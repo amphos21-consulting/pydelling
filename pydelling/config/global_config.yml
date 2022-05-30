@@ -1,0 +1,18 @@
+element_dict: {4: "T", 5: "P", 6: "W", 8: "H"}
+explicit_writer_dict: {4: 6, 6: 8, 8: 9}
+verbose: False
+
+constants:
+  g: 9.81
+  mu: 8.9E-4
+  rho: 1.0E+3
+
+constitutive_laws:
+  transmissivity:
+    # T=a*log10(R)^2
+    a: 1.248e-5
+
+webapps:
+  supported_input_data: ['csv', 'dat']
+  supported_mesh_data: ['csv', 'vtk']
+
