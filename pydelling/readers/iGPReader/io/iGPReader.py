@@ -17,6 +17,7 @@ from pydelling.readers.iGPReader.io import BaseReader
 from pydelling.readers import RasterFileReader
 from pydelling.readers.iGPReader.utils import get_output_path, RegionOperations
 from tqdm import tqdm
+import re
 from copy import deepcopy
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ class iGPReader(BaseReader, RegionOperations):
     of the mesh, and controls all the pre-processing functions related to the mesh.
     """
     element_dict = {"4": "T", "5": "P", "6": "W", "8": "H"}
+    face_dict = {'T': 3, 'Q': 4}
 
     def __init__(self, path,
                  project_name='iGP_project',
@@ -140,8 +142,9 @@ class iGPReader(BaseReader, RegionOperations):
         _temp_array = []
         id_centroids = []
         for i in range(self.region_info["n_region"]):
-            line = self.region_data.readline().split()
-            self.region_info["region_names"].append(line[0])
+            line = self.region_data.readline().rstrip()
+            escaped_region_name = re.sub('[^A-Za-z0-9]+', '_', line)
+            self.region_info["region_names"].append(escaped_region_name)
         for region_name in self.region_info["region_names"]:
             self.region_dict[region_name] = {"elements": [],
                                              "length": None,
@@ -156,8 +159,15 @@ class iGPReader(BaseReader, RegionOperations):
                 if read_line[1] == "IC":
                     is_reading = False
             if is_element:
-                self.region_dict[read_line[-1]]["elements"].append(read_line[2:-1])
-                self.region_dict[read_line[-1]]["centroid_id"].append(read_line[1])
+                # Get the number of vertices expected by reading the face type
+                n_vert = self.face_dict[read_line[0]]
+                # Escape the region name (special characters or spaces)
+                # A region defined with a space in GiD would appear as two different strings when splitting the line
+                # by space. Instead, we know where the info (face type, centroid id, nodes, region name) are located
+                # on the line depending on the type of face element.
+                escaped_region_name = '_'.join(re.sub('[^A-Za-z0-9]+', '_', name) for name in read_line[2+n_vert:])
+                self.region_dict[escaped_region_name]["elements"].append(read_line[2:2+n_vert])
+                self.region_dict[escaped_region_name]["centroid_id"].append(read_line[1])
 
         for region_name in self.region_dict:
             self.region_dict[region_name]["elements"] = np.array(self.region_dict[region_name]["elements"],
@@ -693,13 +703,10 @@ class iGPReader(BaseReader, RegionOperations):
             hdf5_file.create_dataset(name, data=dataset)
 
     def write_csv(self, filename):
-        """Write the processed mesh data to a csv file.
-
-        Args:
-            filename: The name of the csv file to be created.
-
-        Returns:
-            None
+        """
+        Writes the mesh centroids in .csv format
+        :param filename:
+        :return:
         """
         # TODO: set-up default filename
         if self.output_folder is None:
