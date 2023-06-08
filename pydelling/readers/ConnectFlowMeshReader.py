@@ -18,15 +18,52 @@ class ConnectFlowMeshReader(MeshPreprocessor):
 
     def __init__(self, filename, kd_tree=True, st_file=False):
         super().__init__()
-        self.is_streamlit = st_file
-
-        if Path(filename).suffix == '.smesh':
-            self.read_file(filename)
-            if kd_tree:
-                self.create_kd_tree()
-                self.has_kd_tree = True
+        if Path(filename).suffix == '.msh':
+            self.read_file_modified(filename)
         else:
-            self.load(filename)
+            raise ValueError(f"{filename} should have .msh extension.")
+
+        # temporary variables...
+        self.nodes_tmp = []
+        self.elem_tmp = []
+
+    def _map_file(self, filename):
+        """
+        Gets the id line where starts and ends coordinates and connectivities.
+        """
+        # Open file.
+        with open(filename, mode="r") as f:
+            self._texto = list(map(lambda x: x.strip(), filter(lambda x: x.strip(), f)))
+
+        # Get id lines.
+        for index, value in enumerate(self._texto):
+            if value.strip() == "NODES":
+                self._start_coord_line = index + 1
+            if value.strip() == "END_NODES":
+                self._end_coord_line = index
+            if value.strip() == "ELEMENTS":
+                self._start_elements_line = index + 1
+            if value.strip() == "END_ELEMENTS":
+                self._end_elements_line = index
+
+    def read_file_modified(self, filename):
+        """ Reads coordinates and elements of a mesh. """
+        self._map_file(filename)
+
+        # Coordinates of the nodes
+        for index in range(self._start_coord_line, self._end_coord_line):
+            self.nodes_tmp.append([float(i) for i in self._texto[index].split()])
+
+        self.nodes_tmp = np.array(self.nodes_tmp)[:, 1:]
+
+        # Elements
+        for index in range(self._start_elements_line, self._end_elements_line):
+            self.elem_tmp.append([float(i) for i in self._texto[index].split()])
+
+        self.elem_tmp = np.array(self.nodes_tmp)[:, 1:]
+
+        ##tdo: add_hexahedra
+        ## self.add_hexahedra()
 
     def read_file(self, filename):
         with open(filename, 'r') as f:
