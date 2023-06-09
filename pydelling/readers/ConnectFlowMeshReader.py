@@ -18,14 +18,13 @@ class ConnectFlowMeshReader(MeshPreprocessor):
 
     def __init__(self, filename, kd_tree=True, st_file=False):
         super().__init__()
+        # temporary variables...
+        self.nodes_tmp = []
+        self.elem_tmp = []
         if Path(filename).suffix == '.msh':
             self.read_file_modified(filename)
         else:
             raise ValueError(f"{filename} should have .msh extension.")
-
-        # temporary variables...
-        self.nodes_tmp = []
-        self.elem_tmp = []
 
     def _map_file(self, filename):
         """
@@ -56,14 +55,14 @@ class ConnectFlowMeshReader(MeshPreprocessor):
 
         self.nodes_tmp = np.array(self.nodes_tmp)[:, 1:]
 
-        # Elements
-        for index in range(self._start_elements_line, self._end_elements_line):
-            self.elem_tmp.append([float(i) for i in self._texto[index].split()])
+        element_node_ids = np.array([id_node for id_node in range(self.nodes_tmp.shape[0])])
+        element_coords = self.nodes_tmp.tolist()
+        self.add_hexahedra(node_ids=element_node_ids, node_coords=element_coords)
 
-        self.elem_tmp = np.array(self.nodes_tmp)[:, 1:]
-
-        ##tdo: add_hexahedra
-        ## self.add_hexahedra()
+        # Element connectivities. (no need by now)
+        #for index in range(self._start_elements_line, self._end_elements_line):
+        #    self.elem_tmp.append([float(i) for i in self._texto[index].split()])
+        #self.elem_tmp = np.array(self.nodes_tmp)[:, 1:]
 
     def read_file(self, filename):
         with open(filename, 'r') as f:
