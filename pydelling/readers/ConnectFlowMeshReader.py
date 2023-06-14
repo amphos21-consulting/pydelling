@@ -13,7 +13,9 @@ from pathlib import Path
 import streamlit as st
 
 
-class ConnectFlowMeshReader(MeshPreprocessor):
+class ConnectFlowMeshReader(MeshPreprocessor,
+
+                            ):
     has_kd_tree = False
 
     def __init__(self, filename, kd_tree=True, st_file=False):
@@ -21,8 +23,9 @@ class ConnectFlowMeshReader(MeshPreprocessor):
         # temporary variables...
         self.nodes_tmp = []
         self.elem_tmp = []
+        self.material_tmp = []
         if Path(filename).suffix == '.msh':
-            self.read_file_modified(filename)
+            self.read_file(filename)
         else:
             raise ValueError(f"{filename} should have .msh extension.")
 
@@ -45,7 +48,7 @@ class ConnectFlowMeshReader(MeshPreprocessor):
             if value.strip() == "END_ELEMENTS":
                 self._end_elements_line = index
 
-    def read_file_modified(self, filename):
+    def read_file(self, filename):
         """ Reads coordinates and elements of a mesh. """
         self._map_file(filename)
 
@@ -55,16 +58,29 @@ class ConnectFlowMeshReader(MeshPreprocessor):
 
         self.nodes_tmp = np.array(self.nodes_tmp)[:, 1:]
 
-        element_node_ids = np.array([id_node for id_node in range(self.nodes_tmp.shape[0])])
-        element_coords = self.nodes_tmp.tolist()
-        self.add_hexahedra(node_ids=element_node_ids, node_coords=element_coords)
-
         # Element connectivities. (no need by now)
-        #for index in range(self._start_elements_line, self._end_elements_line):
-        #    self.elem_tmp.append([float(i) for i in self._texto[index].split()])
-        #self.elem_tmp = np.array(self.nodes_tmp)[:, 1:]
 
-    def read_file(self, filename):
+        for index in range(self._start_elements_line, self._end_elements_line):
+            cur_data = [int(i) for i in self._texto[index].split()]
+            self.elem_tmp.append(cur_data[1:-1])
+            self.material_tmp.append(cur_data[-1])
+        self.elem_tmp = np.array(self.elem_tmp)[:, :]
+
+        for element_node_ids in tqdm(self.elem_tmp, desc='Reading elements'):
+            local_element_node_ids = element_node_ids - 1
+            element_coords = self.nodes_tmp[local_element_node_ids]
+            element_type = len(local_element_node_ids)
+            if element_type == 4:
+                self.add_tetrahedra(node_ids=local_element_node_ids, node_coords=element_coords)
+            elif element_type == 5:
+                self.add_pyramid(node_ids=local_element_node_ids, node_coords=element_coords)
+            elif element_type == 6:
+                self.add_wedge(node_ids=local_element_node_ids, node_coords=element_coords)
+            elif element_type == 8:
+                self.add_hexahedra(node_ids=local_element_node_ids, node_coords=element_coords)
+
+
+    def _read_file(self, filename):
         with open(filename, 'r') as f:
             first_line = f.readline()
             number_of_nodes = int(first_line.split()[0])
