@@ -1,10 +1,14 @@
 from __future__ import annotations
-import numpy as np
-from ._AbstractGidObject import _AbstractGidObject
-from .Point import Point
+
 import logging
 from typing import List
-logger = logging.getLogger(__file__)
+
+import numpy as np
+
+from .Point import Point
+from ._AbstractGidObject import _AbstractGidObject
+
+logger = logging.getLogger(__name__)
 
 class Line(_AbstractGidObject):
     local_id: int = 1

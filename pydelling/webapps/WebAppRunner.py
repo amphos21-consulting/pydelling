@@ -1,10 +1,10 @@
-from abc import ABC
-from pathlib import Path
 import inspect
 import subprocess
-
-
-class WebAppRunner(ABC):
+from abc import ABC
+import streamlit as st
+import extra_streamlit_components as stx
+from .BaseStreamlitUtilityClass import BaseStreamlitUtilityClass
+class WebAppRunner(ABC, BaseStreamlitUtilityClass):
     """This is the base class used to build other webapps."""
     def __init__(self):
         self.source_script_name = None
@@ -21,10 +21,11 @@ class WebAppRunner(ABC):
         if 'threading' not in current_executer[-1][1]:
             subprocess.run(["streamlit", "run", self.source_script_name])
         else:
+            self.initialize()
             self.construct()
 
-
-
-
+    def initialize(self):
+        """This method initializes the webapp."""
+        pass
 
 

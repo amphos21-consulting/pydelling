@@ -1,10 +1,16 @@
-import numpy as np
 from ._AbstractGidObject import _AbstractGidObject
 from .Line import Line
 from .Point import Point
 import logging
 from typing import List
-logger = logging.getLogger(__file__)
+import logging
+from typing import List
+
+from .Line import Line
+from .Point import Point
+from ._AbstractGidObject import _AbstractGidObject
+
+logger = logging.getLogger(__name__)
 
 
 class Surface(_AbstractGidObject):

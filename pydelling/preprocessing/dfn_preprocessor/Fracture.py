@@ -1,18 +1,37 @@
+from typing import List
+
 import numpy as np
 import shapely.geometry as geom
-import sympy as sp
+
 from pydelling.utils.geometry import Plane, Segment, Point, Line
-from typing import List
-from pydelling.config import config
 
 
 class Fracture(object):
     local_id = 0
-    eps = 1e-8
+    eps = 1e-3
     _transmissivity = None
+    _storativity = None
+    _side_points = None
+    _unit_normal_vector = None
 
-    def __init__(self, dip, dip_dir, x, y, z, size=None, aperture=None, aperture_constant=None,
-                 transmissivity_constant=None, ):
+    def __init__(self,
+                 x=None,
+                 y=None,
+                 z=None,
+                 dip=None,
+                 dip_dir=None,
+                 size=None,
+                 aperture=None,
+                 hydraulic_aperture=None,
+                 rock_type=None,
+                 aperture_constant=None,
+                 transmissivity_constant=None,
+                 storativity_constant=None,
+                 normal_vector=None,
+                 polygon: List[np.ndarray]=None,
+                 ):
+        if normal_vector is not None:
+            self._unit_normal_vector: np.ndarray = normal_vector
         self.side_points = None
         if dip is not None:
             assert dip_dir is not None
@@ -20,8 +39,17 @@ class Fracture(object):
             assert aperture is not None
         if aperture is None:
             assert size is not None
-        # if dip == 90:
-        #     dip = 89.9999
+        # Allow definition of a Fracture object based on a polygon
+        if polygon is not None:
+            # Assert x, y, z are not provided
+            self._side_points = polygon
+            centroid = np.mean(polygon, axis=0)
+            x = centroid[0]
+            y = centroid[1]
+            z = centroid[2]
+        self.polygon_points = polygon
+
+
         self.dip = dip
         self.dip_dir = dip_dir
         self.x_centroid = x
@@ -29,11 +57,36 @@ class Fracture(object):
         self.z_centroid = z
         self.size = size
         self._aperture = aperture
+        self.hydraulic_aperture = hydraulic_aperture
+        self.rock_type = rock_type
         self.intersection_dictionary = {}
         self.aperture_constant = aperture_constant
-        self.transmissivity_constant = transmissivity_constant
+        if transmissivity_constant is not None:
+            if rock_type is not None:
+                if isinstance(transmissivity_constant, dict):
+                    self.transmissivity_constant = transmissivity_constant[int(rock_type)]
+                else:
+                    self.transmissivity_constant = transmissivity_constant
+            else:
+                self.transmissivity_constant = transmissivity_constant
+        else:
+            self.transmissivity_constant = None
+        if storativity_constant is not None:
+            if rock_type is not None:
+                if isinstance(storativity_constant, dict):
+                    self.storativity_constant = storativity_constant[int(rock_type)]
+                else:
+                    self.storativity_constant = storativity_constant
+            else:
+                self.storativity_constant = storativity_constant
+        else:
+            self.storativity_constant = None
+
         self.aperture = self.compute_aperture()
         self.local_id = Fracture.local_id
+        self.side_points = self.get_side_points()
+        self.n_side_points = len(self.side_points)
+
 
         Fracture.local_id += 1
 
@@ -135,6 +188,8 @@ class Fracture(object):
         return np.array([A, B, C, D])
 
     def get_side_points(self, method='v1'):
+        if self._side_points is not None:
+            return self._side_points
         if method == 'v1':
             return self.get_side_points_v1()
         elif method == 'v2':
@@ -142,9 +197,12 @@ class Fracture(object):
         elif method == 'v3':
             return self.get_side_points_v3()
 
+
     def to_obj(self, global_id=0, method='v1'):
         """Converts the fracture to an obj file"""
         side_points = self.get_side_points(method=method)
+        if isinstance(side_points[0], np.ndarray):
+            side_points = [side_point.tolist() for side_point in side_points]
         obj_string = ''
         for i in range(len(side_points)):
             obj_string += 'v ' + str(side_points[i][0]) + ' ' + str(side_points[i][1]) + ' ' + str(
@@ -158,7 +216,7 @@ class Fracture(object):
     @property
     def unit_normal_vector(self):
         """Returns the normal vector of the fracture"""
-        if not hasattr(self, '_unit_normal_vector'):
+        if self._unit_normal_vector is None:
             get_side_points = self.get_side_points()
             v1 = get_side_points[1] - get_side_points[0]
             v2 = get_side_points[2] - get_side_points[0]
@@ -211,15 +269,11 @@ class Fracture(object):
         self._polygon = geom.Polygon(side_points)
         return self._polygon
 
-    @property
-    def sympy_plane(self):
-        """Returns the plane of the fracture"""
-        return sp.Plane(self.centroid, normal_vector=self.unit_normal_vector)
 
     @property
     def plane(self):
         """Returns the plane of the fracture"""
-        if not hasattr(self, '_corners'):
+        if not hasattr(self, '_plane'):
             self._plane = Plane(self.centroid, normal=self.unit_normal_vector)
 
         return self._plane
@@ -289,6 +343,14 @@ class Fracture(object):
         else:
             return False
 
+    def shift(self, x, y, z):
+        """Shifts the fracture"""
+        self.x_centroid += x
+        self.y_centroid += y
+        self.z_centroid += z
+        if self._side_points is not None:
+            self._side_points = [point + np.array([x, y, z]) for point in self._side_points]
+
     @property
     def largest_index_normal_vector(self):
         """Returns the largest coordinate index of the normal vector"""
@@ -315,4 +377,41 @@ class Fracture(object):
             computed_transmissivity = self.transmissivity_constant * (np.log10(self.size / 2.0)) ** 2
             return computed_transmissivity
         else:
-            return np.power(self.aperture, 3) / 12
+            rho = 1000
+            g = 9.8
+            mu = 8.9E-4
+            return (np.power(self.hydraulic_aperture, 3) * rho * g) / (12 * mu)
+
+    @property
+    def storativity(self):
+        """Returns the storativity of the fracture"""
+        if self._storativity is not None:
+            return self._storativity
+        elif self.storativity_constant is not None:
+            computed_storativity = self.storativity_constant * np.log10(self.size / 2.0)
+            return computed_storativity
+        else:
+            return 0.0
+
+    def get_json(self):
+        cur_dict = {
+            'x': self.x_centroid,
+            'y': self.y_centroid,
+            'z': self.z_centroid,
+            'size': self.size,
+            'aperture': self.aperture,
+            'dip': self.dip,
+            'dip_dir': self.dip_dir,
+            'aperture_constant': self.aperture_constant,
+            'rock_type': self.rock_type,
+            'transmissivity_constant': self.transmissivity_constant,
+            'storativity_constant': self.storativity_constant,
+            'normal_vector': self._unit_normal_vector.tolist() if self._unit_normal_vector is not None else None,
+            'polygon': [point.tolist() for point in self.polygon_points] if self.polygon_points is not None else None,
+        }
+
+        return cur_dict
+
+
+
+

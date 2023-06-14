@@ -5,8 +5,8 @@ from pydelling.preprocessing.mesh_preprocessor.geometry import QuadrilateralFace
 
 
 class HexahedraElement(BaseElement):
-    def __init__(self, node_ids, node_coords, centroid_coords=None):
-        super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords)
+    def __init__(self, node_ids, node_coords, centroid_coords=None, local_id=None):
+        super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords, local_id=local_id)
         self.type = "hexahedra"
         self.meshio_type = "hexahedron"
         self.define_faces()
@@ -78,6 +78,21 @@ class HexahedraElement(BaseElement):
                                                                    self.coords[5],
                                                                    self.coords[6],
                                                                    self.coords[7]]))
+
+    @property
+    def local_face_nodes(self):
+        """
+        Returns the nodes of the faces of the polyhedra
+        :return: dictionary of nodes of the faces of the polyhedra
+        """
+        return {
+            'q1': [0, 1, 5, 4],
+            'q2': [1, 2, 6, 5],
+            'q3': [2, 3, 7, 6],
+            'q4': [3, 0, 4, 7],
+            'q5': [0, 3, 2, 1],
+            'q6': [4, 5, 6, 7]
+        }
 
     def compute_volume(self):
         """

@@ -1,1 +1,2 @@
-from WebAppRunner import WebAppRunner
+from .BaseStreamlitUtilityClass import BaseStreamlitUtilityClass
+from .WebAppRunner import WebAppRunner

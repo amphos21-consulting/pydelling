@@ -1,12 +1,12 @@
+import numpy as np
 import pandas as pd
-
-from pydelling.webapps import WebAppRunner
-from pydelling.webapps.components import InputComponent
 import streamlit as st
+import streamlit.components.v1 as components
+
 from pydelling.config import config
 from pydelling.interpolation import SparseDataInterpolator
-import numpy as np
-import streamlit.components.v1 as components
+from pydelling.webapps import WebAppRunner
+from pydelling.webapps.components import InputComponent
 
 
 class SparseInterpolatorWebapp(WebAppRunner):
@@ -63,8 +63,41 @@ class SparseInterpolatorWebapp(WebAppRunner):
             selected_type = st.selectbox('Select target mesh file format', config.globals.webapps.supported_mesh_data)
             if selected_type == 'csv':
                 InputComponent(input_type='csv', key='mesh_input')
+                with st.form('select input variables mesh'):
+                    st.markdown(
+                        """Select the columns corresponding to the`x`, `y` and `z` variables of the centroids""")
+                    cols = st.columns(3)
+                    x_index = None
+                    y_index = None
+                    z_index = None
+                    for col_idx, column_name in enumerate(self.input_data.columns):
+                        if 'x' == column_name.lower():
+                            x_index = col_idx
+                        elif 'y' == column_name.lower():
+                            y_index = col_idx
+                        elif 'z' == column_name.lower():
+                            z_index = col_idx
+
+                    with cols[0]:
+                        x_col = st.selectbox('x centroid', self.input_data.columns,
+                                             index=x_index if x_index is not None else 0)
+                    with cols[1]:
+                        y_col = st.selectbox('y centroid', self.input_data.columns,
+                                             index=y_index if y_index is not None else 0)
+                    with cols[2]:
+                        z_col = st.selectbox('z centroid', self.input_data.columns,
+                                             index=z_index if z_index is not None else 0)
+                    submit = st.form_submit_button('Select variables')
+                    if submit:
+                        st.success(
+                            f'centroid variables: [{x_col}, {y_col}, {z_col}] selected as the target mesh')
+                        st.session_state['input_selection_done'] = True
+
             elif selected_type == 'vtk':
                 InputComponent(input_type='vtk', key='mesh_input')
+
+            elif selected_type == 'fem':
+                InputComponent(input_type='fem', key='mesh_input')
 
         if st.session_state['mesh_input_done']:
             st.subheader('Step 3: Interpolate data')
@@ -72,6 +105,10 @@ class SparseInterpolatorWebapp(WebAppRunner):
             if selected_type == 'vtk':
                 mesh_data = st.session_state['mesh_input']
                 mesh_data = mesh_data.centroids
+            elif selected_type == 'csv':
+                mesh_data = st.session_state['mesh_input'][[x_col, y_col, z_col]].values
+            elif selected_type == 'fem':
+                mesh_data = st.session_state['mesh_input'].centroids
             with st.form('interpolation_step'):
                 st.markdown("""Choose the interpolation method""")
                 interpolation_method = st.selectbox('interpolation method', ['nearest', 'linear', 'cubic'], index=0)
@@ -100,7 +137,6 @@ class SparseInterpolatorWebapp(WebAppRunner):
             visualize = st.checkbox('Visualize interpolated data')
             if visualize:
                 import pyvista as pv
-                from pyvista import examples
                 interpolated_block = st.session_state['interpolated_data']
                 pl = pv.Plotter()
                 point_cloud = pv.PolyData(interpolated_block[['x', 'y', 'z']].values)

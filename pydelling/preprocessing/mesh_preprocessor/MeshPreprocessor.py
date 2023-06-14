@@ -1,14 +1,20 @@
-from typing import *
-import numpy as np
-import pydelling.preprocessing.mesh_preprocessor.geometry as geometry
-import meshio as msh
-from scipy.spatial import KDTree
-from pydelling.preprocessing.dfn_preprocessor.Fracture import Fracture
-from pydelling.utils.geometry_utils import compute_polygon_area
-from tqdm import tqdm
+from __future__ import annotations
+
 import logging
+from typing import *
+
+import meshio as msh
+import numpy as np
+from scipy.spatial import KDTree
+from tqdm import tqdm
+
+import pydelling.preprocessing.mesh_preprocessor.geometry as geometry
+from pydelling.preprocessing.dfn_preprocessor.Fracture import Fracture
+from pydelling.preprocessing.mesh_preprocessor.geometry import BaseElement
+from pydelling.utils.geometry_utils import compute_polygon_area
 
 logger = logging.getLogger(__name__)
+
 
 class MeshPreprocessor(object):
     """Contains the logic to preprocess and work with a generic unstructured mesh"""
@@ -16,16 +22,22 @@ class MeshPreprocessor(object):
     coords: List[np.ndarray]
     centroids: List[np.ndarray]
     meshio_mesh: msh.Mesh = None
-    kd_tree: KDTree
+    kd_tree: KDTree = None
     point_data = {}
     cell_data = {}
     _coords = None
     _centroids = None
     is_intersected = False
+    is_streamlit = False
+    aux_nodes = {}
+    has_kd_tree: bool = False
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.unordered_nodes = {}
         self.elements = []
+        BaseElement.local_id = 0
+        if 'st_file' in kwargs:
+            self.is_streamlit = True
 
         self.find_intersection_stats = {
             'total_intersections': 0,
@@ -52,6 +64,12 @@ class MeshPreprocessor(object):
     def add_wedge(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
         """Adds a wedge to the mesh"""
         self.elements.append(geometry.WedgeElement(node_ids=node_ids, node_coords=node_coords))
+        for idx, node in enumerate(node_coords):
+            self.unordered_nodes[node_ids[idx]] = node
+
+    def add_pyramid(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
+        """Adds a pyramid to the mesh"""
+        self.elements.append(geometry.PyramidElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
@@ -164,6 +182,10 @@ class MeshPreprocessor(object):
                 if not 'quad' in elements_in_meshio.keys():
                     elements_in_meshio['quad'] = []
                 elements_in_meshio['quad'].append(element.nodes.tolist())
+            elif element.type == 'pyramid':
+                if not 'pyramid' in elements_in_meshio.keys():
+                    elements_in_meshio['pyramid'] = []
+                elements_in_meshio['pyramid'].append(element.nodes.tolist())
 
         return elements_in_meshio
 
@@ -220,10 +242,29 @@ class MeshPreprocessor(object):
         Returns:
             A list of the nearest mesh elements.
         """
-        if not hasattr(self, 'kd_tree'):
+        if self.kd_tree is None:
             self.create_kd_tree()
+
         ids = self.kd_tree.query_ball_point(point, distance)
         # assert len(ids) != 0, "No elements found"
+        return [self.elements[i] for i in ids]
+
+    def get_closest_n_mesh_elements(self,
+                                    point,
+                                    n=1
+                                    ):
+        """
+        Get the nearest mesh elements to a point inside a distance.
+        Args:
+            point: A point in 3D space.
+            distance: The radius of the sphere.
+        Returns:
+            A list of the nearest mesh elements.
+        """
+        if self.kd_tree is None:
+            self.create_kd_tree()
+
+        ids = self.kd_tree.query(point, k=n)[1]
         return [self.elements[i] for i in ids]
 
     def clear(self):
@@ -363,4 +404,124 @@ class MeshPreprocessor(object):
         return self.coords[:, 2].max()
 
 
+    def save(self, filename):
+        """Save the mesh to a file."""
+        import pickle
+        logger.info(f'Saving mesh to {filename}')
+        with open(filename, 'wb') as f:
+            save_dictionary = {
+                'elements': self.elements,
+                'coords': self.coords,
+                'kd_tree': self.kd_tree,
+                'has_kd_tree': self.has_kd_tree,
+            }
+            pickle.dump(save_dictionary, f)
+
+    def load(self, filename):
+        """Load the mesh from a file."""
+        logger.info(f'Loading mesh from {filename}')
+        import pickle
+        with open(filename, 'rb') as f:
+            save_dictionary = pickle.load(f)
+            self.elements = save_dictionary['elements']
+            self._coords = save_dictionary['coords']
+            self.kd_tree = save_dictionary['kd_tree']
+            self.has_kd_tree = save_dictionary['has_kd_tree']
+
+    def get_json(self):
+        """Export the mesh to a json file."""
+        logger.info('Exporting mesh to json')
+        save_dictionary = {}
+        _elements = [element.get_json() for element in self.elements]
+        save_dictionary['elements'] = _elements
+        save_dictionary['coords'] = self.coords.tolist()
+        save_dictionary['has_kd_tree'] = self.has_kd_tree
+        return save_dictionary
+
+    def to_json(self, filename='mesh.json'):
+        """Export the mesh to a json file."""
+        import json
+        with open(filename, 'w') as f:
+            json.dump(self.get_json(), f)
+
+    @classmethod
+    def from_json(self, filename='mesh.json'):
+        """Load the mesh from a json file."""
+        logger.info(f'Loading mesh from {filename}')
+        BaseElement.local_id = 0
+        import json
+        with open(filename, 'r') as f:
+            save_dictionary = json.load(f)
+            mesh = MeshPreprocessor()
+            mesh._coords = np.array(save_dictionary['coords'])
+            mesh.has_kd_tree = save_dictionary['has_kd_tree']
+            MeshPreprocessor.load_elements(mesh, save_dictionary['elements'])
+            if mesh.has_kd_tree:
+                mesh.create_kd_tree()
+            return mesh
+
+    @classmethod
+    def from_dict(cls, dict: dict):
+        """Load the mesh from a json file."""
+        BaseElement.local_id = 0
+        mesh = MeshPreprocessor()
+        mesh._coords = np.array(dict['coords'])
+        mesh.has_kd_tree = dict['has_kd_tree']
+        MeshPreprocessor.load_elements(mesh, dict['elements'])
+        if mesh.has_kd_tree:
+            mesh.create_kd_tree()
+        return mesh
+
+    @staticmethod
+    def load_elements(mesh: MeshPreprocessor, element_dict):
+        """Load the elements from a dictionary."""
+        elements = []
+        for local_id, element in tqdm(enumerate(element_dict), desc='Loading elements'):
+            if element['type'] == 'tetrahedra':
+                mesh.add_tetrahedra(node_ids=element['nodes'],
+                                    node_coords=mesh._coords[element['nodes']])
+            elif element['type'] == 'hexahedra':
+                mesh.add_hexahedra(node_ids=element['nodes'],
+                                   node_coords=mesh._coords[element['nodes']])
+            elif element['type'] == 'wedge':
+                mesh.add_wedge(node_ids=element['nodes'],
+                               node_coords=mesh._coords[element['nodes']])
+            elif element['type'] == 'pyramid':
+                mesh.add_pyramid(node_ids=element['nodes'],
+                                 node_coords=mesh._coords[element['nodes']])
+            associated_fractures_dict = element_dict[local_id]['associated_fractures']
+            temp_associated_fractures = {}
+            for key in associated_fractures_dict:
+                cur_fracture = associated_fractures_dict[key]
+                temp_fracture = {key: value for key, value in cur_fracture.items() if key != 'fracture'}
+                temp_fracture['fracture'] = cur_fracture['fracture']
+                temp_associated_fractures[key] = temp_fracture
+            mesh.elements[local_id].associated_fractures = temp_associated_fractures
+
+    def refactor_array_by_element_type(self, array: np.ndarray or list) -> list:
+        """Refactors a given array based on the element type"""
+        if isinstance(array, np.ndarray):
+            array = array.tolist()
+        final_array = []
+        temp_dict = {
+            'wedge': [],
+            'pyramid': [],
+            'tetrahedra': [],
+            'hexahedra': [],
+        }
+        for element in self.elements:
+            temp_dict[element.type].append(array[element.local_id])
+        for key in temp_dict:
+            if len(temp_dict[key]) > 0:
+                final_array.append(temp_dict[key])
+        return final_array
+
+    def __repr__(self):
+        return f'Mesh with {len(self.elements)} elements and {len(self.coords)} nodes.'
+
+    def add_cell_data(self, name, data):
+        self.cell_data[name] = self.refactor_array_by_element_type(data)
+
+    def add_point_data(self, name, data):
+        self.point_data[name] = data
 

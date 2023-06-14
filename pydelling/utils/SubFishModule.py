@@ -1,12 +1,13 @@
 """
 Subsurface Fracture Independent Solutions Helper (SubFISH)
 """
-import numpy as np
-import mpmath as mp
-import scipy.special as scsp
 import logging
 
-logger = logging.getLogger(__file__)
+import mpmath as mp
+import numpy as np
+import scipy.special as scsp
+
+logger = logging.getLogger(__name__)
 
 class SubfishException(Exception):
     pass

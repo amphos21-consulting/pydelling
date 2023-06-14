@@ -1,15 +1,16 @@
 """
 Base interface for a reader class
 """
-import numpy as np
 import logging
+
+import numpy as np
+
 from pydelling.readers import BaseReader
+
 logger = logging.getLogger(__name__)
 from pydelling.config import config
 import logging
 from pathlib import Path
-import h5py
-import natsort
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -45,34 +46,34 @@ class PflotranObservationPointReader(BaseReader):
 
         # Rename time column
         time_column: str = self.data.columns.to_list()[0]
-        self.data.rename(columns={time_column: time_column.strip().strip('"')}, inplace=True)
-        # Get observation point information
-        temp_column_name: str = self.data.columns[1]
-        temp_column_name = temp_column_name.replace('(', '').replace(')', '')
-        splitted_column_name = temp_column_name.split(' ')
-        self.observation_point = np.array([splitted_column_name[-3],
-                                          splitted_column_name[-2],
-                                          splitted_column_name[-3]],
-                                          ).astype(float)
-        self.observation_node = int(splitted_column_name[-4])
-        self.observation_boundary = splitted_column_name[-5]
+        # self.data.rename(columns={time_column: time_column.strip().strip('"')}, inplace=True)
+        # # Get observation point information
+        # temp_column_name: str = self.data.columns[1]
+        # temp_column_name = temp_column_name.replace('(', '').replace(')', '')
+        # splitted_column_name = temp_column_name.split(' ')
+        # self.observation_point = np.array([splitted_column_name[-3],
+        #                                   splitted_column_name[-2],
+        #                                   splitted_column_name[-3]],
+        #                                   ).astype(float)
+        # self.observation_node = int(splitted_column_name[-4])
+        # self.observation_boundary = splitted_column_name[-5]
         # Get output column names
-        self.variables = {}
-        for column in self.data.columns:
-            if 'Time' in column:
-                continue
-            test_column_name: str = column
-            test_column_name_split = test_column_name.split('-')[1].split()
-            variable_str = []
-            flag_list = ['east', 'west', 'north', 'south', 'top', 'bottom']
-            for piece in test_column_name_split:
-                if piece in flag_list:
-                    break
-                else:
-                    variable_str.append(piece)
-            variable_str = ' '.join(variable_str)
-            self.variables[variable_str] = column
-            self.data.rename(columns={column: variable_str}, inplace=True)
+        # self.variables = {}
+        # for column in self.data.columns:
+        #     if 'Time' in column:
+        #         continue
+        #     test_column_name: str = column
+        #     test_column_name_split = test_column_name.split('-')[1].split()
+        #     variable_str = []
+        #     flag_list = ['east', 'west', 'north', 'south', 'top', 'bottom']
+        #     for piece in test_column_name_split:
+        #         if piece in flag_list:
+        #             break
+        #         else:
+        #             variable_str.append(piece)
+        #     variable_str = ' '.join(variable_str)
+        #     self.variables[variable_str] = column
+        #     self.data.rename(columns={column: variable_str}, inplace=True)
 
     @property
     def mineral_names(self):
@@ -89,12 +90,15 @@ class PflotranObservationPointReader(BaseReader):
         temp_keys = [key for key in self.variables if 'Free' in key]
         return temp_keys
 
-    def plot_variable(self, variable) -> plt.Axes:
+    def plot_variable(self, variable,
+                      delete_previous=True,
+                      label=None ) -> plt.Axes:
         logger.info(f'Creating lineplot of {variable}')
-        plt.clf()
-        lineplot: plt.Axes = sns.lineplot(x=self.time_series,
-                                y=self.results[variable])
-        lineplot.set_label(f'{variable}')
+        if delete_previous:
+            plt.clf()
+        lineplot: plt.Axes = plt.plot(self.time_series,
+                                self.results[variable])[0]
+        lineplot.set_label(f'{variable if label is None else label}')
         return lineplot
 
     def to_csv(self, filename='postprocess/results.csv', variables=None) -> pd.DataFrame:
@@ -155,3 +159,8 @@ class PflotranObservationPointReader(BaseReader):
     @property
     def time_series(self):
         return self.results.iloc[:, 0]
+
+    @property
+    def columns(self):
+        return self.results.columns
+
