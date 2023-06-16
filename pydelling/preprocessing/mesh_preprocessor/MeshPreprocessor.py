@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 class MeshPreprocessor(iGPLogic):
     """Contains the logic to preprocess and work with a generic unstructured mesh"""
     elements: List[geometry.BaseElement]
+    boundaries: Dict[str, List[geometry.BaseFace]]
+    material_dict: Dict[str, List[int]]
     coords: List[np.ndarray]
     centroids: List[np.ndarray]
     meshio_mesh: msh.Mesh = None
@@ -35,6 +37,8 @@ class MeshPreprocessor(iGPLogic):
     def __init__(self, *args, **kwargs):
         self.unordered_nodes = {}
         self.elements = []
+        self.material_dict = {}
+        self.boundaries = {}
         BaseElement.local_id = 0
         if 'st_file' in kwargs:
             self.is_streamlit = True
@@ -88,6 +92,10 @@ class MeshPreprocessor(iGPLogic):
                 aux_nodes[idx] = node
             self._coords = aux_nodes
         return self._coords
+
+    @property
+    def nodes(self) -> np.ndarray:
+        return self.coords
 
     def add_quadrilateral(self, node_ids: List[int], node_coords: List[np.ndarray]):
         self.elements.append(geometry.QuadrilateralFace(node_ids=node_ids, node_coords=node_coords))
