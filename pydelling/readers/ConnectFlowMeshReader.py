@@ -79,6 +79,13 @@ class ConnectFlowMeshReader(MeshPreprocessor,
             elif element_type == 8:
                 self.add_hexahedra(node_ids=local_element_node_ids, node_coords=element_coords)
 
+        # Build self.material_dict using self.material_tmp for each unique material id.
+        self.material_dict = {}
+        for index, value in enumerate(self.material_tmp):
+            if value not in self.material_dict.keys():
+                self.material_dict[value] = []
+            self.material_dict[value].append(index)
+
 
     def _read_file(self, filename):
         with open(filename, 'r') as f:
