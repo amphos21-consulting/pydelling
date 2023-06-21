@@ -21,7 +21,6 @@ class MeshPreprocessor(iGPLogic):
     elements: List[geometry.BaseElement]
     boundaries: Dict[str, List[geometry.BaseFace]]
     material_dict: Dict[str, List[int]]
-    connectivities: List[Tuple[List, int]]
     coords: List[np.ndarray]
     centroids: List[np.ndarray]
     meshio_mesh: msh.Mesh = None
@@ -540,8 +539,25 @@ class MeshPreprocessor(iGPLogic):
         aux_vec = []
         for element in tqdm(self.elements, desc='Creating auxiliar vector'):
             for face in element.faces.values():
-                aux_vec.append((face.nodes, element.local_id))
-        print(aux_vec)
+                aux_vec.append((sorted(list(face.nodes)), element.local_id))
+
+        aux_vec.sort(key=lambda x: x[0])
+        # Make a sorted list of the faces
+        for i in tqdm(range(len(aux_vec) - 1), desc='Finding connections'):
+            connection_1 = aux_vec[i]
+            connection_2 = aux_vec[i + 1]
+            if connection_1[0] == connection_2[0]:
+                elem_1 = self.elements[connection_1[1]]
+                elem_2 = self.elements[connection_2[1]]
+                face_1 = elem_1.detect_face(connection_1[0])
+                face_2 = elem_2.detect_face(connection_2[0])
+
+                elem_1.connections[elem_2.local_id] = [face_1, face_2]
+                elem_2.connections[elem_1.local_id] = [face_2, face_1]
+
+
+
+
 
 
 

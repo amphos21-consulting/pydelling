@@ -69,7 +69,7 @@ class TestMeshPreprocessor(unittest.TestCase):
                                                          ])
         edge_lines = mesh_preprocessor.elements[0].edge_lines
         self.assertEqual(len(edge_lines), 12)
-
+        
 
 if __name__ == '__main__':
     unittest.main()

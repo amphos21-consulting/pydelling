@@ -38,6 +38,7 @@ class BaseElement(BaseAbstractMeshObject):
         self.total_fracture_volume = 0
         self.area = 0
         self.is_strange = 0.0
+        self.connections = {}
 
     def __repr__(self):
         return f"{self.type} {self.local_id}"
@@ -309,13 +310,32 @@ class BaseElement(BaseAbstractMeshObject):
                     f.write(f'{local_id + 1} ')
                 f.write('\n')
 
-
     def compute_centroid(self):
         """
         Computes the centroid of a general polyhedra
         :return: centroid of the polyhedron
         """
         return np.mean(self.coords, axis=0)
+
+    def detect_face(self, face_ids: List):
+        """Find the face given the local ids of the nodes"""
+        for face in self.faces:
+            sorted_ids = sorted(self.faces[face].nodes)
+            sorted_face_ids = sorted(face_ids)
+            if sorted_ids == sorted_face_ids:
+                return face
+        return None
+
+    @property
+    def external_faces(self) -> List[BaseFace]:
+        """Returns the external faces of the element. Cached property"""
+        return None
+
+    @property
+    def internal_faces(self) -> List[BaseFace]:
+        """Returns the internal faces of the element"""
+        return None
+
 
     def plot_normal_vectors(self, point: Point=None, value=None, error_face=None):
         """Plots the normal vectors of the faces"""
