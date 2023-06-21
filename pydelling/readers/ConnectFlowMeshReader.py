@@ -13,12 +13,13 @@ from pathlib import Path
 import streamlit as st
 
 
-class ConnectFlowMeshReader(MeshPreprocessor,
-
-                            ):
+class ConnectFlowMeshReader(MeshPreprocessor):
     has_kd_tree = False
-
-    def __init__(self, filename, kd_tree=True, st_file=False):
+    def __init__(self,
+                 filename,
+                 kd_tree=True,
+                 st_file=False,
+                 ):
         super().__init__()
         # temporary variables...
         self.nodes_tmp = []

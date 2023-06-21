@@ -21,6 +21,7 @@ class MeshPreprocessor(iGPLogic):
     elements: List[geometry.BaseElement]
     boundaries: Dict[str, List[geometry.BaseFace]]
     material_dict: Dict[str, List[int]]
+    connectivities: List[Tuple[List, int]]
     coords: List[np.ndarray]
     centroids: List[np.ndarray]
     meshio_mesh: msh.Mesh = None
@@ -532,4 +533,17 @@ class MeshPreprocessor(iGPLogic):
 
     def add_point_data(self, name, data):
         self.point_data[name] = data
+
+    def find_mesh_connections(self):
+        """Find the connections between the elements."""
+        logger.info('Finding mesh connections')
+        aux_vec = []
+        for element in tqdm(self.elements, desc='Creating auxiliar vector'):
+            for face in element.faces.values():
+                aux_vec.append((face.nodes, element.local_id))
+        print(aux_vec)
+
+
+
+
 
