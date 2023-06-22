@@ -557,6 +557,17 @@ class MeshPreprocessor(iGPLogic):
                 elem_2.connections[elem_1.local_id] = [face_2, face_1]
         self.is_connections_found = True
 
+    def find_boundary_elements(self):
+        """ Returns the elements and their external faces."""
+        # self.find_mesh_connections() should be obtained first.
+        if not self.is_connections_found:
+            raise ValueError("Connections should be computed. Run self.find_mesh_connections()")
+        logger.info('Finding boundary elements')
+        for element in tqdm(self.elements, desc="Finding boundary elements"):
+            if not len(element.connections) == element.faces:
+                self.boundaries[element.local_id] = element.external_faces
+
+
 
 
 
