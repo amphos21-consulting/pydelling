@@ -33,6 +33,7 @@ class MeshPreprocessor(iGPLogic):
     is_streamlit = False
     aux_nodes = {}
     has_kd_tree: bool = False
+    is_connections_found: bool = False
 
     def __init__(self, *args, **kwargs):
         self.unordered_nodes = {}
@@ -554,6 +555,7 @@ class MeshPreprocessor(iGPLogic):
 
                 elem_1.connections[elem_2.local_id] = [face_1, face_2]
                 elem_2.connections[elem_1.local_id] = [face_2, face_1]
+        self.is_connections_found = True
 
 
 

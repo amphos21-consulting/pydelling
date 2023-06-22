@@ -76,7 +76,6 @@ class BaseFace(BaseAbstractMeshObject):
         '''Returns the intersection of the face with the plane'''
         return self.plane.intersect(plane)
 
-
     @property
     def unit_normal_vector(self):
         if not hasattr(self, '_unit_normal_vector'):
