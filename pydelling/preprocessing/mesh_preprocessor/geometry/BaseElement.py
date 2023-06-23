@@ -333,7 +333,7 @@ class BaseElement(BaseAbstractMeshObject):
         internal_faces = self.internal_faces
         for key in self.faces.keys():
             if key not in internal_faces:
-                external_faces.append(key)
+                external_faces.append(self.faces[key])
         return external_faces
 
     @property
@@ -341,7 +341,7 @@ class BaseElement(BaseAbstractMeshObject):
         """Returns the internal faces of the element"""
         internal_faces = []
         for key, val in self.connections.items():
-            internal_faces.append(val[0])
+            internal_faces.append(self.faces[val[0]])
         return internal_faces
 
     def plot_normal_vectors(self, point: Point=None, value=None, error_face=None):
