@@ -17,6 +17,7 @@ def progressbar(iter, max, prefix="\t\t    ", size=40, out=sys.stdout):  # Pytho
               end='\n', file=out, flush=True)
     return iter + 1
 
+
 def generate_structured_mesh(
         bounds=[[0, 0, 0], [1, 1, 1]],
         nx: int = 10,
