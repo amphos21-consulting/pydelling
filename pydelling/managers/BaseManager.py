@@ -176,6 +176,7 @@ class BaseManager(ABC):
         study.output_folder = self.results_folder / study.name
         if dummy:
             logger.info("Dummy run, not running the study")
+            study.to_file(self.results_folder / study.name)
         else:
             for callback in study.callbacks:
                 if callback.kind == 'pre':

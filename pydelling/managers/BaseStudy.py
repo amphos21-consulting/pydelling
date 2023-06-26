@@ -75,8 +75,15 @@ class BaseStudy(UnitConverter):
         logger.debug(f"Replacing {var} with jinja variable")
         if var_name is None:
             var_name = var
-        self.raw_text = self.raw_text.replace(var, f"{{{{ {var_name} }}}}")
-        self.jinja_settings[var_name] = {"value": value}
+        self.raw_text = self.raw_text.replace(var, f"{var_name}")
+        self.jinja_settings[var_name] = value
+
+
+    def replace_variable(self, var, value=None):
+        """This method replaces a variable in the raw defined between {} with a value."""
+        logger.info(f"Replacing {var} with value {value}")
+        self._replace_with_jinja_variable(var, value=value)
+
 
     def _find_tags(self, tag: str, ignore_case: bool = True, equal: bool = True):
         """This method finds the line index of the tag in the raw text.
@@ -138,14 +145,12 @@ class BaseStudy(UnitConverter):
         lines[line_index] = sep.join(new_line)
         self.raw_text = '\n'.join(lines)
 
-
-
     def render(self, **kwargs):
         """This method renders the input file using jinja2.
         """
         logger.info(f"Rendering input file {self.input_file_name}")
         template = Template(self.raw_text)
-        return template.render(**kwargs)
+        return template.render(self.jinja_settings, **kwargs)
 
 
     def add_auxiliary_file(self, file_path: str):

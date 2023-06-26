@@ -9,6 +9,7 @@ from pathlib import Path
 
 class PflotranRestartCallback(BaseCallback):
     """Callback to restart Pflotran simulations."""
+    study: PflotranStudy
     def __init__(self, manager: PflotranManager, study: PflotranStudy, kind: str = 'post'):
         super().__init__(manager, study, 'pre')
 
@@ -27,6 +28,7 @@ class PflotranRestartCallback(BaseCallback):
             raise FileNotFoundError('Restart file not found')
         else:
             self.study.add_input_file(target_file)
+            self.study.add_restart(f'input_files/{target_file.name}')
 
     def run_dummy(self):
         """This method is called when the callback is run in dummy mode"""
