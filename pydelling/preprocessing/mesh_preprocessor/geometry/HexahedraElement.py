@@ -9,7 +9,6 @@ class HexahedraElement(BaseElement):
         super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords, local_id=local_id)
         self.type = "hexahedra"
         self.meshio_type = "hexahedron"
-        self.define_faces()
 
         if centroid_coords is None:
             self.centroid = self.compute_centroid()

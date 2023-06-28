@@ -9,7 +9,6 @@ class WedgeElement(BaseElement):
         super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords, local_id=local_id)
         self.type = "wedge"
         self.meshio_type = "wedge"  # TODO:Check in meshio documentation
-        self.define_faces()  # Define faces of the element
 
         if centroid_coords is None:
             self.centroid = self.compute_centroid()
