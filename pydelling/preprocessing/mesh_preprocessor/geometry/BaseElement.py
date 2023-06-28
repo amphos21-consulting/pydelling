@@ -327,21 +327,21 @@ class BaseElement(BaseAbstractMeshObject):
         return None
 
     @property
-    def external_faces(self) -> List[BaseFace]:
+    def external_faces(self) -> dict:
         """Returns the external faces of the element. Cached property"""
-        external_faces = []
+        external_faces = {}
         internal_faces = self.internal_faces
         for key in self.faces.keys():
-            if key not in internal_faces:
-                external_faces.append(self.faces[key])
+            if key not in internal_faces.keys():
+                external_faces[key] = self.faces[key]
         return external_faces
 
     @property
-    def internal_faces(self) -> List[BaseFace]:
+    def internal_faces(self) -> dict:
         """Returns the internal faces of the element"""
-        internal_faces = []
+        internal_faces = {}
         for key, val in self.connections.items():
-            internal_faces.append(self.faces[val[0]])
+            internal_faces[val[0]] = self.faces[val[0]]
         return internal_faces
 
     def plot_normal_vectors(self, point: Point=None, value=None, error_face=None):
