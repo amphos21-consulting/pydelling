@@ -24,6 +24,10 @@ class BaseFace(BaseAbstractMeshObject):
     def centroid(self):
         return self.compute_centroid()
 
+    @property
+    def n_nodes(self):
+        return len(self.nodes)
+
     def compute_area(self):
         """
         This function computes the area of a 3D planar polygon

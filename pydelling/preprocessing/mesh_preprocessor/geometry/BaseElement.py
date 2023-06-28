@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import combinations
 from typing import *
 
@@ -10,6 +11,7 @@ from .BaseAbstractMeshObject import BaseAbstractMeshObject
 from .BaseFace import BaseFace
 from scipy.spatial import Delaunay
 from scipy.spatial.qhull import ConvexHull
+from functools import cached_property, lru_cache
 
 
 class BaseElement(BaseAbstractMeshObject):
@@ -19,11 +21,20 @@ class BaseElement(BaseAbstractMeshObject):
     _edge_lines = None
     __slots__ = ['node_ids', 'node_coords']
 
-    def __init__(self, node_ids, node_coords, centroid_coords=None, local_id=None):
+    def __init__(self,
+                 node_ids,
+                 node_coords,
+                 centroid_coords=None,
+                 local_id=None,
+                 centroid_method="mean",
+                 ):
+        self.centroid_method = centroid_method
         self.nodes: np.ndarray = np.array(node_ids)  # Node id set
         self.coords: np.ndarray = np.array(node_coords)  # Coordinates of each node
+        self.faces: Dict[str, BaseFace] = {}  # Faces of an element
+        self.define_faces()
         if centroid_coords is None:
-            self.centroid = self.compute_centroid()
+            self.centroid = self.compute_centroid(self.centroid_method)
             self.centroid_coords = self.centroid
         else:
             self.centroid = np.array(centroid_coords)
@@ -31,7 +42,6 @@ class BaseElement(BaseAbstractMeshObject):
         self.local_id = local_id if local_id is not None else BaseElement.local_id
         if local_id is None:
             BaseElement.local_id += 1
-        self.faces: Dict[str, BaseFace] = {}  # Faces of an element
         self.type = None
         self.meshio_type = None
         self.associated_fractures = {}
@@ -43,6 +53,9 @@ class BaseElement(BaseAbstractMeshObject):
 
     def __repr__(self):
         return f"{self.type} {self.local_id}"
+
+    def define_faces(self):
+        raise NotImplementedError("Define faces method not implemented")
 
     def print_element_info(self):
         print("### Element info ###")
@@ -223,10 +236,9 @@ class BaseElement(BaseAbstractMeshObject):
                 return True
         return False
 
-    @property
+    @cached_property
     def n_nodes(self):
         return len(self.nodes)
-
     @property
     def edges(self):
         edges_list = []
@@ -239,7 +251,7 @@ class BaseElement(BaseAbstractMeshObject):
         edge_list_unique = np.unique(edge_list_flatten, axis=0)
         return edge_list_unique
 
-    @property
+    @cached_property
     def volume(self):
         """Returns the volume of the element
 
@@ -312,12 +324,50 @@ class BaseElement(BaseAbstractMeshObject):
                     f.write(f'{local_id + 1} ')
                 f.write('\n')
 
-    def compute_centroid(self):
+    def compute_centroid(self, centroid_method='mean'):
         """
         Computes the centroid of a general polyhedra
         :return: centroid of the polyhedron
         """
-        return np.mean(self.coords, axis=0)
+        if centroid_method == 'curl':
+            centroid = np.zeros(3)
+            for face in self._get_tringular_faces():
+                coords = face.coords
+                normal = face.unit_normal_vector
+                x_unit = np.array([1, 0, 0])
+                y_unit = np.array([0, 1, 0])
+                z_unit = np.array([0, 0, 1])
+                centroid[0] += np.dot(x_unit, normal) \
+                                * (np.square(np.dot(coords[0] + coords[1], x_unit))
+                                + np.square(np.dot(coords[1] + coords[2], x_unit))
+                                + np.square(np.dot(coords[2] + coords[0], x_unit)))
+                centroid[1] += np.dot(y_unit, normal) \
+                                * (np.square(np.dot(coords[0] + coords[1], y_unit))
+                                + np.square(np.dot(coords[1] + coords[2], y_unit))
+                                + np.square(np.dot(coords[2] + coords[0], y_unit)))
+                centroid[2] += np.dot(z_unit, normal) \
+                                * (np.square(np.dot(coords[0] + coords[1], z_unit))
+                                + np.square(np.dot(coords[1] + coords[2], z_unit))
+                                + np.square(np.dot(coords[2] + coords[0], z_unit)))
+            centroid /= 48
+            return centroid
+        elif centroid_method == 'mean':
+            return np.mean(self.coords, axis=0)
+
+    def _get_tringular_faces(self) -> List[BaseFace]:
+        """Returns the triangular faces of the element"""
+        triangular_faces = []
+        for face in self.faces:
+            if self.faces[face].n_nodes == 3:
+                triangular_faces.append(self.faces[face])
+            elif self.faces[face].n_nodes == 4:
+                _face = self.faces[face]
+                t1 = BaseFace(node_ids=[[0, 1, 2]], node_coords=_face.coords[[0, 1, 2], :])
+                t2 = BaseFace(node_ids=[[0, 2, 3]], node_coords=_face.coords[[0, 2, 3], :])
+                triangular_faces.append(t1)
+                triangular_faces.append(t2)
+        return triangular_faces
+
 
     def detect_face(self, face_ids: List):
         """Find the face given the local ids of the nodes"""
@@ -328,7 +378,7 @@ class BaseElement(BaseAbstractMeshObject):
                 return face
         return None
 
-    @property
+    @cached_property
     def external_faces(self) -> List[BaseFace]:
         """Returns the external faces of the element. Cached property"""
         external_faces = []
@@ -338,7 +388,7 @@ class BaseElement(BaseAbstractMeshObject):
                 external_faces.append(self.faces[key])
         return external_faces
 
-    @property
+    @cached_property
     def internal_faces(self) -> List[BaseFace]:
         """Returns the internal faces of the element"""
         internal_faces = []
