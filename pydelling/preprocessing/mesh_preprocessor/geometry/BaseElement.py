@@ -9,6 +9,7 @@ from pydelling.utils.geometry_utils import filter_unique_points
 from .BaseAbstractMeshObject import BaseAbstractMeshObject
 from .BaseFace import BaseFace
 from scipy.spatial import Delaunay
+from scipy.spatial.qhull import ConvexHull
 
 
 class BaseElement(BaseAbstractMeshObject):
@@ -240,11 +241,12 @@ class BaseElement(BaseAbstractMeshObject):
 
     @property
     def volume(self):
-        """Returns the volume of the hexahedra
+        """Returns the volume of the element
 
-        Returns: volume of the hexahedra
+        Returns: volume of the element
         """
-        return None
+        return ConvexHull(self.coords, qhull_options='QJ').volume
+
 
     def get_json(self):
         """Returns a json representation of the element"""
