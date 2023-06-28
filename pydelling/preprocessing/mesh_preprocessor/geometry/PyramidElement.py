@@ -18,10 +18,6 @@ class PyramidElement(BaseElement):
             self.centroid = np.array(centroid_coords)
             self.centroid_coords = self.centroid
 
-    @property
-    def volume(self):
-        return self.compute_volume()
-
     def define_faces(self):
         # Add faces that define the wedge
         # Face 1
@@ -79,16 +75,3 @@ class PyramidElement(BaseElement):
         }
 
 
-    def compute_volume(self):
-        """
-        Computes volume of a general polyhedra based on the convex hull of a set of points
-        :return: volume of the polyhedron
-        """
-        return ConvexHull(self.coords).volume
-
-    def compute_centroid(self):
-        """
-        Computes the centroid of a general polyhedra
-        :return: centroid of the polyhedron
-        """
-        return np.mean(self.coords, axis=0)
