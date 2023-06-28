@@ -32,28 +32,36 @@ class PyramidElement(BaseElement):
                                                 node_coords=np.array([self.coords[0],
                                                                     self.coords[1],
                                                                     self.coords[2],
-                                                                    self.coords[3]]))
+                                                                    self.coords[3]]),
+                                             face_id="q1"
+                                             )
         # Face 2
         self.faces['t1'] = TriangleFace(node_ids=np.array([self.nodes[0],
                                                            self.nodes[4],
                                                            self.nodes[3]]),
                                              node_coords=np.array([self.coords[0],
                                                                  self.coords[4],
-                                                                 self.coords[3]]))
+                                                                 self.coords[3]]),
+                                        face_id="t1"
+                                        )
         # Face 3
         self.faces['t2'] = TriangleFace(node_ids=np.array([self.nodes[4],
                                                            self.nodes[2],
                                                            self.nodes[1]]),
                                                 node_coords=np.array([self.coords[4],
                                                                     self.coords[2],
-                                                                    self.coords[1]]))
+                                                                    self.coords[1]]),
+                                        face_id="t2"
+                                        )
         # Face 4
         self.faces['t3'] = TriangleFace(node_ids=np.array([self.nodes[4],
                                                           self.nodes[3],
                                                           self.nodes[2]]),
                                                 node_coords=np.array([self.coords[4],
                                                                     self.coords[3],
-                                                                    self.coords[2]]))
+                                                                    self.coords[2]]),
+                                        face_id="t3"
+                                        )
 
 
 
