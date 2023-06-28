@@ -567,12 +567,16 @@ class MeshPreprocessor(iGPLogic):
             if not len(element.connections) == element.faces:
                 self.boundaries[element.local_id] = element.external_faces
 
+    def get_boundary_elements_given_unit_vector(self, unit_vector: np.array or list) -> dict:
+        """ Returns the elements and the face with a given normal unit vector. """
+        if not self.boundaries:
+            raise ValueError("self.boundaries is None.")
+        elem_vector = {}
+        logger.info('Finding boundary elements from a unit vector')
+        for i_elem, val in tqdm(self.boundaries.items(), desc="Finding boundary elements from a unit vector"):
+            for face in self.elements[i_elem].external_faces:
+                u_vector_face = self.elements[i_elem].faces[face].unit_normal_vector
+                if np.array_equal(unit_vector, u_vector_face):
+                    elem_vector[i_elem] = face
 
-
-
-
-
-
-
-
-
+        return elem_vector
