@@ -132,6 +132,7 @@ class iGPLogic:
                                         self.elements[connected_element].centroid_coords])
                 intersection_point = line_plane_intersection(line_points=line_points,
                                                              plane_points=face_nodes)
+
                 # compute connection centroid and area
                 # intersection_point = face_obj.centroid
                 conn_area = face_obj.area
