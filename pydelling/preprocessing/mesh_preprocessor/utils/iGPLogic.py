@@ -130,8 +130,11 @@ class iGPLogic:
                 # Compute line-face intersection
                 line_points = np.array([self.elements[prime_element].centroid_coords,
                                         self.elements[connected_element].centroid_coords])
-                intersection_point = line_plane_intersection(line_points=line_points,
-                                                             plane_points=face_nodes)
+                # print(face_obj.centroid)
+                intersection_point = np.mean(line_points, axis=0)
+                # intersection_point = line_plane_intersection(line_points=line_points,
+                #                                              plane_points=face_nodes)
+                # intersection_point = face_obj.centroid
 
                 # compute connection centroid and area
                 # intersection_point = face_obj.centroid
