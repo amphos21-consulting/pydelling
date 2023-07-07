@@ -331,39 +331,47 @@ class BaseElement(BaseAbstractMeshObject):
         """
         if centroid_method == 'curl':
             centroid = np.zeros(3)
-            for face in self._get_tringular_faces():
+            vol = 0
+            for face in self._get_triangular_faces():
                 coords = face.coords
-                normal = face.unit_normal_vector
-                x_unit = np.array([1, 0, 0])
-                y_unit = np.array([0, 1, 0])
-                z_unit = np.array([0, 0, 1])
-                centroid[0] += np.dot(x_unit, normal) \
-                                * (np.square(np.dot(coords[0] + coords[1], x_unit))
-                                + np.square(np.dot(coords[1] + coords[2], x_unit))
-                                + np.square(np.dot(coords[2] + coords[0], x_unit)))
-                centroid[1] += np.dot(y_unit, normal) \
-                                * (np.square(np.dot(coords[0] + coords[1], y_unit))
-                                + np.square(np.dot(coords[1] + coords[2], y_unit))
-                                + np.square(np.dot(coords[2] + coords[0], y_unit)))
-                centroid[2] += np.dot(z_unit, normal) \
-                                * (np.square(np.dot(coords[0] + coords[1], z_unit))
-                                + np.square(np.dot(coords[1] + coords[2], z_unit))
-                                + np.square(np.dot(coords[2] + coords[0], z_unit)))
-            centroid /= 48
+                a = coords[0]
+                b = coords[1]
+                c = coords[2]
+                normal = np.cross(b-a, c-a)
+                vol += np.dot(a, normal) / 6.0
+                for i in range(3):
+                    centroid[i] += normal[i] * ((a[i] + b[i]) ** 2 + (b[i] + c[i]) ** 2 + (c[i] + a[i]) ** 2)
+            centroid *= 1 / (48 * vol)
             return centroid
         elif centroid_method == 'mean':
             return np.mean(self.coords, axis=0)
 
-    def _get_tringular_faces(self) -> List[BaseFace]:
+    def _get_triangular_faces(self) -> List[BaseFace]:
         """Returns the triangular faces of the element"""
+        from .TriangleFace import TriangleFace
         triangular_faces = []
         for face in self.faces:
             if self.faces[face].n_nodes == 3:
                 triangular_faces.append(self.faces[face])
             elif self.faces[face].n_nodes == 4:
                 _face = self.faces[face]
-                t1 = BaseFace(node_ids=[[0, 1, 2]], node_coords=_face.coords[[0, 1, 2], :])
-                t2 = BaseFace(node_ids=[[0, 2, 3]], node_coords=_face.coords[[0, 2, 3], :])
+                # # Plot points in 3D each with a different colour
+                # import matplotlib.pyplot as plt
+                # fig = plt.figure()
+                # ax = fig.add_subplot(111, projection='3d')
+                # for i in range(4):
+                #     if i == 0:
+                #         ax.scatter(_face.coords[i, 0], _face.coords[i, 1], _face.coords[i, 2], c='r', marker='o')
+                #     elif i == 1:
+                #         ax.scatter(_face.coords[i, 0], _face.coords[i, 1], _face.coords[i, 2], c='g', marker='o')
+                #     elif i == 2:
+                #         ax.scatter(_face.coords[i, 0], _face.coords[i, 1], _face.coords[i, 2], c='b', marker='o')
+                #     elif i == 3:
+                #         ax.scatter(_face.coords[i, 0], _face.coords[i, 1], _face.coords[i, 2], c='y', marker='o')
+                #
+                # plt.show()
+                t1 = TriangleFace(node_ids=[[0, 1, 2]], node_coords=_face.coords[[0, 1, 2], :])
+                t2 = TriangleFace(node_ids=[[0, 1, 2]], node_coords=_face.coords[[0, 2, 3], :])
                 triangular_faces.append(t1)
                 triangular_faces.append(t2)
         return triangular_faces
