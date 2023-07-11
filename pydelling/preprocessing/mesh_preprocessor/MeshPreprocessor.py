@@ -575,8 +575,8 @@ class MeshPreprocessor(iGPLogic):
         logger.info('Finding boundary elements from a unit vector')
         for i_elem, val in tqdm(self.boundaries.items(), desc="Finding boundary elements from a unit vector"):
             for face in self.elements[i_elem].external_faces:
-                u_vector_face = self.elements[i_elem].faces[face].unit_normal_vector
+                u_vector_face = self.elements[i_elem].faces[face.id].unit_normal_vector
                 if np.array_equal(unit_vector, u_vector_face):
-                    elem_vector[i_elem] = face
+                    elem_vector[i_elem] = face.local_id
 
         return elem_vector

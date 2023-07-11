@@ -15,6 +15,7 @@ class BaseFace(BaseAbstractMeshObject):
         # BaseFace.local_id += 1
         self.id = face_id
         self.face_id = face_id
+        BaseFace.local_id += 1
 
     @property
     def area(self):
