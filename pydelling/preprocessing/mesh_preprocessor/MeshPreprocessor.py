@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 class MeshPreprocessor(iGPLogic):
     """Contains the logic to preprocess and work with a generic unstructured mesh"""
     elements: List[geometry.BaseElement]
+    external_boundaries: Dict[str, List[geometry.BaseFace]]
     boundaries: Dict[str, List[geometry.BaseFace]]
     material_dict: Dict[str, List[int]]
     coords: List[np.ndarray]
@@ -39,7 +40,9 @@ class MeshPreprocessor(iGPLogic):
         self.unordered_nodes = {}
         self.elements = []
         self.material_dict = {}
+        self.external_boundaries = {}
         self.boundaries = {}
+        self.external_boundaries = {}
         BaseElement.local_id = 0
         if 'st_file' in kwargs:
             self.is_streamlit = True
@@ -565,18 +568,22 @@ class MeshPreprocessor(iGPLogic):
         logger.info('Finding boundary elements')
         for element in tqdm(self.elements, desc="Finding boundary elements"):
             if not len(element.connections) == element.faces:
-                self.boundaries[element.local_id] = element.external_faces
+                self.external_boundaries[element.local_id] = element.external_faces
 
     def get_boundary_elements_given_unit_vector(self, unit_vector: np.array or list) -> dict:
         """ Returns the elements and the face with a given normal unit vector. """
-        if not self.boundaries:
+        if not self.external_boundaries:
             raise ValueError("self.boundaries is None.")
         elem_vector = {}
         logger.info('Finding boundary elements from a unit vector')
-        for i_elem, val in tqdm(self.boundaries.items(), desc="Finding boundary elements from a unit vector"):
+        for i_elem, val in tqdm(self.external_boundaries.items(), desc="Finding boundary elements from a unit vector"):
             for face in self.elements[i_elem].external_faces:
-                u_vector_face = self.elements[i_elem].faces[face.id].unit_normal_vector
+                u_vector_face = self.elements[i_elem].faces[face.face_id].unit_normal_vector
                 if np.array_equal(unit_vector, u_vector_face):
-                    elem_vector[i_elem] = face.local_id
-
+                    elem_vector[i_elem] = face
         return elem_vector
+
+    def assign_automatic_six_face_boundaries(self):
+        """This method as"""
+        self.boundaries['top'] = self.get_boundary_elements_given_unit_vector([0, 0, 1])
+

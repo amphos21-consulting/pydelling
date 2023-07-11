@@ -4,7 +4,7 @@ from .BaseAbstractMeshObject import BaseAbstractMeshObject
 
 
 class BaseFace(BaseAbstractMeshObject):
-    local_id = 0
+    _local_id = 0
     __slots__ = ['node_ids', 'node_coords']
     def __init__(self, node_ids, node_coords, face_id=None):
         self.nodes = np.array(node_ids)
@@ -13,9 +13,10 @@ class BaseFace(BaseAbstractMeshObject):
         self.type = 'BaseFace'
         # self.local_id = BaseFace.local_id
         # BaseFace.local_id += 1
-        self.id = face_id
+        self.id = BaseFace._local_id
+        self.local_id = BaseFace._local_id
         self.face_id = face_id
-        BaseFace.local_id += 1
+        BaseFace._local_id += 1
 
     @property
     def area(self):
@@ -109,7 +110,7 @@ class BaseFace(BaseAbstractMeshObject):
         return Plane(self.centroid, normal=self.unit_normal_vector)
 
     def __repr__(self):
-        return f"{self.type}"
+        return f"{self.type}-{self.local_id}"
 
     def __eq__(self, other):
         if isinstance(other, BaseFace):
