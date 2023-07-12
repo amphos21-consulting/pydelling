@@ -22,7 +22,7 @@ class LumiSsh(BaseSsh):
         Connects to the remote server.
         Args:
             user: username
-            pkey_path: path to the private key
+            pkey_path: path to the private key file
         """
         super().__init__(user, pkey_path, password)
         self.project_name = project_name
