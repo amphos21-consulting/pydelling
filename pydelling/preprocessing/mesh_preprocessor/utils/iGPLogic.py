@@ -150,7 +150,7 @@ class iGPLogic:
             else:
                 file_cond = open(os.path.join(self.output_folder, f"{condition}.ex"), "w")
             file_cond.write(f"CONNECTIONS {len(self.boundaries[condition])}\n")
-            for id_number, face in enumerate(self.boundaries[condition]):
+            for id_number, face in enumerate(self.boundaries[condition].values()):
                 n_coords = len(face.coords)
 
                 if n_coords == 3:
