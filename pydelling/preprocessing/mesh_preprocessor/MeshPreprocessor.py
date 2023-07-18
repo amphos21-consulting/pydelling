@@ -5,6 +5,7 @@ from typing import *
 
 import meshio as msh
 import numpy as np
+import math
 from scipy.spatial import KDTree
 from tqdm import tqdm
 
@@ -574,16 +575,36 @@ class MeshPreprocessor(iGPLogic):
         """ Returns the elements and the face with a given normal unit vector. """
         if not self.external_boundaries:
             raise ValueError("self.boundaries is None.")
+        tolerance = 0.1  # tolerance for parallel vectors
         elem_vector = {}
         logger.info('Finding boundary elements from a unit vector')
         for i_elem, val in tqdm(self.external_boundaries.items(), desc="Finding boundary elements from a unit vector"):
             for face in self.elements[i_elem].external_faces:
                 u_vector_face = self.elements[i_elem].faces[face.face_id].unit_normal_vector
-                if np.array_equal(unit_vector, u_vector_face):
+
+                # Compute the dot product of the vectors
+                dot_product = sum(x * y for x, y in zip(unit_vector, u_vector_face))
+                if (dot_product == 0 or dot_product < 1E-16):
+                    continue
+
+                # Compute the magnitudes of the vectors
+                magnitude1 = math.sqrt(sum(x ** 2 for x in unit_vector))
+                magnitude2 = math.sqrt(sum(y ** 2 for y in u_vector_face))
+
+                # Compute the cosine of the angle between the vectors
+                cosine_angle = dot_product / (magnitude1 * magnitude2)
+
+                # Check if the cosine angle is close to 1 within the given tolerance
+                if abs(cosine_angle - 1) < tolerance:
                     elem_vector[i_elem] = face
         return elem_vector
 
     def assign_automatic_six_face_boundaries(self):
         """This method as"""
-        self.boundaries['top'] = self.get_boundary_elements_given_unit_vector([0, 0, 1])
+        self.boundaries['top']    = self.get_boundary_elements_given_unit_vector([0, 0, 1])
+        self.boundaries['bottom'] = self.get_boundary_elements_given_unit_vector([0, 0, -1])
+        self.boundaries['north']  = self.get_boundary_elements_given_unit_vector([0, 1,  0])
+        self.boundaries['south']  = self.get_boundary_elements_given_unit_vector([0, -1, 0])
+        self.boundaries['east']   = self.get_boundary_elements_given_unit_vector([1, 0, 0])
+        self.boundaries['west']   = self.get_boundary_elements_given_unit_vector([-1, 0, 0])
 
