@@ -114,7 +114,10 @@ class iGPLogic:
             export_file.write(
                 f"{element.local_id + 1} {element.centroid[0]:1.8e} {element.centroid[1]:1.8e} {element.centroid[2]:1.8e} {element.volume:1.8e}\n")
 
-    def write_connections(self: MeshPreprocessor, export_file):
+    def write_connections(self: MeshPreprocessor,
+                          export_file,
+                          weight_by_volume=True,
+                          ):
         # compute number of connection elements
         n_conn = 0
         for element in self.connections:
@@ -131,14 +134,31 @@ class iGPLogic:
                 line_points = np.array([self.elements[prime_element].centroid_coords,
                                         self.elements[connected_element].centroid_coords])
                 # print(face_obj.centroid)
-                intersection_point = np.mean(line_points, axis=0)
+                if weight_by_volume:
+                    vol_1 = self.elements[prime_element].volume
+                    vol_2 = self.elements[connected_element].volume
+                    r = vol_1 / (vol_1 + vol_2)
+                    intersection_point = line_points[0] + r * (line_points[1] - line_points[0])
+                    # print(f"r = {r}")
+                else:
+                    intersection_point = np.mean(line_points, axis=0)
+                # v1 = line_points[1] - line_points[0]
+                # v2 = line_points[1] - face_obj.centroid
+                # print(v1, v2)
+                # dot = np.dot(v1, v2)
+                # print(dot / (np.linalg.norm(v1)))
+
                 # intersection_point = line_plane_intersection(line_points=line_points,
                 #                                              plane_points=face_nodes)
                 # intersection_point = face_obj.centroid
 
                 # compute connection centroid and area
                 # intersection_point = face_obj.centroid
-                conn_area = face_obj.area
+                v1 = line_points[1] - line_points[0]
+                v2 = face_obj.centroid - line_points[0]
+                cos_v1_v2 = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+                conn_area = face_obj.area * cos_v1_v2
+                # print(f"cos_v1_v2 = {cos_v1_v2}")
                 # export_file.write(f"{prime_element + 1} {connected_element + 1} {conn_centroid[0]:1.4e} {conn_centroid[1]:1.4e} {conn_centroid[2]:1.4e} {conn_area:1.4e}\n")
                 export_file.write(
                     f"{prime_element + 1} {connected_element + 1} {intersection_point[0]:1.8e} {intersection_point[1]:1.8e} {intersection_point[2]:1.8e} {conn_area:1.8e}\n")
