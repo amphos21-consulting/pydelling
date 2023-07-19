@@ -569,7 +569,49 @@ class MeshPreprocessor(iGPLogic):
         logger.info('Finding boundary elements')
         for element in tqdm(self.elements, desc="Finding boundary elements"):
             if not len(element.connections) == element.faces:
-                self.external_boundaries[element.local_id] = element.external_faces
+                if element.external_faces:
+                    self.external_boundaries[element.local_id] = element.external_faces
+
+
+    def get_topography_faces(self):
+        """ Returns the topography elements. """
+        if not self.external_boundaries:
+            raise ValueError("self.boundaries is None.")
+        elem_vector = {}
+        for local_id, val in tqdm(self.external_boundaries.items(), desc="Finding topography elements"):
+            for face in self.elements[local_id].external_faces:
+                unit_face_vector_z = self.elements[local_id].faces[face.face_id].unit_normal_vector[2]
+                if unit_face_vector_z > 0:
+                    elem_vector[local_id] = face
+
+        return elem_vector
+
+    def set_topography_boundaries(self, z_coord=0.0):
+        """ Set the topography boundaries for the Obayashi project. """
+
+        self.boundaries["land"] = {}
+        self.boundaries["sea"] = {}
+
+        topo_faces = self.get_topography_faces()
+        for id_element, face in tqdm(topo_faces.items(), desc="Assigning topography boundaries."):
+            z_mean = np.mean(face.coords, axis=0)[2]
+            if z_mean > z_coord:
+                self.boundaries["land"][id_element] = face
+            else:
+                self.boundaries["sea"][id_element] = face
+
+    def plot_topography_centroids(self):
+        """ Plots the topography centroids. For testing reasons. """
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        logger.info('Ploting topography centroids')
+        if self.boundaries["sea"]:
+            for key, face in self.boundaries["sea"].items():
+                ax.scatter(face.centroid[0], face.centroid[1], marker="x", c="b", s=10.0)
+        if self.boundaries["land"]:
+            for key, face in self.boundaries["land"].items():
+                ax.scatter(face.centroid[0], face.centroid[1], marker="x", c="g", s=10.0)
+        plt.show()
 
     def get_boundary_elements_given_unit_vector(self, unit_vector: np.array or list) -> dict:
         """ Returns the elements and the face with a given normal unit vector. """
