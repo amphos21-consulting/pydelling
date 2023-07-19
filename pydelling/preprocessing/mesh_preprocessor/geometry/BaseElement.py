@@ -390,10 +390,11 @@ class BaseElement(BaseAbstractMeshObject):
     def external_faces(self) -> List[BaseFace]:
         """Returns the external faces of the element. Cached property"""
         external_faces = []
-        internal_faces_ids = [face.face_id for face in self.internal_faces]
-        for key in self.faces.keys():
-            if key not in internal_faces_ids:
-                external_faces.append(self.faces[key])
+        internal_faces_ids = [face.id for face in self.internal_faces]
+        for face in self.faces.values():
+            idx = face.id
+            if idx not in internal_faces_ids:
+                external_faces.append(self.faces[face.face_id])
         return external_faces
 
     @cached_property
