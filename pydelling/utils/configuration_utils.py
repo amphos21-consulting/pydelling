@@ -60,5 +60,6 @@ def create_output_folder(folder_name='output'):
 
 def delete_last_logger():
     loggers = [handler for handler in logging.root.handlers if isinstance(handler, logging.StreamHandler)]
-    strange_logger = loggers[-1]
-    strange_logger.setLevel(logging.ERROR)
+    if len(loggers) > 0:
+        strange_logger = loggers[-1]
+        strange_logger.setLevel(logging.ERROR)

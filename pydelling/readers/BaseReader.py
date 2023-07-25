@@ -14,6 +14,7 @@ import pydelling.utils.SubFishModule as subfish
 class BaseReader:
     data: np.ndarray  # Hint of self.data array
     info: dict
+    raw_data: None
 
     def __init__(self, filename=None,
                  header=False,
@@ -31,9 +32,9 @@ class BaseReader:
             self.open_file(filename, **kwargs)
         else:
             assert data is not None, "Error: data is None"
-            assert info is not None, "Error: info is None"
+            # assert info is not None, "Error: info is None"
             self.data = data
-            self.info = info
+            # self.info = info
 
     def read_file(self, opened_file):
         """

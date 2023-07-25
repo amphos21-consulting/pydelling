@@ -44,7 +44,7 @@ class BaseManager(ABC):
             petsc_dir: str = '/opt/pflotran-dev/petsc',
             petsc_arch: str = 'arch-linux-c-opt',
             pre_commands: List[str] = None,
-            run_on_jureca: bool = False,
+            run_on: str = None,
             user: str = None,
             project_name: str = None,
             pkey_path: str = None,
@@ -80,7 +80,7 @@ class BaseManager(ABC):
                                    dummy=True,
                                    petsc_dir=petsc_dir,
                                    petsc_arch=petsc_arch,
-                                   run_on_jureca=run_on_jureca,
+                                   run_on=run_on,
                                    user=user,
                                    project_name=project_name,
                                    pkey_path=pkey_path,
@@ -94,7 +94,7 @@ class BaseManager(ABC):
                            dummy=dummy,
                            petsc_dir=petsc_dir,
                            petsc_arch=petsc_arch,
-                           run_on_jureca=run_on_jureca,
+                           run_on=run_on,
                            user=user,
                            project_name=project_name,
                            pkey_path=pkey_path,
@@ -142,11 +142,25 @@ class BaseManager(ABC):
         logger.info(f"Running study {study.name} in JURECA")
         return NotImplementedError("This method must be implemented in the child class")
 
+    def _run_study_lumi(self,
+                            study: BaseStudy,
+                            user: str,
+                            project_name: str,
+                            pkey_path: str,
+                            n_cores: int = 1,
+                            wallclock_limit: float = None,
+                            shell_script: str = None,
+                            **kwargs,
+                            ):
+        """This method runs a study in LUMI supercomputer."""
+        logger.info(f"Running study {study.name} in LUMI")
+        return NotImplementedError("This method must be implemented in the child class")
+
     def run_study(self,
                   study: BaseStudy,
                   n_cores: int = 1,
                   docker_image: str = None,
-                  run_on_jureca: bool = False,
+                  run_on: str = None,
                   dummy: bool = False,
                   user: str = None,
                   project_name: str = None,
@@ -162,13 +176,14 @@ class BaseManager(ABC):
         study.output_folder = self.results_folder / study.name
         if dummy:
             logger.info("Dummy run, not running the study")
+            study.to_file(self.results_folder / study.name)
         else:
             for callback in study.callbacks:
                 if callback.kind == 'pre':
                     callback.run()
             study.to_file(self.results_folder / study.name)
             # Run the study
-            if run_on_jureca:
+            if run_on == 'jureca':
                 self._run_study_jureca(study,
                                        n_cores=n_cores,
                                        user=user,
@@ -177,6 +192,15 @@ class BaseManager(ABC):
                                        wallclock_limit=wallclock_limit,
                                        shell_script=shell_script,
                                        **kwargs)
+            elif run_on == 'lumi':
+                self._run_study_lumi(study,
+                                     n_cores=n_cores,
+                                     user=user,
+                                     project_name=project_name,
+                                     pkey_path=pkey_path,
+                                     wallclock_limit=wallclock_limit,
+                                     shell_script=shell_script,
+                                     **kwargs)
             elif docker_image is not None:
                 self._run_study_docker(study, docker_image, n_cores=n_cores, **kwargs)
             else:

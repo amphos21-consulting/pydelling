@@ -54,6 +54,25 @@ class PflotranStudy(BaseStudy):
         new_time = self.convert_time(value=new_time, initial_unit=time_unit, final_unit=time_unit)
         self._replace_line(line_index=time_lines[0], new_line=['FINAL_TIME', str(new_time), time_unit])
 
+    def replace_parameter(self, label: str, new_value: float, inside: float, time_unit: str = 'y'):
+        """This method replaces the value of a parameter.
+        """
+        if inside != 0:
+            inside = inside
+        else:
+            inside = 0
+
+        parameter_lines = self._find_tags(label[0])
+        self._replace_line(line_index=parameter_lines[0] + inside, new_line=[label[1], str(new_value)])
+
+    def replace_material_properties(self, new_perm: float, new_porosity: float, new_vertical_anisotropy: float, material_name: str = ''):
+        """This method replaces the simulation time of the simulation.
+        """
+        material_lines = self._find_tags('MATERIAL_PROPERTY ' + material_name)
+        self._replace_line(line_index=material_lines[0] + 2, new_line=['POROSITY', str(new_porosity)])
+        self._replace_line(line_index=material_lines[0] + 8, new_line=['PERM_HORIZONTAL', str(new_perm)])
+        self._replace_line(line_index=material_lines[0] + 9, new_line=['VERTICAL_ANISOTROPY_RATIO', str(new_vertical_anisotropy)])
+
     def get_region_file(self, region: str) -> Union[str, None]:
         """This method returns the file of the region.
         """
@@ -77,8 +96,6 @@ class PflotranStudy(BaseStudy):
                 datasets.append(line.split()[1])
                 self.datasets_to_idx[line.split()[1]] = line_idx
         return datasets
-
-
 
     def replace_region_file(self, region: str, new_file: str):
         """This method replaces the file of the region.
@@ -113,7 +130,7 @@ class PflotranStudy(BaseStudy):
             # Find simulation block
             simulation_block_idx = self._get_block_line_idx(self._find_tags('SIMULATION')[0])
             # Find the last line of the simulation block
-            last_line_idx = simulation_block_idx[-1] - 1
+            last_line_idx = simulation_block_idx[-1]
             # Add the checkpoint block
             self._add_line(line_index=last_line_idx, new_line=['CHECKPOINT'])
             self._add_line(line_index=last_line_idx + 1, new_line=['TIMES', time_unit, *times])
