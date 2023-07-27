@@ -50,6 +50,7 @@ class BaseManager(ABC):
             pkey_path: str = None,
             wallclock_limit: float = 23,
             shell_script: str = None,
+            download_file_extensions: List[str] = None,
             **kwargs,
             ):
         """This method runs all the studies.
@@ -86,6 +87,7 @@ class BaseManager(ABC):
                                    pkey_path=pkey_path,
                                    wallclock_limit=wallclock_limit,
                                    shell_script_path=shell_script,
+                                   download_file_extensions=download_file_extensions,
                                    **kwargs)
                     continue
             self.run_study(study,
@@ -100,6 +102,7 @@ class BaseManager(ABC):
                            pkey_path=pkey_path,
                            wallclock_limit=wallclock_limit,
                            shell_script_path=shell_script,
+                           download_file_extensions=download_file_extensions,
                            **kwargs)
 
     def generate_run_files(self, studies_folder: str = './studies'):
@@ -167,6 +170,7 @@ class BaseManager(ABC):
                   pkey_path: str = None,
                   wallclock_limit: float = 23,
                   shell_script: str = None,
+                  download_file_extensions: List[str] = None,
                   **kwargs,
                   ):
         """This method runs a study.
@@ -191,6 +195,7 @@ class BaseManager(ABC):
                                        pkey_path=pkey_path,
                                        wallclock_limit=wallclock_limit,
                                        shell_script=shell_script,
+                                       download_file_extensions=download_file_extensions,
                                        **kwargs)
             elif run_on == 'lumi':
                 self._run_study_lumi(study,
@@ -200,6 +205,7 @@ class BaseManager(ABC):
                                      pkey_path=pkey_path,
                                      wallclock_limit=wallclock_limit,
                                      shell_script=shell_script,
+                                     download_file_extensions=download_file_extensions,
                                      **kwargs)
             elif docker_image is not None:
                 self._run_study_docker(study, docker_image, n_cores=n_cores, **kwargs)

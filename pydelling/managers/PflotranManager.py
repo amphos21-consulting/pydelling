@@ -109,6 +109,7 @@ class PflotranManager(BaseManager):
                             n_cores: int = 1,
                             wallclock_limit: str = None,
                             shell_script_path: str = None,
+                            download_file_extensions: list = None,
                             **kwargs,
                             ):
         """This method runs a study on JURECA"""
@@ -150,12 +151,11 @@ class PflotranManager(BaseManager):
             self.ssh.wait_for_job(job_id)
             # Copy the results back to the local machine
             # Detect files ending with .h5
-            dir_list = self.ssh.ls
-            dir_list = [file for file in dir_list if file.endswith('.h5')]
-            # Add the files containing the job id to the list
-            dir_list += [file for file in self.ssh.ls if str(job_id) in file]
-            for file in dir_list:
-                self.ssh.get(f"{file}", study.output_folder/file)
+            self._ssh_download(
+                study=study,
+                file_ext=download_file_extensions,
+                job_id=job_id,
+            )
 
         else:
             raise ValueError('shell_script should be provided with the details of the job submission.')
@@ -169,6 +169,7 @@ class PflotranManager(BaseManager):
                             n_cores: int = 1,
                             wallclock_limit: str = None,
                             shell_script_path: str = None,
+                            download_file_extensions = None,
                             **kwargs,
                             ):
         """This method runs a study on JURECA"""
@@ -209,8 +210,6 @@ class PflotranManager(BaseManager):
             while job_id is None:
                 import time
                 try:
-                    print(self.ssh.user_queue)
-                    print(self.ssh.general_queue)
                     job_id = max(self.ssh.user_queue['JOBID'])
                 except ValueError:
                     logger.warning('No jobs found in the queue. Waiting for 5 seconds.')
@@ -218,16 +217,32 @@ class PflotranManager(BaseManager):
             # pflotran_status = PflotranStatus()
             self.ssh.wait_for_job(job_id)
             # Copy the results back to the local machine
-            # Detect files ending with .h5
-            dir_list = self.ssh.ls
-            dir_list = [file for file in dir_list if file.endswith('.h5')]
-            # Add the files containing the job id to the list
-            dir_list += [file for file in self.ssh.ls if str(job_id) in file]
-            for file in dir_list:
-                self.ssh.get(f"{file}", study.output_folder/file)
+            self._ssh_download(
+                study=study,
+                file_ext=download_file_extensions,
+                job_id=job_id,
+            )
 
         else:
             raise ValueError('shell_script should be provided with the details of the job submission.')
+
+    def _ssh_download(self,
+                      study: PflotranStudy,
+                      file_ext=None,
+                      job_id=None,
+                      ):
+        """This method downloads the results from the remote server."""
+        if file_ext is None:
+            file_ext = ['.h5']
+        dir_list = self.ssh.ls
+        for ext in file_ext:
+            ext_files = [file for file in dir_list if Path(file).suffix == ext]
+            dir_list += ext_files
+        if job_id is not None:
+            ext_files = [file for file in dir_list if str(job_id) in file]
+            dir_list += ext_files
+        for file in dir_list:
+            self.ssh.get(f"{file}", study.output_folder / file)
 
 
 
