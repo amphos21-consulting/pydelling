@@ -205,7 +205,16 @@ class PflotranManager(BaseManager):
             # Run the shell script
             self.ssh.send_job(f"{study.name}/{Path(shell_script_path).name}")
             # Get the highest job id
-            job_id = max(self.ssh.user_queue['JOBID'])
+            job_id = None
+            while job_id is None:
+                import time
+                try:
+                    print(self.ssh.user_queue)
+                    print(self.ssh.general_queue)
+                    job_id = max(self.ssh.user_queue['JOBID'])
+                except ValueError:
+                    logger.warning('No jobs found in the queue. Waiting for 5 seconds.')
+                    time.sleep(5)
             # pflotran_status = PflotranStatus()
             self.ssh.wait_for_job(job_id)
             # Copy the results back to the local machine
