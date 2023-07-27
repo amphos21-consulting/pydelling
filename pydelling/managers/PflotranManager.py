@@ -242,7 +242,10 @@ class PflotranManager(BaseManager):
             ext_files = [file for file in dir_list if str(job_id) in file]
             dir_list += ext_files
         for file in dir_list:
-            self.ssh.get(f"{file}", study.output_folder / file)
+            try:
+                self.ssh.get(f"{file}", study.output_folder / file)
+            except:
+                logger.warning(f"Could not download {file}.")
 
 
 
