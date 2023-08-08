@@ -226,12 +226,12 @@ class RasterFileReader(BaseReader):
         iy = int(self.reader_info["ncols"] - iy - 1)
         return self.data[iy, ix]
 
-
         # normalize the image
     def find_enclosing_polygon(self,
                                val,
                                plot_polygons=False,
                                export_polygons=True,
+                               export_coordinates=True,
                                ):
         """Finds the polygons that enclose a given value"""
         import matplotlib.pyplot as plt
@@ -268,7 +268,31 @@ class RasterFileReader(BaseReader):
             # Unite last polygon with first one
             plt.show()
 
-        return polygons
+        if export_coordinates:
+            polygon_coords = []
+            for polygon in polygons:
+                polygon_coords.append([])
+                for coord in polygon:
+                    polygon_coords[-1].append(self.get_coordinate_from_pixel(coord[1], coord[0]))
+            return polygon_coords
+        else:
+            return polygons
+
+    def p2c(self, ix, iy):
+        """Converts pixel to coordinate"""
+        x = self.reader_info["xllcorner"] + ix * self.reader_info["cellsize"]
+        y = self.reader_info["yllcorner"] + iy * self.reader_info["cellsize"]
+        return x, y
+
+    def get_coordinate_from_pixel(self, ix, iy):
+        """Converts pixel to coordinate"""
+        x = self.reader_info["xllcorner"] + ix * self.reader_info["cellsize"]
+        y = self.reader_info["yllcorner"] + iy * self.reader_info["cellsize"]
+        return x, y
+
+    def c2p(self, x, y):
+        """Converts coordinate to pixel"""
+        return self.get_value_from_coord(x, y)
 
     def flip_y(self):
         self.info['reader']["yllcorner"] = self.info['reader']["yllcorner"] + self.info['reader']["cellsize"] * self.info['reader']["nrows"]
