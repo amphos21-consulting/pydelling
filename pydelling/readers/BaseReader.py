@@ -1,27 +1,40 @@
 """
 Base interface for a reader class
 """
-import numpy as np
 import logging
 from pathlib import Path
-import matplotlib.pyplot as plt
+
+import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 import pydelling.utils.SubFishModule as subfish
-import seaborn as sns
+
 
 class BaseReader:
     data: np.ndarray  # Hint of self.data array
     info: dict
+    raw_data: None
 
-    def __init__(self, filename=None, header=False, **kwargs):
+    def __init__(self, filename=None,
+                 header=False,
+                 read_data=True,
+                 info=None,
+                 data=None,
+                 **kwargs,
+                 ):
         self.filename = Path(filename)
         self.info = {"reader": {}}
         self.data = None
         self.header = header
         self.__dict__.update(kwargs)
-        self.open_file(filename, **kwargs)
+        if read_data:
+            self.open_file(filename, **kwargs)
+        else:
+            assert data is not None, "Error: data is None"
+            # assert info is not None, "Error: info is None"
+            self.data = data
+            # self.info = info
 
     def read_file(self, opened_file):
         """
@@ -102,3 +115,7 @@ class BaseReader:
                                     }
                                    )
         return tang_sol_pd
+
+    @property
+    def values(self):
+        return self.get_data()
