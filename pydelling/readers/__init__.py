@@ -8,8 +8,12 @@ from .StreamlineReader import StreamlineReader
 from .VtkReader import VtkReader
 from .iGPReader.io.iGPReader import iGPReader
 from .ConnectFlowReader import ConnectFlowReader
+from .PflotranProcessingUtils import PflotranProcessingUtils
 from .PflotranReader import PflotranReader
 from .PflotranObservationPointReader import PflotranObservationPointReader
 from .FemReader import FemReader
 from .UnstructuredMeshReader import UnstructuredMeshReader
 from .VTKMeshReader import VTKMeshReader
+from .SmeshReader import SmeshReader
+from .PflotranMassBalanceFileReader import PflotranMassBalanceFileReader
+from .ConnectFlowMeshReader import ConnectFlowMeshReader

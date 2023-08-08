@@ -5,8 +5,8 @@ from pydelling.preprocessing.mesh_preprocessor.geometry import TriangleFace, Bas
 
 
 class TetrahedraElement(BaseElement):
-    def __init__(self, node_ids, node_coords, centroid_coords=None):
-        super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords)
+    def __init__(self, node_ids, node_coords, centroid_coords=None, local_id=None):
+        super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords, local_id=local_id)
         self.type = "tetrahedra"
         self.meshio_type = "tetra"
         self.define_faces()  # Define faces of the element
@@ -53,6 +53,18 @@ class TetrahedraElement(BaseElement):
                                         node_coords=np.array([self.coords[0],
                                                               self.coords[2],
                                                               self.coords[1]]))
+    @property
+    def local_face_nodes(self):
+        """
+        Returns the nodes of the faces of the polyhedra
+        :return: dictionary of nodes of the faces of the polyhedra
+        """
+        return {
+            't1': [0, 1, 3],
+            't2': [1, 2, 3],
+            't3': [0, 3, 2],
+            't4': [0, 2, 1]
+        }
 
     def compute_volume(self):
         """

@@ -1,34 +1,51 @@
+from __future__ import annotations
+
+import logging
 import os
 from collections import OrderedDict
 from pathlib import Path
+from typing import Dict, List
 
 import h5py
 import numpy as np
-from pydelling.config import config
-from pydelling.readers.iGPReader.geometry import *
-from pydelling.readers.iGPReader.io import BaseReader
-from pydelling.readers.iGPReader.utils import get_output_path
-import logging
-from typing import Dict, List
 import pandas as pd
+
+from pydelling.config import config
+# from pydelling.readers.iGPReader.geometry import *
+from pydelling.preprocessing.mesh_preprocessor.geometry import *
+from pydelling.readers.iGPReader.io import BaseReader
+from pydelling.readers import RasterFileReader
+from pydelling.readers.iGPReader.utils import get_output_path, RegionOperations
+from tqdm import tqdm
+import re
+from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
 
-class iGPReader(BaseReader):
+class iGPReader(BaseReader, RegionOperations):
     """
     This class reads the mesh and region information of an iGP project folder. It also builds an internal representation
     of the mesh, and controls all the pre-processing functions related to the mesh.
     """
     element_dict = {"4": "T", "5": "P", "6": "W", "8": "H"}
+    face_dict = {'T': 3, 'Q': 4}
 
-    def __init__(self, path, project_name, build_mesh=False, output_folder=None, write_materials=True):
+    def __init__(self, path,
+                 project_name='iGP_project',
+                 build_mesh=False,
+                 output_folder='./results',
+                 write_materials=True,
+                 ):
+        self.elements = None
+        self.boundaries = {}
+        self.element_nodes = None
         logger.info("Initializing iGP Reader module")
         from pydelling.readers.iGPReader.io import AscReader, BoreholeReader, CsvWriter, PflotranExplicitWriter, PflotranImplicitWriter
         self.ExplicitWriter = PflotranExplicitWriter
         self.ImplicitWriter = PflotranImplicitWriter
         self.CsvWriter = CsvWriter
-        self.AscReader = AscReader
+        self.RasterReader = RasterFileReader
         self.BoreholeReader = BoreholeReader
         self.path: Path
         if type(path) is not Path:
@@ -44,7 +61,9 @@ class iGPReader(BaseReader):
             self.is_igp_present = True
         except FileNotFoundError:
             self.is_igp_present = False
-            logger.info("iGP project files were not found")
+            logger.error("iGP project files were not found")
+            raise FileNotFoundError("iGP project files were not found")
+
         self.build_mesh = build_mesh
         self.project_name = project_name
         self.is_write_materials = write_materials
@@ -70,7 +89,9 @@ class iGPReader(BaseReader):
         # Create output folder if it is not created
         if self.output_folder:
             os.makedirs(self.output_folder, exist_ok=True)
-        self.initialize_info_dicts()
+        self.mesh_data = None
+        self.centroid_data = None
+        self.region_data = None
 
     def read_mesh_data(self):
         """Reads mesh data
@@ -83,8 +104,8 @@ class iGPReader(BaseReader):
             mesh_line = self.mesh_data.readline().split()
             _elements.append([int(element) - 1 for element in mesh_line[1:]])
         # self.elements = np.array(_elements, dtype=np.int32) - 1  # To local ordering
-        self.elements = _elements
-        assert len(self.elements) == self.mesh_info["n_elements"], "Element number is incorrect"
+        self.element_nodes = _elements
+        assert len(self.element_nodes) == self.mesh_info["n_elements"], "Element number is incorrect"
         # Read node data
         _nodes = []
         for line in range(self.mesh_info["n_nodes"]):
@@ -97,15 +118,15 @@ class iGPReader(BaseReader):
         logger.info(f"Mesh data has been read from {self.path / 'data.mesh'}")
 
     def initialize_info_dicts(self):
-        self.material_names = {}
+        self._material_names = {}
         for material_id, material in enumerate(self.material_dict):
-            self.material_names[material_id] = material
+            self._material_names[material_id] = material
         self.material_info = {}
         for material in self.material_dict:
             self.material_info[material] = {}
 
     def read_centroid_data(self):
-        self.centroids = np.zeros(shape=(len(self.elements), 3))
+        self.centroids = np.zeros(shape=(len(self.element_nodes), 3))
         for _ in range(self.mesh_info["n_elements"]):
             mesh_line = self.centroid_data.readline().split()
             self.centroids[int(mesh_line[-1]) - 1] = np.array(mesh_line[0:3], dtype=np.float32)
@@ -123,8 +144,9 @@ class iGPReader(BaseReader):
         _temp_array = []
         id_centroids = []
         for i in range(self.region_info["n_region"]):
-            line = self.region_data.readline().split()
-            self.region_info["region_names"].append(line[0])
+            line = self.region_data.readline().rstrip()
+            escaped_region_name = re.sub('[^A-Za-z0-9]+', '_', line)
+            self.region_info["region_names"].append(escaped_region_name)
         for region_name in self.region_info["region_names"]:
             self.region_dict[region_name] = {"elements": [],
                                              "length": None,
@@ -139,8 +161,15 @@ class iGPReader(BaseReader):
                 if read_line[1] == "IC":
                     is_reading = False
             if is_element:
-                self.region_dict[read_line[-1]]["elements"].append(read_line[2:-1])
-                self.region_dict[read_line[-1]]["centroid_id"].append(read_line[1])
+                # Get the number of vertices expected by reading the face type
+                n_vert = self.face_dict[read_line[0]]
+                # Escape the region name (special characters or spaces)
+                # A region defined with a space in GiD would appear as two different strings when splitting the line
+                # by space. Instead, we know where the info (face type, centroid id, nodes, region name) are located
+                # on the line depending on the type of face element.
+                escaped_region_name = '_'.join(re.sub('[^A-Za-z0-9]+', '_', name) for name in read_line[2+n_vert:])
+                self.region_dict[escaped_region_name]["elements"].append(read_line[2:2+n_vert])
+                self.region_dict[escaped_region_name]["centroid_id"].append(read_line[1])
 
         for region_name in self.region_dict:
             self.region_dict[region_name]["elements"] = np.array(self.region_dict[region_name]["elements"],
@@ -173,30 +202,40 @@ class iGPReader(BaseReader):
         logger.info(f"Region data has been read from {self.path / 'source.ss'}")
 
     # @timer_min
-    def implicit_to_explicit(self, dump_mesh_info=True):
+    def implicit_to_explicit(self,
+                             dump_mesh_info=True,
+                             write_cells=True,
+                             write_regions=True,
+                             ):
         """
         Function that transforms an implicit mesh into an explicit mesh
         :param dump_mesh_info: set it True in order to write the primal mesh into the same unstructured explicit mesh
         """
-        assert self.is_mesh_built, "Mesh is read but not built"
+        if not self.is_mesh_built:
+            self.build_mesh_data()
         logger.info("Converting PFLOTRAN implicit mesh to explicit format")
-        self.find_connectivities()  # Find the connections of the mesh
-        # Write mesh file
-        exp_mesh_filename = f"{self.project_name}.mesh"
-        if self.output_folder is None:
-            output_file = open(exp_mesh_filename, "w")
-        else:
-            output_file = open(os.path.join(self.output_folder, exp_mesh_filename), "w")
-        self.ExplicitWriter.write_cells(self, output_file)
-        self.ExplicitWriter.write_connections(self, output_file)
-        if dump_mesh_info:
-            self.ImplicitWriter.write_elements(self, output_file)  # Write elements for mesh visualization
-            self.ImplicitWriter.write_nodes(self, output_file)  # Write node_ids for mesh visualization
-        output_file.close()
+        if write_cells:
+            self.find_connectivities()  # Find the connections of the mesh
+            # Write mesh file
+            logger.info(f'Writing mesh file to {self.output_folder}')
+            exp_mesh_filename = f"{self.project_name}.mesh"
+            if self.output_folder is None:
+                output_file = open(exp_mesh_filename, "w")
+            else:
+                output_file = open(os.path.join(self.output_folder, exp_mesh_filename), "w")
+            self.ExplicitWriter.write_cells(self, output_file)
+            self.ExplicitWriter.write_connections(self, output_file)
+            if dump_mesh_info:
+                self.ImplicitWriter.write_elements(self, output_file)  # Write elements for mesh visualization
+                self.ImplicitWriter.write_nodes(self, output_file)  # Write node_ids for mesh visualization
+            output_file.close()
+            self.write_hdf5_domain()
+
         # Write condition data
-        self.ExplicitWriter.write_condition_data(self)
-        if self.is_write_materials:
-            self.ExplicitWriter.write_materials(self)
+        if write_regions:
+            self.ExplicitWriter.write_condition_data(self)
+            if self.is_write_materials:
+                self.ExplicitWriter.write_materials(self)
 
     def write_explicit_mesh_in_csv(self):
         """
@@ -259,48 +298,158 @@ class iGPReader(BaseReader):
         conn_dict_ordered = OrderedDict(conn_dict)
         self.connections = sorted(conn_dict_ordered.items())
 
-    def raster_interpolator(self, raster_folder, raster_filenames):
+    def raster_interpolator(self,
+                            regions: List,
+                            raster_filenames: dict,
+                            raster_folder=None,
+                            top_regions: List = None,
+                            top_region_offset: float = None,
+                            second_layer: str = None,
+                            second_layer_offset = None,
+                            max_error: float = None, # Maximum error allowed in the interpolation
+                            ):
         """Performs layer based raster interpolation
         This function approximates the node_ids that lay on each of the layers with the rasterized data of such layer.
         The current approach is based on nearest neighbours approximation
         :return np.array of interpolated node_ids
         """
         logger.info("Interpolating raster regions to mesh")
-        for region in config.raster_refinement.regions:
+        if max_error is not None:
+            logger.info(f"Maximum error allowed: {max_error} m")
+        if top_regions is None:
+            top_regions = []
+        if raster_folder is None:
+            raster_folder = './'
+
+        for region in regions:
             self._raster_max_error = 0.0
             logger.info(f"Interpolating region {region}")
             raster_current_region_filename = os.path.join(raster_folder, raster_filenames[region])
-            raster_data = self.AscReader(raster_current_region_filename)
+            raster_data = self.RasterReader(raster_current_region_filename)
             # print(f"Elements in face length is {len(iGP_data.region_dict[region]['elements'])}")
             id_list = np.unique(self.region_dict[region]["elements"].flatten())
             _test = []
-            if region in config.raster_refinement.top_regions:
-                logger.info(f"An offset of +{config.raster_refinement.top_offset} m will be applied in the z-direction to region {region}")
-            if region == config.raster_refinement.second_layer:
-                logger.info(f"Region {region} has been selected as the second layer region. Thus, its node_ids will be displaced {config.raster_refinement.first_layer_to_second_layer_difference}m from the top raster file")
+            if region in top_regions:
+                assert top_region_offset is not None, "Top region offset is not defined"
+                logger.info(f"An offset of +{top_region_offset} m will be applied in the z-direction to region {region}")
+            if region == second_layer:
+                assert second_layer_offset is not None, "Second layer offset (difference between the top layer) is not defined"
+                logger.info(f"Region {region} has been selected as the second layer region. Thus, its node_ids will be displaced {second_layer_offset}m from the top raster file")
+            xy_raster = raster_data.get_xy_data()
             for mesh_id in id_list:
                 x_mesh = self.nodes[mesh_id][0]
                 y_mesh = self.nodes[mesh_id][1]
                 # Raster data
-                d_raster = raster_data.info_dict["cellsize"]
-                origin_x = raster_data.info_dict["xllcorner"]
-                origin_y = raster_data.info_dict["yllcorner"]
-                ix = int(np.floor((x_mesh - origin_x) / (1.001 * d_raster)))  # 1.001 value is used to avoid issues with
-                # the floor function
-                iy = int(np.floor((y_mesh - origin_y) / (1.001 * d_raster)))  # 1.001 value is used to avoid issues with
-                # the floor function
-                iy = int(raster_data.info_dict["ncols"] - iy - 1)
-                z_raster = raster_data.data[iy, ix]
-                z_offset = config.raster_refinement.top_offset if region in config.raster_refinement.top_regions else 0.0
+                z_raster = raster_data.get_data_from_coordinates(x_mesh, y_mesh)
+                z_offset = top_region_offset if region in top_regions else 0.0
                 interpolation_difference = abs((z_raster + z_offset) - self.nodes[mesh_id][2])
-                self._raster_max_error = interpolation_difference if interpolation_difference > self._raster_max_error else self._raster_max_error
-                z_second_layer_diff = config.raster_refinement.first_layer_to_second_layer_difference if region == config.raster_refinement.second_layer else 0.0  # Corrects the second layer on a layer based mesh
-                self.nodes[mesh_id][2] = z_raster + z_offset + z_second_layer_diff
+
+                z_second_layer_diff = second_layer_offset if region == second_layer else 0.0  # Corrects the second layer on a layer based mesh
+                if max_error is None:
+                    self.nodes[mesh_id][2] = z_raster + z_offset + z_second_layer_diff
+                    self._raster_max_error = interpolation_difference if interpolation_difference > self._raster_max_error else self._raster_max_error
+                else:
+                    if interpolation_difference < max_error:
+                        self.nodes[mesh_id][2] = z_raster + z_offset + z_second_layer_diff
+                        self._raster_max_error = interpolation_difference if interpolation_difference > self._raster_max_error else self._raster_max_error
+                    else:
+                        pass
             logger.info(f"Interpolation of region {region} completed. Max absolute difference {self._raster_max_error:1.2f}m")
 
         # node_ids = raster_interpolator(self.path, raster_folder, raster_filenames)
         # self.node_ids = node_ids  # Update the mesh with the moved node_ids
         return self.nodes
+
+    def raster_interpolator_semistructured(self,
+                                           regions: List,
+                                           raster_filenames: dict,
+                                           raster_folder=None,
+                                           n_nearest: int = 5,
+                                           material_subset: List = None,
+                                           min_samples: int = 10,
+                                           eps: float = 0.5,
+                                           growth_rate: float = None,
+                                           ):
+        """
+        Performs a raster interpolation for semi-structured (layer based) meshes.
+        This method computes the first n_nearest nearest neighbours (in the z-direction) and
+        moves the mesh nodes proportionally to the raster surface
+
+        Args:
+            regions: List of regions to interpolate
+            raster_filenames: Dictionary with the raster filenames for each region
+            raster_folder: Folder where the raster files are located
+            n_nearest: Number of nearest neighbours (in z) to consider
+            material_subset: List of materials to consider in the interpolation
+            min_samples: Minimum samples used in the DBSCAN clustering
+            eps: Epsilon value used in the DBSCAN clustering
+            growth_rate: Growth rate of the mesh in the z-direction
+        Returns:
+
+        """
+
+        logger.info("Interpolating topography layers to the mesh")
+        if raster_folder is None:
+            raster_folder = './'
+
+        for region in regions:
+            self._raster_max_error = 0.0
+            logger.info(f"Interpolating region {region}")
+            raster_current_region_filename = os.path.join(raster_folder, raster_filenames[region])
+            raster_data = self.RasterReader(raster_current_region_filename)
+            # print(f"Elements in face length is {len(iGP_data.region_dict[region]['elements'])}")
+            id_list = np.unique(self.region_dict[region]["elements"].flatten())
+            _test = []
+            for mesh_id in tqdm(id_list, desc=f"Interpolating region {region}"):
+                x_mesh = self.nodes[mesh_id][0]
+                y_mesh = self.nodes[mesh_id][1]
+                # Raster data
+                z_raster = raster_data.get_data_from_coordinates(x_mesh, y_mesh)
+                # Get the nearest neighbours in the z-direction
+                z_nearest_ids = self.get_nodes_from_x_y(
+                    x=x_mesh,
+                    y=y_mesh,
+                    materials=material_subset,
+                    min_samples=min_samples,
+                    eps=eps,
+                    top_region_name=region,
+                )
+                if n_nearest is not None:
+                    z_nearest_ids = z_nearest_ids[-n_nearest:]
+                z_nearest_nodes = self.nodes[z_nearest_ids]
+                # Proportionally move the mesh node
+                z_nearest_new = z_nearest_nodes.copy()
+                z_nearest_new[:, 2] -= z_nearest_new[:, 2].min()
+                z_nearest_new[:, 2] /= z_nearest_new[:, 2].max()
+                # Apply a logarithmic growth
+                if growth_rate is not None:
+                    z_nearest_new[:, 2] = self.geometric_growth(len(z_nearest_new), growth_rate)
+                    if not hasattr(self, "info_geometric_growth"):
+                        geometryic_growth_formatted_string = [f"{i:1.2f}" for i in z_nearest_new[:, 2]]
+                        logger.info(f"The following geometrical spacing (growth_rate {growth_rate}) has been applied to the z-nodes: {geometryic_growth_formatted_string}")
+                        self.info_geometric_growth = True
+
+                z_nearest_new[:, 2] *= (z_raster - z_nearest_nodes[:, 2].min())
+                z_nearest_new[:, 2] += z_nearest_nodes[:, 2].min()
+                for z_id in z_nearest_ids:
+                    self.nodes[z_id][2] = z_nearest_new[z_nearest_ids == z_id][0][2]
+            logger.info(f"Interpolation of region {region} completed.")
+
+    def geometric_growth(self, n, growth_rate=0.3) -> list:
+        """
+        Generates a geometric growth function from 0.0 to 1.0
+        Args:
+            n: Number of points
+            growth_rate: Growth rate
+
+        Returns: List of values
+
+        """
+        values = [1.0 - (1.0 - growth_rate) ** i for i in range(n)]
+        values = np.array(values)
+        values /= values.max()
+        return list(values)
+
 
     def write_ASCII_meshfile(self, filename):
         """
@@ -330,7 +479,7 @@ class iGPReader(BaseReader):
             else:
                 file = open(os.path.join(self.output_folder, filename), "w")
             file.write(f"{self.mesh_info['n_elements']} {self.mesh_info['n_nodes']}\n")
-            for element in self.elements:  # Element data
+            for element in self.element_nodes:  # Element data
                 file.write(f"{config.globals.element_dict[len(element)]} {' '.join(map(str, element + 1))}\n")
             for id, node in enumerate(self.nodes_output):  # Node coordinates data
                 file.write(f"{node[0]} {node[1]} {self.nodes[id][2]:5.5f}\n")
@@ -433,7 +582,7 @@ class iGPReader(BaseReader):
             f"Adding linear {property} value taking into account topography of layer {material_features.topography_region} to material {material} in such a way that f(z_topography) = {material_features.value_top}."
             f"{f' Values below {material_features.z_bot}m are kept constant and equal to {material_features.value_bot}' if material_features.bottom_constant else ''}")
         raster_current_region_filename = Path(config.data_files.raster_file_folder) / config.data_files.raster_filenames[material_features.topography_region]
-        raster_data = self.AscReader(raster_current_region_filename)
+        raster_data = self.RasterReader(raster_current_region_filename)
 
         for centroid in self.centroids[self.material_dict[material] - 1]:
             x_mesh = centroid[0]  # x-coordinate of centroid
@@ -576,73 +725,90 @@ class iGPReader(BaseReader):
     def chunks(l, n):
         return [l[i:i + n] for i in range(0, len(l), n)]
 
-    def build_mesh_data(self):
+    def build_mesh_data(self, processes=1,
+                        generate_cells=True,
+                        generate_boundaries=True,
+                        ):
         """
         Creates an internal representation of the mesh based on a given unstructured implicit grid.
         :return:
         """
         if config.general.constant_centroids:
             logger.info('The location of the centroids will not be changed after refining the boundaries')
-        if not config.general.multiprocessing:
+        if processes == 1:
             logger.info("Building implicit mesh structure")
             temp = []
             amount_read = 0.0
-            for id_local, element in enumerate(self.elements):
-                n_type = len(element)
-                if n_type == 4:  # This is a Wedge object
-                    temp.append(TetrahedraElement(node_ids=element,
-                                                  node_coords=self.nodes[element],
-                                                  element_type_n=n_type,
-                                                  local_id=id_local,
-                                                  centroid_coords=self.centroids[id_local] if config.general.constant_centroids else None,
-                                                  # centroid_coords=self.centroids[id_local]
-                                                  ))
-                if n_type == 6:  # This is a Wedge object
-                    temp.append(WedgeElement(node_ids=element,
-                                             node_coords=self.nodes[element],
-                                             element_type_n=n_type,
-                                             local_id=id_local,
-                                             centroid_coords=self.centroids[id_local] if config.general.constant_centroids else None,
-                                             # centroid_coords=self.centroids[id_local]
-                                             ))
-                if n_type == 8:  # This is a Hexahedra object
-                    temp.append(HexahedraElement(node_ids=element,
+            if generate_cells:
+                for id_local, element in tqdm(enumerate(self.element_nodes), total=len(self.element_nodes), desc='Building mesh'):
+                    n_type = len(element)
+                    if n_type == 4:  # This is a Wedge object
+                        temp.append(TetrahedraElement(node_ids=element,
+                                                      node_coords=self.nodes[element],
+                                                      local_id=id_local,
+                                                      centroid_coords=self.centroids[id_local] if config.general.constant_centroids else None,
+                                                      # centroid_coords=self.centroids[id_local]
+                                                      ))
+                    if n_type == 6:  # This is a Wedge object
+                        temp.append(WedgeElement(node_ids=element,
                                                  node_coords=self.nodes[element],
-                                                 element_type_n=n_type,
                                                  local_id=id_local,
                                                  centroid_coords=self.centroids[id_local] if config.general.constant_centroids else None,
                                                  # centroid_coords=self.centroids[id_local]
                                                  ))
-                if id_local / int(self.mesh_info["n_elements"]) >= amount_read:
-                    amount = id_local / int(self.mesh_info["n_elements"])
-                    logger.info(f"Building internal mesh {amount * 100:3.0f} %")
-                    amount_read += 0.01
-
-            self.elements = temp
+                    if n_type == 8:  # This is a Hexahedra object
+                        temp.append(HexahedraElement(node_ids=element,
+                                                     node_coords=self.nodes[element],
+                                                     local_id=id_local,
+                                                     centroid_coords=self.centroids[id_local] if config.general.constant_centroids else None,
+                                                     # centroid_coords=self.centroids[id_local]
+                                                     ))
+                self.elements = temp
+            # Generate boundary information
+            if generate_boundaries:
+                for boundary in tqdm(self.region_dict, desc='Building boundary mesh'):
+                    temp_boundary = []
+                    for element in self.region_dict[boundary]['elements']:
+                        n_type = len(element)
+                        if n_type == 4:
+                            temp_boundary.append(QuadrilateralFace(
+                                node_ids=element,
+                                node_coords=self.nodes[element],
+                            )
+                            )
+                        if n_type == 3:
+                            temp_boundary.append(TriangleFace(
+                                node_ids=element,
+                                node_coords=self.nodes[element],
+                            )
+                            )
+                    self.boundaries[boundary] = temp_boundary
             self.is_mesh_built = True
         else:
-            logger.info("Building internal mesh using multiprocessing")
+            logger.info(f"Building internal mesh using multiprocessing with {processes} processes")
             from multiprocessing import Process, Manager
             import multiprocessing as mp
             with Manager() as manager:
                 shared_list = manager.list()
-                processes = []
-                total_number_of_elements = len(self.elements)
-                number_of_processes = config.general.num_of_processes if config.general.num_of_processes else mp.cpu_count() - 1
+                processes_list = []
+                total_number_of_elements = len(self.element_nodes)
+                number_of_processes = processes if processes is not None else mp.cpu_count() - 1
                 chunk_size = int(total_number_of_elements / number_of_processes)
-                chunks = self.chunks(self.elements, chunk_size)
+                chunks = self.chunks(self.element_nodes, chunk_size)
+
                 for i, chunk in enumerate(chunks):
                     p = Process(target=parallel_build_mesh_data, args=(chunk, self.nodes, shared_list, i, chunk_size, self.centroids))
-                    processes.append(p)
-                for id, process in enumerate(processes):
+                    processes_list.append(p)
+                for id, process in enumerate(processes_list):
                     process.start()
                     logger.info(f"Process {id} has been started")
-                for id, process in enumerate(processes):
+                for id, process in enumerate(processes_list):
                     process.join()
                     logger.info(f"Process {id} has finished")
                 self.elements = list(shared_list)
             # Order self.elements list following the local_id
             self.elements = sorted(self.elements, key=lambda x: x.local_id)
+
             self.is_mesh_built = True
 
     def set_material_z_ranges(self):
@@ -658,7 +824,7 @@ class iGPReader(BaseReader):
         logger.info(f"Exporting raster files read from {config.data_files.raster_file_folder}")
         for region in config.raster_refinement.regions:
             raster_current_region_filename = os.path.join(config.data_files.raster_file_folder, config.data_files.raster_filenames[region])
-            raster_data = self.AscReader(raster_current_region_filename)
+            raster_data = self.RasterReader(raster_current_region_filename)
             if downsample_factor:
                 raster_data.downsample_data(slice_factor=downsample_factor)
             if file_format == 'asc':
@@ -669,7 +835,7 @@ class iGPReader(BaseReader):
     def export_recharge_file(self, csv_export=False):
         if config.data_files.recharge_file:
             logger.info(f"Processing recharge file located at {config.data_files.recharge_file}")
-            recharge_data = self.AscReader(config.data_files.recharge_file)
+            recharge_data = self.RasterReader(config.data_files.recharge_file)
         else:
             logger.error("A recharge file has to be submitted in the configuration file")
             raise FileNotFoundError("Recharge file was not submitted in the configuration file")
@@ -728,9 +894,115 @@ class iGPReader(BaseReader):
                 step = 1
                 print(f"{step * '  '}{property} = {self.material_info[material][property]}")
 
-
-    def get_region(self, region_name):
+    def get_region_centroids(self, region_name):
         return self.centroids[self.region_dict[region_name]['centroid_id'] - 1]
+
+    def get_region_nodes(self, region_name):
+        cur_array = self.region_dict[region_name]['elements']
+        cur_array = cur_array.flatten()
+        cur_array = np.unique(cur_array)
+        return self.nodes[cur_array]
+
+    def get_boundary_faces(self, region_name) -> List[BaseFace]:
+        assert self.is_mesh_built, "Mesh has to be built before calling this method"
+        return self.boundaries[region_name]
+
+    def get_material_elements(self, material_name) -> List[BaseElement]:
+        return [self.elements[element_id - 1] for element_id in self.material_dict[material_name]]
+
+    def get_material_centroids(self, material_name):
+        return self.centroids[self.material_dict[material_name]]
+
+    @property
+    def min_x(self):
+        '''Returns the minimum x coordinate of the centroids of the mesh'''
+        return min(self.centroids[:, 0])
+
+    @property
+    def max_x(self):
+        '''Returns the maximum x coordinate of the centroids of the mesh'''
+        return max(self.centroids[:, 0])
+
+    @property
+    def min_y(self):
+        '''Returns the minimum y coordinate of the centroids of the mesh'''
+        return min(self.centroids[:, 1])
+
+    @property
+    def max_y(self):
+        '''Returns the maximum y coordinate of the centroids of the mesh'''
+        return max(self.centroids[:, 1])
+
+    @property
+    def min_z(self):
+        '''Returns the minimum z coordinate of the centroids of the mesh'''
+        return min(self.centroids[:, 2])
+
+    @property
+    def max_z(self):
+        '''Returns the maximum z coordinate of the centroids of the mesh'''
+        return max(self.centroids[:, 2])
+
+    @property
+    def coords_min_x(self):
+        '''Returns the minimum x coordinate of the nodes of the mesh'''
+        return min(self.nodes[:, 0])
+
+    @property
+    def coords_max_x(self):
+        '''Returns the maximum x coordinate of the nodes of the mesh'''
+        return max(self.nodes[:, 0])
+
+    @property
+    def coords_min_y(self):
+        '''Returns the minimum y coordinate of the nodes of the mesh'''
+        return min(self.nodes[:, 1])
+
+    @property
+    def coords_max_y(self):
+        '''Returns the maximum y coordinate of the nodes of the mesh'''
+        return max(self.nodes[:, 1])
+
+    @property
+    def coords_min_z(self):
+        '''Returns the minimum z coordinate of the nodes of the mesh'''
+        return min(self.nodes[:, 2])
+
+    @property
+    def coords_max_z(self):
+        '''Returns the maximum z coordinate of the nodes of the mesh'''
+        return max(self.nodes[:, 2])
+
+    @property
+    def region_names(self):
+        '''Returns the names of the regions'''
+        return list(self.region_dict.keys())
+
+    @property
+    def boundary_names(self):
+        '''Returns the names of the boundaries'''
+        return list(self.region_dict.keys())
+
+    @property
+    def material_names(self):
+        '''Returns the names of the materials'''
+        return list(self.material_dict.keys())
+
+    def __repr__(self):
+        import rich
+        from rich.markdown import Markdown
+        text = Markdown(f"""
+         iGP mesh with {self.n_mesh_elements} elements and {self.n_mesh_nodes} nodes.
+         Boundary names: {list(self.region_dict.keys())}
+         Material names: {list(self.material_dict.keys())}
+         """)
+        rich.print(text)
+        return ''
+
+    def __str__(self):
+        return self.__repr__()
+
+
 
 
 def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_size, centroids):
@@ -741,7 +1013,6 @@ def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_si
         if n_type == 4:  # This is a Tetrahedra object
             shared_list.append(TetrahedraElement(node_ids=element,
                                                  node_coords=nodes[element],
-                                                 element_type_n=n_type,
                                                  local_id=id_local_chunk,
                                                  centroid_coords=centroids[id_local_chunk] if config.general.constant_centroids else None,
                                                  # centroid_coords=self.centroids[id_local]
@@ -749,7 +1020,6 @@ def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_si
         if n_type == 6:  # This is a Wedge object
             shared_list.append(WedgeElement(node_ids=element,
                                             node_coords=nodes[element],
-                                            element_type_n=n_type,
                                             local_id=id_local_chunk,
                                             centroid_coords=centroids[id_local_chunk] if config.general.constant_centroids else None,
                                             # centroid_coords=self.centroids[id_local]
@@ -757,7 +1027,6 @@ def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_si
         if n_type == 8:  # This is a Hexahedra object
             shared_list.append(HexahedraElement(node_ids=element,
                                                 node_coords=nodes[element],
-                                                element_type_n=n_type,
                                                 local_id=id_local_chunk,
                                                 centroid_coords=centroids[id_local_chunk] if config.general.constant_centroids else None,
                                                 # centroid_coords=self.centroids[id_local]
@@ -766,5 +1035,13 @@ def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_si
             amount = id_local / int(len(elements))
             logger.info(f"Process {chunk_index} completed amount: {amount * 100:3.0f} %")
             amount_read += 0.1
+
+
+
+
+
+
+
+
 
 

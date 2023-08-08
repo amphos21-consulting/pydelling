@@ -1,8 +1,6 @@
 from __future__ import annotations
+
 import numpy as np
-from . import Scalar
-from .BasePrimitive import BasePrimitive
-from typing import *
 
 
 class Point(np.ndarray):
@@ -40,3 +38,5 @@ class Point(np.ndarray):
     def z(self):
         return self[2]
 
+    def get_json(self):
+        return [self.x, self.y, self.z]

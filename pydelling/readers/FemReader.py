@@ -1,10 +1,13 @@
-import os
 import numpy as np
 from ..preprocessing.mesh_preprocessor import MeshPreprocessor
 import logging
-import math
+import logging
+
+import numpy as np
+
+from ..preprocessing.mesh_preprocessor import MeshPreprocessor
+
 logger = logging.getLogger(__name__)
-import meshio as msh
 from tqdm import tqdm
 
 
@@ -12,8 +15,8 @@ class FemReader(MeshPreprocessor):
     upscaled_permeability = {} # dict of upscaled permeability values
     upscaled_porosity = {} # dict of upscaled porosity values
 
-    def __init__(self, filename, kd_tree=True):
-        super().__init__()
+    def __init__(self, filename, kd_tree=True, st_file=False):
+        super().__init__(st_file=False)
         self.aux_nodes = []
         self.open_file(filename)
         # Create KD-mesh structure
@@ -21,6 +24,8 @@ class FemReader(MeshPreprocessor):
             self.create_kd_tree()
 
     def open_file(self, filename):
+        if self.is_streamlit:
+            import streamlit as st
         with open(filename, "r") as f:
             for line in f:
                 line = line.rstrip()
@@ -116,7 +121,19 @@ class FemReader(MeshPreprocessor):
                 else:
                     continue
 
+        if self.is_streamlit:
+            st.write(f'Creating {self.aux_n_elements} mesh elements')
+            progress_tetra = st.empty()
+            progress_tetra.progress(0)
+            count = 0
+
+
         for e in range(0, self.aux_n_elements):
+            if self.is_streamlit:
+                proportion = round(count / self.aux_n_elements * 100)
+                progress_tetra.progress(proportion)
+                count += 1
+
             if element_type[2] == 6:
                 # Add a tetrahedra to the mesh structure
                 self.add_tetrahedra(node_ids=nodes_elem[e],
@@ -127,6 +144,7 @@ class FemReader(MeshPreprocessor):
                                         self.aux_nodes[nodes_elem[e, 3]],
                                     ]
                                     )
+
             else:
                 logger.warning(f"Element type {element_type[e]} not supported")
 

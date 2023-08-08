@@ -1,9 +1,14 @@
+
 """
 Base interface for a reader class
 """
-import numpy as np
 import logging
+
+import numpy as np
+import pandas
+
 from pydelling.readers import BaseReader
+
 logger = logging.getLogger(__name__)
 from pydelling.config import config
 import logging
@@ -13,18 +18,36 @@ import natsort
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-logger = logging.getLogger(__name__)
 from collections import OrderedDict
+from tqdm import tqdm
+from pydelling.readers import PflotranProcessingUtils
+import colorsys
+import seaborn as sns
 
 
-class PflotranReader(BaseReader):
-    def __init__(self, filename=None):
+
+logger = logging.getLogger(__name__)
+
+class PflotranReader(BaseReader, PflotranProcessingUtils):
+    def __init__(self,
+                 filename=None,
+                 variables=None,
+                 ):
         self.filename = Path(filename) if filename else Path(config.pflotran_reader.filename)
         logger.info(f"Reading PFLOTRAN results file from {self.filename}")
         super().__init__(filename=self.filename)
         self.results = {}
-        for time in self.time_keys:
-            self.results[time] = PflotranResults(time=time, data=self.data[self.time_keys[time]])
+        if variables:
+            self.variables = variables
+        else:
+            self.variables = list(self.data[self.time_keys[self.time_values[0]]])
+        if 'Material_ID' not in self.variables:
+            self.variables.append('Material_ID')
+
+        for time in tqdm(self.time_keys, desc='Reading PFLOTRAN results'):
+            data_slice = self.data[self.time_keys[time]]
+            data_slice = {key: data_slice[key] for key in self.variables}
+            self.results[time] = PflotranResults(time=time, data=data_slice)
         self.variables = list(self.results[self.time_values[0]].variable_keys)
 
     def open_file(self, filename):
@@ -42,9 +65,9 @@ class PflotranReader(BaseReader):
     def coordinates(self):
         temp_coordinates = self.data['Coordinates']
         temp_df = {'x[m]': np.array(temp_coordinates['X [m]']),
-                                'y[m]': np.array(temp_coordinates['Y [m]']),
-                                'z[m]': np.array(temp_coordinates['Z [m]']),
-                                }
+                    'y[m]': np.array(temp_coordinates['Y [m]']),
+                    'z[m]': np.array(temp_coordinates['Z [m]']),
+                  }
         return temp_df
 
     def get_data(self) -> np.ndarray:
@@ -87,17 +110,52 @@ class PflotranReader(BaseReader):
         temp_keys = [key.split('_')[1] for key in self.variables if 'Total' in key]
         return temp_keys
 
-    @property
-    def x_centroid(self):
-        return pd.DataFrame(np.diff(self.coordinates['x[m]']) + self.coordinates['x[m]'][0:-1], columns=['x[m]'])
 
-    @property
-    def y_centroid(self):
-        return np.diff(self.coordinates['y[m]']) + self.coordinates['y[m]'][0:-1]
+    def get_variable_by_time_index(self, variable: str, time_index: int) -> np.ndarray:
+        """
+        Returns the results of a given variable at a given time index
+        Args:
+            variable: variable name
+            time_index: time index
 
-    @property
-    def z_centroid(self):
-        return np.diff(self.coordinates['z[m]']) + self.coordinates['z[m]'][0:-1]
+        Returns:
+            results of the variable at the given time index
+        """
+        return self.results[self.time_values[time_index]].results[variable]
+
+    def get_variable_by_time(self, variable: str, time: float) -> np.ndarray:
+        """
+        Returns the results of a given variable at a given time
+        Args:
+            variable: variable name
+            time: time
+
+        Returns:
+            results of the variable at the given time
+        """
+        return self.results[time].results[variable]
+
+    def get_results_by_time(self, time: float) -> dict:
+        """
+        Returns the results of a given time
+        Args:
+            time: time
+
+        Returns:
+            results of the given time
+        """
+        return self.results[time].results
+
+    def get_results_by_time_index(self, time_index: int) -> dict:
+        """
+        Returns the results of a given time index
+        Args:
+            time_index: time index
+
+        Returns:
+            results of the given time index
+        """
+        return self.results[self.time_values[time_index]].results
 
 
     def get_mineral_vf_key(self, mineral):
@@ -228,6 +286,122 @@ class PflotranReader(BaseReader):
             line_plot.set_xlabel ('X [m]')
             line_plot.set_ylabel (f'{mineral} volume fraction variation')
         plt.savefig(postprocess_dir / f'{mineral}.png')
+
+    def plot_1D_slice_of_variable(self, variable,
+                                  times=None,
+                                  axis='x',
+                                  coordinate=0,
+                                  postprocess_dir='./postprocess',
+                                  color='b',
+                                  ) -> plt.Axes:
+        """This method plots the variation of a variable along a given axis and coordinate"""
+        fig, ax = plt.subplots()
+        ax: plt.Axes
+        ax_color = ax._get_lines.get_next_color()
+        if times is None:
+            times = [self.time_values[0]]
+        elif times == 'all':
+            times = self.time_values
+        else:
+            times = times
+
+        for time_id, time in enumerate(times):
+            data = self.get_variable_by_time(variable, time)
+            data_slice = self.get_slice_from_coordinates(data=data,
+                                                         axis=axis,
+                                                         coordinate=coordinate
+                                                         )
+            dims = self.get_shape_dimensions(data_slice)
+            n_times = len(times)
+            # Convert hex to rgb
+            next_color = tuple(int(ax_color.lstrip('#')[i:i + 2], 16) / 255 for i in (0, 2, 4))
+            original_color = colorsys.rgb_to_hls(*next_color)
+            darker_color = colorsys.hls_to_rgb(original_color[0], 0.25 + 0.5 * time_id / n_times, original_color[2])
+            data_slice = data_slice.flatten()
+            x_data = self.axis_centroids(dims)
+            ax.plot(x_data, data_slice, label=f'{time} years', color=darker_color)
+            ax.set_xlabel(self.axis_translator[dims])
+        ax.set_ylabel(variable)
+        ax.grid()
+        return ax
+
+    def plot_1D_rigge_variable(self,
+                               variable,
+                                 times=None,
+                                 axis='x',
+                                 coordinate=0,
+                                 postprocess_dir='./postprocess',
+                                 color='b',
+                                 ) -> plt.Axes:
+
+        if times is None:
+            times = [self.time_values[0]]
+        elif times is 'all':
+            times = self.time_values
+        else:
+            times = times
+
+        df = pd.DataFrame()
+
+        for time_id, time in enumerate(times):
+            data = self.get_variable_by_time(variable, time)
+            data_slice = self.get_slice_from_coordinates(data=data,
+                                                         axis=axis,
+                                                         coordinate=coordinate
+                                                         )
+            dims = self.get_shape_dimensions(data_slice)
+            n_times = len(times)
+            # Convert hex to rgb
+            label_name = self.get_shape_dimensions(data_slice)
+            data_slice = data_slice.flatten()
+            x_data = self.axis_centroids(dims)
+            times_var = [time] * len(x_data)
+            df = pd.concat([df, pd.DataFrame({'x': x_data, 'y': data_slice, 'times': times_var})])
+
+
+        a = 2
+        sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
+
+        # Initialize the FacetGrid object
+        pal = sns.cubehelix_palette(len(times), rot=-.25, light=.7)
+        g = sns.FacetGrid(df, row="times", hue="times", aspect=15, height=.5, palette=pal)
+
+        g.map(sns.lineplot, "x", 'y',
+              clip_on=False,
+            alpha=1, linewidth=1.5)
+        # Fill the space between the line and the curve
+        g.map(plt.fill_between, "x", "y", alpha=.2, clip_on=False)
+
+        # Add a horizontal line to show the maximum value
+        max_value = df['y'].max()
+        # g.map(plt.axhline, y=max_value, lw=0.5, clip_on=True, color='k')
+        def label(x, color, label):
+            ax = plt.gca()
+            ax.text(-.04, .2, label, fontweight="bold", color=color,
+                    ha="left", va="center", transform=ax.transAxes)
+
+
+        g.map(label, 'x')
+        # Set the subplots to overlap
+        g.figure.subplots_adjust(hspace=0.5)
+        # Change the x axis labels
+
+        # Remove axes details that don't play well with overlap
+        g.set_titles("")
+        g.set(yticks=[], ylabel="")
+        g.despine(bottom=True, left=True)
+        g.set_xlabels('x [m]')
+        # Set y label in the middle
+        g.fig.text(0.01, 0.5, variable, va='center', rotation='vertical')
+        # Shrink the plot to fit the legend
+        g.fig.subplots_adjust(left=0.1, bottom=0.15)
+
+
+
+
+
+
+
 
 class PflotranResults:
     """

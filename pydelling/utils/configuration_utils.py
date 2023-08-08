@@ -1,9 +1,12 @@
 """
 Global variables
 """
+from pathlib import Path
+
 import yaml
 from box import Box
-from pathlib import Path
+
+import logging
 
 
 def get_root_path() -> Path:
@@ -45,3 +48,18 @@ def initialize_config(config_file="./config/config.yaml"):
         print(f"ERROR: Config file({config_file}) not found.")
         exit(1)
 
+def create_results_folder(folder_name='./results'):
+    output_folder = Path(folder_name)
+    output_folder.mkdir(exist_ok=True)
+    return output_folder
+
+def create_output_folder(folder_name='output'):
+    output_folder = Path(folder_name)
+    output_folder.mkdir(exist_ok=True)
+    return output_folder
+
+def delete_last_logger():
+    loggers = [handler for handler in logging.root.handlers if isinstance(handler, logging.StreamHandler)]
+    if len(loggers) > 0:
+        strange_logger = loggers[-1]
+        strange_logger.setLevel(logging.ERROR)
