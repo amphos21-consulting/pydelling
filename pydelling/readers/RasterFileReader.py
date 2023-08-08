@@ -4,6 +4,8 @@ import numpy as np
 from typing import Tuple, List, Union
 
 from .BaseReader import BaseReader
+from skimage import measure
+from scipy.spatial import ConvexHull
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +226,50 @@ class RasterFileReader(BaseReader):
         iy = int(self.reader_info["ncols"] - iy - 1)
         return self.data[iy, ix]
 
+
+        # normalize the image
+    def find_enclosing_polygon(self,
+                               val,
+                               plot_polygons=False,
+                               export_polygons=True,
+                               ):
+        """Finds the polygons that enclose a given value"""
+        import matplotlib.pyplot as plt
+        self.data = self.data.astype(np.float32)
+        binary_img = self.data.copy()
+        binary_img[binary_img != val] = 0
+        binary_img[binary_img == val] = 1
+        norm_img = np.interp(binary_img, (binary_img.min(), binary_img.max()), (0, 255)).astype(np.uint8)
+
+        labeled_img = measure.label(binary_img, connectivity=2)
+
+        polygons = []
+
+        # get properties of labeled regions
+        region_props = measure.regionprops(labeled_img)
+
+        for prop in region_props:
+            # get coordinates of the polygon that encloses the region
+            polygon = prop.coords
+            # Find the convex hull of the polygon
+            if len(polygon) > 3:
+                hull = ConvexHull(polygon, qhull_options='QJ')
+                polygon = polygon[hull.vertices]
+                polygons.append(polygon)
+
+        if plot_polygons:
+            fig, ax = plt.subplots()
+            ax.imshow(self.data, cmap='gray')
+            for polygon in polygons:
+                plt.plot(polygon[:, 1], polygon[:, 0], '-r', linewidth=2)
+                last_segment = np.array([[polygon[-1, 1], polygon[-1, 0]],
+                                            [polygon[0, 1], polygon[0, 0]]])
+                plt.plot(last_segment[:, 0], last_segment[:, 1], '-r', linewidth=2)
+            # Unite last polygon with first one
+            plt.show()
+
+        return polygons
+
     def flip_y(self):
         self.info['reader']["yllcorner"] = self.info['reader']["yllcorner"] + self.info['reader']["cellsize"] * self.info['reader']["nrows"]
         RasterFileReader.rebuild_x_y(self)
@@ -266,6 +312,7 @@ class RasterFileReader(BaseReader):
                             colorbar_label=colorbar_label,
                             **kwargs)
         plt.savefig(output_file)
+
 
     @property
     def nx(self) -> int:
