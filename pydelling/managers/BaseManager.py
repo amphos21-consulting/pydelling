@@ -243,7 +243,3 @@ class BaseManager(ABC):
         """
         pass
 
-
-
-
-

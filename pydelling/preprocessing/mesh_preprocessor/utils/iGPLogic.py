@@ -25,6 +25,7 @@ class iGPLogic:
                              write_regions=True,
                              output_folder=None,
                              project_name='igp_mesh',
+                             weight_by_volume=True,
                              ):
         """
         Function that transforms an implicit mesh into an explicit mesh
