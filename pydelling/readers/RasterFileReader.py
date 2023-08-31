@@ -6,6 +6,7 @@ from typing import Tuple, List, Union
 from .BaseReader import BaseReader
 from skimage import measure
 from scipy.spatial import ConvexHull
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,6 @@ class RasterFileReader(BaseReader):
                                 self.reader_info["cellsize"])
             y_range = np.arange(self.reader_info["yllcorner"], self.reader_info["yllcorner"] + self.reader_info["ncols"] * self.reader_info["cellsize"],
                                 self.reader_info["cellsize"])
-            print(self.reader_info['xllcorner'], self.reader_info['yllcorner'], self.reader_info['cellsize'], self.reader_info['nrows'], self.reader_info['ncols'])
         else:
             x_range = np.arange(self.reader_info["xllcorner"], self.reader_info["xllcorner"] + self.reader_info["nrows"] * self.reader_info["dx"],
                                 self.reader_info["dx"])
@@ -200,7 +200,6 @@ class RasterFileReader(BaseReader):
         else:
             self.info['reader']["dx"] *= slice_factor
             self.info['reader']["dy"] *= slice_factor
-        print(self.data.shape)
         self.rebuild_x_y()
         logger.info(f"Data has been downsampled by a factor of {slice_factor}")
 
@@ -258,14 +257,7 @@ class RasterFileReader(BaseReader):
                 polygons.append(polygon)
 
         if plot_polygons:
-            fig, ax = plt.subplots()
-            ax.imshow(self.data, cmap='gray')
-            for polygon in polygons:
-                plt.plot(polygon[:, 1], polygon[:, 0], '-r', linewidth=2)
-                last_segment = np.array([[polygon[-1, 1], polygon[-1, 0]],
-                                            [polygon[0, 1], polygon[0, 0]]])
-                plt.plot(last_segment[:, 0], last_segment[:, 1], '-r', linewidth=2)
-            # Unite last polygon with first one
+            fig = self._plot_comparison_real_polygons(polygons)
             plt.show()
 
         if export_coordinates:
@@ -277,6 +269,35 @@ class RasterFileReader(BaseReader):
             return polygon_coords
         else:
             return polygons
+
+    def _plot_comparison_real_polygons(self,
+                                       polygons,
+                                       background_data=None,
+                                       palette='Oranges_r',
+                                       preprocess_func: callable = None,
+                                       timestamp: str = None,
+                                       show_polygons=True,
+                                       ):
+        fig, ax = plt.subplots()
+        plt_data = None
+        if background_data is None:
+            plt_data = self.data.copy()
+        else:
+            plt_data = background_data.copy()
+        if preprocess_func is not None:
+            plt_data = preprocess_func(plt_data)
+        ax.imshow(plt_data, cmap=palette)
+        if show_polygons:
+            for polygon in polygons:
+                ax.plot(polygon[:, 1], polygon[:, 0], '-r', linewidth=2)
+                last_segment = np.array([[polygon[-1, 1], polygon[-1, 0]],
+                                         [polygon[0, 1], polygon[0, 0]]])
+                ax.plot(last_segment[:, 0], last_segment[:, 1], '-r', linewidth=2)
+        if timestamp is not None:
+            # Add a timestamp as a title
+            ax.set_title(f'Time: {timestamp}')
+        # Unite last polygon with first one
+        return fig, ax
 
     def p2c(self, ix, iy):
         """Converts pixel to coordinate"""
