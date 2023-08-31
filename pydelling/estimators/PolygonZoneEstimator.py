@@ -1,9 +1,10 @@
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 
-from iml.source.estimators import BaseEstimator
-import sympy
+from pydelling.estimators import BaseEstimator
+from shapely.geometry import Point, Polygon
 from typing import Union
 from pathlib import Path
 import logging
@@ -21,11 +22,13 @@ class PolygonZoneEstimator(BaseEstimator):
             zones_dict: A dictionary with the name of the zone as key and the path to the polygon file as value.
         """
         super().__init__(file_path=None, zones_dict=zones_dict)
+        # User the data keys alphabetically sorted
+        self.data = {k: self.data[k] for k in sorted(self.data.keys())}
         self.zone_to_ids = {zone: i for i, zone in enumerate(self.data.keys())}
         self.ids_to_zone = {i: zone for i, zone in enumerate(self.data.keys())}
         logger.info(f"Initialized PolygonZoneEstimator with {len(self.data)} zones.")
 
-    def read_data(self, file_path=None, zones_dict: dict[str, Union[str, Path]] = None):
+    def read_data(self, file_path, zones_dict: dict[str, Union[str, Path]] = None):
         """Reads the data from the polygon files."""
         if zones_dict is None:
             logger.error("No valid {zone: polygon_file} dictionary was provided.")
@@ -33,15 +36,25 @@ class PolygonZoneEstimator(BaseEstimator):
         # Read the data from the polygon files
         temp_data = {}
         for zone, polygon_file in zones_dict.items():
-            temp_data[zone] = pd.read_csv(polygon_file)
-            temp_data[zone].columns = ['x', 'y']
+            if isinstance(polygon_file, str):
+                temp_data[zone] = pd.read_csv(polygon_file)
+                temp_data[zone].columns = ['x', 'y']
+            elif isinstance(polygon_file, np.ndarray) or isinstance(polygon_file, list):
+                temp_data[zone] = pd.DataFrame(polygon_file, columns=['x', 'y'])
+            elif isinstance(polygon_file, Path):
+                temp_data[zone] = pd.read_csv(polygon_file)
+                temp_data[zone].columns = ['x', 'y']
+            elif isinstance(polygon_file, pd.DataFrame):
+                temp_data[zone] = polygon_file
+            else:
+                raise ValueError(f"Invalid zones_dict type: {type(polygon_file)}")
         return temp_data
 
     def process_data(self):
         """Processes the self.data variable."""
         # Convert the data to sympy polygons
         for zone, data in self.data.items():
-            self.data[zone] = sympy.Polygon(*data.values)
+            self.data[zone] = Polygon(data.values)
 
     def smooth_data(self, window_size=3, sigma=1):
         pass
@@ -50,8 +63,10 @@ class PolygonZoneEstimator(BaseEstimator):
         """PLots all the polygons"""
         import matplotlib.pyplot as plt
         for zone, data in self.data.items():
-            vertices = data.vertices
-            x, y = zip(*vertices)
+            data: Polygon
+            vertices = data.exterior.coords.xy
+            x = vertices[0]
+            y = vertices[1]
             plt.plot(x, y, label=zone)
         plt.legend()
         if filename is not None:
@@ -65,8 +80,9 @@ class PolygonZoneEstimator(BaseEstimator):
         from plotly.colors import qualitative
         idx = 0
         for zone, data in self.data.items():
-            vertices = data.vertices
-            x, y = zip(*vertices)
+            vertices = data.exterior.coords.xy
+            x = vertices[0]
+            y = vertices[1]
             x = [float(i) for i in x]
             y = [float(i) for i in y]
             x.append(x[0])
@@ -86,9 +102,10 @@ class PolygonZoneEstimator(BaseEstimator):
 
     def point_in_zone(self, x, y):
         """Returns the zone in which the point (x, y) is located."""
-        point = sympy.Point(x, y)
+        point = Point(x, y)
         for zone, polygon in self.data.items():
-            if polygon.encloses_point(point):
+            polygon: Polygon
+            if polygon.contains(point):
                 return zone
         return None
 
