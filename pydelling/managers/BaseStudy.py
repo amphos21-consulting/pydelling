@@ -174,6 +174,9 @@ class BaseStudy(UnitConverter):
 
         """
         logger.info(f"Adding input file {file_path}" + ("(Shared file)" if shared_file else ""))
+        # Check if the file exists
+        if not Path(file_path).exists():
+            raise FileNotFoundError(f"File {file_path} not found")
         file_path = Path(file_path)
         self.aux_files[file_path.name] = file_path
         if shared_file:
@@ -191,9 +194,7 @@ class BaseStudy(UnitConverter):
         """
         folder_path = Path(folder_path)
         for file in folder_path.glob('*'):
-            self.aux_files[file.name] = file
-            if shared_file:
-                self._shared_files.append(file.name)
+            self.add_input_file(file, shared_file=shared_file)
         logger.info(f"Adding input folder {folder_path} with {len(self.aux_files)} files" + ("(Shared files)" if shared_file else ""))
 
     def add_callback(self, callback: Callable, kind: str = 'pre', **kwargs):
