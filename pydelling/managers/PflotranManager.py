@@ -7,7 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from pydelling.utils import create_results_folder
 from pydelling.managers.PflotranPostprocessing import PflotranPostprocessing
-from pydelling.managers.ssh import JurecaSsh, LumiSsh
+from pydelling.managers.ssh import JurecaSsh, LumiSsh, BaseSsh
 from pydelling.managers.status import PflotranStatus
 import logging
 import os
@@ -190,7 +190,8 @@ class PflotranManager(BaseManager):
             self.ssh.rmdir(study.name)
         self.ssh.mkdir(study.name)
         # Copy the study folder to the server
-        self.ssh.cpdir(study.output_folder, study.name)
+        # self.ssh.cpdir(study.output_folder, study.name)
+        self.copy_study_to_remote(self.ssh, study=study)
         # Copy the shell_script to the server
         if shell_script_path is not None:
             # Read the shell script and replace the study name where {input_name} is found\
@@ -225,6 +226,46 @@ class PflotranManager(BaseManager):
 
         else:
             raise ValueError('shell_script should be provided with the details of the job submission.')
+
+
+    def copy_study_to_remote(self,
+                            ssh_manager: BaseSsh,
+                            study: PflotranStudy,
+                            ):
+        """This method copies the data to the remote server. Takes care of the shared files.
+        """
+        # Check if the shared files are already in the remote server
+        if self.has_shared_files:
+            if not PflotranStudy.shared_folder_default_name in ssh_manager.ls:
+                ssh_manager.mkdir(PflotranStudy.shared_folder_default_name)
+            shared_folder_ls = ssh_manager.ls_dir(PflotranStudy.shared_folder_default_name)
+            for file in study._shared_files:
+                # Get ls of the shared folder
+                if file not in shared_folder_ls:
+                    ssh_manager.cp(study.aux_files[file], f"{PflotranStudy.shared_folder_default_name}/{file}")
+
+        # Copy the study folder to the server excepting the 'input_files' folder
+            for file in study.output_folder.glob('*'):
+                if file.name != 'input_files':
+                    ssh_manager.cp(file.absolute(), str(Path(study.name) / file.name))
+            # Copy the aux files to the server, excepting the shared files
+            for file in study.aux_files:
+                if file not in study._shared_files:
+                    ssh_manager.cp(study.aux_files[file], f"{study.name}/{file}")
+                else:
+                    # Copy the shared files from the shared folder to the input_files folder
+                    ssh_manager.cp_remote(f"{PflotranStudy.shared_folder_default_name}/{file}", f"{study.name}/input_files/{file}")
+
+
+
+
+
+
+
+
+    @property
+    def has_shared_files(self):
+        return any([len(study._shared_files) > 0 for study in self.studies.values()])
 
     def _ssh_download(self,
                       study: PflotranStudy,
