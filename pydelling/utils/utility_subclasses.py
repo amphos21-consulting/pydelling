@@ -56,6 +56,8 @@ class UnitConverter:
         else:
             raise ValueError(f"Invalid unit conversion: {initial_unit} to {final_unit}")
 
+
+
 class SemistructuredFinder:
     """A class for processing a semi-structured grid based on a set of points.
     Based on a cloud of points, the algorithm creates clusters of points that share a common z coordinate.

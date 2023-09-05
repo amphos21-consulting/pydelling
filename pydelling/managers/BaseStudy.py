@@ -58,6 +58,7 @@ class BaseStudy(UnitConverter):
         self.output_folder = None
         self._callbacks: List[Callable] = []
         self.callbacks: List[BaseCallback] = []
+        self._shared_files = []
 
     def pre_run(self):
         """This method is executed before the run.
@@ -160,20 +161,38 @@ class BaseStudy(UnitConverter):
         file_path = Path(file_path)
         self.aux_files[file_path.name] = file_path
 
-    def add_input_file(self, file_path: Union[Path, str]):
-        """This method adds an auxiliary file to the manager.
+    def add_input_file(self, file_path: Union[Path, str], shared_file=False):
         """
-        logger.info(f"Adding input file {file_path}")
+        Adds an input file to the study
+        Args:
+            file_path: Path of the input file
+            shared_file: If True, the file will be added to the common folder and shared among all the studies
+
+        Returns:
+
+        """
+        logger.info(f"Adding input file {file_path}" + ("(Shared file)" if shared_file else ""))
         file_path = Path(file_path)
         self.aux_files[file_path.name] = file_path
+        if shared_file:
+            self._shared_files.append(file_path.name)
 
-    def add_input_folder(self, folder_path: str):
-        """This method adds an auxiliary folder to the manager.
+    def add_input_folder(self, folder_path: str, shared_file=False):
+        """
+        Adds an input folder to the study
+        Args:
+            folder_path: Path of the input folder
+            shared_file: If True, the folder will be added to the common folder and shared among all the studies
+
+        Returns:
+
         """
         folder_path = Path(folder_path)
         for file in folder_path.glob('*'):
             self.aux_files[file.name] = file
-        logger.info(f"Adding input folder {folder_path} with {len(self.aux_files)} files")
+            if shared_file:
+                self._shared_files.append(file.name)
+        logger.info(f"Adding input folder {folder_path} with {len(self.aux_files)} files" + ("(Shared files)" if shared_file else ""))
 
     def add_callback(self, callback: Callable, kind: str = 'pre', **kwargs):
         """This method adds a callback to the manager.
@@ -189,6 +208,17 @@ class BaseStudy(UnitConverter):
             temp_callbacks.append(callback(manager))
         self.callbacks = temp_callbacks
 
+    def to_shared_folder(self, shared_folder_name='shared_folder'):
+        """This method copies the input files to the shared folder.
+        """
+        logger.info(f"Copying input files to shared folder ({shared_folder_name})")
+        shared_folder = Path().parent / shared_folder_name
+        shared_folder.mkdir(exist_ok=True)
+        for file in self.aux_files:
+            if file in self._shared_files:
+                # Check if it is already in the shared folder
+                if not (shared_folder / file).exists():
+                    shutil.copy(self.aux_files[file], shared_folder / file)
 
     def to_file(self,
                 output_folder: str=None,
@@ -197,6 +227,7 @@ class BaseStudy(UnitConverter):
                 **kwargs):
         """This method renders the input file and saves it to a file.
         """
+
         self.output_folder = output_folder if output_folder is not None else f'case-{BaseStudy.count}'
         logger.info(f"Saving input files to {output_folder}")
         BaseStudy.count += 1
@@ -206,12 +237,25 @@ class BaseStudy(UnitConverter):
         output_file.write_text(self.render(**kwargs))
 
         # Copy the auxiliary files
+        if len(self._shared_files) > 0:
+            self.to_shared_folder()
         if len(self.aux_files) > 0:
             auxiliary_folder = auxiliary_folder if auxiliary_folder is not None else 'input_files'
             auxiliary_folder = output_folder / auxiliary_folder
             auxiliary_folder.mkdir(exist_ok=True)
             for aux_file in self.aux_files:
-                shutil.copy(self.aux_files[aux_file], auxiliary_folder / aux_file)
+                # Only copy if it is not in the shared folder
+                if aux_file not in self._shared_files:
+                    shutil.copy(self.aux_files[aux_file], auxiliary_folder / aux_file)
+                # Otherwise, copy it from the shared folder
+                else:
+                    shutil.copy(self.shared_path_default / aux_file, auxiliary_folder / aux_file)
+
+    @property
+    def shared_path_default(self):
+        """This method returns the path of the shared folder.
+        """
+        return Path().parent / 'shared_folder'
 
     def to_tar(self):
         """This method creates a tar file with the input files. Using the gzip compression.
