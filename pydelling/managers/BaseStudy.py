@@ -30,6 +30,8 @@ class BaseStudy(UnitConverter):
     - The input file is rendered using jinja2 for each specific case
     """
     count = 0
+    shared_folder_default_name = 'shared_folder'
+    results_folder_name = None
 
     def __init__(self,
                  input_file: str,
@@ -208,11 +210,16 @@ class BaseStudy(UnitConverter):
             temp_callbacks.append(callback(manager))
         self.callbacks = temp_callbacks
 
-    def to_shared_folder(self, shared_folder_name='shared_folder'):
+    def to_shared_folder(self,
+                         shared_folder_name='./shared_folder',
+                         results_folder_name=None,
+                         ):
         """This method copies the input files to the shared folder.
         """
-        logger.info(f"Copying input files to shared folder ({shared_folder_name})")
-        shared_folder = Path().parent / shared_folder_name
+        BaseStudy.shared_folder_default_name = shared_folder_name
+        logger.debug(f"Copying input files to shared folder ({shared_folder_name})")
+        shared_folder = Path() / results_folder_name if results_folder_name is not None else Path()
+        shared_folder = shared_folder / shared_folder_name
         shared_folder.mkdir(exist_ok=True)
         for file in self.aux_files:
             if file in self._shared_files:
@@ -229,6 +236,9 @@ class BaseStudy(UnitConverter):
         """
 
         self.output_folder = output_folder if output_folder is not None else f'case-{BaseStudy.count}'
+        # Get the results folder name (previously set by the manager)
+        self.results_folder_name = Path(self.output_folder).parent.name
+
         logger.info(f"Saving input files to {output_folder}")
         BaseStudy.count += 1
         output_folder = Path(self.output_folder)
@@ -238,7 +248,7 @@ class BaseStudy(UnitConverter):
 
         # Copy the auxiliary files
         if len(self._shared_files) > 0:
-            self.to_shared_folder()
+            self.to_shared_folder(results_folder_name=self.results_folder_name)
         if len(self.aux_files) > 0:
             auxiliary_folder = auxiliary_folder if auxiliary_folder is not None else 'input_files'
             auxiliary_folder = output_folder / auxiliary_folder
@@ -255,7 +265,13 @@ class BaseStudy(UnitConverter):
     def shared_path_default(self):
         """This method returns the path of the shared folder.
         """
-        return Path().parent / 'shared_folder'
+        project_name = 'studies'
+        if self.results_folder_name is not None:
+            project_name = self.results_folder_name
+        else:
+            self.results_folder_name = project_name
+
+        return Path() / project_name / self.shared_folder_default_name
 
     def to_tar(self):
         """This method creates a tar file with the input files. Using the gzip compression.
