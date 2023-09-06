@@ -567,10 +567,23 @@ class MeshPreprocessor(iGPLogic):
         if not self.is_connections_found:
             raise ValueError("Connections should be computed. Run self.find_mesh_connections()")
         logger.info('Finding boundary elements')
+        # # filter out elements if material == 2
+        # condition_list = []
+        # for imat, mat_elements in self.material_dict.items():
+        #     if imat == 1:
+        #         condition_list.extend([False for el in mat_elements])
+        #     else:
+        #         condition_list.extend([True for el in mat_elements])
+        #
+        # #intersection
+        # self.elements = [i for (i, v) in zip(self.elements, condition_list) if v]
+
+
         for element in tqdm(self.elements, desc="Finding boundary elements"):
             if not len(element.connections) == element.faces:
                 if element.external_faces:
                     self.external_boundaries[element.local_id] = element.external_faces
+                    # self.external_boundaries[element] = element.external_faces
 
 
     def get_topography_faces(self):
@@ -579,9 +592,16 @@ class MeshPreprocessor(iGPLogic):
             raise ValueError("self.boundaries is None.")
         elem_vector = {}
         for local_id, val in tqdm(self.external_boundaries.items(), desc="Finding topography elements"):
+        # for element, val in tqdm(self.external_boundaries.items(), desc="Finding topography elements"):
+            # print(len(self.elements))
+            # print(local_id)
+            # print(self.elements[local_id])
             for face in self.elements[local_id].external_faces:
+            # for face in element.external_faces:
                 unit_face_vector_z = self.elements[local_id].faces[face.face_id].unit_normal_vector[2]
+                # unit_face_vector_z = element.faces[face.face_id].unit_normal_vector[2]
                 if unit_face_vector_z > 0:
+                    # elem_vector[element.local_id] = face
                     elem_vector[local_id] = face
 
         return elem_vector
@@ -594,11 +614,15 @@ class MeshPreprocessor(iGPLogic):
 
         topo_faces = self.get_topography_faces()
         for id_element, face in tqdm(topo_faces.items(), desc="Assigning topography boundaries."):
-            z_mean = np.mean(face.coords, axis=0)[2]
-            if z_mean > z_coord:
-                self.boundaries["land"][id_element] = face
+            # filter out by material
+            if id_element in self.material_dict[1]:
+                continue
             else:
-                self.boundaries["sea"][id_element] = face
+                z_mean = np.mean(face.coords, axis=0)[2]
+                if z_mean > z_coord:
+                    self.boundaries["land"][id_element] = face
+                else:
+                    self.boundaries["sea"][id_element] = face
 
     def plot_topography_centroids(self):
         """ Plots the topography centroids. For testing reasons. """
