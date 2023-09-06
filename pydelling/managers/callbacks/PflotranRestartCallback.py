@@ -54,12 +54,6 @@ class PflotranRestartCallback(BaseCallback):
             if target_file is None:
                 raise FileNotFoundError('Restart file not found')
 
-
-
-
-
-
-
     def run_dummy(self):
         """This method is called when the callback is run in dummy mode"""
         pass
