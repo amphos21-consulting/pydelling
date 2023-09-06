@@ -114,7 +114,7 @@ class PflotranStudy(BaseStudy):
         """This method adds a checkpoint to the simulation.
         """
         logger.info(f"Adding checkpoint at {times} {time_unit}")
-        if isinstance(times, float):
+        if isinstance(times, float) or isinstance(times, int):
             times = [times]
         times = [self.convert_time(value=time, initial_unit=time_unit, final_unit=time_unit) for time in times]
         times = [str(time) for time in times]

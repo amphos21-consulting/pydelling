@@ -55,7 +55,21 @@ class TestPflotranCase(TestCase):
         new_datasets = ['dirichletpressure', 'topflow', 'pepe']
         self.assertListEqual(sorted(self.pflotran_study.get_datasets()), sorted(new_datasets))
 
+    def test_file_not_found_error(self):
+        new_study = PflotranStudy(str(test_data_path() / 'test_manager.in'))
+        # Check that the following raises an error
+        with self.assertRaises(FileNotFoundError):
+            new_study.add_input_file('input_files/common_file.txt')
 
+    def test_local_shared_file(self):
+        new_study = PflotranStudy(str(test_data_path() / 'test_manager.in'))
+        # Create a dummy file
+        dummy_file = test_data_path() / 'dummy_file.txt'
+        dummy_file.touch()
+        new_study.add_input_file(dummy_file, shared_file=True)
+        self.assertIn(dummy_file.name, new_study._shared_files)
+        # Delete the dummy file
+        dummy_file.unlink()
 
 
 

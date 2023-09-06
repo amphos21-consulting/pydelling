@@ -26,8 +26,17 @@ class PflotranSaveResultsCallback(BaseCallback):
     def __init__(self, manager: PflotranManager,
                  study: PflotranStudy,
                  kind: str = 'post',
+                 move: bool = False,
+                 postprocess: bool = False,
+                 postprocess_regular: bool = False,
                  **kwargs):
-        super().__init__(manager, study, 'post', **kwargs)
+        super().__init__(manager, study,
+                         'post',
+                         move=move,
+                         postprocess=postprocess,
+                         postprocess_regular=postprocess_regular,
+                         **kwargs,
+                         )
 
     def run(self):
         """This callback runs after the simulation is run, it creates a folder and copies (or moves) the results to it"""

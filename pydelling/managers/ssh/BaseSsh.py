@@ -38,6 +38,27 @@ class BaseSsh(ABC):
         stdin, stdout, stderr = self.client.exec_command(command)
         return stdout.read().decode('utf-8').strip()
 
+    def cp_remote(self, src, dst):
+        """
+        Copies a file from the remote server to another location in the remote server.
+        Args:
+            src: source file
+            dst: destination file
+        """
+        self.run_command(f'cp {src} {dst}')
+        logger.info(f'Copied (remote -> remote) {src} to {dst}')
+
+    def cpdir_remote(self, src, dst):
+        """
+        Copies a directory from the remote server to another location in the remote server.
+        Args:
+            src: source directory
+            dst: destination directory
+        """
+        self.run_command(f'cp -r {src} {dst}')
+        logger.info(f'Copied (remote -> remote) {src} to {dst}')
+
+
     @property
     def pwd(self):
         """
@@ -81,7 +102,7 @@ class BaseSsh(ABC):
         """
         path = str(path)
         self.sftp.remove(path)
-        logger.info(f'Removed file {path}')
+        logger.info(f'Removed (remote) file {path}')
 
     def rmdir(self,
               path,
@@ -102,7 +123,7 @@ class BaseSsh(ABC):
             except IOError:
                 self.rmdir(str(path / file))
         self.sftp.rmdir(str(path))
-        logger.info(f'Removed directory {path}')
+        logger.info(f'Removed (remote) directory {path}')
 
     def cp(self, src, dst):
         """
@@ -112,7 +133,7 @@ class BaseSsh(ABC):
             dst: destination file
         """
         self.sftp.put(src, dst)
-        logger.info(f'Copied {src} to {dst}')
+        logger.info(f'Copied (local -> remote) {src} to {dst}')
 
     def cpdir(self, src, dst):
         """
@@ -139,7 +160,7 @@ class BaseSsh(ABC):
             dst: destination file
         """
         self.sftp.get(src, dst)
-        logger.info(f'Copied {src} to {dst}')
+        logger.info(f'Copied (remote -> local) {src} to {dst}')
 
     def getdir(self, src, dst):
         """
@@ -164,4 +185,11 @@ class BaseSsh(ABC):
         Returns: content of the current working directory
         """
         return self.sftp.listdir()
+
+    def ls_dir(self, dir):
+        """
+        Returns the content of a directory in the remote server.
+        Returns: content of the directory
+        """
+        return self.sftp.listdir(dir)
 

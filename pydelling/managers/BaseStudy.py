@@ -8,6 +8,7 @@ from typing import Callable
 from typing import TYPE_CHECKING, List, Union
 if TYPE_CHECKING:
     from pydelling.managers import BaseCallback, BaseManager
+    from pydelling.managers.ssh.steps import BaseStep
 
 import logging
 
@@ -60,7 +61,9 @@ class BaseStudy(UnitConverter):
         self.output_folder = None
         self._callbacks: List[Callable] = []
         self.callbacks: List[BaseCallback] = []
+        self.steps: List[BaseStep] = []
         self._shared_files = []
+
 
     def pre_run(self):
         """This method is executed before the run.
@@ -174,6 +177,9 @@ class BaseStudy(UnitConverter):
 
         """
         logger.info(f"Adding input file {file_path}" + ("(Shared file)" if shared_file else ""))
+        # Check if the file exists
+        if not Path(file_path).exists():
+            raise FileNotFoundError(f"File {file_path} not found")
         file_path = Path(file_path)
         self.aux_files[file_path.name] = file_path
         if shared_file:
@@ -191,9 +197,7 @@ class BaseStudy(UnitConverter):
         """
         folder_path = Path(folder_path)
         for file in folder_path.glob('*'):
-            self.aux_files[file.name] = file
-            if shared_file:
-                self._shared_files.append(file.name)
+            self.add_input_file(file, shared_file=shared_file)
         logger.info(f"Adding input folder {folder_path} with {len(self.aux_files)} files" + ("(Shared files)" if shared_file else ""))
 
     def add_callback(self, callback: Callable, kind: str = 'pre', **kwargs):
@@ -201,6 +205,19 @@ class BaseStudy(UnitConverter):
         """
         kwargs['kind'] = kind
         self._callbacks.append(lambda manager: callback(manager, self, **kwargs))
+
+    def add_ssh_step(self, step: BaseStep):
+        """This method adds a ssh step to the manager.
+        """
+        from pydelling.managers.ssh.steps import BaseStep
+        assert isinstance(step, BaseStep), 'Step must be a subclass of BaseStep'
+        self.steps.append(step)
+        logger.debug(f"Adding ssh step {step.__class__.__name__}")
+
+    def remove_ssh_steps(self):
+        """This method removes all the ssh steps from the manager.
+        """
+        self.steps = []
 
     def initialize_callbacks(self, manager: BaseManager):
         """This method initializes the callbacks.
