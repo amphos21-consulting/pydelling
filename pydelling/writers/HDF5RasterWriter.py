@@ -6,6 +6,9 @@ import numpy as np
 
 from .BaseWriter import BaseWriter
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class HDF5RasterWriter(BaseWriter):
     def __init__(self,
@@ -93,6 +96,7 @@ class HDF5RasterWriter(BaseWriter):
         self.times = times
         self.attributes = attributes
         self.filename = filename
+        logger.info(f"Created HDF5RasterWriter with filename {filename} and parameters {self.info}")
 
 
     def transform_flatten_to_regular_mesh(self, data):
@@ -138,7 +142,6 @@ class HDF5RasterWriter(BaseWriter):
             self.filename = filename
 
         if self.check_data():
-            print(self.filename)
             if not os.path.exists(self.filename):
                 h5temp = h5py.File(self.filename, "w")
                 h5temp.close()
@@ -166,8 +169,10 @@ class HDF5RasterWriter(BaseWriter):
                         else:
                             temp_group.attrs[attribute] = self.attributes[attribute]
 
+            logger.info(f"Saved raster file to {self.filename}")
         else:
             print("Couldn't find data to dump!")
+
 
     def add_dimension_attribute(self, dimension):
         self.attributes["Dimension"] = dimension
