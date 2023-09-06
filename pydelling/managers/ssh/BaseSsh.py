@@ -123,7 +123,7 @@ class BaseSsh(ABC):
             except IOError:
                 self.rmdir(str(path / file))
         self.sftp.rmdir(str(path))
-        logger.info(f'Removed (remove) directory {path}')
+        logger.info(f'Removed (remote) directory {path}')
 
     def cp(self, src, dst):
         """

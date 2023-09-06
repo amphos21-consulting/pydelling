@@ -51,6 +51,7 @@ class BaseManager(ABC):
             wallclock_limit: float = 23,
             shell_script: str = None,
             download_file_extensions: List[str] = None,
+            download_results: bool = True,
             **kwargs,
             ):
         """This method runs all the studies.
@@ -88,6 +89,7 @@ class BaseManager(ABC):
                                    wallclock_limit=wallclock_limit,
                                    shell_script_path=shell_script,
                                    download_file_extensions=download_file_extensions,
+                                   download_results=download_results,
                                    **kwargs)
                     continue
             self.run_study(study,
@@ -103,6 +105,7 @@ class BaseManager(ABC):
                            wallclock_limit=wallclock_limit,
                            shell_script_path=shell_script,
                            download_file_extensions=download_file_extensions,
+                           download_results=download_results,
                            **kwargs)
 
     def generate_run_files(self, studies_folder: str = './studies'):
@@ -139,6 +142,7 @@ class BaseManager(ABC):
                             n_cores: int = 1,
                             wallclock_limit: float = None,
                             shell_script: str = None,
+                            download_results: bool = True,
                             **kwargs,
                             ):
         """This method runs a study in JURECA."""
@@ -153,6 +157,7 @@ class BaseManager(ABC):
                             n_cores: int = 1,
                             wallclock_limit: float = None,
                             shell_script: str = None,
+                            download_results: bool = True,
                             **kwargs,
                             ):
         """This method runs a study in LUMI supercomputer."""
@@ -171,6 +176,7 @@ class BaseManager(ABC):
                   wallclock_limit: float = 23,
                   shell_script: str = None,
                   download_file_extensions: List[str] = None,
+                  download_results: bool = True,
                   **kwargs,
                   ):
         """This method runs a study.
@@ -186,6 +192,7 @@ class BaseManager(ABC):
                 if callback.kind == 'pre':
                     callback.run()
             study.to_file(self.results_folder / study.name)
+
             # Run the study
             if run_on == 'jureca':
                 self._run_study_jureca(study,
@@ -196,6 +203,7 @@ class BaseManager(ABC):
                                        wallclock_limit=wallclock_limit,
                                        shell_script=shell_script,
                                        download_file_extensions=download_file_extensions,
+                                       download_results=download_results,
                                        **kwargs)
             elif run_on == 'lumi':
                 self._run_study_lumi(study,
@@ -206,14 +214,19 @@ class BaseManager(ABC):
                                      wallclock_limit=wallclock_limit,
                                      shell_script=shell_script,
                                      download_file_extensions=download_file_extensions,
+                                     download_results=download_results,
                                      **kwargs)
             elif docker_image is not None:
                 self._run_study_docker(study, docker_image, n_cores=n_cores, **kwargs)
             else:
                 self._run_study(study, n_cores=n_cores, **kwargs)
+            for step in study.steps:
+                if step.kind == 'post':
+                    step.run()
             for callback in study.callbacks:
                 if callback.kind == 'post':
                     callback.run()
+
             study.post_run()
 
 

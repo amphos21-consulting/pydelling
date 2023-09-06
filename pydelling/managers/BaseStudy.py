@@ -8,6 +8,7 @@ from typing import Callable
 from typing import TYPE_CHECKING, List, Union
 if TYPE_CHECKING:
     from pydelling.managers import BaseCallback, BaseManager
+    from pydelling.managers.ssh.steps import BaseStep
 
 import logging
 
@@ -60,7 +61,9 @@ class BaseStudy(UnitConverter):
         self.output_folder = None
         self._callbacks: List[Callable] = []
         self.callbacks: List[BaseCallback] = []
+        self.steps: List[BaseStep] = []
         self._shared_files = []
+
 
     def pre_run(self):
         """This method is executed before the run.
@@ -202,6 +205,19 @@ class BaseStudy(UnitConverter):
         """
         kwargs['kind'] = kind
         self._callbacks.append(lambda manager: callback(manager, self, **kwargs))
+
+    def add_ssh_step(self, step: BaseStep):
+        """This method adds a ssh step to the manager.
+        """
+        from pydelling.managers.ssh.steps import BaseStep
+        assert isinstance(step, BaseStep), 'Step must be a subclass of BaseStep'
+        self.steps.append(step)
+        logger.debug(f"Adding ssh step {step.__class__.__name__}")
+
+    def remove_ssh_steps(self):
+        """This method removes all the ssh steps from the manager.
+        """
+        self.steps = []
 
     def initialize_callbacks(self, manager: BaseManager):
         """This method initializes the callbacks.
