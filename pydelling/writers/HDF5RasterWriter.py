@@ -14,11 +14,53 @@ class HDF5RasterWriter(BaseWriter):
                  data=None,
                  times=0.0,
                  attributes={},
+                 interpolation_info=None,
+                 n_x=None,
+                 n_y=None,
+                 x_min=None,
+                 x_max=None,
+                 y_min=None,
+                 y_max=None,
+                 dilatation_factor=1.0,
                  **kwargs,
                  ):
+        assert data is not None, "You must provide the data"
+        if interpolation_info is not None:
+            self.info = interpolation_info
+        if any([n_x, n_y, x_min, x_max, y_min, y_max]):
+            assert all([x_min is not None, x_max is not None, y_min is not None, y_max is not None]), \
+                "You must provide all the interpolation information if interpolation_info is not provided"
+            if n_x is None:
+                if len(data.shape) == 2:
+                    n_x = data.shape[0]
+                else:
+                    raise ValueError("Could not determine n_x, please provide it")
+
+            if n_y is None:
+                if len(data.shape) == 2:
+                    n_y = data.shape[1]
+                else:
+                    raise ValueError("Could not determine n_y, please provide it")
+            self.info = {
+                "interpolation": {
+                    "type": "regular_mesh",
+                    "n_x": n_x,
+                    "n_y": n_y,
+                    "x_min": x_min,
+                    "x_max": x_max,
+                    "y_min": y_min,
+                    "y_max": y_max,
+                    "d_x": (x_max - x_min) / n_x,
+                    "d_y": (y_max - y_min) / n_y,
+                    "dilatation_factor": dilatation_factor,
+                }
+            }
+
         super().__init__(self, data=data, **kwargs)
         if self.info["interpolation"]["type"] == "regular_mesh":
             if len(self.data.shape) == 1:
+                assert all([self.info["interpolation"]["n_x"], self.info["interpolation"]["n_y"]]), \
+                    "You must provide the n_x and n_y parameters if the data is 1D"
                 self.data = self.transform_flatten_to_regular_mesh(self.data)
                 self.data = np.array(self.data)
                 plt.imshow(self.data[0, :, :])
@@ -29,7 +71,10 @@ class HDF5RasterWriter(BaseWriter):
                 if self.data.shape[1] == 3:
                     self.data = self.centroid_transform_to_mesh()
                 else:
-                    self.data = self.transform_flatten_to_regular_mesh(data=self.data)
+                    try:
+                        self.data = self.transform_flatten_to_regular_mesh(data=self.data)
+                    except:
+                        self.data =[self.data]
                     self.data = np.array(self.data)
                     plt.imshow(self.data[0, :, :])
                     plt.show()
@@ -47,6 +92,8 @@ class HDF5RasterWriter(BaseWriter):
         self.region_name = dataset_name
         self.times = times
         self.attributes = attributes
+        self.filename = filename
+
 
     def transform_flatten_to_regular_mesh(self, data):
         aux_array = []
@@ -55,6 +102,7 @@ class HDF5RasterWriter(BaseWriter):
                 aux_array.append(np.reshape(case, (self.info["interpolation"]["n_y"], self.info["interpolation"]["n_x"])).T)
         elif len(data.shape) == 1:
             aux_array.append(np.reshape(data, (self.info["interpolation"]["n_y"], self.info["interpolation"]["n_x"])).T)
+
         return np.array(aux_array)
 
     def centroid_transform_to_mesh(self):
@@ -90,6 +138,7 @@ class HDF5RasterWriter(BaseWriter):
             self.filename = filename
 
         if self.check_data():
+            print(self.filename)
             if not os.path.exists(self.filename):
                 h5temp = h5py.File(self.filename, "w")
                 h5temp.close()
