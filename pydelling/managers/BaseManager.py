@@ -52,12 +52,14 @@ class BaseManager(ABC):
             shell_script: str = None,
             download_file_extensions: List[str] = None,
             download_results: bool = True,
+            password: str = None,
             **kwargs,
             ):
         """This method runs all the studies.
         """
         self.is_dummy = dummy
         shell_script = Path(shell_script).absolute() if shell_script is not None else None
+        self.password = password
         # Initialize callbacks
         for study in self.studies.values():
             study.initialize_callbacks(self)
