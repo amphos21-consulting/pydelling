@@ -51,7 +51,7 @@ class BaseStudy(UnitConverter):
             self.is_independent = True
         self.name = study_name if study_name is not None else f"{self.__class__.__name__}-{self.idx + 1}"
         self.input_file_name = input_file_name if input_file_name is not None else Path(input_file).name
-        logger.info(f"Initializing {self.__class__.__name__} study")
+        logger.info(f"Initializing {self.__class__.__name__} study (input template: {self.input_file_name})")
         self.input_file = Path(input_file)
         self.settings = {}
         self.jinja_settings = {}
