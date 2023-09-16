@@ -2512,16 +2512,6 @@ files = [
 ]
 
 [[package]]
-name = "sklearn"
-version = "0.0.post1"
-description = "deprecated sklearn package, use scikit-learn instead"
-optional = false
-python-versions = "*"
-files = [
-    {file = "sklearn-0.0.post1.tar.gz", hash = "sha256:76b9ed1623775168657b86b5fe966d45752e5c87f528de6240c38923b94147c5"},
-]
-
-[[package]]
 name = "smmap"
 version = "5.0.0"
 description = "A pure Python implementation of a sliding window memory map manager"
@@ -2989,4 +2979,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "f583a357b3943a662f27f43b05fc7531a3448abb1b5d7f1297b40e47fbfbca88"
+content-hash = "d0d4b5536c00551e1ea2d97266efe58f807b102a535c1478d3b497b726eb100b"
