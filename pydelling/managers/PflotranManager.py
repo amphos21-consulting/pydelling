@@ -291,6 +291,7 @@ class PflotranManager(BaseManager):
                       job_id=None,
                       ):
         """This method downloads the results from the remote server."""
+        print(file_ext)
         if file_ext is None:
             file_ext = ['.h5']
         dir_list = self.ssh.ls
