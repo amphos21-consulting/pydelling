@@ -4,15 +4,19 @@ from .BaseAbstractMeshObject import BaseAbstractMeshObject
 
 
 class BaseFace(BaseAbstractMeshObject):
-    local_id = 0
+    _local_id = 0
     __slots__ = ['node_ids', 'node_coords']
-    def __init__(self, node_ids, node_coords):
+    def __init__(self, node_ids, node_coords, face_id=None):
         self.nodes = np.array(node_ids)
         self.coords = np.array(node_coords)
         self.n_coords = len(node_coords)
         self.type = 'BaseFace'
         # self.local_id = BaseFace.local_id
         # BaseFace.local_id += 1
+        self.id = BaseFace._local_id
+        self.local_id = BaseFace._local_id
+        self.face_id = face_id
+        BaseFace._local_id += 1
 
     @property
     def area(self):
@@ -21,6 +25,10 @@ class BaseFace(BaseAbstractMeshObject):
     @property
     def centroid(self):
         return self.compute_centroid()
+
+    @property
+    def n_nodes(self):
+        return len(self.nodes)
 
     def compute_area(self):
         """
@@ -76,7 +84,6 @@ class BaseFace(BaseAbstractMeshObject):
         '''Returns the intersection of the face with the plane'''
         return self.plane.intersect(plane)
 
-
     @property
     def unit_normal_vector(self):
         if not hasattr(self, '_unit_normal_vector'):
@@ -103,4 +110,10 @@ class BaseFace(BaseAbstractMeshObject):
         return Plane(self.centroid, normal=self.unit_normal_vector)
 
     def __repr__(self):
-        return f"{self.type}"
+        return f"{self.type}-{self.local_id}"
+
+    def __eq__(self, other):
+        if isinstance(other, BaseFace):
+            return np.all(self.nodes == other.nodes)
+        else:
+            return False

@@ -5,6 +5,7 @@ from typing import *
 
 import meshio as msh
 import numpy as np
+import math
 from scipy.spatial import KDTree
 from tqdm import tqdm
 
@@ -12,13 +13,16 @@ import pydelling.preprocessing.mesh_preprocessor.geometry as geometry
 from pydelling.preprocessing.dfn_preprocessor.Fracture import Fracture
 from pydelling.preprocessing.mesh_preprocessor.geometry import BaseElement
 from pydelling.utils.geometry_utils import compute_polygon_area
-from pydelling.preprocessing.mesh_preprocessor.utils import iGPLogic
+from .utils import iGPLogic
 logger = logging.getLogger(__name__)
 
 
 class MeshPreprocessor(iGPLogic):
     """Contains the logic to preprocess and work with a generic unstructured mesh"""
     elements: List[geometry.BaseElement]
+    external_boundaries: Dict[str, List[geometry.BaseFace]]
+    boundaries: Dict[str, List[geometry.BaseFace]]
+    material_dict: Dict[str, List[int]]
     coords: List[np.ndarray]
     centroids: List[np.ndarray]
     meshio_mesh: msh.Mesh = None
@@ -31,10 +35,15 @@ class MeshPreprocessor(iGPLogic):
     is_streamlit = False
     aux_nodes = {}
     has_kd_tree: bool = False
+    is_connections_found: bool = False
 
     def __init__(self, *args, **kwargs):
         self.unordered_nodes = {}
         self.elements = []
+        self.material_dict = {}
+        self.external_boundaries = {}
+        self.boundaries = {}
+        self.external_boundaries = {}
         BaseElement.local_id = 0
         if 'st_file' in kwargs:
             self.is_streamlit = True
@@ -88,6 +97,10 @@ class MeshPreprocessor(iGPLogic):
                 aux_nodes[idx] = node
             self._coords = aux_nodes
         return self._coords
+
+    @property
+    def nodes(self) -> np.ndarray:
+        return self.coords
 
     def add_quadrilateral(self, node_ids: List[int], node_coords: List[np.ndarray]):
         self.elements.append(geometry.QuadrilateralFace(node_ids=node_ids, node_coords=node_coords))
@@ -524,4 +537,117 @@ class MeshPreprocessor(iGPLogic):
 
     def add_point_data(self, name, data):
         self.point_data[name] = data
+
+    def find_mesh_connections(self):
+        """Find the connections between the elements."""
+        logger.info('Finding mesh connections')
+        aux_vec = []
+        for element in tqdm(self.elements, desc='Creating auxiliar vector'):
+            for face in element.faces.values():
+                aux_vec.append((sorted(list(face.nodes)), element.local_id))
+
+        aux_vec.sort(key=lambda x: x[0])
+        # Make a sorted list of the faces
+        for i in tqdm(range(len(aux_vec) - 1), desc='Finding connections'):
+            connection_1 = aux_vec[i]
+            connection_2 = aux_vec[i + 1]
+            if connection_1[0] == connection_2[0]:
+                elem_1 = self.elements[connection_1[1]]
+                elem_2 = self.elements[connection_2[1]]
+                face_1 = elem_1.detect_face(connection_1[0])
+                face_2 = elem_2.detect_face(connection_2[0])
+
+                elem_1.connections[elem_2.local_id] = [face_1, face_2]
+                elem_2.connections[elem_1.local_id] = [face_2, face_1]
+        self.is_connections_found = True
+
+    def find_boundary_elements(self):
+        """ Returns the elements and their external faces."""
+        # self.find_mesh_connections() should be obtained first.
+        if not self.is_connections_found:
+            raise ValueError("Connections should be computed. Run self.find_mesh_connections()")
+        logger.info('Finding boundary elements')
+        for element in tqdm(self.elements, desc="Finding boundary elements"):
+            if not len(element.connections) == len(element.faces):
+                self.external_boundaries[element.local_id] = element.external_faces
+
+
+    def get_topography_faces(self):
+        """ Returns the topography elements. """
+        if not self.external_boundaries:
+            raise ValueError("self.boundaries is None.")
+        elem_vector = {}
+        for local_id, val in tqdm(self.external_boundaries.items(), desc="Finding topography elements"):
+            for face in self.elements[local_id].external_faces:
+                unit_face_vector_z = self.elements[local_id].faces[face.face_id].unit_normal_vector[2]
+                if unit_face_vector_z > 0:
+                    elem_vector[local_id] = face
+
+        return elem_vector
+
+    def set_topography_boundaries(self, z_coord=0.0):
+        """ Set the topography boundaries for the Obayashi project. """
+
+        self.boundaries["land"] = {}
+        self.boundaries["sea"] = {}
+
+        topo_faces = self.get_topography_faces()
+        for id_element, face in tqdm(topo_faces.items(), desc="Assigning topography boundaries."):
+            z_mean = np.mean(face.coords, axis=0)[2]
+            if z_mean > z_coord:
+                self.boundaries["land"][id_element] = face
+            else:
+                self.boundaries["sea"][id_element] = face
+
+    def plot_topography_centroids(self):
+        """ Plots the topography centroids. For testing reasons. """
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        logger.info('Ploting topography centroids')
+        if self.boundaries["sea"]:
+            for key, face in self.boundaries["sea"].items():
+                ax.scatter(face.centroid[0], face.centroid[1], marker="x", c="b", s=10.0)
+        if self.boundaries["land"]:
+            for key, face in self.boundaries["land"].items():
+                ax.scatter(face.centroid[0], face.centroid[1], marker="x", c="g", s=10.0)
+        plt.show()
+
+    def get_boundary_elements_given_unit_vector(self,
+                                                unit_vector: np.array or list,
+                                                tolerance: float = 0.1
+                                                ) -> List[geometry.BaseFace]:
+        """ Returns the elements and the face with a given normal unit vector. """
+        if not self.external_boundaries:
+            raise ValueError("self.boundaries is None.")
+        elem_vector = {}
+        logger.info(f'Finding boundary elements from unit vector: {unit_vector}')
+        for i_elem, val in tqdm(self.external_boundaries.items(), desc="Finding boundary elements from a unit vector"):
+            for face in self.elements[i_elem].external_faces:
+                u_vector_face = self.elements[i_elem].faces[face.face_id].unit_normal_vector
+
+                # Compute the dot product of the vectors
+                dot_product = np.dot(unit_vector, u_vector_face)
+                if dot_product < 1E-16:
+                    continue
+
+                # Compute the magnitudes of the vectors
+                magnitude1 = np.linalg.norm(unit_vector)
+                magnitude2 = np.linalg.norm(u_vector_face)
+
+                # Compute the cosine of the angle between the vectors
+                cosine_angle = dot_product / (magnitude1 * magnitude2)
+
+                # Check if the cosine angle is close to 1 within the given tolerance
+                if abs(cosine_angle - 1) < tolerance:
+                    elem_vector[i_elem] = face
+        return elem_vector
+
+    def assign_automatic_six_face_boundaries(self):
+        """This method as"""
+        self.boundaries['top']    = self.get_boundary_elements_given_unit_vector([0, 0, 1])
+        self.boundaries['bottom'] = self.get_boundary_elements_given_unit_vector([0, 0, -1])
+        self.boundaries['north']  = self.get_boundary_elements_given_unit_vector([0, 1,  0])
+        self.boundaries['south']  = self.get_boundary_elements_given_unit_vector([0, -1, 0])
+        self.boundaries['east']   = self.get_boundary_elements_given_unit_vector([1, 0, 0])
+        self.boundaries['west']   = self.get_boundary_elements_given_unit_vector([-1, 0, 0])
 

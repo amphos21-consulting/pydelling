@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import combinations
 from typing import *
 
@@ -9,6 +10,8 @@ from pydelling.utils.geometry_utils import filter_unique_points
 from .BaseAbstractMeshObject import BaseAbstractMeshObject
 from .BaseFace import BaseFace
 from scipy.spatial import Delaunay
+from scipy.spatial.qhull import ConvexHull
+from functools import cached_property, lru_cache
 
 
 class BaseElement(BaseAbstractMeshObject):
@@ -18,11 +21,20 @@ class BaseElement(BaseAbstractMeshObject):
     _edge_lines = None
     __slots__ = ['node_ids', 'node_coords']
 
-    def __init__(self, node_ids, node_coords, centroid_coords=None, local_id=None):
+    def __init__(self,
+                 node_ids,
+                 node_coords,
+                 centroid_coords=None,
+                 local_id=None,
+                 centroid_method="mean",
+                 ):
+        self.centroid_method = centroid_method
         self.nodes: np.ndarray = np.array(node_ids)  # Node id set
         self.coords: np.ndarray = np.array(node_coords)  # Coordinates of each node
+        self.faces: Dict[str, BaseFace] = {}  # Faces of an element
+        self.define_faces()
         if centroid_coords is None:
-            self.centroid = self.compute_centroid()
+            self.centroid = self.compute_centroid(self.centroid_method)
             self.centroid_coords = self.centroid
         else:
             self.centroid = np.array(centroid_coords)
@@ -30,7 +42,6 @@ class BaseElement(BaseAbstractMeshObject):
         self.local_id = local_id if local_id is not None else BaseElement.local_id
         if local_id is None:
             BaseElement.local_id += 1
-        self.faces: Dict[str, BaseFace] = {}  # Faces of an element
         self.type = None
         self.meshio_type = None
         self.associated_fractures = {}
@@ -38,9 +49,13 @@ class BaseElement(BaseAbstractMeshObject):
         self.total_fracture_volume = 0
         self.area = 0
         self.is_strange = 0.0
+        self.connections = {}
 
     def __repr__(self):
         return f"{self.type} {self.local_id}"
+
+    def define_faces(self):
+        raise NotImplementedError("Define faces method not implemented")
 
     def print_element_info(self):
         print("### Element info ###")
@@ -221,10 +236,9 @@ class BaseElement(BaseAbstractMeshObject):
                 return True
         return False
 
-    @property
+    @cached_property
     def n_nodes(self):
         return len(self.nodes)
-
     @property
     def edges(self):
         edges_list = []
@@ -237,13 +251,14 @@ class BaseElement(BaseAbstractMeshObject):
         edge_list_unique = np.unique(edge_list_flatten, axis=0)
         return edge_list_unique
 
-    @property
+    @cached_property
     def volume(self):
-        """Returns the volume of the hexahedra
+        """Returns the volume of the element
 
-        Returns: volume of the hexahedra
+        Returns: volume of the element
         """
-        return None
+        return ConvexHull(self.coords, qhull_options='QJ').volume
+
 
     def get_json(self):
         """Returns a json representation of the element"""
@@ -309,13 +324,86 @@ class BaseElement(BaseAbstractMeshObject):
                     f.write(f'{local_id + 1} ')
                 f.write('\n')
 
-
-    def compute_centroid(self):
+    def compute_centroid(self, centroid_method='mean'):
         """
         Computes the centroid of a general polyhedra
         :return: centroid of the polyhedron
         """
-        return np.mean(self.coords, axis=0)
+        if centroid_method == 'curl':
+            centroid = np.zeros(3)
+            vol = 0
+            for face in self._get_triangular_faces():
+                coords = face.coords
+                a = coords[0]
+                b = coords[1]
+                c = coords[2]
+                normal = np.cross(b-a, c-a)
+                vol += np.dot(a, normal) / 6.0
+                for i in range(3):
+                    centroid[i] += normal[i] * ((a[i] + b[i]) ** 2 + (b[i] + c[i]) ** 2 + (c[i] + a[i]) ** 2)
+            centroid *= 1 / (48 * vol)
+            return centroid
+        elif centroid_method == 'mean':
+            return np.mean(self.coords, axis=0)
+
+    def _get_triangular_faces(self) -> List[BaseFace]:
+        """Returns the triangular faces of the element"""
+        from .TriangleFace import TriangleFace
+        triangular_faces = []
+        for face in self.faces:
+            if self.faces[face].n_nodes == 3:
+                triangular_faces.append(self.faces[face])
+            elif self.faces[face].n_nodes == 4:
+                _face = self.faces[face]
+                # # Plot points in 3D each with a different colour
+                # import matplotlib.pyplot as plt
+                # fig = plt.figure()
+                # ax = fig.add_subplot(111, projection='3d')
+                # for i in range(4):
+                #     if i == 0:
+                #         ax.scatter(_face.coords[i, 0], _face.coords[i, 1], _face.coords[i, 2], c='r', marker='o')
+                #     elif i == 1:
+                #         ax.scatter(_face.coords[i, 0], _face.coords[i, 1], _face.coords[i, 2], c='g', marker='o')
+                #     elif i == 2:
+                #         ax.scatter(_face.coords[i, 0], _face.coords[i, 1], _face.coords[i, 2], c='b', marker='o')
+                #     elif i == 3:
+                #         ax.scatter(_face.coords[i, 0], _face.coords[i, 1], _face.coords[i, 2], c='y', marker='o')
+                #
+                # plt.show()
+                t1 = TriangleFace(node_ids=[[0, 1, 2]], node_coords=_face.coords[[0, 1, 2], :])
+                t2 = TriangleFace(node_ids=[[0, 1, 2]], node_coords=_face.coords[[0, 2, 3], :])
+                triangular_faces.append(t1)
+                triangular_faces.append(t2)
+        return triangular_faces
+
+
+    def detect_face(self, face_ids: List):
+        """Find the face given the local ids of the nodes"""
+        for face in self.faces:
+            sorted_ids = sorted(self.faces[face].nodes)
+            sorted_face_ids = sorted(face_ids)
+            if sorted_ids == sorted_face_ids:
+                return face
+        return None
+
+    @cached_property
+    def external_faces(self) -> List[BaseFace]:
+        """Returns the external faces of the element. Cached property"""
+        external_faces = []
+        internal_faces_ids = [face.id for face in self.internal_faces]
+        for face in self.faces.values():
+            idx = face.id
+            if idx not in internal_faces_ids:
+                external_faces.append(self.faces[face.face_id])
+        return external_faces
+
+    @cached_property
+    def internal_faces(self) -> List[BaseFace]:
+        """Returns the internal faces of the element"""
+        internal_faces = []
+        for key, val in self.connections.items():
+            internal_faces.append(self.faces[val[0]])
+        return internal_faces
 
     def plot_normal_vectors(self, point: Point=None, value=None, error_face=None):
         """Plots the normal vectors of the faces"""
