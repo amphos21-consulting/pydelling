@@ -612,7 +612,6 @@ class MeshPreprocessor(iGPLogic):
                 ax.scatter(face.centroid[0], face.centroid[1], marker="x", c="g", s=10.0)
         plt.show()
 
-    def get_boundary_elements_given_unit_vector(self, unit_vector: np.array or list) -> dict:
     def get_boundary_elements_given_unit_vector(self,
                                                 unit_vector: np.array or list,
                                                 tolerance: float = 0.1
