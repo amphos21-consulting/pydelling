@@ -39,6 +39,8 @@ class PflotranManager(BaseManager):
             # Run the study in parallel
             os.environ['PETSC_DIR'] = petsc_dir
             os.environ['PETSC_ARCH'] = petsc_arch
+            print(os.environ['PETSC_DIR'])
+            print(os.environ['PETSC_ARCH'])
             subprocess.call([f'$PETSC_DIR/$PETSC_ARCH/bin/mpirun -np {n_cores} pflotran -pflotranin {study.input_file_name}'],
                            cwd=study.output_folder.absolute(),
                            shell=True
