@@ -275,12 +275,6 @@ class PflotranManager(BaseManager):
             ssh_manager.cpdir(study.output_folder, study.name)
 
 
-
-
-
-
-
-
     @property
     def has_shared_files(self):
         return any([len(study._shared_files) > 0 for study in self.studies.values()])
