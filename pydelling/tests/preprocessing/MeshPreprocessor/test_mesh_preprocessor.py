@@ -5,6 +5,7 @@ import numpy as np
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
 from pydelling.readers.FemReader import FemReader
 from pydelling.utils import test_data_path
+from pydelling.readers import ConnectFlowMeshReader
 from pydelling.preprocessing import DfnPreprocessor
 
 
@@ -70,6 +71,21 @@ class TestMeshPreprocessor(unittest.TestCase):
         edge_lines = mesh_preprocessor.elements[0].edge_lines
         self.assertEqual(len(edge_lines), 12)
 
+    def test_find_mesh_connections(self):
+        connect_flow_reader = ConnectFlowMeshReader(test_data_path() / "connect_flow_reader_data.msh")
+        connect_flow_reader.find_mesh_connections()
+        connections = [connect_flow_reader.elements[0].connections, connect_flow_reader.elements[10].connections]
+        self.assertEqual(len(connections[0]), 3)
+        self.assertEqual(len(connections[1]), 5)
+
+    def test_find_boundary_elements(self):
+        connect_flow_reader = ConnectFlowMeshReader(test_data_path() / "connect_flow_reader_data.msh")
+        connect_flow_reader.find_mesh_connections()
+        connect_flow_reader.find_boundary_elements()
+        internal_faces = connect_flow_reader.elements[0].internal_faces
+        external_faces = connect_flow_reader.elements[0].external_faces
+        self.assertEqual(len(internal_faces), 3)
+        self.assertEqual(len(external_faces), 3)
 
 if __name__ == '__main__':
     unittest.main()

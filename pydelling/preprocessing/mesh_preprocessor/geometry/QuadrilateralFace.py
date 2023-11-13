@@ -4,8 +4,8 @@ from pydelling.preprocessing.mesh_preprocessor.geometry import BaseFace
 
 
 class QuadrilateralFace(BaseFace):
-    def __init__(self, node_ids, node_coords):
-        super().__init__(node_ids, node_coords)
+    def __init__(self, node_ids, node_coords, *args, **kwargs):
+        super().__init__(node_ids, node_coords, *args, **kwargs)
         self.type = "quadrilateral"
 
     def compute_centroid(self):
