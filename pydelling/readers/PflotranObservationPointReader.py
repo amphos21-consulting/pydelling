@@ -25,6 +25,7 @@ class PflotranObservationPointReader(BaseReader):
     def __init__(self, filename=None):
         self.filename = Path(filename) if filename else Path(config.pflotran_reader.filename)
         logger.info(f"Reading PFLOTRAN observation point results file from {self.filename}")
+        self.variables = {}
         super().__init__(filename=self.filename)
         self.results = self.data.copy()
 
@@ -46,34 +47,24 @@ class PflotranObservationPointReader(BaseReader):
 
         # Rename time column
         time_column: str = self.data.columns.to_list()[0]
-        # self.data.rename(columns={time_column: time_column.strip().strip('"')}, inplace=True)
-        # # Get observation point information
-        # temp_column_name: str = self.data.columns[1]
-        # temp_column_name = temp_column_name.replace('(', '').replace(')', '')
-        # splitted_column_name = temp_column_name.split(' ')
-        # self.observation_point = np.array([splitted_column_name[-3],
-        #                                   splitted_column_name[-2],
-        #                                   splitted_column_name[-3]],
-        #                                   ).astype(float)
-        # self.observation_node = int(splitted_column_name[-4])
-        # self.observation_boundary = splitted_column_name[-5]
-        # Get output column names
-        # self.variables = {}
-        # for column in self.data.columns:
-        #     if 'Time' in column:
-        #         continue
-        #     test_column_name: str = column
-        #     test_column_name_split = test_column_name.split('-')[1].split()
-        #     variable_str = []
-        #     flag_list = ['east', 'west', 'north', 'south', 'top', 'bottom']
-        #     for piece in test_column_name_split:
-        #         if piece in flag_list:
-        #             break
-        #         else:
-        #             variable_str.append(piece)
-        #     variable_str = ' '.join(variable_str)
-        #     self.variables[variable_str] = column
-        #     self.data.rename(columns={column: variable_str}, inplace=True)
+        def limpiar_nombre_variable_mejorado(nombre):
+            import re
+            # Usaremos una expresión regular para extraer la parte relevante del nombre de la variable
+            # Buscamos hasta el primer dígito, paréntesis abierto o corchete cerrado ']'
+            match = re.match(r"([a-zA-Z\s]+)\s*\[.*\]", nombre)
+            if match:
+                return match.group(1).strip()
+            else:
+                return nombre.strip()
+
+        for col in self.data.columns:
+            new_col = limpiar_nombre_variable_mejorado(col)
+            self.variables[new_col] = col
+            self.data.rename(columns={col: new_col}, inplace=True)
+        # Set time column as index and change name to time
+        print(self.data.columns)
+        self.data.set_index('"Time [y]"', inplace=True)
+        self.data.index.name = 'time'
 
     @property
     def mineral_names(self):
