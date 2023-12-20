@@ -130,7 +130,37 @@ class BaseStudy(UnitConverter):
         """
         logger.debug(f"Adding line {line_index} with {new_line}")
         lines = self.raw_text.splitlines()
+        if isinstance(new_line, str):
+            new_line = [new_line]
         lines.insert(line_index, sep.join(new_line))
+        self.raw_text = '\n'.join(lines)
+
+    def _delete_line(self, line_index: int):
+        """This method deletes a line in the raw text.
+        """
+        logger.debug(f"Deleting line {line_index}")
+        lines = self.raw_text.splitlines()
+        del lines[line_index]
+        self.raw_text = '\n'.join(lines)
+
+    def _delete_lines(self, line_indexes: list):
+        """This method deletes a line in the raw text.
+        """
+        logger.debug(f"Deleting lines {line_indexes}")
+        lines = self.raw_text.splitlines()
+        for line_index in sorted(line_indexes, reverse=True):
+            del lines[line_index]
+        self.raw_text = '\n'.join(lines)
+
+    def _add_lines(self, line_index: int, new_lines: list, sep: str = ' '):
+        """This method adds a line in the raw text.
+        """
+        logger.debug(f"Adding lines {line_index} with {new_lines}")
+        lines = self.raw_text.splitlines()
+        for i, new_line in enumerate(new_lines):
+            if isinstance(new_line, str):
+                new_line = [new_line]
+            lines.insert(line_index + i, sep.join(new_line))
         self.raw_text = '\n'.join(lines)
 
     def _get_nth_previous_line(self, line_index: int, n: int = 1):
