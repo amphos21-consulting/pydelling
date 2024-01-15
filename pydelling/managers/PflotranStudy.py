@@ -219,10 +219,10 @@ class PflotranStudy(BaseStudy):
             if 'subsurface' in line.lower():
                 has_end_tag = True
             temp_list.append(line)
-            if 'end' in line.lower().split():
+            if 'end' in line.lower():
                 has_end_tag = True
-            elif '/' in line.split():
-                has_end_tag = True
+            # elif '/' in line:
+            #     has_end_tag = True
         tag_name = temp_list[-2].split()[0]
         if self._get_line(original_line_index).split()[0].lower() == tag_name.lower():
             return None
