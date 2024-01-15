@@ -62,7 +62,7 @@ class JurecaSsh(BaseSsh):
         Returns the queue status in the remote server.
         Returns: queue status
         """
-        queue_string = self.run_command("squeue -u aitor1")
+        queue_string = self.run_command(f"squeue -u {self.user}")
         lines = queue_string.split('\n')
         lines = [line.split() for line in lines]
         # Take only the length of the first line
