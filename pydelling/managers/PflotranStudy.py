@@ -221,11 +221,11 @@ class PflotranStudy(BaseStudy):
             temp_list.append(line)
             if 'end' in line.lower():
                 has_end_tag = True
-            # elif '/' in line.:
-            #     has_end_tag = True
+            temp_list.append(line)
+
         tag_name = temp_list[-2].split()[0]
         if self._get_line(original_line_index).split()[0].lower() == tag_name.lower():
-            return None
+            return tag_name
         return temp_list[-2].split()[0]
 
     def _get_block_lines(self, line_index: int):
@@ -263,7 +263,6 @@ class PflotranStudy(BaseStudy):
             if line[0] == '#':
                 continue
             temp_list.append(line_index)
-            # Check 'end' is as its own word
             if 'end' in line.lower().split():
                 has_end_tag = True
         return temp_list
