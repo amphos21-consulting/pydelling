@@ -37,7 +37,7 @@ class PflotranStudy(BaseStudy):
         regions = []
         for line_idx in region_lines:
             line = self._get_line(line_idx)
-            if self._get_parent_tag_name_(line_idx).lower() == 'region':
+            if self._get_parent_tag_name(line_idx).lower() == 'region':
                 regions.append(line.split()[1])
                 self.regions_to_idx[line.split()[1]] = line_idx
         return regions
@@ -107,7 +107,7 @@ class PflotranStudy(BaseStudy):
             line = self._get_line(line_idx)
             if line.split()[0].lower() == 'hdf5_dataset_name':
                 continue
-            if self._get_parent_tag_name_(line_idx).lower() == 'dataset':
+            if self._get_parent_tag_name(line_idx).lower() == 'dataset':
                 datasets.append(line.split()[1])
                 self.datasets_to_idx[line.split()[1]] = line_idx
         return datasets
@@ -193,7 +193,7 @@ class PflotranStudy(BaseStudy):
         """
         subsurface_idx = self._find_tags('SUBSURFACE')
         for idx in subsurface_idx:
-            if self._get_parent_tag_name_(idx) == 'SUBSURFACE':
+            if self._get_parent_tag_name(idx) == 'SUBSURFACE':
                 return idx
 
     def has_tag(self, tag: str):
@@ -201,7 +201,7 @@ class PflotranStudy(BaseStudy):
         """
         return len(self._find_tags(tag)) > 0
 
-    def _get_parent_tag_name_(self, line_index: int):
+    def _get_parent_tag_name(self, line_index: int):
         """This method returns the parent tag of the line.
         """
         # Find the previous END tag
@@ -219,10 +219,10 @@ class PflotranStudy(BaseStudy):
             if 'subsurface' in line.lower():
                 has_end_tag = True
             temp_list.append(line)
-            if 'end' in line.lower().split():
+            if 'end' in line.lower():
                 has_end_tag = True
-            elif '/' in line.split():
-                has_end_tag = True
+            # elif '/' in line.:
+            #     has_end_tag = True
         tag_name = temp_list[-2].split()[0]
         if self._get_line(original_line_index).split()[0].lower() == tag_name.lower():
             return None
@@ -257,7 +257,6 @@ class PflotranStudy(BaseStudy):
         while not has_end_tag:
             line_index += 1
             line = self._get_line(line_index)
-            print(line)
             if len(line.split()) == 0:
                 continue
             if line[0] == '#':
@@ -265,8 +264,6 @@ class PflotranStudy(BaseStudy):
             temp_list.append(line_index)
             # Check 'end' is as its own word
             if 'end' in line.lower().split():
-                print('here')
-                print(self._get_parent_tag_name_(line_index))
                 has_end_tag = True
         return temp_list
 
@@ -315,7 +312,7 @@ class PflotranStudy(BaseStudy):
         max_time_block_ids = []
         parent_tag_idx = None
         for idx  in time_tags:
-            parent_tag = self._get_parent_tag_name_(idx)
+            parent_tag = self._get_parent_tag_name(idx)
             if parent_tag == None:
                 parent_tag_idx = idx
             if parent_tag == 'TIME':
