@@ -257,7 +257,6 @@ class PflotranStudy(BaseStudy):
         while not has_end_tag:
             line_index += 1
             line = self._get_line(line_index)
-            print(line)
             if len(line.split()) == 0:
                 continue
             if line[0] == '#':
