@@ -219,7 +219,9 @@ class PflotranStudy(BaseStudy):
             if 'subsurface' in line.lower():
                 has_end_tag = True
             temp_list.append(line)
-            if 'end' in line.lower():
+            if 'end' in line.lower().split():
+                has_end_tag = True
+            elif '/' in line.split():
                 has_end_tag = True
         tag_name = temp_list[-2].split()[0]
         if self._get_line(original_line_index).split()[0].lower() == tag_name.lower():
@@ -255,12 +257,16 @@ class PflotranStudy(BaseStudy):
         while not has_end_tag:
             line_index += 1
             line = self._get_line(line_index)
+            print(line)
             if len(line.split()) == 0:
                 continue
             if line[0] == '#':
                 continue
             temp_list.append(line_index)
-            if 'end' in line.lower():
+            # Check 'end' is as its own word
+            if 'end' in line.lower().split():
+                print('here')
+                print(self._get_parent_tag_name_(line_index))
                 has_end_tag = True
         return temp_list
 
