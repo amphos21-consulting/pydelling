@@ -209,6 +209,15 @@ class LumiSsh(BaseSsh):
         """
         return self.user_queue['JOBID'].values
 
+    def cd_studies_folder(self, studies_folder_name):
+        """
+        Changes the current working directory to the studies folder in the LUMI supercomputer
+        Args:
+            studies_folder_name: name of the studies folder
+        """
+        self.cd_scratch()
+        self.cd(f'./{studies_folder_name}')
+
 
 
 

@@ -40,18 +40,14 @@ class PflotranRestartCallback(BaseCallback):
                 prev_study: PflotranStudy = list(self.manager.studies.values())[self.study.idx - 1]
             else:
                 return
-            try:
-                self.manager.ssh.cd_scratch()
-                self.manager.ssh.cd(self.manager.studies_folder_name)
-                output_files = self.manager.ssh.ls_dir(f'./{prev_study.output_folder.name}')
-            except:
-                output_files = Path(prev_study.output_folder).glob('*h5')
+            self.manager.ssh.cd_studies_folder(self.manager.studies_folder_name)
+            output_files = self.manager.ssh.ls_dir(f'./{prev_study.output_folder.name}')
             # Copy the input
             target_file = None
             for file in output_files:
                 if 'restart' in file:
                     target_file = f"{self.manager.ssh.pwd}/{file}"
-                    final_file = f"{self.manager.ssh.pwd}/../{self.study.output_folder.name}/input_files/{Path(file).name}"
+                    final_file = f"{self.manager.ssh.pwd}/{self.study.output_folder.name}/input_files/{Path(file).name}"
                     copy_step = CopyStep(target_file, final_file, remote=True)
                     self.study.add_ssh_step(copy_step)
                     self.study.add_restart(f'input_files/{Path(file).name}')

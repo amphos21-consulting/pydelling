@@ -194,11 +194,11 @@ class BaseSsh(ABC):
         return self.sftp.listdir(dir)
 
     @abstractmethod
-    def cd_studies_folder(self):
+    def cd_studies_folder(self, project_name):
         """
         Changes the current working directory to the studies folder.
         Returns:
 
         """
-        pass
+        return NotImplementedError('Method not implemented')
 

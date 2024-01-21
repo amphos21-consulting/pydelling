@@ -191,6 +191,15 @@ class JurecaSsh(BaseSsh):
         """
         return self.user_queue['JOBID'].values
 
+    def cd_studies_folder(self, studies_folder_name):
+        """
+        Changes the current working directory to the studies folder in the JURECA supercomputer
+        Args:
+            studies_folder_name: name of the studies folder
+        """
+        self.cd_project()
+        self.cd(f'./{studies_folder_name}')
+
 
 
 
