@@ -5,7 +5,7 @@ import logging
 from alive_progress import alive_bar
 from tqdm import tqdm
 from pydelling.utils import create_results_folder
-from pydelling.managers.ssh import BaseSsh
+from pydelling.managers.ssh import BaseSsh, JurecaSsh, LumiSsh
 from docker import DockerClient
 from pathlib import Path
 import subprocess
@@ -230,6 +230,20 @@ class BaseManager(ABC):
                     callback.run()
 
             study.post_run()
+
+    def set_ssh(self,
+                platform: str,
+                user: str,
+                project_name: str,
+                pkey_path: str,
+                password: str = None,
+                ):
+        """This method sets the ssh object to the manager."""
+        platform_to_ssh = {
+            'jureca': JurecaSsh,
+            'lumi': LumiSsh,
+        }
+        self.ssh: BaseSsh = platform_to_ssh[platform](user, project_name, pkey_path, password)
 
 
     @property
