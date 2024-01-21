@@ -42,10 +42,10 @@ class PflotranRestartCallback(BaseCallback):
                 return
             self.manager.ssh.cd_scratch()
             self.manager.ssh.cd(self.manager.studies_folder_name)
-            self.manager.ssh.cd(self.study.output_folder.name)
+            # self.manager.ssh.cd(self.study.output_folder.name)
             print(f'file: ../{prev_study.output_folder.name}')
             print(self.manager.ssh.pwd)
-            output_files = self.manager.ssh.ls_dir(f'../{prev_study.output_folder.name}')
+            output_files = self.manager.ssh.ls_dir(f'./{prev_study.output_folder.name}')
             # Copy the input
             target_file = None
             for file in output_files:
