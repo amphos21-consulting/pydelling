@@ -36,7 +36,6 @@ class PflotranRestartCallback(BaseCallback):
                 self.study.add_input_file(target_file)
                 self.study.add_restart(f'input_files/{target_file.name}')
         else:
-            files = self.manager.ssh.ls
             if self.study.idx > 0:
                 prev_study: PflotranStudy = list(self.manager.studies.values())[self.study.idx - 1]
             else:
