@@ -46,7 +46,7 @@ class PflotranRestartCallback(BaseCallback):
             target_file = None
             for file in output_files:
                 if 'restart' in file:
-                    target_file = f"{self.manager.ssh.pwd}/{file}"
+                    target_file = f"{self.manager.ssh.pwd}/{prev_study.output_folder.name}/{file}"
                     final_file = f"{self.manager.ssh.pwd}/{self.study.output_folder.name}/input_files/{Path(file).name}"
                     copy_step = CopyStep(target_file, final_file, remote=True)
                     self.study.add_ssh_step(copy_step)
