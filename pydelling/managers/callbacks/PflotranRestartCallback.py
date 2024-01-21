@@ -41,7 +41,7 @@ class PflotranRestartCallback(BaseCallback):
             else:
                 return
             self.manager.ssh.cd_scratch()
-            self.ssh.cd(self.studies_folder_name)
+            self.manager.ssh.cd(self.studies_folder_name)
             print(f'file: ../{prev_study.output_folder.name}')
             print(self.manager.ssh.pwd)
             output_files = self.manager.ssh.ls_dir(f'../{prev_study.output_folder.name}')
