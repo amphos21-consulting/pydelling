@@ -57,6 +57,10 @@ class BaseManager(ABC):
             ):
         """This method runs all the studies.
         """
+        # Set ssh
+        if run_on in ['jureca', 'lumi']:
+            self.set_ssh(run_on, user, project_name, pkey_path, password)
+
         self.is_dummy = dummy
         shell_script = Path(shell_script).absolute() if shell_script is not None else None
         self.password = password
