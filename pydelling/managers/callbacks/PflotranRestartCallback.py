@@ -40,6 +40,9 @@ class PflotranRestartCallback(BaseCallback):
                 prev_study: PflotranStudy = list(self.manager.studies.values())[self.study.idx - 1]
             else:
                 return
+            print(f'file: ../{prev_study.output_folder.name}')
+            print(self.manager.ssh.pwd)
+
             output_files = self.manager.ssh.ls_dir(f'../{prev_study.output_folder.name}')
             # Copy the input
             target_file = None
