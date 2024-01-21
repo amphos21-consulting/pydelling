@@ -193,3 +193,12 @@ class BaseSsh(ABC):
         """
         return self.sftp.listdir(dir)
 
+    @abstractmethod
+    def cd_studies_folder(self):
+        """
+        Changes the current working directory to the studies folder.
+        Returns:
+
+        """
+        pass
+
