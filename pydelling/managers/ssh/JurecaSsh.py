@@ -23,7 +23,7 @@ class JurecaSsh(BaseSsh):
             user: username
             pkey_path: path to the private key
         """
-        super().__init__(user, pkey_path, password)
+        super().__init__(user=user, pkey_path=pkey_path, password=password)
         self.project_name = project_name
         self.current_job_id = None
 

@@ -24,7 +24,7 @@ class LumiSsh(BaseSsh):
             user: username
             pkey_path: path to the private key file
         """
-        super().__init__(user, pkey_path, password)
+        super().__init__(user=user, pkey_path=pkey_path, password=password)
         self.project_name = project_name
         self.project_id = project_id
         self.project_folder_name = f'project_{self.project_id}'
