@@ -11,7 +11,7 @@ class BaseSsh(ABC):
     def __init__(self,
                  user,
                  pkey_path,
-                 project_name = None,
+                 project_name=None,
                  password=None,
                  ):
         """
