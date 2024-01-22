@@ -59,7 +59,7 @@ class BaseManager(ABC):
         """
         # Set ssh
         if run_on in ['jureca', 'lumi']:
-            self.set_ssh(run_on, user, pkey_path, password)
+            self.set_ssh(user=user, pkey_path=pkey_path, project_name=project_name, password=password, platform=run_on)
 
         self.is_dummy = dummy
         shell_script = Path(shell_script).absolute() if shell_script is not None else None
@@ -239,14 +239,22 @@ class BaseManager(ABC):
                 platform: str,
                 user: str,
                 pkey_path: str,
+                project_name: str,
                 password: str = None,
+                **kwargs,
                 ):
         """This method sets the ssh object to the manager."""
         platform_to_ssh = {
             'jureca': JurecaSsh,
             'lumi': LumiSsh,
         }
-        self.ssh: BaseSsh = platform_to_ssh[platform](user, pkey_path, password)
+        func_kwargs = {'user': user,
+                'pkey_path': pkey_path,
+                'password': password,
+                'project_name': project_name,
+                }
+        func_kwargs.update(kwargs)
+        self.ssh: BaseSsh = platform_to_ssh[platform](**func_kwargs)
 
 
     @property
