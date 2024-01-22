@@ -73,6 +73,7 @@ class JurecaSsh(BaseSsh):
         """
         Changes the current working directory to the project directory in the remote server.
         """
+        print(f'/p/scratch/cjiek63/{self.project_name}')
         self.cd(f'/p/scratch/cjiek63/{self.project_name}')
 
     def send_job(self, job_path):
