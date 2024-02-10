@@ -34,7 +34,7 @@ class PflotranRestartCallback(BaseCallback):
                 raise FileNotFoundError('Restart file not found')
             else:
                 self.study.add_input_file(target_file)
-                self.study.add_restart(f'input_files/{target_file.name}')
+                self.study.add_restart(f'./input_files/{target_file.name}')
         else:
             if self.study.idx > 0:
                 prev_study: PflotranStudy = list(self.manager.studies.values())[self.study.idx - 1]
@@ -50,7 +50,7 @@ class PflotranRestartCallback(BaseCallback):
                     final_file = f"{self.manager.ssh.pwd}/{self.study.output_folder.name}/input_files/{Path(file).name}"
                     copy_step = CopyStep(target_file, final_file, remote=True)
                     self.study.add_ssh_step(copy_step)
-                    self.study.add_restart(f'input_files/{Path(file).name}')
+                    self.study.add_restart(f'./input_files/{Path(file).name}')
             if target_file is None:
                 raise FileNotFoundError('Restart file not found')
 
