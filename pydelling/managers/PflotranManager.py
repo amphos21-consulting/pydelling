@@ -227,7 +227,7 @@ class PflotranManager(BaseManager):
                     logger.warning('No jobs found in the queue. Waiting for 5 seconds.')
                     time.sleep(5)
             # pflotran_status = PflotranStatus()
-            self.ssh.wait_for_job(job_id)
+            self.ssh.wait_for_job(job_id, check_interval=6)
             # Copy the results back to the local machine
             if download_results:
                 self._ssh_download(

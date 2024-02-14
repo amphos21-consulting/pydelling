@@ -162,7 +162,7 @@ class LumiSsh(BaseSsh):
                     status_bar.update(task_start, visible=False)
                 elif job_status == None:
                     assert_finish_counter += 1
-                    if assert_finish_counter > 3:
+                    if assert_finish_counter > 6:
                         status_bar.remove_task(task_wait)
                         status_bar.remove_task(task_cancel)
                         status_bar.remove_task(task_run)
