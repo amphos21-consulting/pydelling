@@ -34,23 +34,23 @@ class PflotranRestartCallback(BaseCallback):
                 raise FileNotFoundError('Restart file not found')
             else:
                 self.study.add_input_file(target_file)
-                self.study.add_restart(f'input_files/{target_file.name}')
+                self.study.add_restart(f'./input_files/{target_file.name}')
         else:
-            files = self.manager.ssh.ls
             if self.study.idx > 0:
                 prev_study: PflotranStudy = list(self.manager.studies.values())[self.study.idx - 1]
             else:
                 return
-            output_files = self.manager.ssh.ls_dir(f'../{prev_study.output_folder.name}')
+            self.manager.ssh.cd_studies_folder(self.manager.studies_folder_name)
+            output_files = self.manager.ssh.ls_dir(f'./{prev_study.output_folder.name}')
             # Copy the input
             target_file = None
             for file in output_files:
                 if 'restart' in file:
-                    target_file = f"{self.manager.ssh.pwd}/{file}"
-                    final_file = f"{self.manager.ssh.pwd}/../{self.study.output_folder.name}/input_files/{Path(file).name}"
+                    target_file = f"{self.manager.ssh.pwd}/{prev_study.output_folder.name}/{file}"
+                    final_file = f"{self.manager.ssh.pwd}/{self.study.output_folder.name}/input_files/{Path(file).name}"
                     copy_step = CopyStep(target_file, final_file, remote=True)
                     self.study.add_ssh_step(copy_step)
-                    self.study.add_restart(f'input_files/{Path(file).name}')
+                    self.study.add_restart(f'./input_files/{Path(file).name}')
             if target_file is None:
                 raise FileNotFoundError('Restart file not found')
 

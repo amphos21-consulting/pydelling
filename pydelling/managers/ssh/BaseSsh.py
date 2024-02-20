@@ -8,9 +8,12 @@ from pathlib import Path
 class BaseSsh(ABC):
     client: paramiko.SSHClient
     sftp: paramiko.SFTPClient
-    def __init__(self, user,
+    def __init__(self,
+                 user,
                  pkey_path,
-                 password=None):
+                 project_name=None,
+                 password=None,
+                 ):
         """
         Connects to the remote server.
         Args:
@@ -192,4 +195,13 @@ class BaseSsh(ABC):
         Returns: content of the directory
         """
         return self.sftp.listdir(dir)
+
+    @abstractmethod
+    def cd_studies_folder(self, project_name):
+        """
+        Changes the current working directory to the studies folder.
+        Returns:
+
+        """
+        return NotImplementedError('Method not implemented')
 

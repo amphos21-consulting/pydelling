@@ -23,7 +23,7 @@ class JurecaSsh(BaseSsh):
             user: username
             pkey_path: path to the private key
         """
-        super().__init__(user, pkey_path, password)
+        super().__init__(user=user, pkey_path=pkey_path, password=password)
         self.project_name = project_name
         self.current_job_id = None
 
@@ -190,6 +190,15 @@ class JurecaSsh(BaseSsh):
         Returns: jobs of the user
         """
         return self.user_queue['JOBID'].values
+
+    def cd_studies_folder(self, studies_folder_name):
+        """
+        Changes the current working directory to the studies folder in the JURECA supercomputer
+        Args:
+            studies_folder_name: name of the studies folder
+        """
+        self.cd_project()
+        self.cd(f'./{studies_folder_name}')
 
 
 

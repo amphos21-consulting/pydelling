@@ -1,7 +1,6 @@
 from .BaseStudy import BaseStudy
 import logging
 from typing import Union, List, Dict
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -15,20 +14,6 @@ class PflotranStudy(BaseStudy):
         super().__init__(input_file, *args, **kwargs)
         self.regions_to_idx = {}
         self.datasets_to_idx = {}
-        self._parse_blocks()
-
-    def _parse_blocks(self):
-        """
-        Parse the file content and return a list of dictionaries and strings
-        representing the structure of the file. Each block starts with a given name and ends with 'END' or '/'.
-        Blocks can contain either other blocks (subblocks), data values, or comments.
-        """
-        # First we will find the blocks and their names
-        # Each block starts with the format TAG or TAG tag_name and ends with END or /
-        # I want to create a hierarchy of blocks,
-
-
-    # Try parsing the file content again with the revised function
 
     def get_regions(self):
         """This method returns the regions of the simulation.
@@ -207,7 +192,6 @@ class PflotranStudy(BaseStudy):
         # Find the previous END tag
         has_end_tag = False
         temp_list = []
-        original_line_index = line_index
         temp_list.append(self._get_line(line_index))
         while not has_end_tag:
             line = self._get_line(line_index)
@@ -221,11 +205,7 @@ class PflotranStudy(BaseStudy):
             temp_list.append(line)
             if 'end' in line.lower():
                 has_end_tag = True
-            # elif '/' in line.:
-            #     has_end_tag = True
-        tag_name = temp_list[-2].split()[0]
-        if self._get_line(original_line_index).split()[0].lower() == tag_name.lower():
-            return None
+
         return temp_list[-2].split()[0]
 
     def _get_block_lines(self, line_index: int):
@@ -262,100 +242,9 @@ class PflotranStudy(BaseStudy):
             if line[0] == '#':
                 continue
             temp_list.append(line_index)
-            # Check 'end' is as its own word
             if 'end' in line.lower().split():
                 has_end_tag = True
         return temp_list
-
-    def replace_maximum_timestep_values(self,
-                                        final_timestep: float = 1,
-                                        initial_timestep: float = 1E-8,
-                                        timesteps_per_order_of_magnitude: int or list = 10,
-                                        time_unit: str = 'y',
-                                        initial_time: float = 0.0,
-                                        ):
-        """
-        Replaces the maximum timestep values in a simulation's input file. This method adjusts the timestep settings based on
-        the provided parameters, ensuring a gradual change in timestep sizes throughout the simulation.
-
-        The method calculates the number of orders of magnitude difference between the initial and final timesteps.
-        It then creates a series of timestep values, each incrementally larger than the previous, spaced evenly across
-        these orders of magnitude.
-
-        Args:
-            final_timestep (float): The value of the final timestep in the simulation. Default is 1.
-            initial_timestep (float): The value of the initial timestep. Default is 1E-8.
-            timesteps_per_order_of_magnitude (int or list): The number of timesteps per order of magnitude. Can be an integer or a list specifying the number for each order. Default is 10.
-            time_unit (str): The unit of time to be used for the timesteps (e.g., 'y' for years, 's' for seconds). Default is 'y'.
-            initial_time (float): The starting time of the simulation. Default is 0.0.
-
-        Returns:
-            None
-
-        Example:
-            # Set the parameters for the timestep replacement
-            final_timestep = 1
-            initial_timestep = 1E-6
-            timesteps_per_order_of_magnitude = 5
-            time_unit = 'y'
-            initial_time = 1.0
-
-            # Replace the maximum timestep values
-            simulation.replace_maximum_timestep_values(final_timestep,
-                                                       initial_timestep,
-                                                       timesteps_per_order_of_magnitude,
-                                                       time_unit,
-                                                       initial_time)
-        """
-        # Find the time block
-        time_tags = self._find_tags('TIME')
-        max_time_block_ids = []
-        parent_tag_idx = None
-        for idx  in time_tags:
-            parent_tag = self._get_parent_tag_name(idx)
-            if parent_tag == None:
-                parent_tag_idx = idx
-            if parent_tag == 'TIME':
-                content = self._get_line(idx)
-                content_split = self._process_parameter_line(content)
-                if content_split is not None:
-                    if content_split[0] == 'MAXIMUM_TIMESTEP_SIZE':
-                        max_time_block_ids.append(idx)
-        # Delete the lines
-        self._delete_lines(max_time_block_ids)
-
-        # Add a random line after the time block
-        assert parent_tag_idx is not None, "TIME block seems to be undefined"
-        n_orders = int(np.log10(final_timestep / initial_timestep))
-        lines_to_add = []
-        for order in range(n_orders):
-            cur_timestep = initial_timestep * 10 ** order / timesteps_per_order_of_magnitude
-            cur_time = initial_time + initial_timestep * 10 ** order
-            line = f"MAXIMUM_TIMESTEP_SIZE {cur_timestep} {time_unit} at {cur_time} {time_unit}"
-            lines_to_add.append(line)
-        self._add_lines(line_index=parent_tag_idx + 1, new_lines=lines_to_add)
-
-
-
-    def _process_parameter_line(self, line: str):
-        """This method processes a parameter line.
-        """
-        line = line.split()
-        if line[0].startswith('#'):
-            return None
-        else:
-            return [line[0], line[1:]]
-
-    def _process_float(self, f: str):
-        """This method processes a float.
-        """
-        try:
-            return float(f)
-        except ValueError:
-            f = f.replace('d', 'e')
-            f = f.replace('D', 'e')
-            return float(f)
-
 
     # Class properties
     @property

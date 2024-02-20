@@ -24,7 +24,7 @@ class LumiSsh(BaseSsh):
             user: username
             pkey_path: path to the private key file
         """
-        super().__init__(user, pkey_path, password)
+        super().__init__(user=user, pkey_path=pkey_path, password=password)
         self.project_name = project_name
         self.project_id = project_id
         self.project_folder_name = f'project_{self.project_id}'
@@ -162,7 +162,7 @@ class LumiSsh(BaseSsh):
                     status_bar.update(task_start, visible=False)
                 elif job_status == None:
                     assert_finish_counter += 1
-                    if assert_finish_counter > 3:
+                    if assert_finish_counter > 6:
                         status_bar.remove_task(task_wait)
                         status_bar.remove_task(task_cancel)
                         status_bar.remove_task(task_run)
@@ -208,6 +208,15 @@ class LumiSsh(BaseSsh):
         Returns: jobs of the user
         """
         return self.user_queue['JOBID'].values
+
+    def cd_studies_folder(self, studies_folder_name):
+        """
+        Changes the current working directory to the studies folder in the LUMI supercomputer
+        Args:
+            studies_folder_name: name of the studies folder
+        """
+        self.cd_scratch()
+        self.cd(f'./{studies_folder_name}')
 
 
 
