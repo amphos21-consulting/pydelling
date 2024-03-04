@@ -17,6 +17,10 @@ except:
 import pandas as pd
 from box import Box
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def interpolate_permeability_anisotropic(perm_filename, mesh_filename=None, mesh=None):
     perm = readers.CentroidReader(filename=perm_filename, header=True)
@@ -282,4 +286,80 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file=True, return
     return final_list
 
 # Create a cache decorator
+
+# Generate a pyvista component from streamlit
+
+def plot_pyvista(plot_method,
+                 data=None,
+                 filename=None,
+                 border=True,
+                 width=None,
+                 height=None,
+                 **kwargs):
+    import pickle
+    import inspect
+    import subprocess
+    import streamlit as st
+    from pathlib import Path
+    import textwrap
+    import streamlit.components.v1 as components
+    if data is not None:
+        # Save the data to a temporal file
+        with open('temp_data.pkl', 'wb') as file:
+            pickle.dump(data, file)
+    filename = Path(filename)
+    filename = filename.with_suffix('.html')
+    filename = str(filename)
+    temp_file_path = './temp_method.py'
+    temp_data_path = './temp_data.pkl'
+
+    def execute_method_in_file(method):
+        # Extract the source code of the method
+        source_code = inspect.getsource(method)
+        # Add necessary imports to the source code
+        full_code = "import pyvista as pv\n"
+        full_code += "import pickle\n"
+        if data is not None:
+            full_code += f"with open('temp_data.pkl', 'rb') as file:\n"
+            full_code += "    data = pickle.load(file)\n"
+        full_code += textwrap.dedent(source_code)
+        # Add a line in the source code idented
+        # full_code += "\t"
+        if data is None:
+            full_code += f"{method.__name__}('{filename}')"
+        else:
+            full_code += f"{method.__name__}('{filename}', data)"
+
+        # Write the source code to a temporary file
+        with open(temp_file_path, 'w') as file:
+            file.write(full_code)
+
+        # Execute the temporary file in a subprocess
+        execution_result = subprocess.run(["python", temp_file_path], capture_output=True, text=True)
+
+        # Return the execution result
+        return execution_result.stderr, execution_result.returncode
+
+    stderr, return_code = execute_method_in_file(plot_method)
+    if not return_code:
+        subprocess.run(["rm", temp_file_path])
+        if data is not None:
+            subprocess.run(["rm", temp_data_path])
+        HtmlFile = open(f"{filename}", 'r', encoding='utf-8')
+        source_code = HtmlFile.read()
+        with st.container(border=border):
+            component_dict = dict()
+            if width is not None:
+                component_dict['width'] = width
+            if height is not None:
+                component_dict['height'] = height
+            components.html(source_code, **component_dict)
+    else:
+        logger.error(f"An error occurred while executing the method {plot_method.__name__}")
+        print(stderr)
+
+
+
+
+
 
