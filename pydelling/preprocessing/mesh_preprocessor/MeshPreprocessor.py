@@ -585,19 +585,32 @@ class MeshPreprocessor(iGPLogic):
 
         return elem_vector
 
-    def set_topography_boundaries(self, z_coord=0.0):
-        """ Set the topography boundaries for the Obayashi project. """
+    def set_topography_boundaries(self, z_coord=0.0, keys=["land", "sea"]):
+        """
+        Set the topography boundaries for the Obayashi project.
 
-        self.boundaries["land"] = {}
-        self.boundaries["sea"] = {}
+        :parameter
+        z_coord: float
+            Coordinate to separate two regions.
+
+        keys: list
+            List of the two keys.
+
+
+        """
+
+        for key in keys:
+            self.boundaries[key] = {}
+        # self.boundaries["land"] = {}
+        # self.boundaries["sea"] = {}
 
         topo_faces = self.get_topography_faces()
         for id_element, face in tqdm(topo_faces.items(), desc="Assigning topography boundaries."):
             z_mean = np.mean(face.coords, axis=0)[2]
             if z_mean > z_coord:
-                self.boundaries["land"][id_element] = face
+                self.boundaries[keys[0]][id_element] = face
             else:
-                self.boundaries["sea"][id_element] = face
+                self.boundaries[keys[1]][id_element] = face
 
     def plot_topography_centroids(self):
         """ Plots the topography centroids. For testing reasons. """
