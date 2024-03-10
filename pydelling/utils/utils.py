@@ -21,6 +21,7 @@ import logging
 from typing import Union
 
 logger = logging.getLogger(__name__)
+import streamlit as st
 
 from pydelling.utils.geometry import *
 from pydelling.preprocessing.mesh_preprocessor.geometry.HexahedraElement import HexahedraElement
@@ -291,14 +292,15 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file=True, return
 # Create a cache decorator
 
 # Generate a pyvista component from streamlit
-
-def plot_pyvista(plot_method,
+@st.cache_resource
+def plot_pyvista(_plot_method,
                  data=None,
                  filename=None,
                  border=True,
                  width=None,
                  height=None,
                  **kwargs):
+    plot_method = _plot_method
     import pickle
     import inspect
     import subprocess
