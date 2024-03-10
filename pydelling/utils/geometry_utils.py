@@ -1,5 +1,6 @@
 import numpy as np
 
+from typing import Union
 
 # Useful geometrical functions
 def normal_vector(points):
@@ -108,4 +109,6 @@ def filter_unique_points(points: list or np.ndarray, tolerance: float = 1e-4) ->
         if uniqueness:
             unique_points.append(point)
     return unique_points
+
+
 

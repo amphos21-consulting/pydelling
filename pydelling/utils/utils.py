@@ -18,9 +18,12 @@ import pandas as pd
 from box import Box
 
 import logging
+from typing import Union
 
 logger = logging.getLogger(__name__)
 
+from pydelling.utils.geometry import *
+from pydelling.preprocessing.mesh_preprocessor.geometry.HexahedraElement import HexahedraElement
 
 def interpolate_permeability_anisotropic(perm_filename, mesh_filename=None, mesh=None):
     perm = readers.CentroidReader(filename=perm_filename, header=True)
@@ -358,7 +361,52 @@ def plot_pyvista(plot_method,
         logger.error(f"An error occurred while executing the method {plot_method.__name__}")
         print(stderr)
 
+def find_intersection_points_with_bounding_box(element: Union[Line, Plane],
+                                               min_x: float,
+                                               max_x: float,
+                                               min_y: float,
+                                               max_y: float,
+                                               min_z: float,
+                                               max_z: float,
+                                               ):
+    """Finds the intersection points of a line or plane with a bounding box"""
+    assert isinstance(element, (Line, Plane)), "Element must be a Line or a Plane"
+    # Compute intersection points
+    edges = [
+        [(min_x, min_y, min_z), (max_x, min_y, min_z)],
+        [(min_x, max_y, min_z), (max_x, max_y, min_z)],
+        [(min_x, min_y, max_z), (max_x, min_y, max_z)],
+        [(min_x, max_y, max_z), (max_x, max_y, max_z)],
+        [(min_x, min_y, min_z), (min_x, max_y, min_z)],
+        [(max_x, min_y, min_z), (max_x, max_y, min_z)],
+        [(min_x, min_y, max_z), (min_x, max_y, max_z)],
+        [(max_x, min_y, max_z), (max_x, max_y, max_z)],
+        [(min_x, min_y, min_z), (min_x, min_y, max_z)],
+        [(max_x, min_y, min_z), (max_x, min_y, max_z)],
+        [(min_x, max_y, min_z), (min_x, max_y, max_z)],
+        [(max_x, max_y, min_z), (max_x, max_y, max_z)]
+    ]
+    bbox = HexahedraElement(
+        node_ids=[0, 1, 2, 3, 4, 5, 6, 7],
+        node_coords=[
+            [min_x, min_y, min_z],
+            [max_x, min_y, min_z],
+            [max_x, max_y, min_z],
+            [min_x, max_y, min_z],
+            [min_x, min_y, max_z],
+            [max_x, min_y, max_z],
+            [max_x, max_y, max_z],
+            [min_x, max_y, max_z]
+        ],
+    )
+    bbox.plot_normal_vectors()
 
+    intersection_points = []
+    for edge in edges:
+        intersection = element.intersect(Line(Point(edge[0]), Point(edge[1])))
+        if bbox.contains(intersection):
+            intersection_points.append(intersection)
+    return intersection_points
 
 
 
