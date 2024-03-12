@@ -562,7 +562,7 @@ class MeshPreprocessor(iGPLogic):
         self.is_connections_found = True
 
     def find_boundary_elements(self):
-        """ Returns the elements and their external faces."""
+        """Returns the elements and their external faces."""
         # self.find_mesh_connections() should be obtained first.
         if not self.is_connections_found:
             raise ValueError("Connections should be computed. Run self.find_mesh_connections()")
@@ -571,9 +571,17 @@ class MeshPreprocessor(iGPLogic):
             if not len(element.connections) == len(element.faces):
                 self.external_boundaries[element.local_id] = element.external_faces
 
-
     def get_topography_faces(self):
-        """ Returns the topography elements. """
+        """Returns the topography elements.
+
+        Examples:
+            >>> get_topography_faces()
+            {1: "quadrilateral-1"}
+
+        Returns:
+            elem_vector: Dictionary with the element ID and the topography face.
+
+        """
         if not self.external_boundaries:
             raise ValueError("self.boundaries is None.")
         elem_vector = {}
@@ -589,20 +597,15 @@ class MeshPreprocessor(iGPLogic):
         """
         Set the topography boundaries for the Obayashi project.
 
-        :parameter
-        z_coord: float
-            Coordinate to separate two regions.
+        Parameters:
+            z_coord: Coordinate to separate two regions (float).
 
-        keys: list
-            List of the two keys.
-
+            keys: List of the two keys (lisr).
 
         """
 
         for key in keys:
             self.boundaries[key] = {}
-        # self.boundaries["land"] = {}
-        # self.boundaries["sea"] = {}
 
         topo_faces = self.get_topography_faces()
         for id_element, face in tqdm(topo_faces.items(), desc="Assigning topography boundaries."):

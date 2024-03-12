@@ -23,6 +23,7 @@ nav:
   - "Readers":
       - "Centroid reader": readers/docs-readers-centroid.md
       - "ConnectFlow reader": readers/docs-readers-connectflow.md
+      - "ConnectFlow Mesh reader": readers/docs-readers-connectflowmesh.md
       - "FEM reader": readers/docs-readers-fem.md
       - "OpenFOAM reader": readers/docs-readers-openfoam.md
       - "PFLOTRAN observation point reader": readers/docs-readers-pflotran_observation_point.md
