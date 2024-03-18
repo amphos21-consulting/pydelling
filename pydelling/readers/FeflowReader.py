@@ -10,6 +10,7 @@ The module contains the following fuctions:
 """
 import logging
 import pandas as pd
+import matplotlib.pyplot as plt
 logger = logging.getLogger(__name__)
 
 
@@ -84,6 +85,26 @@ class FeflowReader(FeflowBaseRader):
         diff_field["Diff"] = field1[key] - field2[key]
         return diff_field
 
+    def plot_point_data(self, field, key="Concentration"):
+        """
+        Scatter plot of the point data.
+
+        Parameters
+        ----------
+        field : Dict with the x, y, z, field values.
+
+        key : String with the key to compute the differences
+
+        Returns:
+        --------
+        fig: Object figure.
+        """
+        fig, ax = plt.subplots()
+        sc = ax.scatter(field["x"], field["y"], s=4, c=field[key], cmap="Spectral")
+        plt.colorbar(sc, label="Concentration [mg/L]")
+        return fig
+
 
 if __name__ == "__main__":
     reader = FeflowReader()
+
