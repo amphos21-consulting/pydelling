@@ -87,7 +87,3 @@ class FeflowReader(FeflowBaseRader):
 
 if __name__ == "__main__":
     reader = FeflowReader()
-
-
-
-

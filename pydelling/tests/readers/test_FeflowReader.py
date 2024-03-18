@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from pathlib import Path
 from pydelling.readers.FeflowReader import FeflowReader
 from pydelling.utils import test_data_path
 
@@ -8,7 +9,7 @@ class FeflowReaderCase(unittest.TestCase):
 
     def test_feflowreader(self):
         """ Test class method read_field_dat. """
-        path = "../test_data/concentration_5nodes.dat"
+        path = Path(__file__).parent.parent / "test_data/concentration_5nodes.dat"
         reader = FeflowReader()
         data = reader.read_field_dat(path)
         concentration_reader = data["Concentration"]
@@ -22,7 +23,7 @@ class FeflowReaderCase(unittest.TestCase):
 
     def test_compute_diff_2fields(self):
         """ Test class method compute_diff_2fields."""
-        path = "../test_data/concentration_5nodes.dat"
+        path = Path(__file__).parent.parent / "test_data/concentration_5nodes.dat"
         reader = FeflowReader()
         field1 = reader.read_field_dat(path)
         field2 = reader.read_field_dat(path)
