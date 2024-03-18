@@ -63,6 +63,27 @@ class FeflowReader(FeflowBaseRader):
             field[k_labels[ik]] = df[key].to_numpy()
         return field
 
+    def compute_diff_2fields(self, field1, field2, key="Concentration"):
+        """
+        Computes the differences between two fields.
+        Parameters
+        ----------
+        field1 : Dict with the x, y, z, field values.
+
+        field2 : Dict with the x, y, z, field values.
+
+        key : String with the key to compute the differences
+
+        Returns:
+        --------
+        diff_field: Dict with the x, y, z, difference field values.
+
+        """
+        diff_field = field1.copy()
+        del diff_field[key]
+        diff_field["Diff"] = field1[key] - field2[key]
+        return diff_field
+
 
 if __name__ == "__main__":
     reader = FeflowReader()
