@@ -4,7 +4,7 @@ from pydelling.readers.FeflowReader import FeflowReader
 from pydelling.utils import test_data_path
 
 
-class FeflowReadertCase(unittest.TestCase):
+class FeflowReaderCase(unittest.TestCase):
 
     def test_feflowreader(self):
         """ Test class method read_field_dat. """
@@ -19,6 +19,21 @@ class FeflowReadertCase(unittest.TestCase):
                                        1.375429918E-08])
 
         self.assertTrue(np.allclose(concentration_reader, concentration_real, rtol=1e-05, atol=1e-08))
+
+    def test_compute_diff_2fields(self):
+        """ Test class method compute_diff_2fields."""
+        path = "../test_data/concentration_5nodes.dat"
+        reader = FeflowReader()
+        field1 = reader.read_field_dat(path)
+        field2 = reader.read_field_dat(path)
+        diff_field = reader.compute_diff_2fields(field1, field2, "Concentration")
+        # self.assert_allclose(diff_field["Concentration"], 0, atol=1e-07)
+        self.assertTrue(
+            np.allclose(diff_field["Diff"], np.zeros(len(diff_field["Diff"])),
+                        rtol=1e-05,
+                        atol=1e-08)
+        )
+
 
 
 if __name__ == '__main__':
