@@ -35,6 +35,17 @@ class FeflowReaderCase(unittest.TestCase):
                         atol=1e-08)
         )
 
+    def test_set_head_bc(self):
+        """ Test method set_head_bc """
+        reader = FeflowReader()
+        z_coord = np.array([0., -100., -1000.])  # water depth
+        sea_rise = 1  # sea level rise in meters
+        head_new = np.array([1.025, 3.525, 26.025])
+        head_comp = reader.set_head_bc(sea_rise, z_coord)
+        self.assertTrue(
+            np.allclose(head_new, head_comp,
+                        rtol=1e-05,
+                        atol=1e-08))
 
 
 if __name__ == '__main__':
