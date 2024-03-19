@@ -104,6 +104,28 @@ class FeflowReader(FeflowBaseRader):
         plt.colorbar(sc, label="Concentration [mg/L]")
         return fig
 
+    def set_head_bc(self, sea_rise, z_coord, rho_seawater=1025.0, rho_fresh=1000.0):
+        """
+        Sets the head for the density driven simulations.
+
+        :parameter
+        sea_rise : float
+            Sea rise in meters
+        z_coord : np.array
+            Z-coordinates.
+        rho_seawater : float
+            Density of the seawater in kg/m3
+        rho_fresh : float
+            Density of the freshwater in kg/m3
+
+        :returns
+        head_1 : np.array
+            BC head.
+        """
+        rho_s = rho_seawater
+        rho_f = rho_fresh
+        return sea_rise * (rho_s / rho_f) - ((rho_s - rho_f) / rho_f) * z_coord
+
 
 if __name__ == "__main__":
     reader = FeflowReader()
