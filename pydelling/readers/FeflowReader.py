@@ -6,6 +6,8 @@ This module allows the user to read the Feflow output files.
 The module contains the following fuctions:
 
 -`read_field_dat(filename)` - Reads .dat files
+-`compute_diff_2fields(field1, field2, key="Concentration")` - Compute the difference between two fields
+-`set_head_bc(sea_rise, z_coord, rho_seawater=1025.0, rho_fresh=1000.0)` - Sets the BC head
 
 """
 import logging
