@@ -388,6 +388,9 @@ def find_intersection_points_with_bounding_box(element: Union[Line, Plane],
         [(min_x, max_y, min_z), (min_x, max_y, max_z)],
         [(max_x, max_y, min_z), (max_x, max_y, max_z)]
     ]
+    # Order the points counter-clockwise
+
+
     bbox = HexahedraElement(
         node_ids=[0, 1, 2, 3, 4, 5, 6, 7],
         node_coords=[
@@ -401,15 +404,138 @@ def find_intersection_points_with_bounding_box(element: Union[Line, Plane],
             [min_x, max_y, max_z]
         ],
     )
-    bbox.plot_normal_vectors()
+    # bbox.plot_normal_vectors()
 
     intersection_points = []
     for edge in edges:
         intersection = element.intersect(Line(Point(edge[0]), Point(edge[1])))
         if bbox.contains(intersection):
             intersection_points.append(intersection)
+    # Order the intersection points counter-clockwise
+
+    def calculate_centroid(points):
+        sum_x, sum_y, sum_z = 0, 0, 0
+        for point in points:
+            sum_x += point[0]
+            sum_y += point[1]
+            sum_z += point[2]
+        n = len(points)
+        return (sum_x / n, sum_y / n, sum_z / n)
+
+    # Function to calculate the normal vector of the plane formed by the points
+    def normal_vector(points):
+        # Assuming all points are coplanar and using the first three points to define the plane
+        v1 = np.array(points[1]) - np.array(points[0])
+        v2 = np.array(points[2]) - np.array(points[0])
+        return np.cross(v1, v2)
+
+    # Function to sort points clockwise
+    def sort_points_clockwise(points, centroid, normal):
+        if not points:
+            # If the list is empty, there's nothing to sort.
+            return
+
+        # Define a reference vector for the plane
+        ref_vector = np.array(points[0]) - np.array(centroid)
+        ref_vector -= np.dot(ref_vector, normal) * normal  # Project onto the plane
+
+        def angle_from_centroid(point):
+            v = np.array(point) - np.array(centroid)
+            v -= np.dot(v, normal) * normal  # Project v onto the plane
+            # Calculate angle using the cross product and dot product
+            cross_product = np.cross(ref_vector, v)
+            dot_product = np.dot(ref_vector, v)
+            angle = np.arctan2(np.linalg.norm(cross_product), dot_product)
+            # Determine the direction of the angle based on the sign of the dot product with the normal
+            if np.dot(normal, cross_product) < 0:
+                angle = 2 * np.pi - angle
+            return angle
+
+        # Sort points based on the computed angles
+        points.sort(key=angle_from_centroid, reverse=True)  # Use reverse=True for clockwise
+
+    # Example usage, assuming intersection_points, centroid, and normal have been defined:
+    if intersection_points:  # Ensure there are points to sort
+        centroid = calculate_centroid(intersection_points)
+        normal = normal_vector(intersection_points)
+        sort_points_clockwise(intersection_points, centroid, normal)
+    else:
+        print("No intersection points found.")
     return intersection_points
 
 
+def order_points_clockwise(points):
+    """
+    Orders a set of points in a clockwise manner
+    Args:
+        points: list of points to order
+    Returns:
+        A list of points ordered clockwise
+    """
+    def calculate_centroid(points):
+        sum_x, sum_y, sum_z = 0, 0, 0
+        for point in points:
+            sum_x += point[0]
+            sum_y += point[1]
+            sum_z += point[2]
+        n = len(points)
+        return (sum_x / n, sum_y / n, sum_z / n)
+
+    # Function to calculate the normal vector of the plane formed by the points
+    def normal_vector(points):
+        # Assuming all points are coplanar and using the first three points to define the plane
+        v1 = np.array(points[1]) - np.array(points[0])
+        v2 = np.array(points[2]) - np.array(points[0])
+        return np.cross(v1, v2)
+
+    # Function to sort points clockwise
+    def sort_points_clockwise(points, centroid, normal):
+        if not points:
+            # If the list is empty, there's nothing to sort.
+            return
+
+        # Define a reference vector for the plane
+        ref_vector = np.array(points[0]) - np.array(centroid)
+        ref_vector -= np.dot(ref_vector, normal) * normal  # Project onto the plane
+
+        def angle_from_centroid(point):
+            v = np.array(point) - np.array(centroid)
+            v -= np.dot(v, normal) * normal  # Project v onto the plane
+            # Calculate angle using the cross product and dot product
+            cross_product = np.cross(ref_vector, v)
+            dot_product = np.dot(ref_vector, v)
+            angle = np.arctan2(np.linalg.norm(cross_product), dot_product)
+            # Determine the direction of the angle based on the sign of the dot product with the normal
+            if np.dot(normal, cross_product) < 0:
+                angle = 2 * np.pi - angle
+            return angle
+
+        # Sort points based on the computed angles
+        points.sort(key=angle_from_centroid, reverse=True)  # Use reverse=True for clockwise
+
+    # Example usage, assuming intersection_points, centroid, and normal have been defined:
+    centroid = calculate_centroid(points)
+    normal = normal_vector(points)
+    sort_points_clockwise(points, centroid, normal)
+    return points
+
+def compute_area_of_polygon(points):
+    """
+    This method computes the area of a polygon given a set of points
+    Args:
+        points: list of points that define the polygon
+    Returns:
+        The area of the polygon
+    """
+    # order points
+    points = order_points_clockwise(points)
+    n = len(points)
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += points[i][0] * points[j][1]
+        area -= points[j][0] * points[i][1]
+    area = abs(area) / 2.0
+    return area
 
 

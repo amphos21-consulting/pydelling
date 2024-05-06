@@ -1,0 +1,12 @@
+image: python:3.9
+
+pages:
+  script:
+    - pip install mkdocs
+    - mkdocs build
+    - mv site public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main  # Adjust if you deploy from a different branch
