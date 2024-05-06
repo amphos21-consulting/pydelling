@@ -1,20 +1,27 @@
-import numpy as np
-from ..preprocessing.mesh_preprocessor import MeshPreprocessor
-import logging
-import logging
+"""Reader for the CONNECTFLOW mesh
+==================================
 
-import numpy as np
+This module allows the user to read ConnectFlow mesh.
 
+The module contains the following functions:
+
+- `read_file(filename)` - Reads the ConnectFlow mesh.
+"""
+import logging
+import numpy as np
+import streamlit as st
+from tqdm import tqdm
+from pathlib import Path
 from ..preprocessing.mesh_preprocessor import MeshPreprocessor
 
 logger = logging.getLogger(__name__)
-from tqdm import tqdm
-from pathlib import Path
-import streamlit as st
 
 
 class ConnectFlowMeshReader(MeshPreprocessor):
+    """Reader for the CONNECTFLOW mesh.
+    """
     has_kd_tree = False
+
     def __init__(self,
                  filename,
                  kd_tree=True,
@@ -50,7 +57,12 @@ class ConnectFlowMeshReader(MeshPreprocessor):
                 self._end_elements_line = index
 
     def read_file(self, filename):
-        """ Reads coordinates and elements of a mesh. """
+        """Reads coordinates and elements of the CONNECTFLOW mesh.
+
+        Parameters:
+            filename : Path of the ConnectFlow mesh.
+
+        """
         self._map_file(filename)
 
         # Coordinates of the nodes
@@ -60,7 +72,6 @@ class ConnectFlowMeshReader(MeshPreprocessor):
         self.nodes_tmp = np.array(self.nodes_tmp)[:, 1:]
 
         # Element connectivities. (no need by now)
-
         for index in range(self._start_elements_line, self._end_elements_line):
             cur_data = [int(i) for i in self._texto[index].split()]
             self.elem_tmp.append(cur_data[1:-1])

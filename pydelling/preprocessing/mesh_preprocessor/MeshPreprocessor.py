@@ -562,7 +562,7 @@ class MeshPreprocessor(iGPLogic):
         self.is_connections_found = True
 
     def find_boundary_elements(self):
-        """ Returns the elements and their external faces."""
+        """Returns the elements and their external faces."""
         # self.find_mesh_connections() should be obtained first.
         if not self.is_connections_found:
             raise ValueError("Connections should be computed. Run self.find_mesh_connections()")
@@ -571,9 +571,17 @@ class MeshPreprocessor(iGPLogic):
             if not len(element.connections) == len(element.faces):
                 self.external_boundaries[element.local_id] = element.external_faces
 
-
     def get_topography_faces(self):
-        """ Returns the topography elements. """
+        """Returns the topography elements.
+
+        Examples:
+            >>> get_topography_faces()
+            {1: "quadrilateral-1"}
+
+        Returns:
+            elem_vector: Dictionary with the element ID and the topography face.
+
+        """
         if not self.external_boundaries:
             raise ValueError("self.boundaries is None.")
         elem_vector = {}
@@ -585,19 +593,27 @@ class MeshPreprocessor(iGPLogic):
 
         return elem_vector
 
-    def set_topography_boundaries(self, z_coord=0.0):
-        """ Set the topography boundaries for the Obayashi project. """
+    def set_topography_boundaries(self, z_coord=0.0, keys=["land", "sea"]):
+        """
+        Set the topography boundaries for the Obayashi project.
 
-        self.boundaries["land"] = {}
-        self.boundaries["sea"] = {}
+        Parameters:
+            z_coord: Coordinate to separate two regions (float).
+
+            keys: List of the two keys (lisr).
+
+        """
+
+        for key in keys:
+            self.boundaries[key] = {}
 
         topo_faces = self.get_topography_faces()
         for id_element, face in tqdm(topo_faces.items(), desc="Assigning topography boundaries."):
             z_mean = np.mean(face.coords, axis=0)[2]
             if z_mean > z_coord:
-                self.boundaries["land"][id_element] = face
+                self.boundaries[keys[0]][id_element] = face
             else:
-                self.boundaries["sea"][id_element] = face
+                self.boundaries[keys[1]][id_element] = face
 
     def plot_topography_centroids(self):
         """ Plots the topography centroids. For testing reasons. """
