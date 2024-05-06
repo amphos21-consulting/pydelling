@@ -20,7 +20,7 @@ class VTKMeshReader(MeshPreprocessor):
         super().__init__()
         self.is_streamlit = st_file
 
-        if Path(filename).suffix == '.vtk':
+        if Path(filename).suffix == '.vtk' or '.vtu':
             self.meshio_mesh: meshio.Mesh = meshio.read(filename)
             self._coords = self.meshio_mesh.points
             if generate_internal_mesh:
