@@ -4,6 +4,7 @@ pages:
   script:
     - pip install mkdocs
     - pip install mkdocs-material
+    - pip install mkdocstrings
     - mkdocs build
     - mv site public
   artifacts:
