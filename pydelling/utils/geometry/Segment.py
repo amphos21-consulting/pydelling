@@ -30,11 +30,20 @@ class Segment(Line):
         else:
             raise NotImplementedError(f"Intersection of {type(self)} with {type(primitive)} is not implemented")
 
-    def contains(self, point: Point, rel=0.05):
-        value = self.p1.distance(point) + self.p2.distance(point) / self.length
-        if abs(1 - value) < rel:
-            return True
-        else:
+    def contains(self, point):
+        # Calculate direction vectors
+        segment_vector = self.p2 - self.p1
+        point_vector = point - self.p1
+
+        # Check if point_vector is a scalar multiple of segment_vector
+        cross_product = np.cross(segment_vector, point_vector)
+        if not np.allclose(cross_product, 0):
             return False
+
+        # Check if the point lies between the segment endpoints
+        dot_product = np.dot(segment_vector, point_vector)
+        segment_length_squared = np.dot(segment_vector, segment_vector)
+
+        return 0 <= dot_product <= segment_length_squared
 
 
