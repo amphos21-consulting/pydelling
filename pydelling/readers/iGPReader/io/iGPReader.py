@@ -507,6 +507,16 @@ class iGPReader(BaseReader, RegionOperations):
         borehole_reader = self.BoreholeReader(igp_reader=self)
         borehole_reader.run()
 
+    def set_material_from_list(self, material_name: str, centroid_list: list):
+        """
+        Assigns a material to a list of centroids
+        Args:
+            material_name: Name of the material to assign
+            centroid_list: List of centroids to assign the material to
+        """
+        self.material_dict[material_name] = np.array(centroid_list)
+        logger.info(f"Material {material_name} has been assigned to {len(centroid_list)} centroids")
+
     def assign_heterogeneous_materials(self):
         logger.info('Processing heterogeneous material properties')
         for material in config.borehole_processing.heterogeneous_distribution:
