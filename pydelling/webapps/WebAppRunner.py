@@ -2,7 +2,6 @@ import inspect
 import subprocess
 from abc import ABC
 import streamlit as st
-import extra_streamlit_components as stx
 from .BaseStreamlitUtilityClass import BaseStreamlitUtilityClass
 class WebAppRunner(ABC, BaseStreamlitUtilityClass):
     """This is the base class used to build other webapps."""
