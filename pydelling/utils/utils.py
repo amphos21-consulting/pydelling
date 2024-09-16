@@ -340,7 +340,7 @@ def plot_pyvista(_plot_method,
             file.write(full_code)
 
         # Execute the temporary file in a subprocess
-        execution_result = subprocess.run(["python", temp_file_path], capture_output=True, text=True)
+        execution_result = subprocess.run(["uv", "run", temp_file_path], capture_output=True, text=True)
 
         # Return the execution result
         return execution_result.stderr, execution_result.returncode
