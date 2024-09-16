@@ -1,49 +1,42 @@
-[tool.poetry]
+[project]
 name = "pydelling"
-version = "1.14.1"
-description = "Package providing a variety of utility methods for mathematical modelling"
-authors = ["Aitor <aitirga@gmail.com>"]
-license = "MIT"
-readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "~3.11, !=3.9.7"
-ofpp = "*"
-numpy = "*"
-pandas = "*"
-h5py = "*"
-vtk = "*"
-matplotlib = "*"
-scipy = "*"
-python-box = "*"
-pyyaml = "*"
-setuptools = "*"
-xlrd = "*"
-openpyxl = "*"
-tqdm = "*"
-seaborn = "*"
-natsort = "*"
-meshio = "*"
-plotly = "*"
-shapely = "*"
-tabulate = "*"
-mkdocs = "*"
-mkdocs-material = "*"
-mkdocstrings = "*"
-streamlit = "*"
-dill = "*"
-trimesh = "*"
-mpmath = "*"
-paramiko = "*"
-rich = "*"
-numpy-stl = "*"
-docker = "*"
-scikit-learn = "*"
-alive-progress = "*"
-rtree = "*"
-charset-normalizer = "^3.1.0"
-scikit-image = "^0.21.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+version = "0.15.0"
+description =  "Package providing a variety of utility methods for mathematical modelling"
+requires-python = ">=3.11"
+dependencies = [
+    "alive-progress>=3.1.5",
+    "charset-normalizer>=3.3.2",
+    "dill>=0.3.8",
+    "docker>=7.1.0",
+    "h5py>=3.11.0",
+    "matplotlib>=3.9.2",
+    "meshio>=5.3.5",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.5.34",
+    "mkdocstrings>=0.26.1",
+    "mpmath>=1.3.0",
+    "natsort>=8.4.0",
+    "numpy-stl>=3.1.2",
+    "numpy>=2.1.1",
+    "ofpp>=0.12",
+    "openpyxl>=3.1.5",
+    "pandas>=2.2.2",
+    "paramiko>=3.5.0",
+    "plotly>=5.24.1",
+    "python-box>=7.2.0",
+    "pyyaml>=6.0.2",
+    "rich>=13.8.1",
+    "rtree>=1.3.0",
+    "scikit-image>=0.24.0",
+    "scikit-learn>=1.5.2",
+    "scipy>=1.14.1",
+    "seaborn>=0.13.2",
+    "setuptools>=75.1.0",
+    "shapely>=2.0.6",
+    "streamlit>=1.38.0",
+    "tabulate>=0.9.0",
+    "tqdm>=4.66.5",
+    "trimes>=0.0.1",
+    "vtk>=9.3.1",
+    "xlrd>=2.0.1",
+]
