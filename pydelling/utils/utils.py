@@ -292,7 +292,6 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file=True, return
 # Create a cache decorator
 
 # Generate a pyvista component from streamlit
-@st.cache_resource
 def plot_pyvista(_plot_method,
                  data=None,
                  filename=None,
@@ -339,8 +338,8 @@ def plot_pyvista(_plot_method,
         with open(temp_file_path, 'w') as file:
             file.write(full_code)
 
-        # Execute the temporary file in a subprocess
-        execution_result = subprocess.run(["python", temp_file_path], capture_output=True, text=True)
+        # Execute the temporary file in a subprocess uv run
+        execution_result = subprocess.run(["uv", 'run', temp_file_path], capture_output=True, text=True)
 
         # Return the execution result
         return execution_result.stderr, execution_result.returncode
@@ -478,7 +477,8 @@ def order_points_clockwise(points):
             sum_x += point[0]
             sum_y += point[1]
             sum_z += point[2]
-        n = len(points)
+        n = len(points) # n
+        
         return (sum_x / n, sum_y / n, sum_z / n)
 
     # Function to calculate the normal vector of the plane formed by the points
