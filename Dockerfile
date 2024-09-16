@@ -48,5 +48,4 @@ COPY --from=builder /app/pyproject.toml pyproject.toml
 
 # Set the default command
 CMD ["bash", "-c", "source /app/.venv/bin/activate && exec bash"]
-
 WORKDIR /app
