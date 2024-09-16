@@ -1286,7 +1286,7 @@ dependencies = [
     { name = "tqdm" },
     { name = "trimes" },
     { name = "trimesh" },
-    { name = "vtk", marker = "(platform_machine != 'aarch64' and platform_system != 'Linux') or (platform_machine == 'aarch64' and platform_system == 'Linux')" },
+    { name = "vtk" },
     { name = "xlrd" },
 ]
 
@@ -1325,8 +1325,7 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.66.5" },
     { name = "trimes", specifier = ">=0.0.1" },
     { name = "trimesh", specifier = ">=4.4.9" },
-    { name = "vtk", marker = "platform_machine == 'aarch64' and platform_system == 'Linux'", specifier = ">=9.3.1" },
-    { name = "vtk", marker = "platform_machine != 'aarch64' and platform_system != 'Linux'", specifier = ">=9.3.1" },
+    { name = "vtk", specifier = ">=9.3.1" },
     { name = "xlrd", specifier = ">=2.0.1" },
 ]
 
@@ -2046,7 +2045,7 @@ name = "vtk"
 version = "9.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "matplotlib", marker = "(platform_machine != 'aarch64' and platform_system != 'Linux') or (platform_machine == 'aarch64' and platform_system == 'Linux')" },
+    { name = "matplotlib" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/95/1f/91780093a0cf2afc234063bb9697d1285ccba138c1531700bc2986e65adc/vtk-9.3.1-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:c41ed344b9cc90ee9dcfc5967815de272985647d0c8e0a57f0e8b4229bc1b0b9", size = 76687544 },

@@ -34,12 +34,13 @@ dependencies = [
     "tabulate>=0.9.0",
     "tqdm>=4.66.5",
     "trimes>=0.0.1",
-    "vtk>=9.3.1; platform_system != 'Linux' and platform_machine != 'aarch64'",
+    #"vtk>=9.3.1; platform_system != 'Linux' and platform_machine != 'aarch64'",
+    #"vtk>=9.3.1; platform_system == 'Linux' and platform_machine == 'aarch64'",
+    "vtk>=9.3.1",
     "xlrd>=2.0.1",
     "trimesh>=4.4.9",
     "h5py==3.11; platform_system != 'Linux' and platform_machine != 'aarch64'",
     "docker>=7.1.0",
-    "vtk>=9.3.1; platform_system == 'Linux' and platform_machine == 'aarch64'"
 ]
 
 [tool.hatch.build.targets."pydelling"]
