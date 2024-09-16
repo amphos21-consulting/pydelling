@@ -1,8 +1,8 @@
 image: python:3.9
 
 stages:
-  - pages
   - test
+  - pages
 
 pages:
   script:
