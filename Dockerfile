@@ -45,9 +45,6 @@ COPY --from=builder /app/pydelling pydelling
 COPY --from=builder /app/justfile justfile
 COPY --from=builder /app/pyproject.toml pyproject.toml
 
-# Test h5py installation in runtime
-# RUN python -c "import h5py; print(f'h5py version: {h5py.__version__}')" && \
-#     echo "h5py import test passed successfully in runtime!"
 
 # Set the default command
 CMD ["bash", "-c", "source /app/.venv/bin/activate && exec bash"]

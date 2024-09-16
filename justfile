@@ -4,7 +4,7 @@ list:
 
 #Docker compose up
 up: build
-	docker compose up -d --build
+	docker compose up -d
 
 #Docker compose build
 build:
