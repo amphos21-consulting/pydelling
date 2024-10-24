@@ -307,41 +307,98 @@ class Fracture(object):
         ]
         return corner_segments
 
-    def contains(self, point: Point):
-        """Returns if a point is inside the fracture"""
-        q1, q2, q3, q4 = self.corners
-        q1: Point
+    def contains(self, point: np.ndarray) -> bool:
+        """
+        Determines if a given 3D point is inside the fracture's polygon using the Ray Casting algorithm.
 
-        largest_normal_index = self.largest_index_normal_vector
-        q1_hat = np.delete(q1, largest_normal_index)
-        q2_hat = np.delete(q2, largest_normal_index)
-        q3_hat = np.delete(q3, largest_normal_index)
-        q4_hat = np.delete(q4, largest_normal_index)
-        p_hat = np.delete(point, largest_normal_index)
-        u0 = p_hat[0]
-        u1 = q1_hat[0]
-        u2 = q2_hat[0]
-        u3 = q3_hat[0]
-        u4 = q4_hat[0]
-        v0 = p_hat[1]
-        v1 = q1_hat[1]
-        v2 = q2_hat[1]
-        v3 = q3_hat[1]
-        v4 = q4_hat[1]
+        Parameters:
+        - point (np.ndarray): A 3D point as a NumPy array [x, y, z].
 
-        s1 = (v1 - v2) * u0 + (u2 - u1) * v0 + v2 * u1 - u2 * v1
-        s2 = (v2 - v3) * u0 + (u3 - u2) * v0 + v3 * u2 - u3 * v2
-        s3 = (v3 - v4) * u0 + (u4 - u3) * v0 + v4 * u3 - u4 * v3
-        s4 = (v4 - v1) * u0 + (u1 - u4) * v0 + v1 * u4 - u1 * v4
+        Returns:
+        - bool: True if the point is inside the fracture polygon, False otherwise.
+        """
+        # Step 1: Check if the point is close to the fracture's plane
+        distance = self.distance_to_point(point)
+        if distance > self.eps:
+            return False  # The point is not on the fracture's plane
 
-        s = np.array([s1, s2, s3, s4])
+        # Step 2: Project the polygon and the point onto a 2D plane
+        normal = self.unit_normal_vector
+        largest_index = np.argmax(np.abs(normal))  # Choose the projection plane
+        # Indices of the two coordinates to keep
+        proj_indices = [i for i in range(3) if i != largest_index]
 
-        equal_sign = np.all(s >= -self.eps) if s[0] >= -self.eps else np.all(s <= self.eps)
+        # Project polygon points
+        projected_polygon = [p[proj_indices] for p in self.get_side_points()]
+        # Ensure the polygon is closed by appending the first point at the end
+        if not np.array_equal(projected_polygon[0], projected_polygon[-1]):
+            projected_polygon.append(projected_polygon[0])
 
-        if equal_sign:
-            return True
-        else:
-            return False
+        # Project the point
+        px, py = point[proj_indices]
+
+        # Step 3: Perform the Ray Casting algorithm
+        num_intersections = 0
+        num_vertices = len(projected_polygon)
+
+        for i in range(num_vertices - 1):
+            x1, y1 = projected_polygon[i]
+            x2, y2 = projected_polygon[i + 1]
+
+            # Check if the point is exactly on a vertex
+            if (px == x1 and py == y1) or (px == x2 and py == y2):
+                return True  # Consider the point as inside
+
+            # Check if the point is on the edge
+            if self._point_on_segment(px, py, x1, y1, x2, y2):
+                return True  # Consider the point as inside
+
+            # Check if the edge intersects with the ray
+            # Conditions:
+            # 1. The y-coordinate of the point is between the y-coordinates of the edge's endpoints
+            # 2. The point is to the left of the edge
+            if ((y1 > py) != (y2 > py)):
+                # Compute the x-coordinate of the intersection point
+                x_intersect = (x2 - x1) * (py - y1) / (y2 - y1 + 1e-12) + x1
+                if px < x_intersect:
+                    num_intersections += 1
+
+        # If the number of intersections is odd, the point is inside
+        return num_intersections % 2 == 1
+
+
+    def _point_on_segment(self, px, py, x1, y1, x2, y2) -> bool:
+        """
+        Checks if a point (px, py) lies on the segment [(x1, y1), (x2, y2)].
+
+        Parameters:
+        - px, py: Coordinates of the point.
+        - x1, y1, x2, y2: Coordinates of the segment's endpoints.
+
+        Returns:
+        - bool: True if the point lies on the segment, False otherwise.
+        """
+        # Check if the point is within the bounding box of the segment
+        if min(x1, x2) - self.eps <= px <= max(x1, x2) + self.eps and \
+            min(y1, y2) - self.eps <= py <= max(y1, y2) + self.eps:
+            # Compute the cross product to check collinearity
+            dx = x2 - x1
+            dy = y2 - y1
+            if abs(dx) < self.eps and abs(dy) < self.eps:
+                # The segment is a point
+                return abs(px - x1) < self.eps and abs(py - y1) < self.eps
+            elif abs(dx) < self.eps:
+                # Vertical segment
+                return abs(px - x1) < self.eps
+            elif abs(dy) < self.eps:
+                # Horizontal segment
+                return abs(py - y1) < self.eps
+            else:
+                # General case
+                slope = dy / dx
+                expected_py = slope * (px - x1) + y1
+                return abs(py - expected_py) < self.eps
+        return False
 
     def shift(self, x, y, z):
         """Shifts the fracture"""
