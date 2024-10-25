@@ -1,5 +1,7 @@
 import logging
 import pathlib
+from multiprocessing import Pool, cpu_count
+from .parallel_helpers import initializer, process_fracture
 
 import dill
 import numpy as np
@@ -14,6 +16,8 @@ from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
 from pydelling.utils.geometry_utils import compute_polygon_area
 
 logger = logging.getLogger(__name__)
+
+
 
 
 class DfnUpscaler:
@@ -45,16 +49,52 @@ class DfnUpscaler:
 
 
     def _intersect_dfn_with_mesh(self, parallel=False):
-        """Runs the DfnUpscaler"""
+        """Runs the DfnUpscaler with optional parallel processing."""
         logger.info('Upscaling the DFN to the mesh')
-        self.break_for = False
-        for fracture in tqdm(self.dfn, desc='Intersecting fractures with mesh', total=len(self.dfn)):
-            self.find_intersection_points_between_fracture_and_mesh(fracture)
-            # if fracture.local_id == 94:
-            #     break
-            # if self.break_for:
-            #     break
+        self.mesh.find_intersection_stats = {
+            'intersection_points': {},
+            'total_intersections': 0
+        }
+        self.all_intersected_points = []
 
+        if parallel:
+            logger.info('Computing intersections in parallel')
+            num_workers = cpu_count()  # Use the number of CPU cores available
+            with Pool(processes=num_workers, initializer=initializer, initargs=(self.mesh, self.eps)) as pool:
+                # Use tqdm to monitor progress
+                results = list(tqdm(pool.imap(process_fracture, self.dfn), total=len(self.dfn), desc='Intersecting fractures with mesh'))
+        else:
+            logger.info('Computing intersections serially')
+            results = []
+            for fracture in tqdm(self.dfn, desc='Intersecting fractures with mesh', total=len(self.dfn)):
+                result = self.find_intersection_points_between_fracture_and_mesh(fracture)
+                results.append(result)
+
+        # Aggregate results
+        for data in results:
+            fracture_id = data['fracture_id']
+            fracture = self.dfn[fracture_id]
+            
+            # Update intersection_dictionary
+            fracture.intersection_dictionary.update(data['intersection_areas'])
+            
+            # Update associated fractures in mesh elements
+            for element_id, assoc_data in data['associated_elements'].items():
+                element = self.mesh.elements[element_id]
+                element.associated_fractures[fracture_id] = assoc_data
+                
+                # Update intersection statistics
+                n_intersections = len(data['intersections']) if data['intersections'] else 0
+                if n_intersections not in self.mesh.find_intersection_stats['intersection_points']:
+                    self.mesh.find_intersection_stats['intersection_points'][n_intersections] = 0
+                self.mesh.find_intersection_stats['intersection_points'][n_intersections] += 1
+                self.mesh.find_intersection_stats['total_intersections'] += n_intersections
+            
+            # Save intersections if required
+            if self.save_intersections:
+                self.all_intersected_points.append(data['intersections'])
+
+        # Proceed with fault cell assignments
         if not self.load_faults:
             self.find_fault_cells(nearest=self.nearest, check_nodes=self.check_nodes)
         else:
@@ -62,59 +102,56 @@ class DfnUpscaler:
             with open(self.load_faults, 'rb') as f:
                 fault_info = dill.load(f)
                 for element in self.mesh.elements:
-                    element.associated_faults = fault_info[element.local_id]
+                    element.associated_faults = fault_info.get(element.local_id, {})
 
-
+        # Save intersections to CSV if required
         if self.save_intersections:
             import csv
-            with open('intersections.csv', 'w') as f:
+            with open('intersections.csv', 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(['x', 'y', 'z', 'value'])
                 local_id = 0
-                for intersection in self.all_intersected_points:
-                    for point in intersection:
-                        writer.writerow([point.x, point.y, point.z, local_id])
+                for intersection_group in self.all_intersected_points:
+                    for intersection in intersection_group:
+                        for point in intersection:
+                            writer.writerow([point.x, point.y, point.z, local_id])
                     local_id += 1
 
-    def find_intersection_points_between_fracture_and_mesh(self, fracture: Fracture, export_stats=True):
-        """Finds the intersection points between a fracture and the mesh"""
-
-        intersection_points = []
+    def find_intersection_points_between_fracture_and_mesh(self, fracture: Fracture):
+        """Finds the intersection points between a fracture and the mesh and returns the results."""
+        
+        intersection_data = {
+            'fracture_id': fracture.local_id,
+            'intersections': [],  # List of intersection points
+            'intersection_areas': {},  # element_id: intersection_area
+            'associated_elements': {}  # element_id: {details}
+        }
+        
         kd_tree_filtered_elements = self.mesh.get_closest_mesh_elements(fracture.centroid, distance=fracture.size)
-        counter = 0
-        elements_filtered = 0
+        
         for element in kd_tree_filtered_elements:
-            element: geometry.BaseElement
-            counter += 1
             absolute_distance = np.abs(fracture.distance_to_point(element.centroid))
             characteristic_length = np.power(element.volume, 1 / 3)
             if absolute_distance > 1.25 * characteristic_length:
-                elements_filtered += 1
-                continue
-
+                continue  # Filter out elements too far away
+            
             intersection_points = element.intersect_with_fracture(fracture)
-            if len(intersection_points) > 0:
-                a = 1
-            if self.save_intersections:
-                self.all_intersected_points.append(intersection_points)
-
-            # intersection_area = compute_polygon_area(intersection_points)
+            
+            if intersection_points:
+                if intersection_data['intersections'] is not None:
+                    intersection_data['intersections'].append(intersection_points)
+            
             intersection_area = np.abs(compute_polygon_area(intersection_points))
-            fracture.intersection_dictionary[element.local_id] = intersection_area
-            if len(intersection_points) > 0:
-                element.associated_fractures[fracture.local_id] = {
+            intersection_data['intersection_areas'][element.local_id] = intersection_area
+            
+            if intersection_points:
+                intersection_data['associated_elements'][element.local_id] = {
                     'area': intersection_area,
                     'volume': intersection_area * fracture.aperture,
                     'fracture': fracture.local_id,
                 }
-            n_intersections = len(intersection_points)
-            if not n_intersections in self.mesh.find_intersection_stats['intersection_points'].keys():
-                self.mesh.find_intersection_stats['intersection_points'][n_intersections] = 0
-            self.mesh.find_intersection_stats['intersection_points'][n_intersections] += 1
-            self.mesh.find_intersection_stats['total_intersections'] += 1
-
-        self.mesh.is_intersected = True
-        return intersection_points
+        
+        return intersection_data
 
     def find_fault_cells(self, save_fault_cells=True,
                          nearest=None,
