@@ -28,7 +28,7 @@ class DfnUpscaler:
                  load_faults:str or pathlib.Path=None,
                  loading=False,
                  nearest=None,
-                 check_nodes=False,
+                 check_nodes=True,
                  ):
         self.eps = 1E-4
         self.dfn: DfnPreprocessor = dfn
@@ -283,7 +283,7 @@ class DfnUpscaler:
                 minimum_porosity = np.percentile(np.array(resulting_porosity)[~np.isnan(resulting_porosity)],
                                                  min_percentile)
                 min_percentile = min_percentile + 1
-            print("Porosity will be truncated to Percentile = " + str(min_percentile))
+            logger.info("Porosity will be truncated to Percentile = " + str(min_percentile))
 
             # Truncate to max
             maximum_porosity = np.percentile(np.array(resulting_porosity)[~np.isnan(resulting_porosity)],
