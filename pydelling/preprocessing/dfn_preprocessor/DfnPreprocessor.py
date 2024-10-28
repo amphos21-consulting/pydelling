@@ -147,6 +147,7 @@ class DfnPreprocessor(object):
                                      porosity=porosity,
                                      storativity=storativity,
                                      ))
+            logger.info(f"Fault with aperture {aperture} has been added from {filename}")
         else:
             logger.error('Fault filename must be a string or Fault object')
             raise TypeError('Fault filename must be a string or Fault object')

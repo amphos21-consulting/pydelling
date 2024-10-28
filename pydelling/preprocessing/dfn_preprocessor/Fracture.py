@@ -14,22 +14,23 @@ class Fracture(object):
     _side_points = None
     _unit_normal_vector = None
 
-    def __init__(self,
-                 x=None,
-                 y=None,
-                 z=None,
-                 dip=None,
-                 dip_dir=None,
-                 size=None,
-                 aperture=None,
-                 hydraulic_aperture=None,
-                 rock_type=None,
-                 aperture_constant=None,
-                 transmissivity_constant=None,
-                 storativity_constant=None,
-                 normal_vector=None,
-                 polygon: List[np.ndarray]=None,
-                 ):
+    def __init__(
+        self,
+        x=None,
+        y=None,
+        z=None,
+        dip=None,
+        dip_dir=None,
+        size=None,
+        aperture=None,
+        hydraulic_aperture=None,
+        rock_type=None,
+        aperture_constant=None,
+        transmissivity_constant=None,
+        storativity_constant=None,
+        normal_vector=None,
+        polygon: List[np.ndarray] = None,
+    ):
         if normal_vector is not None:
             self._unit_normal_vector: np.ndarray = normal_vector
         self.side_points = None
@@ -49,7 +50,6 @@ class Fracture(object):
             z = centroid[2]
         self.polygon_points = polygon
 
-
         self.dip = dip
         self.dip_dir = dip_dir
         self.x_centroid = x
@@ -64,7 +64,9 @@ class Fracture(object):
         if transmissivity_constant is not None:
             if rock_type is not None:
                 if isinstance(transmissivity_constant, dict):
-                    self.transmissivity_constant = transmissivity_constant[int(rock_type)]
+                    self.transmissivity_constant = transmissivity_constant[
+                        int(rock_type)
+                    ]
                 else:
                     self.transmissivity_constant = transmissivity_constant
             else:
@@ -87,7 +89,6 @@ class Fracture(object):
         self.side_points = self.get_side_points()
         self.n_side_points = len(self.side_points)
 
-
         Fracture.local_id += 1
 
     def get_side_points_v1(self):
@@ -98,8 +99,10 @@ class Fracture(object):
         phi = self.dip_dir / 360 * (2 * np.pi)
         theta = self.dip / 360 * (2 * np.pi)
 
-        u = np.array([np.cos(theta) * np.sin(phi), np.cos(theta) * np.cos(phi), -np.sin(theta)])
-        v = np.array([np.cos(phi), - np.sin(phi), 0])
+        u = np.array(
+            [np.cos(theta) * np.sin(phi), np.cos(theta) * np.cos(phi), -np.sin(theta)]
+        )
+        v = np.array([np.cos(phi), -np.sin(phi), 0])
 
         A = self.centroid + self.size / 2 * (u + v)
         B = self.centroid + self.size / 2 * (u - v)
@@ -144,8 +147,26 @@ class Fracture(object):
         Z = -w * np.sin(delta)
 
         B = np.array([L * np.sin(alpha), L * np.cos(alpha), 0]) + A
-        C = np.array([L * np.cos(np.pi / 2 - alpha) + H, L * np.sin(np.pi / 2 - alpha) + V, Z]) + A
-        D = np.array([w * np.sin(alpha + np.pi / 2), w * np.cos(alpha + np.pi / 2), -w * np.sin(delta)]) + A
+        C = (
+            np.array(
+                [
+                    L * np.cos(np.pi / 2 - alpha) + H,
+                    L * np.sin(np.pi / 2 - alpha) + V,
+                    Z,
+                ]
+            )
+            + A
+        )
+        D = (
+            np.array(
+                [
+                    w * np.sin(alpha + np.pi / 2),
+                    w * np.cos(alpha + np.pi / 2),
+                    -w * np.sin(delta),
+                ]
+            )
+            + A
+        )
 
         P = np.array([A, B, C, D])
 
@@ -159,58 +180,72 @@ class Fracture(object):
         alpha = self.dip / 360 * (2 * np.pi)
         beta = self.dip_dir / 360 * (2 * np.pi)
 
-        A = self.centroid + np.array([
-            + self.size / 2 * (-np.cos(beta) - np.sin(beta) * np.cos(alpha)),
-            + self.size / 2 * (np.sin(beta) - np.cos(beta) * np.cos(alpha)),
-            self.size / 2 * np.sin(alpha)
-        ])
+        A = self.centroid + np.array(
+            [
+                +self.size / 2 * (-np.cos(beta) - np.sin(beta) * np.cos(alpha)),
+                +self.size / 2 * (np.sin(beta) - np.cos(beta) * np.cos(alpha)),
+                self.size / 2 * np.sin(alpha),
+            ]
+        )
 
-        B = self.centroid + np.array([
-            + self.size / 2 * (-np.cos(beta) + np.sin(beta) * np.cos(alpha)),
-            + self.size / 2 * (np.sin(beta) + np.cos(beta) * np.cos(alpha)),
-            - self.size / 2 * np.sin(alpha)
-        ])
+        B = self.centroid + np.array(
+            [
+                +self.size / 2 * (-np.cos(beta) + np.sin(beta) * np.cos(alpha)),
+                +self.size / 2 * (np.sin(beta) + np.cos(beta) * np.cos(alpha)),
+                -self.size / 2 * np.sin(alpha),
+            ]
+        )
 
-        C = self.centroid + np.array([
-            + self.size / 2 * (np.cos(beta) + np.sin(beta) * np.cos(alpha)),
-            + self.size / 2 * (-np.sin(beta) + np.cos(beta) * np.cos(alpha)),
-            - self.size / 2 * np.sin(alpha)
-        ])
+        C = self.centroid + np.array(
+            [
+                +self.size / 2 * (np.cos(beta) + np.sin(beta) * np.cos(alpha)),
+                +self.size / 2 * (-np.sin(beta) + np.cos(beta) * np.cos(alpha)),
+                -self.size / 2 * np.sin(alpha),
+            ]
+        )
 
-        D = self.centroid + np.array([
-            + self.size / 2 * (np.cos(beta) - np.sin(beta) * np.cos(alpha)),
-            + self.size / 2 * (-np.sin(beta) - np.cos(beta) * np.cos(alpha)),
-            + self.size / 2 * np.sin(alpha)
-        ])
+        D = self.centroid + np.array(
+            [
+                +self.size / 2 * (np.cos(beta) - np.sin(beta) * np.cos(alpha)),
+                +self.size / 2 * (-np.sin(beta) - np.cos(beta) * np.cos(alpha)),
+                +self.size / 2 * np.sin(alpha),
+            ]
+        )
 
         self.side_points = 4
 
         return np.array([A, B, C, D])
 
-    def get_side_points(self, method='v1'):
+    def get_side_points(self, method="v1"):
         if self._side_points is not None:
             return self._side_points
-        if method == 'v1':
+        if method == "v1":
             return self.get_side_points_v1()
-        elif method == 'v2':
+        elif method == "v2":
             return self.get_side_points_v2()
-        elif method == 'v3':
+        elif method == "v3":
             return self.get_side_points_v3()
 
-
-    def to_obj(self, global_id=0, method='v1'):
+    def to_obj(self, global_id=0, method="v1"):
         """Converts the fracture to an obj file"""
         side_points = self.get_side_points(method=method)
         if isinstance(side_points[0], np.ndarray):
             side_points = [side_point.tolist() for side_point in side_points]
-        obj_string = ''
+        obj_string = ""
         for i in range(len(side_points)):
-            obj_string += 'v ' + str(side_points[i][0]) + ' ' + str(side_points[i][1]) + ' ' + str(
-                side_points[i][2]) + '\n'
-        obj_string += f'f '
+            obj_string += (
+                "v "
+                + str(side_points[i][0])
+                + " "
+                + str(side_points[i][1])
+                + " "
+                + str(side_points[i][2])
+                + "\n"
+            )
+        obj_string += f"f "
         for i in range(len(side_points)):
-            obj_string += str(global_id + i) + ' '
-        obj_string += '\n'
+            obj_string += str(global_id + i) + " "
+        obj_string += "\n"
         return obj_string
 
     @property
@@ -230,7 +265,9 @@ class Fracture(object):
         b = self.unit_normal_vector[1]
         c = self.unit_normal_vector[2]
         d = -np.dot(self.unit_normal_vector, self.centroid)
-        return abs(a * point[0] + b * point[1] + c * point[2] + d) / np.sqrt(a ** 2 + b ** 2 + c ** 2)
+        return abs(a * point[0] + b * point[1] + c * point[2] + d) / np.sqrt(
+            a**2 + b**2 + c**2
+        )
 
     def get_bounding_box(self):
         """Returns the bounding box of the fracture"""
@@ -250,11 +287,20 @@ class Fracture(object):
         ly = bounding_box[3] - bounding_box[2]
         lz = bounding_box[5] - bounding_box[4]
 
-        if point[0] < bounding_box[0] - scale_factor * lx or point[0] > bounding_box[1] + scale_factor * lx:
+        if (
+            point[0] < bounding_box[0] - scale_factor * lx
+            or point[0] > bounding_box[1] + scale_factor * lx
+        ):
             return False
-        if point[1] < bounding_box[2] - scale_factor * ly or point[1] > bounding_box[3] + scale_factor * ly:
+        if (
+            point[1] < bounding_box[2] - scale_factor * ly
+            or point[1] > bounding_box[3] + scale_factor * ly
+        ):
             return False
-        if point[2] < bounding_box[4] - scale_factor * lz or point[2] > bounding_box[5] + scale_factor * lz:
+        if (
+            point[2] < bounding_box[4] - scale_factor * lz
+            or point[2] > bounding_box[5] + scale_factor * lz
+        ):
             return False
         else:
             return True
@@ -269,11 +315,10 @@ class Fracture(object):
         self._polygon = geom.Polygon(side_points)
         return self._polygon
 
-
     @property
     def plane(self):
         """Returns the plane of the fracture"""
-        if not hasattr(self, '_plane'):
+        if not hasattr(self, "_plane"):
             self._plane = Plane(self.centroid, normal=self.unit_normal_vector)
 
         return self._plane
@@ -281,7 +326,7 @@ class Fracture(object):
     @property
     def corners(self) -> List[Point]:
         """Returns the corners of the fracture"""
-        if not hasattr(self, '_corners'):
+        if not hasattr(self, "_corners"):
             self._corners = [Point(point) for point in self.get_side_points()]
         return self._corners
 
@@ -292,7 +337,7 @@ class Fracture(object):
             Segment(self.corners[0], self.corners[1]),
             Segment(self.corners[1], self.corners[2]),
             Segment(self.corners[2], self.corners[3]),
-            Segment(self.corners[3], self.corners[0])
+            Segment(self.corners[3], self.corners[0]),
         ]
         return corner_segments
 
@@ -307,41 +352,99 @@ class Fracture(object):
         ]
         return corner_segments
 
-    def contains(self, point: Point):
-        """Returns if a point is inside the fracture"""
-        q1, q2, q3, q4 = self.corners
-        q1: Point
+    def contains(self, point: np.ndarray) -> bool:
+        """
+        Determines if a given 3D point is inside the fracture's polygon using the Ray Casting algorithm.
 
-        largest_normal_index = self.largest_index_normal_vector
-        q1_hat = np.delete(q1, largest_normal_index)
-        q2_hat = np.delete(q2, largest_normal_index)
-        q3_hat = np.delete(q3, largest_normal_index)
-        q4_hat = np.delete(q4, largest_normal_index)
-        p_hat = np.delete(point, largest_normal_index)
-        u0 = p_hat[0]
-        u1 = q1_hat[0]
-        u2 = q2_hat[0]
-        u3 = q3_hat[0]
-        u4 = q4_hat[0]
-        v0 = p_hat[1]
-        v1 = q1_hat[1]
-        v2 = q2_hat[1]
-        v3 = q3_hat[1]
-        v4 = q4_hat[1]
+        Parameters:
+        - point (np.ndarray): A 3D point as a NumPy array [x, y, z].
 
-        s1 = (v1 - v2) * u0 + (u2 - u1) * v0 + v2 * u1 - u2 * v1
-        s2 = (v2 - v3) * u0 + (u3 - u2) * v0 + v3 * u2 - u3 * v2
-        s3 = (v3 - v4) * u0 + (u4 - u3) * v0 + v4 * u3 - u4 * v3
-        s4 = (v4 - v1) * u0 + (u1 - u4) * v0 + v1 * u4 - u1 * v4
+        Returns:
+        - bool: True if the point is inside the fracture polygon, False otherwise.
+        """
+        # Step 1: Check if the point is close to the fracture's plane
+        distance = self.distance_to_point(point)
+        if distance > self.eps:
+            return False  # The point is not on the fracture's plane
 
-        s = np.array([s1, s2, s3, s4])
+        # Step 2: Project the polygon and the point onto a 2D plane
+        normal = self.unit_normal_vector
+        largest_index = np.argmax(np.abs(normal))  # Choose the projection plane
+        # Indices of the two coordinates to keep
+        proj_indices = [i for i in range(3) if i != largest_index]
 
-        equal_sign = np.all(s >= -self.eps) if s[0] >= -self.eps else np.all(s <= self.eps)
+        # Project polygon points
+        projected_polygon = [p[proj_indices] for p in self.get_side_points()]
+        # Ensure the polygon is closed by appending the first point at the end
+        if not np.array_equal(projected_polygon[0], projected_polygon[-1]):
+            projected_polygon.append(projected_polygon[0])
 
-        if equal_sign:
-            return True
-        else:
-            return False
+        # Project the point
+        px, py = point[proj_indices]
+
+        # Step 3: Perform the Ray Casting algorithm
+        num_intersections = 0
+        num_vertices = len(projected_polygon)
+
+        for i in range(num_vertices - 1):
+            x1, y1 = projected_polygon[i]
+            x2, y2 = projected_polygon[i + 1]
+
+            # Check if the point is exactly on a vertex
+            if (px == x1 and py == y1) or (px == x2 and py == y2):
+                return True  # Consider the point as inside
+
+            # Check if the point is on the edge
+            if self._point_on_segment(px, py, x1, y1, x2, y2):
+                return True  # Consider the point as inside
+
+            # Check if the edge intersects with the ray
+            # Conditions:
+            # 1. The y-coordinate of the point is between the y-coordinates of the edge's endpoints
+            # 2. The point is to the left of the edge
+            if (y1 > py) != (y2 > py):
+                # Compute the x-coordinate of the intersection point
+                x_intersect = (x2 - x1) * (py - y1) / (y2 - y1 + 1e-12) + x1
+                if px < x_intersect:
+                    num_intersections += 1
+
+        # If the number of intersections is odd, the point is inside
+        return num_intersections % 2 == 1
+
+    def _point_on_segment(self, px, py, x1, y1, x2, y2) -> bool:
+        """
+        Checks if a point (px, py) lies on the segment [(x1, y1), (x2, y2)].
+
+        Parameters:
+        - px, py: Coordinates of the point.
+        - x1, y1, x2, y2: Coordinates of the segment's endpoints.
+
+        Returns:
+        - bool: True if the point lies on the segment, False otherwise.
+        """
+        # Check if the point is within the bounding box of the segment
+        if (
+            min(x1, x2) - self.eps <= px <= max(x1, x2) + self.eps
+            and min(y1, y2) - self.eps <= py <= max(y1, y2) + self.eps
+        ):
+            # Compute the cross product to check collinearity
+            dx = x2 - x1
+            dy = y2 - y1
+            if abs(dx) < self.eps and abs(dy) < self.eps:
+                # The segment is a point
+                return abs(px - x1) < self.eps and abs(py - y1) < self.eps
+            elif abs(dx) < self.eps:
+                # Vertical segment
+                return abs(px - x1) < self.eps
+            elif abs(dy) < self.eps:
+                # Horizontal segment
+                return abs(py - y1) < self.eps
+            else:
+                # General case
+                slope = dy / dx
+                expected_py = slope * (px - x1) + y1
+                return abs(py - expected_py) < self.eps
+        return False
 
     def shift(self, x, y, z):
         """Shifts the fracture"""
@@ -349,14 +452,16 @@ class Fracture(object):
         self.y_centroid += y
         self.z_centroid += z
         if self._side_points is not None:
-            self._side_points = [point + np.array([x, y, z]) for point in self._side_points]
+            self._side_points = [
+                point + np.array([x, y, z]) for point in self._side_points
+            ]
 
     @property
     def largest_index_normal_vector(self):
         """Returns the largest coordinate index of the normal vector"""
         return np.argmax(self.unit_normal_vector)
 
-    def compute_aperture(self, const=3.020E-3):
+    def compute_aperture(self, const=3.020e-3):
         """Computes the aperture of the fracture"""
         if self._aperture is not None:
             return self._aperture
@@ -374,12 +479,14 @@ class Fracture(object):
         if self._transmissivity is not None:
             return self._transmissivity
         elif self.transmissivity_constant is not None:
-            computed_transmissivity = self.transmissivity_constant * (np.log10(self.size / 2.0)) ** 2
+            computed_transmissivity = (
+                self.transmissivity_constant * (np.log10(self.size / 2.0)) ** 2
+            )
             return computed_transmissivity
         else:
             rho = 1000
             g = 9.8
-            mu = 8.9E-4
+            mu = 8.9e-4
             return (np.power(self.hydraulic_aperture, 3) * rho * g) / (12 * mu)
 
     @property
@@ -395,23 +502,23 @@ class Fracture(object):
 
     def get_json(self):
         cur_dict = {
-            'x': self.x_centroid,
-            'y': self.y_centroid,
-            'z': self.z_centroid,
-            'size': self.size,
-            'aperture': self.aperture,
-            'dip': self.dip,
-            'dip_dir': self.dip_dir,
-            'aperture_constant': self.aperture_constant,
-            'rock_type': self.rock_type,
-            'transmissivity_constant': self.transmissivity_constant,
-            'storativity_constant': self.storativity_constant,
-            'normal_vector': self._unit_normal_vector.tolist() if self._unit_normal_vector is not None else None,
-            'polygon': [point.tolist() for point in self.polygon_points] if self.polygon_points is not None else None,
+            "x": self.x_centroid,
+            "y": self.y_centroid,
+            "z": self.z_centroid,
+            "size": self.size,
+            "aperture": self.aperture,
+            "dip": self.dip,
+            "dip_dir": self.dip_dir,
+            "aperture_constant": self.aperture_constant,
+            "rock_type": self.rock_type,
+            "transmissivity_constant": self.transmissivity_constant,
+            "storativity_constant": self.storativity_constant,
+            "normal_vector": self._unit_normal_vector.tolist()
+            if self._unit_normal_vector is not None
+            else None,
+            "polygon": [point.tolist() for point in self.polygon_points]
+            if self.polygon_points is not None
+            else None,
         }
 
         return cur_dict
-
-
-
-
