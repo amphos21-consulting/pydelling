@@ -42,6 +42,8 @@ dependencies = [
     "trimesh>=4.4.9",
     "h5py==3.11; platform_system != 'Linux' and platform_machine != 'aarch64'",
     "docker>=7.1.0",
+    "extra-streamlit-components>=0.1.71",
+    "translate>=3.6.1",
 ]
 
 [tool.hatch.build.targets."pydelling"]

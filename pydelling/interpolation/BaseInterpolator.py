@@ -11,7 +11,7 @@ import seaborn as sns
 
 from pydelling.config import config
 from pydelling.utils.decorators import set_run
-from ..writers.BaseWriter import BaseWriter
+from pydelling.writers.BaseWriter import BaseWriter
 
 logger = logging.getLogger(__name__)
 

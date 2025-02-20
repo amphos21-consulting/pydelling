@@ -1,5 +1,5 @@
 import numpy as np
-import cv2
+# import cv2
 from matplotlib import pyplot as plt
 
 
@@ -40,12 +40,12 @@ class ImageOperations:
 
         return polygons
 
-    def plot_polygons(self, polygons):
-        image_copy = self.data.copy()
-        image_copy = cv2.cvtColor(image_copy, cv2.COLOR_GRAY2BGR)  # convert grayscale to BGR for visualization
+    # def plot_polygons(self, polygons):
+    #     image_copy = self.data.copy()
+    #     image_copy = cv2.cvtColor(image_copy, cv2.COLOR_GRAY2BGR)  # convert grayscale to BGR for visualization
 
-        for polygon in polygons:
-            cv2.polylines(image_copy, [polygon], True, (0, 255, 0), 2)  # draw polygon on the image
+    #     for polygon in polygons:
+    #         cv2.polylines(image_copy, [polygon], True, (0, 255, 0), 2)  # draw polygon on the image
 
-        plt.imshow(cv2.cvtColor(image_copy, cv2.COLOR_BGR2RGB))  # convert BGR to RGB for matplotlib
-        plt.show()
+    #     plt.imshow(cv2.cvtColor(image_copy, cv2.COLOR_BGR2RGB))  # convert BGR to RGB for matplotlib
+    #     plt.show()
