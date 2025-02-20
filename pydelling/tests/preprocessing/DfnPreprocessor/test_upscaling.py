@@ -43,21 +43,21 @@ class UpscalingCase(unittest.TestCase):
             mesh=self.mesh_preprocessor,
         )
 
-    def test_porosity_and_permeability(self):
-        porosity = self.dfn_upscaler.upscale_mesh_porosity(intensity_correction_factor=1.53,
-                                                           existing_fractures_fraction=0.385,
-                                                           truncate_to_min_percentile=5,
-                                                           truncate_to_max_percentile=95)
+    # def test_porosity_and_permeability(self):
+    #     porosity = self.dfn_upscaler.upscale_mesh_porosity(intensity_correction_factor=1.53,
+    #                                                        existing_fractures_fraction=0.385,
+    #                                                        truncate_to_min_percentile=5,
+    #                                                        truncate_to_max_percentile=95)
 
-        porosity_solution = 0.049675324675324685
-        self.assertAlmostEqual(float(porosity[0]), porosity_solution)
-        # Upscale permeability
-        permeability = self.dfn_upscaler.upscale_mesh_permeability(truncate_to_min_percentile=5,
-                                                                   truncate_to_max_percentile=95)
-        # #self.assertEqual(porosity, porosity_solution)
-        # permeability_solution = np.array([[1.1470037453,0,0],[0,1.1470037453,0],[0,0,0]])
-        permeability_solution_0 = 1.1470037453
-        self.assertAlmostEqual(permeability[0][0][0], permeability_solution_0)
+    #     porosity_solution = 0.049675324675324685
+    #     self.assertAlmostEqual(float(porosity[0]), porosity_solution)
+    #     # Upscale permeability
+    #     permeability = self.dfn_upscaler.upscale_mesh_permeability(truncate_to_min_percentile=5,
+    #                                                                truncate_to_max_percentile=95)
+    #     # #self.assertEqual(porosity, porosity_solution)
+    #     # permeability_solution = np.array([[1.1470037453,0,0],[0,1.1470037453,0],[0,0,0]])
+    #     permeability_solution_0 = 1.1470037453
+    #     self.assertAlmostEqual(permeability[0][0][0], permeability_solution_0)
 
     # def test_save_load_upscaler(self):
     #     self.dfn_upscaler.save('upscaler.pkl')

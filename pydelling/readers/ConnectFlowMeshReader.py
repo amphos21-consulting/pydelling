@@ -12,7 +12,7 @@ import numpy as np
 import streamlit as st
 from tqdm import tqdm
 from pathlib import Path
-from ..preprocessing.mesh_preprocessor import MeshPreprocessor
+from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
 
 logger = logging.getLogger(__name__)
 

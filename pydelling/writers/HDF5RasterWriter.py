@@ -67,7 +67,7 @@ class HDF5RasterWriter(BaseWriter):
                 self.data = self.transform_flatten_to_regular_mesh(self.data)
                 self.data = np.array(self.data)
                 plt.imshow(self.data[0, :, :])
-                plt.show()
+                # plt.show()
                 self.data = np.swapaxes(np.array(self.data), 0, 1)
                 self.data = np.swapaxes(self.data, 1, 2)
             elif len(self.data.shape) == 2:
@@ -80,7 +80,7 @@ class HDF5RasterWriter(BaseWriter):
                         self.data =[self.data]
                     self.data = np.array(self.data)
                     plt.imshow(self.data[0, :, :])
-                    plt.show()
+                    # plt.show()
                     self.data = np.swapaxes(np.array(self.data), 0, 1)
                     self.data = np.swapaxes(self.data, 1, 2)
             elif len(self.data.shape) == 3:

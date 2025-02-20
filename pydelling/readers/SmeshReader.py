@@ -1,11 +1,11 @@
 import numpy as np
-from ..preprocessing.mesh_preprocessor import MeshPreprocessor
+from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
 import logging
 import logging
 
 import numpy as np
 
-from ..preprocessing.mesh_preprocessor import MeshPreprocessor
+
 
 logger = logging.getLogger(__name__)
 from tqdm import tqdm
