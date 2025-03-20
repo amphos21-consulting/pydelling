@@ -1,2 +1,2 @@
-from .BaseEstimator import BaseEstimator
-from .PolygonZoneEstimator import PolygonZoneEstimator
+from .base_estimator import BaseEstimator
+from .polygon_zone_estimator import PolygonZoneEstimator

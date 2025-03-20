@@ -28,7 +28,7 @@ def main(argv):
     velocity_BC_files_list = glob.glob(globals.config.general.pressure_raster_folder + "/*")
     velocity_BC_files_list = sorted(velocity_BC_files_list)
     output_filename = "top_BC_velocities.h5"
-    bc_interpolator = interpolation.SparseDataInterpolator()
+    bc_interpolator = interpolation.sparse_data_interpolator()
     bc_interpolator.remove_output_file(filename=output_filename)
     bc_times = []
     interpolated_array = []
@@ -39,7 +39,7 @@ def main(argv):
         normalized_time = (float(normalized_time) - globals.config.time.zero_time_modifier) * 365 * 24 * 3600
         print(f"{year_iterator+1} of {len(velocity_BC_files_list)}")
         bc_times.append(normalized_time)
-        pressure_raster = readers.CentroidReader(filename=year_file,
+        pressure_raster = readers.centroid_reader(filename=year_file,
                                                  centroid_pos=(1, 3),
                                                  var_pos=6,
                                                  var_name=os.path.basename(year_file),
@@ -54,7 +54,7 @@ def main(argv):
         bc_interpolator.create_regular_mesh(n_x=1000, n_y=1000)
         bc_interpolator.interpolate()
         interpolated_array.append(bc_interpolator.get_data())
-    base_writer = writers.HDF5RasterWriter(filename=output_filename, data=np.array(interpolated_array),
+    base_writer = writers.hdf5_raster_writer(filename=output_filename, data=np.array(interpolated_array),
                                            info=bc_interpolator.info, times=bc_times)
     base_writer.dump_file(filename=output_filename)
 

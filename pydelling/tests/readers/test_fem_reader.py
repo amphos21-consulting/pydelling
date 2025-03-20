@@ -1,5 +1,5 @@
 import unittest
-from pydelling.readers.FemReader import FemReader
+from pydelling.readers.fem_reader import FemReader
 from pydelling.utils import test_data_path
 
 

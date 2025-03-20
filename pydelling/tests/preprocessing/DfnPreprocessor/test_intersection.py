@@ -1,10 +1,42 @@
 import unittest
 import numpy.testing as nptest
 import numpy as np
+import sys
+import pickle
 from pydelling.utils.geometry import Line
 from pydelling.preprocessing import DfnPreprocessor, MeshPreprocessor
 from pydelling.preprocessing.dfn_preprocessor import DfnUpscaler
 from pydelling.utils import test_data_path
+
+# Import the renamed modules to make them available in sys.modules
+from pydelling.preprocessing.dfn_preprocessor.fracture import Fracture
+from pydelling.utils.sub_fish_module import SubfishException
+
+# Create a custom unpickler to handle renamed modules
+class RenameUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        # Map old module names to new ones
+        renamed_modules = {
+            'pydelling.preprocessing.dfn_preprocessor.Fracture': 'pydelling.preprocessing.dfn_preprocessor.fracture',
+            'pydelling.preprocessing.BasePreprocessing': 'pydelling.preprocessing.base_preprocessing',
+            'pydelling.utils.SubFishModule': 'pydelling.utils.sub_fish_module',
+            'pydelling.utils.geometry.Point': 'pydelling.utils.geometry.point',
+            'pydelling.utils.geometry.Line': 'pydelling.utils.geometry.line',
+            'pydelling.utils.geometry.Plane': 'pydelling.utils.geometry.plane',
+            'pydelling.utils.geometry.Vector': 'pydelling.utils.geometry.vector',
+            'pydelling.preprocessing.mesh_preprocessor.geometry.TetrahedraElement': 'pydelling.preprocessing.mesh_preprocessor.geometry.tetrahedra_element',
+            'pydelling.preprocessing.mesh_preprocessor.geometry.TriangleFace': 'pydelling.preprocessing.mesh_preprocessor.geometry.triangle_face',
+        }
+        
+        # If this is a module we want to rename, update the module name
+        if module in renamed_modules:
+            module = renamed_modules[module]
+            
+        return super().find_class(module, name)
+
+# Override the standard pickle.load with our custom unpickler
+def custom_load(file_obj):
+    return RenameUnpickler(file_obj).load()
 
 class IntersectionCase(unittest.TestCase):
     def test_full_intersection(self):
@@ -254,15 +286,14 @@ class IntersectionCase(unittest.TestCase):
         nptest.assert_array_almost_equal(intersections, solution)
 
     def test_problematic_fracture_1(self):
-        import pickle
         dfn_preprocessor = DfnPreprocessor()
         mesh = MeshPreprocessor()
         read_fracture = test_data_path() / "problematic_fractures/issue_fracture_1.pkl"
         with open(read_fracture, "rb") as f:
-            fracture = pickle.load(f)
+            fracture = custom_load(f)
         read_element = test_data_path() / "problematic_fractures/issue_element_1.pkl"
         with open(read_element, "rb") as f:
-            element = pickle.load(f)
+            element = custom_load(f)
 
         dfn_preprocessor.dfn.append(fracture)
         dfn_preprocessor.to_vtk('test_dfn.vtk')
@@ -271,15 +302,14 @@ class IntersectionCase(unittest.TestCase):
         self.assertEqual(len(intersections), 3)
 
     def test_problematic_fracture_2(self):
-        import pickle
         dfn_preprocessor = DfnPreprocessor()
         mesh = MeshPreprocessor()
         read_fracture = test_data_path() / "problematic_fractures/issue_fracture_2.pkl"
         with open(read_fracture, "rb") as f:
-            fracture = pickle.load(f)
+            fracture = custom_load(f)
         read_element = test_data_path() / "problematic_fractures/issue_element_2.pkl"
         with open(read_element, "rb") as f:
-            element = pickle.load(f)
+            element = custom_load(f)
 
         dfn_preprocessor.dfn.append(fracture)
         mesh.elements.append(element)
