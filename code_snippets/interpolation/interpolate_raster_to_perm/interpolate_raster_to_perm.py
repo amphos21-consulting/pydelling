@@ -4,7 +4,7 @@ Template to interpolate a set of raster files to a PFLOTRAN mesh
 import pydelling.readers as readers
 import pydelling.interpolation as interpolation
 from pydelling.utils.utils import interpolate_permeability_anisotropic
-from pydelling.writers.HDF5CentroidWriter import HDF5CentroidWriter
+from pydelling.writers.hdf5_centroid_writer import HDF5CentroidWriter
 import glob
 import numpy as np
 import os
@@ -24,7 +24,7 @@ def main(argv):
     globals.initialize_config(config_file=config_file_path)
 
     perm_folders = sorted(glob.glob(globals.config.general.raster_files_folder+"/Perm*"))
-    PFLOTRAN_centroid = readers.CentroidReader(filename=globals.config.general.PFLOTRAN_centroid_file, header=False)
+    PFLOTRAN_centroid = readers.centroid_reader(filename=globals.config.general.PFLOTRAN_centroid_file, header=False)
     # normal_range = np.arange(1, PFLOTRAN_centroid.info["n_cells"] + 1)
     # diff_array = PFLOTRAN_centroid.get_data()[:, 3] - normal_range
     # diff_array[diff_array != 0.0] = 1.0
@@ -62,9 +62,9 @@ def main(argv):
 
         # PFLOTRAN_centroid = CentroidReader(filename="./data/centroid_mini.dat")
         z_depth = [int(dummy.strip()) for dummy in open(globals.config.general.permeability_files_folder+"/z.dat").readlines()]
-        raster_file_interpolator = interpolation.SparseDataInterpolator()
+        raster_file_interpolator = interpolation.sparse_data_interpolator()
         for idx, raster_file in enumerate(glob.glob(perm_folder+"/*.txt")):
-            raster_file_data = readers.RasterFileReader(filename=raster_file)
+            raster_file_data = readers.raster_file_reader(filename=raster_file)
             raster_file_data.add_z_info(z_depth[idx])
             raster_file_data = raster_file_data.get_data()
             raster_file_data[:, 0] -= float(globals.config.coord.x_local_to_global)

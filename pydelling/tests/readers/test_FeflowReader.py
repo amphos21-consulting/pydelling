@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from pathlib import Path
-from pydelling.readers.FeflowReader import FeflowReader
+from pydelling.readers.feflow_reader import FeflowReader
 from pydelling.utils import test_data_path
 
 

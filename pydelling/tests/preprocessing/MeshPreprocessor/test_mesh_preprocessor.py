@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
-from pydelling.readers.FemReader import FemReader
+from pydelling.readers.fem_reader import FemReader
 from pydelling.utils import test_data_path
 from pydelling.readers import ConnectFlowMeshReader
 from pydelling.preprocessing import DfnPreprocessor

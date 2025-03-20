@@ -6,8 +6,8 @@ Writes a point dataset .dat (FEFLOW format) into a Paraview .vtu format
 
 import numpy as np
 import meshio
-from pydelling.readers.FeflowReader import FeflowReader
-from pydelling.interpolation.SparseDataInterpolator import SparseDataInterpolator
+from pydelling.readers.feflow_reader import FeflowReader
+from pydelling.interpolation.sparse_data_interpolator import SparseDataInterpolator
 
 # Reads the concentration field from FEFLOW
 path_dat = "c_layer_b_tf.dat"

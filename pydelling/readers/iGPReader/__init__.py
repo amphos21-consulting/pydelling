@@ -1,1 +1,1 @@
-from .io.iGPReader import iGPReader
+from .io.igp_reader import iGPReader

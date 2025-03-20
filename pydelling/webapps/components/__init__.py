@@ -1,3 +1,3 @@
-from .BaseComponent import BaseComponent
-from .InputComponent import InputComponent
-from .RemoteLoginComponent import RemoteLoginComponent
+from .base_component import BaseComponent
+from .input_component import InputComponent
+from .remote_login_component import RemoteLoginComponent

@@ -8,12 +8,13 @@ import numpy as np
 import yaml
 
 import pydelling.interpolation as interpolation
+from pydelling.paraview_processor.filters import base_filter
 import pydelling.readers as readers
 
 try:
-    from pydelling.paraview_processor.filters import BaseFilter, PlotOverLineFilter
+    from pydelling.paraview_processor.filters import plot_over_line_filter
 except:
-    from pydelling.paraview_processor.filters import BaseFilter
+    from pydelling.paraview_processor.filters import base_filter
 import pandas as pd
 from box import Box
 
@@ -24,16 +25,16 @@ logger = logging.getLogger(__name__)
 import streamlit as st
 
 from pydelling.utils.geometry import *
-from pydelling.preprocessing.mesh_preprocessor.geometry.HexahedraElement import HexahedraElement
+from pydelling.preprocessing.mesh_preprocessor.geometry.hexahedra_element import HexahedraElement
 
 def interpolate_permeability_anisotropic(perm_filename, mesh_filename=None, mesh=None):
-    perm = readers.CentroidReader(filename=perm_filename, header=True)
+    perm = readers.centroid_reader(filename=perm_filename, header=True)
     if mesh is None:
         assert mesh_filename is not None, "A mesh file needs to be given under the mesh_filename tag"
-        mesh = readers.CentroidReader(filename=mesh_filename, header=False)
+        mesh = readers.centroid_reader(filename=mesh_filename, header=False)
     else:
         mesh = mesh
-    interpolator = interpolation.SparseDataInterpolator(interpolation_data=perm.get_data(),
+    interpolator = interpolation.sparse_data_interpolator(interpolation_data=perm.get_data(),
                                           mesh_data=mesh.get_data())
     interpolator.interpolate(method="nearest")
     if mesh is None:
@@ -66,7 +67,7 @@ def interpolate_centroid_to_structured_grid(centroid: np.ndarray,
     grid_x, grid_y = np.meshgrid(linspace_x, linspace_y)
 
 
-def aperture_from_a_xy_point_old(dataset: BaseFilter, x_point, y_point, line_interpolator, variable=None, target_value=1.0, threshold=0.45, line_resolution=100):
+def aperture_from_a_xy_point_old(dataset: base_filter, x_point, y_point, line_interpolator, variable=None, target_value=1.0, threshold=0.45, line_resolution=100):
     """
     This method computes the aperture at a given position in the XY plane.
     Args:
@@ -107,7 +108,7 @@ def aperture_from_a_xy_point_old(dataset: BaseFilter, x_point, y_point, line_int
             aperture = 0.0
         return aperture
 
-def aperture_from_a_xy_point(dataset: BaseFilter, x_point, y_point, line_interpolator, variable=None, target_value=1.0, threshold=0.45, line_resolution=100, method='explicit'):
+def aperture_from_a_xy_point(dataset: base_filter, x_point, y_point, line_interpolator, variable=None, target_value=1.0, threshold=0.45, line_resolution=100, method='explicit'):
     """
     This method computes the aperture at a given position in the XY plane.
     Args:

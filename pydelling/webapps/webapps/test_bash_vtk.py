@@ -1,4 +1,4 @@
-from WebAppRunner import WebAppRunner
+from pydelling.webapps.web_app_runer import WebAppRunner
 
 
 class TestWebApp(WebAppRunner):

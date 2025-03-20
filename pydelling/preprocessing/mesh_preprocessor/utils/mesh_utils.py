@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from ..MeshPreprocessor import MeshPreprocessor
+    from ..mesh_preprocessor import MeshPreprocessor
 import numpy as np
 import sys
 import logging
