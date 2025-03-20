@@ -11,7 +11,7 @@ Targets:
 
 """
 
-from pydelling.readers.ConnectFlowMeshReader import ConnectFlowMeshReader
+from pydelling.readers.connect_flow_mesh_reader import ConnectFlowMeshReader
 
 # Reads the CONNECTFLOW mesh format.
 path_cf_mesh = "dummy_cf_2cell_mesh"

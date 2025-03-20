@@ -1,3 +1,3 @@
-from .BaseInterpolator import BaseInterpolator
-from .KdeEstimator import KdeEstimator
-from .SparseDataInterpolator import SparseDataInterpolator
+from .base_interpolator import BaseInterpolator
+from .kde_estimator import KdeEstimator
+from .sparse_data_interpolator import SparseDataInterpolator

@@ -4,7 +4,7 @@ read_feflow_dat.py
 Reads a FEFLOW field and plots the field.
 """
 import matplotlib.pyplot as plt
-from pydelling.readers.FeflowReader import FeflowReader
+from pydelling.readers.feflow_reader import FeflowReader
 
 path_dat = "c_layer_b_tf.dat"
 reader = FeflowReader()
