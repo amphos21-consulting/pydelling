@@ -108,6 +108,7 @@ class LumiSsh(BaseSsh):
     def wait_for_job(self,
                      job_id,
                      check_interval=3,
+                     reconnect_interval=60*60*2,
                      running_object_status: BaseStatus = None,
                      ):
         """
@@ -115,7 +116,7 @@ class LumiSsh(BaseSsh):
         Args:
             job_id: id of the job
             check_interval: time in seconds between checks
-
+            reconnect_interval: time in seconds between reconnections
         Returns:
 
         """
@@ -124,6 +125,7 @@ class LumiSsh(BaseSsh):
 
         logger.info(f'Waiting for job {job_id} to finish in the remote server')
         is_finished = False
+        time0 = time.time()
         # Add a static rich status information bar (not a Progress object) that can be updated dynamically
         with Progress() as status_bar:
             task_wait = status_bar.add_task(f"Waiting the job {job_id} to start", total=None)
@@ -170,6 +172,10 @@ class LumiSsh(BaseSsh):
                         is_finished = True
 
                 time.sleep(check_interval)
+                if time.time() - time0 > reconnect_interval:
+                    logger.info(f'Quiting and reconnecting to the remote server')
+                    time0 = time.time()
+                    self.connect()
 
     def cancel_job(self, job_id):
         """

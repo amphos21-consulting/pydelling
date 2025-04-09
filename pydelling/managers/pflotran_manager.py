@@ -28,18 +28,19 @@ class PflotranManager(BaseManager):
                    n_cores: int = 1,
                    petsc_dir: str = '/opt/pflotran-dev/petsc',
                    petsc_arch: str = 'arch-linux-c-opt',
+                   pflotran_dir: str = 'pflotran',
                    **kwargs,
                    ):
         """This method runs a study.
         """
         if n_cores == 1:
             # Run the study in serial
-            subprocess.run(['pflotran', '-pflotranin', study.input_file_name], cwd=study.output_folder.absolute())
+            subprocess.run([pflotran_dir, '-pflotranin', study.input_file_name], cwd=study.output_folder.absolute())
         else:
             # Run the study in parallel
             os.environ['PETSC_DIR'] = petsc_dir
             os.environ['PETSC_ARCH'] = petsc_arch
-            subprocess.call([f'$PETSC_DIR/$PETSC_ARCH/bin/mpirun -np {n_cores} pflotran -pflotranin {study.input_file_name}'],
+            subprocess.call([f'$PETSC_DIR/$PETSC_ARCH/bin/mpirun -np {n_cores} {pflotran_dir} -pflotranin {study.input_file_name}'],
                            cwd=study.output_folder.absolute(),
                            shell=True
                            )
