@@ -1,0 +1,35 @@
+PROBLEM DATA
+TITLE: Simulation properties
+QUESTION: Total_time(yr)
+VALUE: 0.25
+QUESTION: Time_step(yr)
+VALUE: 0.01
+QUESTION: VTK_output#CB#(0,1)
+VALUE: 1
+TITLE: Initial condition
+QUESTION: Type#CB#(Dirichlet,Hydrostatic)
+VALUE: Hydrostatic
+DEPENDENCIES: (Dirichlet,HIDE,Manual_datum,#CURRENT#,HIDE,x_datum,#CURRENT#,HIDE,y_datum,#CURRENT#,HIDE,z_datum,#CURRENT#)
+DEPENDENCIES: (Hydrostatic,RESTORE,Manual_datum,0,HIDE,x_datum,#CURRENT#,HIDE,y_datum,#CURRENT#,HIDE,z_datum,#CURRENT#)
+QUESTION: Pressure(Pa)
+VALUE: 101293
+QUESTION: Manual_datum#CB#(0,1)
+VALUE: 0
+HELP: If unchecked, iGP will assign the reference pressure to the highest z coordinate of the mesh. If checked, allows to manually specify the reference point.
+DEPENDENCIES: (0,HIDE,x_datum,#CURRENT#,HIDE,y_datum,#CURRENT#,HIDE,z_datum,#CURRENT#)
+DEPENDENCIES: (1,RESTORE,x_datum,#CURRENT#,RESTORE,y_datum,#CURRENT#,RESTORE,z_datum,#CURRENT#)
+QUESTION: x_datum
+VALUE: 0.0
+HELP: Set the X value of the reference point
+STATE: hidden
+QUESTION: y_datum
+VALUE: 0.0
+HELP: Set the Y value of the reference point
+STATE: hidden
+QUESTION: z_datum
+VALUE: 0.0
+HELP: Set the Z value of the reference point
+STATE: hidden
+END PROBLEM DATA
+INTERVAL DATA
+END INTERVAL DATA

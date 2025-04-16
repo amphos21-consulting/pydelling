@@ -1,0 +1,78 @@
+NUMBER: 1 CONDITION: SOURCE_SINK
+CONDTYPE: over surfaces
+CONDMESHTYPE: over face elements
+TITLE: Flow
+QUESTION: Flow_type:#CB#(mass_rate)
+VALUE: mass_rate
+QUESTION: SOURCE_SINK_name
+VALUE: inlet
+HELP: Introduce the name of the Source/sink condition
+QUESTION: Total_mass_rate(kg/s):
+VALUE: 0.01
+HELP: This is the total mass rate. It will be automatically distributed among the mesh elements.
+TITLE: Transport
+QUESTION: Transport_type:#CB#(Dirichlet,Dirichlet_zero_gradient)
+VALUE: Dirichlet_zero_gradient
+DEPENDENCIES: (Dirichlet,HIDE,Pressure,#CURRENT#,RESTORE,Constraint_name,#CURRENT#)
+DEPENDENCIES: (Dirichlet_zero_gradient,HIDE,Pressure,#CURRENT#,RESTORE,Constraint_name,#CURRENT#)
+QUESTION: Pressure(Pa)
+VALUE: 101293
+STATE: hidden
+QUESTION: Constraint_name
+VALUE: inlet
+HELP: This name should correspond to one of the constraints defined in the PFLOTRAN input file.
+END CONDITION
+NUMBER: 2 CONDITION: BOUNDARY_CONDITION
+CONDTYPE: over surfaces
+CONDMESHTYPE: over face elements
+TITLE: Flow
+QUESTION: Flow_type#CB#(Mass_rate,Dirichlet,Flux)
+VALUE: Dirichlet
+DEPENDENCIES: (Mass_rate,RESTORE,Mass_rate,#CURRENT#,HIDE,Pressure,#CURRENT#,HIDE,Flux,#CURRENT#)
+DEPENDENCIES: (Dirichlet,HIDE,Mass_rate,#CURRENT#,RESTORE,Pressure,#CURRENT#,HIDE,Flux,#CURRENT#)
+DEPENDENCIES: (Flux,HIDE,Mass_rate,#CURRENT#,HIDE,Pressure,#CURRENT#,RESTORE,Flux,#CURRENT#)
+QUESTION: BC_name
+VALUE: Pwall
+QUESTION: Mass_rate(kg/s)
+VALUE: 0.01
+HELP: This is the total mass rate. It will be automatically distributed among the mesh elements.
+STATE: hidden
+QUESTION: Pressure(Pa)
+VALUE: 101293
+STATE: normal
+QUESTION: Flux(m/s)
+VALUE: 0.01
+HELP: Assign a darcy flux. This flux is applied perpendicularly to the associated element.
+STATE: hidden
+TITLE: Transport
+QUESTION: Transport_type#CB#(Dirichlet,Dirichlet_zero_gradient)
+VALUE: Dirichlet_zero_gradient
+DEPENDENCIES: (Dirichlet,HIDE,Dirichlet_pressure,#CURRENT#)
+DEPENDENCIES: (Dirichlet_zero_gradient,HIDE,Dirichlet_pressure,#CURRENT#,RESTORE,Constraint_name,#CURRENT#)
+QUESTION: proba
+VALUE: 2
+STATE: HIDDEN
+QUESTION: Dirichlet_pressure(Pa)
+VALUE: 101293
+STATE: hidden
+QUESTION: Constraint_name
+VALUE: inlet
+HELP: This name should correspond to one of the constraints defined in the PFLOTRAN input file.
+END CONDITION
+NUMBER: 3 CONDITION: INITIAL_CONDITION
+CONDTYPE: over surfaces
+CONDMESHTYPE: over face elements
+TITLE: Flow
+QUESTION: Flow_type#CB#(Dirichlet)
+VALUE: Dirichlet
+QUESTION: IC_name
+VALUE: initial
+QUESTION: Pressure(Pa)
+VALUE: 101293
+TITLE: Transport
+QUESTION: Transport_type#CB#(Dirichlet_zero_gradient)
+VALUE: Dirichlet_zero_gradient
+QUESTION: Constraint_name
+VALUE: initial
+HELP: This name should correspond to one of the constraints defined in the PFLOTRAN input file.
+END CONDITION
