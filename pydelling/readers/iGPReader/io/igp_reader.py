@@ -9,6 +9,7 @@ from typing import Dict, List
 import h5py
 import numpy as np
 import pandas as pd
+import trimesh
 
 from pydelling.config import config
 # from pydelling.readers.iGPReader.geometry import *
@@ -926,6 +927,68 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
     def get_material_centroids(self, material_name):
         return self.centroids[self.material_dict[material_name]]
+    
+    def assign_material_from_stl(self, material_dict, stl_files):
+        """
+        Finds which cell belong to each material (in parallel)
+        based on .stl files and generates its .mat files for PFLOTRAN
+        """
+        def dist(p1, p2):
+            """
+            Computes the euclidean distance between two points
+            """
+            return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)**(1/2)
+
+        def nearest_material(centroids, stl_meshes, unassigned_centroids, centroid_in_stl):
+            """
+            Finds a node's nearest material
+            """
+            for idx in tqdm(unassigned_centroids, "Reassigning unassigned cells"):
+                dmin = 1.0e300
+                imin = 0
+                cell = centroids[idx]
+                for stl_idx, stl_mesh in enumerate(stl_meshes):
+                    for stl_cell in stl_mesh.triangles_center:
+                        d = dist(cell, stl_cell)
+                        if d < dmin:
+                            dmin = d
+                            imin = stl_idx
+                centroid_in_stl[imin].append(idx) 
+            return centroid_in_stl
+
+
+        # stl_files and material_dict must follow the same order
+        stl_meshes = []
+        for file in list(stl_files):
+            stl_mesh = trimesh.load_mesh(file)
+            stl_meshes.append(stl_mesh)
+        
+        # Creates lists for each material in material_dict.
+        centroid_in_stl = []
+        for idx, material in material_dict.items():
+            centroid_in_stl.append([])
+        
+        # Find centroids contained in stl
+        i = -1
+        unassigned_centroids = []
+        for cell in tqdm(self.centroids, "Classifying centroids"):
+            i += 1
+            flag = 0
+            for stl_idx, stl_mesh in enumerate(stl_meshes):
+                if stl_mesh.contains([cell]):
+                    flag = 1
+                    centroid_in_stl[stl_idx].append(i)
+                    break
+            if flag == 0: unassigned_centroids.append(i)
+            
+        # Find nearest stl to unassgined centroids
+        centroid_in_stl = nearest_material(self.centroids, stl_meshes, unassigned_centroids, centroid_in_stl)
+
+        # Assign material to centroids
+        for idx, material in material_dict.items():
+            cur_centroids = list(np.array(centroid_in_stl[idx])+1)
+            self.set_material_from_list(material_name=material, centroid_list=cur_centroids)
+
 
     @property
     def min_x(self):
