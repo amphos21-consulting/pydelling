@@ -92,5 +92,12 @@ class iGPReaderCase(unittest.TestCase):
         top_elements = self.igp_reader.elements
         print(top_elements[0])
 
+    def test_assign_materials_from_stl(self):
+        self.igp_reader.assign_material_from_stl(material_dict={0: "Material_1", 1: "Material_2"}, stl_files=[test_data_path() / "Mat1.stl", test_data_path() / "Mat2.stl"])
+        mat1 = self.igp_reader.get_material_elements("Material_1")
+        mat2 = self.igp_reader.get_material_elements("Material_2")
+        self.assertEqual(len(mat1), 650)
+        self.assertEqual(len(mat2), 0)
+
 if __name__ == '__main__':
     unittest.main()
