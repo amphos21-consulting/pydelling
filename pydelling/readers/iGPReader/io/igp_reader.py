@@ -10,6 +10,7 @@ import h5py
 import numpy as np
 import pandas as pd
 import trimesh
+import copy
 
 from pydelling.config import config
 # from pydelling.readers.iGPReader.geometry import *
@@ -928,10 +929,12 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
     def get_material_centroids(self, material_name):
         return self.centroids[self.material_dict[material_name]]
     
-    def assign_material_from_stl(self, material_dict, stl_files):
+    def assign_material_from_stl(self, material_dict, stl_files, mpi_comm=None, rank=None, size=None):
         """
         Finds which cell belong to each material (in parallel)
         based on .stl files and generates its .mat files for PFLOTRAN
+
+        Give MPI.COMM_WORLD (mpi4py), rank and size to run in parallel. Otherwise, it runs in serial.
         """
         def dist(p1, p2):
             """
@@ -956,6 +959,9 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                 centroid_in_stl[imin].append(idx) 
             return centroid_in_stl
 
+        if mpi_comm is not None:
+            if rank is None or size is None:
+                raise ValueError("rank and size must be provided when using MPI")
 
         # stl_files and material_dict must follow the same order
         stl_meshes = []
@@ -971,23 +977,79 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         # Find centroids contained in stl
         i = -1
         unassigned_centroids = []
-        for cell in tqdm(self.centroids, "Classifying centroids"):
-            i += 1
-            flag = 0
-            for stl_idx, stl_mesh in enumerate(stl_meshes):
-                if stl_mesh.contains([cell]):
-                    flag = 1
-                    centroid_in_stl[stl_idx].append(i)
-                    break
-            if flag == 0: unassigned_centroids.append(i)
-            
-        # Find nearest stl to unassgined centroids
-        centroid_in_stl = nearest_material(self.centroids, stl_meshes, unassigned_centroids, centroid_in_stl)
 
-        # Assign material to centroids
-        for idx, material in material_dict.items():
-            cur_centroids = list(np.array(centroid_in_stl[idx])+1)
-            self.set_material_from_list(material_name=material, centroid_list=cur_centroids)
+        if mpi_comm is not None:
+            nodes_to_classify = np.array_split(self.centroids, size)
+            index_to_classify = np.array_split(list(range(len(self.centroids))), size)
+
+            for cell in tqdm(nodes_to_classify[rank], "Classifying centroids"):
+                i += 1
+                flag = 0
+                for stl_idx, stl_mesh in enumerate(stl_meshes):
+                    if stl_mesh.contains([cell]):
+                        flag = 1
+                        centroid_in_stl[stl_idx].append(index_to_classify[rank][i])
+                        break
+                if flag == 0: unassigned_centroids.append(index_to_classify[rank][i])
+
+            if rank != 0:
+                msg = {'unassigned': unassigned_centroids}
+                mpi_comm.send(msg,0,100)
+                
+            if rank == 0:
+                unassigned_centroids_root = copy.deepcopy(unassigned_centroids)
+                for r in range(1,size):
+                    temp = mpi_comm.recv(source=r,tag=100)
+                    unassigned_centroids_root += temp['unassigned']
+                
+                # Find nearest stl to unassgined centroids
+                unassigned_centroids_list = np.array_split(unassigned_centroids_root, size)
+                for r in range(1,size):
+                    msg = {'centroids_root': unassigned_centroids_list[r]}
+                    mpi_comm.send(msg,r,r)
+                unassigned_centroids = unassigned_centroids_list[0]
+
+            if rank != 0:
+                temp = mpi_comm.recv(source=0, tag=rank)
+                unassigned_centroids = temp['centroids_root']
+
+            nearest_material(self.centroids, stl_meshes, unassigned_centroids, centroid_in_stl)
+
+            if rank != 0:
+                for stl_idx, stl_mesh in enumerate(stl_meshes):
+                    msg = {'stl_idx': stl_idx, 'centroids': centroid_in_stl[stl_idx]}
+                    mpi_comm.send(msg,0,stl_idx)
+                
+            if rank == 0:
+                for r in range(1,size):
+                    for stl_idx, stl_mesh in enumerate(stl_meshes):
+                        temp = mpi_comm.recv(source=r, tag=stl_idx)
+                        centroid_in_stl[stl_idx] += temp['centroids']
+
+                for idx, material in material_dict.items():
+                    # I wat the idx of the centroids not the value
+                    cur_centroids = list(np.array(centroid_in_stl[idx])+1)
+                    self.set_material_from_list(material_name=material, centroid_list=cur_centroids)            
+                
+        
+        if mpi_comm is None:
+            for cell in tqdm(self.centroids, "Classifying centroids"):
+                i += 1
+                flag = 0
+                for stl_idx, stl_mesh in enumerate(stl_meshes):
+                    if stl_mesh.contains([cell]):
+                        flag = 1
+                        centroid_in_stl[stl_idx].append(i)
+                        break
+                if flag == 0: unassigned_centroids.append(i)
+            
+            # Find nearest stl to unassgined centroids
+            centroid_in_stl = nearest_material(self.centroids, stl_meshes, unassigned_centroids, centroid_in_stl)
+
+            # Assign material to centroids
+            for idx, material in material_dict.items():
+                cur_centroids = list(np.array(centroid_in_stl[idx])+1)
+                self.set_material_from_list(material_name=material, centroid_list=cur_centroids)
 
 
     @property
