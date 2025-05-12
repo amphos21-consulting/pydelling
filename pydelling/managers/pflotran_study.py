@@ -4,6 +4,8 @@ from typing import Union, List, Dict
 
 logger = logging.getLogger(__name__)
 
+class LineNotFound(Exception):
+    pass
 
 class PflotranStudy(BaseStudy):
     """This class extends the BaseStudy class to manage PFLOTRAN related simulations.
@@ -72,6 +74,94 @@ class PflotranStudy(BaseStudy):
         self._replace_line(line_index=material_lines[0] + 2, new_line=['POROSITY', str(new_porosity)])
         self._replace_line(line_index=material_lines[0] + 8, new_line=['PERM_HORIZONTAL', str(new_perm)])
         self._replace_line(line_index=material_lines[0] + 9, new_line=['VERTICAL_ANISOTROPY_RATIO', str(new_vertical_anisotropy)])
+
+    def get_line_after_finding(self, given_lines: list, file_lines: list) -> int:
+        """
+        given_lines and file_lines must be lists of strings.
+
+        This method first looks at the first string of the given_lines list and finds the first line of the file
+        that starts with that string. Then, continuing from that position in the file, it looks at the second string
+        of given_lines and finds a line that starts with that string. It keeps doing this until the prev_lines list
+        is exhausted. Afterwards, it returns the line index where it ended (i.e., a line that starts like the last
+        element in given_lines).
+
+        If the sequence of lines is not found (e.g., because the order is wrong or some line does not exist) it
+        returns a LineNotFound exception.
+
+        Leading spaces are ignored. That is, "    This is a test" is considered to start with "This is".
+        """
+        given_line_i = 0
+        for line_i, line in enumerate(file_lines):
+            if line.lstrip().startswith(given_lines[given_line_i].lstrip()):
+                given_line_i += 1
+                if given_line_i==len(given_lines):
+                    # All lines have been found
+                    return line_i
+
+        message = "Sequence of lines not found: "
+        for gl in given_lines:
+            message += '"' + gl + '"' + " / "
+
+        message = message [:-3] # Remove last slash
+            
+        raise LineNotFound(message)
+
+    def replace_after_finding(self, prev_lines: list, new_line: str, offset: int=0):
+        """
+        prev_lines must be a list of strings.
+
+        This method scans the file until it has found all the lines in the prev_lines list, in the specified
+        order but not necessarily consecutive. See get_line_after_finding for a more detailed explanation
+        of this step. Afterwards, it replaces the line in the [current position+offset] index by the new_line string.
+
+        e.g. replace_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2) looks for
+        a line starting with "REGION fracture", then keeps going until the first line that starts with
+        "COORDINATES", and finally replaces the line 2 positions below by "    1. 1. 1.".
+        """
+        file_lines = self.raw_text.splitlines()
+
+        sought_line = self.get_line_after_finding(prev_lines, file_lines)
+        file_lines[sought_line+offset] = new_line
+
+        self.raw_text = '\n'.join(file_lines)
+
+    def add_after_finding(self, prev_lines: list, new_line: str, offset: int=0):
+        """
+        prev_lines must be a list of strings.
+
+        This method scans the file until it has found all the lines in the prev_lines list, in the specified
+        order but not necessarily consecutive. See get_line_after_finding for a more detailed explanation
+        of this step. Afterwards, it inserts the line new_line in the [current position+offset+1] index.
+
+        e.g. add_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2) looks for
+        a line starting with "REGION fracture", then keeps going until the first line that starts with
+        "COORDINATES", and finally adds a line 2 positions below that says "    1. 1. 1.".
+        """
+        file_lines = self.raw_text.splitlines()
+
+        sought_line = self.get_line_after_finding(prev_lines, file_lines)
+        file_lines.insert(sought_line+offset+1, new_line)
+
+        self.raw_text = '\n'.join(file_lines)
+
+    def remove_after_finding(self, prev_lines: list, offset: int=0):
+        """
+        prev_lines must be a list of strings.
+
+        This method scans the file until it has found all the lines in the prev_lines list, in the specified
+        order but not necessarily consecutive. See get_line_after_finding for a more detailed explanation
+        of this step. Afterwards, it removes the line in the [current position+offset] index.
+
+        e.g. remove_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2) looks for
+        a line starting with "REGION fracture", then keeps going until the first line that starts with
+        "COORDINATES", and finally removes the line 2 positions below.
+        """
+        file_lines = self.raw_text.splitlines()
+
+        sought_line = self.get_line_after_finding(prev_lines, file_lines)
+        file_lines.pop(sought_line+offset)
+
+        self.raw_text = '\n'.join(file_lines)
 
     def get_region_file(self, region: str) -> Union[str, None]:
         """This method returns the file of the region.
