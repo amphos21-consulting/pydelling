@@ -1,14 +1,147 @@
-
+import numpy as np
+import pandas as pd
+import mph
+from tqdm import tqdm
 
 class ComsolPostprocessor:
     """
     A class to handle postprocessing of COMSOL simulation results.
     """
 
-    def __init__(self, file_path: str):
+    def __init__(self,
+                file_path: str,
+                comp_tag: str = 'comp1',
+                geom_tag: str = 'geom1',
+                ):
         """
         Initialize the ComsolPostprocessor with the path to the COMSOL file.
 
-        :param file_path: Path to the COMSOL file.
+        Parameters:
+            file_path (str): Path to the COMSOL file.
+            comp_tag (str): The tag of the component in the COMSOL model. Defaults to 'comp1'.
+            geom_tag (str): The tag of the geometry in the specified component. Defaults to 'geom1'.
         """
         
+        self.client = mph.start()
+        self.model = self.client.load(file_path)
+        self.comp = self.model.java.modelNode(comp_tag)
+        self.geom = self.comp.geom(geom_tag)
+
+    def get_variable_evolution_at_point(self, 
+                                        dataset: str, 
+                                        var_list: list, 
+                                        point_list: list):
+        """
+        Get the evolution of specified variables at specified points over time.
+
+        Parameters:
+            dataset (str): The tag of the dataset of the solution.
+            var_list (list of str): A list with the names of the variables to evaluate.
+            point_list (list of list): A list of points' geomertry tags where the variable evolution is to be computed.
+            coord_labels (list of str): A list with the names of the coordinates to evaluate. Defaults to ['r', 'z'].
+        Returns:
+            tuple: t (numpy.ndarray): A 1D array of unique time steps (in days) from the dataset.
+            tuple: var_list (list of list of lists): A list with a list of lists for each variable where each inner list contains the variable values
+            at the corresponding point in `point_list` over time.
+        """
+        points = [self.geom.feature(name) for name in point_list]
+
+        # Get coordinates of points
+        coords_list = []
+        for point in points:
+            coords = point.getDoubleArray('p')
+            coords_list.append(coords)
+
+        datasetname = self.model.java.result().dataset(dataset).name()
+        datasetname = str(datasetname.replace('/', '//'))
+        
+        coord_java = list(self.comp.spatialCoord())
+        coord_labels = [str(coord_java[i]) for i in range(len(coord_java))]
+
+        if self.geom.getSDim() == 2:
+            if self.geom.isAxisymmetric():
+                coord_labels = [coord_labels[0], coord_labels[2]]
+            else:
+                coord_labels = [coord_labels[0], coord_labels[1]]
+        elif self.geom.getSDim() == 1:
+            coord_labels = coord_labels[0]
+
+        x, y = self.model.evaluate(coord_labels, dataset=datasetname)
+        t = self.model.evaluate('t', unit='d', dataset=datasetname)
+        t = np.unique(t)
+        var_results = []
+        var_eval = []
+        for i in range(len(var_list)):
+            var = self.model.evaluate(var_list[i], dataset=datasetname)
+            var_eval.append(var)
+            var_results.append([[] for _ in range(len(coords_list))])
+        
+        for n in tqdm(range(len(t)),desc="Processing time steps"):
+            mesh_coords = np.array([x[n], y[n]]).T
+            points_idx = []
+            for i in range(len(coords_list)):
+                distances = np.linalg.norm(mesh_coords - coords_list[i], axis=1)
+                nearest_idx = np.argmin(distances)
+                points_idx.append(nearest_idx)
+                for k in range(len(var_list)):
+                    var_results[k][i].append(var_eval[k][n][points_idx[i]])
+        return t, var_results
+    
+    def point_evaluation_to_excel(self,
+                                  dataset,
+                                  var_list: list,
+                                  point_list: list,
+                                  order: int = 0,
+                                  export: bool = True,
+                                  file_name: str = 'point_evaluation.xlsx',
+                                  ):
+        """
+        Evaluate the variables at the specified points and save the results to an Excel file.
+
+        Parameters:
+            dataset (str or list): A dataset or a list of datasets to evaluate.
+            var_list (list): A list of variables to evaluate. Or a list of lists of variables, one list for each dataset.
+            point_list (list): A list of points to evaluate.
+            order (int): The order of the evaluation. Defaults to 0. 0 stands for every point for each variable, and 1 for every variable for each point.
+            file_name (str): The name of the Excel file to save the results. Defaults to 'point_evaluation.xlsx'.
+        """
+        if isinstance(dataset, str):
+            dataset = [dataset]
+
+        headlist = ['t']
+        var_list_temp = var_list[0] if isinstance(var_list[0], list) else var_list
+        if order == 0:
+            for i, var in enumerate(var_list_temp):
+                for j, point in enumerate(point_list):
+                    headlist.append(f'{var}_{point}')
+        elif order == 1:
+            for i, point in enumerate(point_list):
+                for j, var in enumerate(var_list_temp):
+                    headlist.append(f'{point}_{var}')
+        else:
+            raise ValueError("order must be 0 or 1")
+        
+        df = pd.DataFrame(columns=headlist)
+
+        for ds_idx, ds in enumerate(dataset):
+            var_list_temp = var_list[ds_idx] if isinstance(var_list[0], list) else var_list
+            df_temp = pd.DataFrame()
+            t, var_results = self.get_variable_evolution_at_point(ds, var_list_temp, point_list)
+            df_temp['t'] = t
+            if order == 0:
+                for i, var in enumerate(var_list_temp):
+                    for j, point in enumerate(point_list):
+                        df_temp[f'{var}_{point}'] = var_results[i][j]
+            elif order == 1:
+                for i, point in enumerate(point_list):
+                    for j, var in enumerate(var_list_temp):
+                        df_temp[f'{point}_{var}'] = var_results[j][i]
+            else:
+                raise ValueError("order must be 0 or 1")
+            df_temp.columns = headlist
+            df = pd.concat([df, df_temp], ignore_index=True)
+
+        # Save to Excel
+        df.to_excel(file_name, index=False)
+
+        return df
