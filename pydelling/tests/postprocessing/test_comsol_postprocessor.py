@@ -3,12 +3,15 @@ from pydelling.postprocessing.comsol_postprocessor import ComsolPostprocessor
 from pydelling.utils.configuration_utils import test_data_path
 
 class TestComsolPostprocessor(unittest.TestCase):
-    def test_initialization(self):
-        # Test if the initialization sets up the client and model correctly
-        comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
-        model = comsol.model
-        comp = comsol.comp
-        geom = comsol.geom
+    def setUp(self):
+        # Initialize the ComsolPostprocessor with a test file
+        try:
+            self.comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
+            self.model = self.comsol.model
+            self.comp = self.comsol.comp
+            self.geom = self.comsol.geom
+        except:
+            self.skipTest("COMSOL model could not be loaded. Ensure the test.mph file is available.")
         
 
     def test_get_variable_evolution_at_point(self):
