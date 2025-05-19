@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import mph
+import re
 from tqdm import tqdm
 
 class ComsolPostprocessor:
@@ -10,6 +11,7 @@ class ComsolPostprocessor:
 
     def __init__(self,
                 file_path: str,
+                version: str | None = None,
                 comp_tag: str = 'comp1',
                 geom_tag: str = 'geom1',
                 ):
@@ -18,14 +20,17 @@ class ComsolPostprocessor:
 
         Parameters:
             file_path (str): Path to the COMSOL file.
+            version (str or bool): The version of COMSOL to use. If False, the default version is used.
             comp_tag (str): The tag of the component in the COMSOL model. Defaults to 'comp1'.
             geom_tag (str): The tag of the geometry in the specified component. Defaults to 'geom1'.
         """
-        
-        self.client = mph.start()
-        self.model = self.client.load(file_path)
-        self.comp = self.model.java.modelNode(comp_tag)
+        self.file_path = file_path
+        self.client = mph.start(version=version)
+        self.model_standalone = self.client.load(file_path)
+        self.model = self.model_standalone.java
+        self.comp = self.model.modelNode(comp_tag)
         self.geom = self.comp.geom(geom_tag)
+
 
     def get_variable_evolution_at_point(self, 
                                         dataset: str, 
@@ -52,7 +57,7 @@ class ComsolPostprocessor:
             coords = point.getDoubleArray('p')
             coords_list.append(coords)
 
-        datasetname = self.model.java.result().dataset(dataset).name()
+        datasetname = self.model.result().dataset(dataset).name()
         datasetname = str(datasetname.replace('/', '//'))
         
         coord_java = list(self.comp.spatialCoord())
@@ -66,13 +71,13 @@ class ComsolPostprocessor:
         elif self.geom.getSDim() == 1:
             coord_labels = coord_labels[0]
 
-        x, y = self.model.evaluate(coord_labels, dataset=datasetname)
-        t = self.model.evaluate('t', unit='d', dataset=datasetname)
+        x, y = self.model_standalone.evaluate(coord_labels, dataset=datasetname)
+        t = self.model_standalone.evaluate('t', unit='d', dataset=datasetname)
         t = np.unique(t)
         var_results = []
         var_eval = []
         for i in range(len(var_list)):
-            var = self.model.evaluate(var_list[i], dataset=datasetname)
+            var = self.model_standalone.evaluate(var_list[i], dataset=datasetname)
             var_eval.append(var)
             var_results.append([[] for _ in range(len(coords_list))])
         
@@ -145,3 +150,56 @@ class ComsolPostprocessor:
         df.to_excel(file_name, index=False)
 
         return df
+
+    def plot_profiles():
+        pass
+
+    def duplicate_plot(self,
+                       template: str,
+                       expression: str,
+                       unit: str,
+                       label: str | None = None,
+                       color_table: str | None = None,
+                       dataset: str | None = None,
+                       time: float | None = None,
+                       rangelist: list | None = None,
+                       ):
+        """
+        Plot the results of a COMSOL simulation using a template of a 2D or 3D surface.
+
+        Parameters:
+            template (str): The tag of the template to use for the plot.
+            expression (str): The expression to plot.
+            unit (str): The unit of the expression.
+            label (str or bool): The label to use for the plot. If False, the template label is used.
+            color_table (str or bool): The name of the color table to use for the plot. If False, the template color table is used.
+            dataset (str or bool): The name of the dataset to use for the plot. If False, the template dataset is used.
+            time (float or bool): The time step to use for the plot. If False, the template time step is used.
+            rangelist (list or bool): The range of the plot. If False, automatic range is used.
+        """
+
+        tags = self.model.result().tags()
+        last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
+
+        original_pg = self.model.result(template)
+        plot_group = self.model.result().duplicate(f'pg{last_tag+1}', template)
+        if label is not None: plot_group.label(label)
+        surface = plot_group.feature(plot_group.feature().tags()[0])
+        surface.set('expr', expression)
+        surface.set('unit', unit)
+        if color_table is not None: surface.set('colortable', color_table)
+        if dataset is not None: plot_group.set('data', dataset)
+        if time is not None: plot_group.set('t', float(time))
+        if rangelist is not None:
+            surface.set('rangecoloractive', 'on')
+            surface.set('rangecolormin', float(rangelist[0]))
+            surface.set('rangecolormax', float(rangelist[1]))
+        else: surface.set('rangecoloractive', 'off')
+
+        plot_group.run()
+
+        self.model.save(self.file_path.split('.')[0] + '_postprocess.mph')
+
+
+    def create_special_dataset():
+        pass
