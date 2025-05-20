@@ -181,7 +181,7 @@ class ComsolPostprocessor:
             rangelist (list or None): The range of the plot. If None, automatic range is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (dict) [width, height, resolution, font_size]: A dictionary with the properties of the export. If None, the default properties are used.
-            export_path (str or None): The path to save the exported plot. If None, the default path is used.
+            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
         """
 
         tags = self.model.result().tags()
@@ -208,7 +208,7 @@ class ComsolPostprocessor:
             image_export = self.model.result().export().create('img1', 'Image')
             image_export.set('plotgroup', f'pg{last_tag+1}')
             if export_path is None: image_export.set('pngfilename', f'pg{last_tag+1}_{expression}.png')
-            else: image_export.set('pngfilename', export_path)
+            else: image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{expression}.png')
             if export_properties is not None:
                 image_export.set('resolution', float(export_properties['resolution']))
                 image_export.set('unit', 'px')
