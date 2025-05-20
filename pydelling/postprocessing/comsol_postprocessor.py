@@ -165,6 +165,7 @@ class ComsolPostprocessor:
                        rangelist: list | None = None,
                        export: bool = False,
                        export_properties: dict | None = None,
+                       export_path: str | None = None,
                        ):
         """
         Plot the results of a COMSOL simulation using a template of a 2D or 3D surface.
@@ -180,6 +181,7 @@ class ComsolPostprocessor:
             rangelist (list or None): The range of the plot. If None, automatic range is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (dict) [width, height, resolution, font_size]: A dictionary with the properties of the export. If None, the default properties are used.
+            export_path (str or None): The path to save the exported plot. If None, the default path is used.
         """
 
         tags = self.model.result().tags()
@@ -205,7 +207,8 @@ class ComsolPostprocessor:
         if export:
             image_export = self.model.result().export().create('img1', 'Image')
             image_export.set('plotgroup', f'pg{last_tag+1}')
-            image_export.set('pngfilename', f'pg{last_tag+1}_{expression}.png')
+            if export_path is None: image_export.set('pngfilename', f'pg{last_tag+1}_{expression}.png')
+            else: image_export.set('pngfilename', export_path)
             if export_properties is not None:
                 image_export.set('resolution', float(export_properties['resolution']))
                 image_export.set('unit', 'px')
@@ -214,11 +217,17 @@ class ComsolPostprocessor:
                 image_export.set('height', float(export_properties['height']))
                 image_export.set('fontsize', float(export_properties['font_size']))
             image_export.run()
-        return plot_group
-    
+        
 
     def create_special_dataset():
         pass
 
-    def save(self):
-        self.model.save(self.file_path.split('.')[0] + '_postprocess.mph')
+    def save(self, save_path: str = None):
+        """
+        Save the COMSOL model to a file.
+        Parameters:
+            save_path (str): The path to save the COMSOL model. If None, the original file path + _postprocess is used.
+        """
+        if save_path is None: self.model.save(self.file_path.split('.')[0] + '_postprocess.mph')
+        else: self.model.save(save_path)
+        self.client.close()
