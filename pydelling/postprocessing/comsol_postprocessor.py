@@ -227,7 +227,12 @@ class ComsolPostprocessor:
         plot_group.run()
 
         if export:
-            image_export = self.model.result().export().create('img1', 'Image')
+            # Check if 'img1' already exists, if so, remove it before creating
+            export_tags = self.model.result().export().tags()
+            if 'img1' in export_tags:
+                pass
+            else: image_export = self.model.result().export().create('img1', 'Image')
+            
             image_export.set('plotgroup', f'pg{last_tag+1}')
             logger.info(f"Exporting image pg{last_tag+1}_{expression}.png")
             if export_path is None:
