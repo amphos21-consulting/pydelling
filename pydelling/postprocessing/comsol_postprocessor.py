@@ -192,7 +192,7 @@ class ComsolPostprocessor:
         if label is not None: plot_group.label(label)
         surface = plot_group.feature(plot_group.feature().tags()[0])
         surface.set('expr', expression)
-        surface.set('unit', unit)
+        if unit is not None: surface.set('unit', unit)
         if color_table is not None: surface.set('colortable', color_table)
         if dataset is not None: plot_group.set('data', dataset)
         if time is not None: plot_group.set('t', float(time))
