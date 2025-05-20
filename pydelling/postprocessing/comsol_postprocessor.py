@@ -234,11 +234,13 @@ class ComsolPostprocessor:
             image_export = self.model.result().export().create('img1', 'Image')
 
             image_export.set('plotgroup', f'pg{last_tag+1}')
-            logger.info(f"Exporting image pg{last_tag+1}_{expression}.png")
+            if label is not None: label_export = label
+            else: label_export = expression.replace('/', '_')
+            logger.info(f"Exporting image pg{last_tag+1}_{label_export}.png")
             if export_path is None:
-                image_export.set('pngfilename', f'pg{last_tag+1}_{expression}.png')
+                image_export.set('pngfilename', f'pg{last_tag+1}_{label_export}.png')
             else:
-                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{expression}.png')
+                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label_export}.png')
             if export_properties is not None:
                 image_export.set('resolution', float(export_properties['resolution']))
                 image_export.set('unit', 'px')
