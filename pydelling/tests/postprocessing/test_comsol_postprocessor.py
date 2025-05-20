@@ -33,5 +33,13 @@ class TestComsolPostprocessor(unittest.TestCase):
         self.assertEqual(int(df_test['t'][68]*10), 67)
         self.assertEqual(int(df_test['p_pt6'][68]), 44572)
 
+    def test_duplicate_plot(self):
+        comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
+        new_plot = comsol.model.result().duplicate("pg99", "pg4")
+        # Check if the new plot was created successfully
+        self.assertIsNotNone(new_plot)
+        # Check if the new plot has the expected name
+        self.assertEqual(new_plot.tag(), "pg99")
+
 if __name__ == '__main__':
     unittest.main()

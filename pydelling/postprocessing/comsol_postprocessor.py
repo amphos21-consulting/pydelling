@@ -157,12 +157,14 @@ class ComsolPostprocessor:
     def duplicate_plot(self,
                        template: str,
                        expression: str,
-                       unit: str,
+                       unit: str | None = None,
                        label: str | None = None,
                        color_table: str | None = None,
                        dataset: str | None = None,
                        time: float | None = None,
                        rangelist: list | None = None,
+                       export: bool = False,
+                       export_properties: dict | None = None,
                        ):
         """
         Plot the results of a COMSOL simulation using a template of a 2D or 3D surface.
@@ -170,12 +172,14 @@ class ComsolPostprocessor:
         Parameters:
             template (str): The tag of the template to use for the plot.
             expression (str): The expression to plot.
-            unit (str): The unit of the expression.
-            label (str or bool): The label to use for the plot. If False, the template label is used.
-            color_table (str or bool): The name of the color table to use for the plot. If False, the template color table is used.
-            dataset (str or bool): The name of the dataset to use for the plot. If False, the template dataset is used.
-            time (float or bool): The time step to use for the plot. If False, the template time step is used.
-            rangelist (list or bool): The range of the plot. If False, automatic range is used.
+            unit (str or None): The unit of the expression. If None default unit is used.
+            label (str or None): The label to use for the plot. If None, the template label is used.
+            color_table (str or None): The name of the color table to use for the plot. If None, the template color table is used.
+            dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
+            time (float or None): The time step to use for the plot. If None, the template time step is used.
+            rangelist (list or None): The range of the plot. If None, automatic range is used.
+            export (bool): If True, the plot is exported to a file. Defaults to False.
+            export_properties (dict) [width, height, resolution, font_size]: A dictionary with the properties of the export. If None, the default properties are used.
         """
 
         tags = self.model.result().tags()
@@ -198,8 +202,23 @@ class ComsolPostprocessor:
 
         plot_group.run()
 
-        self.model.save(self.file_path.split('.')[0] + '_postprocess.mph')
-
+        if export:
+            image_export = self.model.result().export().create('img1', 'Image')
+            image_export.set('plotgroup', f'pg{last_tag+1}')
+            image_export.set('pngfilename', f'pg{last_tag+1}_{expression}.png')
+            if export_properties is not None:
+                image_export.set('resolution', float(export_properties['resolution']))
+                image_export.set('unit', 'px')
+                image_export.set('size','manualweb')
+                image_export.set('width', float(export_properties['width']))
+                image_export.set('height', float(export_properties['height']))
+                image_export.set('fontsize', float(export_properties['font_size']))
+            image_export.run()
+        return plot_group
+    
 
     def create_special_dataset():
         pass
+
+    def save(self):
+        self.model.save(self.file_path.split('.')[0] + '_postprocess.mph')
