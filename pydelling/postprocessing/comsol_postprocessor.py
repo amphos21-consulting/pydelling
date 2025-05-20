@@ -3,6 +3,11 @@ import pandas as pd
 import mph
 import re
 from tqdm import tqdm
+import logging
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
 
 class ComsolPostprocessor:
     """
@@ -147,6 +152,7 @@ class ComsolPostprocessor:
             df = pd.concat([df, df_temp], ignore_index=True)
 
         # Save to Excel
+        logger.info(f"Saving results to {file_name}")
         df.to_excel(file_name, index=False)
 
         return df
@@ -160,6 +166,9 @@ class ComsolPostprocessor:
                        unit: str | None = None,
                        label: str | None = None,
                        color_table: str | None = None,
+                       color_table_discrete: int | None = None,
+                       color_table_reverse: bool = False,
+                       color_table_sym: bool = False,
                        dataset: str | None = None,
                        time: float | None = None,
                        rangelist: list | None = None,
@@ -176,6 +185,9 @@ class ComsolPostprocessor:
             unit (str or None): The unit of the expression. If None default unit is used.
             label (str or None): The label to use for the plot. If None, the template label is used.
             color_table (str or None): The name of the color table to use for the plot. If None, the template color table is used.
+            color_table_discrete (int or None): The number of discrete colors to use for the plot. If None, the color table is used as default.
+            color_table_reverse (bool): If True, the color table is reversed. Defaults to False.
+            color_table_sym (bool): If True, the color table is symmetric. Defaults to False.
             dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
             time (float or None): The time step to use for the plot. If None, the template time step is used.
             rangelist (list or None): The range of the plot. If None, automatic range is used.
@@ -193,7 +205,17 @@ class ComsolPostprocessor:
         surface = plot_group.feature(plot_group.feature().tags()[0])
         surface.set('expr', expression)
         if unit is not None: surface.set('unit', unit)
+
         if color_table is not None: surface.set('colortable', color_table)
+        if color_table_discrete is None: surface.set('colortabletype', 'continuous')
+        if color_table_discrete is not None:
+            surface.set('colortabletype', 'discrete')
+            surface.set('bandcount', float(color_table_discrete))
+        if color_table_reverse: surface.set('colortablerev', 'on')
+        if not color_table_reverse: surface.set('colortablerev', 'off')
+        if color_table_sym: surface.set('colortablesym', 'on')
+        if not color_table_sym: surface.set('colortablesym', 'off')
+
         if dataset is not None: plot_group.set('data', dataset)
         if time is not None: plot_group.set('t', float(time))
         if rangelist is not None:
@@ -207,8 +229,11 @@ class ComsolPostprocessor:
         if export:
             image_export = self.model.result().export().create('img1', 'Image')
             image_export.set('plotgroup', f'pg{last_tag+1}')
-            if export_path is None: image_export.set('pngfilename', f'pg{last_tag+1}_{expression}.png')
-            else: image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{expression}.png')
+            logger.info(f"Exporting image pg{last_tag+1}_{expression}.png")
+            if export_path is None:
+                image_export.set('pngfilename', f'pg{last_tag+1}_{expression}.png')
+            else:
+                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{expression}.png')
             if export_properties is not None:
                 image_export.set('resolution', float(export_properties['resolution']))
                 image_export.set('unit', 'px')
