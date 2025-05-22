@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 class ComsolPostprocessor:
     """
     A class to handle postprocessing of COMSOL simulation results.
+
+    Warning: A valid COMSOL installation is required to use this class as well as java 11 or higher. Moreover, the oficial version of python is recommended, since the Microsoft Store version could cause issues with the COMSOL API.
+
     """
 
     def __init__(self,
@@ -262,4 +265,3 @@ class ComsolPostprocessor:
         """
         if save_path is None: self.model.save(self.file_path.split('.')[0] + '_postprocess.mph')
         else: self.model.save(save_path)
-        self.client.close()
