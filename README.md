@@ -2,6 +2,17 @@
 
 This repository contains the pydelling source code
 
+## Release notes
+
+### v1.0.2
+- Feat: [iGPReader.assign_material_from_stl()](https://gitlab.amphos21.com/aitirga/pydelling/-/blob/main/pydelling/readers/iGPReader/io/igp_reader.py#L932)
+    - A function has been added to assign materials based on a .stl file
+
+### v1.0.1
+- Fix: [PflotranManager](https://gitlab.amphos21.com/aitirga/pydelling/-/tree/main/pydelling/managers?ref_type=heads)
+    - `-pflotran_dir` was added to improve flexibility when running in local
+    - SSH reconnection was added to avoid desconnection after a certain time when running or waiting during a long time.
+
 ## Getting started test
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.
