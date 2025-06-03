@@ -1,5 +1,6 @@
 from unittest import TestCase
 from pydelling.managers import PflotranStudy
+from pydelling.managers.pflotran_study import LineNotFound
 from pydelling.utils.configuration_utils import test_data_path
 
 
@@ -71,14 +72,20 @@ class TestPflotranCase(TestCase):
         # Delete the dummy file
         dummy_file.unlink()
 
+    def test_modify_params(self):
+        new_study = PflotranStudy(str(test_data_path() / 'test_manager.in'))
 
+        new_study.replace_after_finding(["FLOW_CONDITION dirichlet", "PRESSURE"], "    PRESSURE DIRICHLET_ZERO_GRADIENT")
 
+        # Check that the line exists (usually, the user would not directly use get_line_after_finding, or
+        # manually deal with exceptions)
+        file_lines = new_study.raw_text.splitlines()
 
+        try:
+            line = new_study.get_line_after_finding(["FLOW_CONDITION dirichlet", "PRESSURE DIRICHLET_ZERO_GRADIENT"],
+                file_lines)
+            line_found = True
+        except LineNotFound:
+            line_found = False
 
-
-
-
-
-
-
-
+        self.assertTrue(line_found)
