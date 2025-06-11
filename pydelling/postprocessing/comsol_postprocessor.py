@@ -53,8 +53,8 @@ class ComsolPostprocessor:
             point_list (list of list): A list of points' geomertry tags where the variable evolution is to be computed.
             coord_labels (list of str): A list with the names of the coordinates to evaluate. Defaults to ['r', 'z'].
         Returns:
-            tuple: t (numpy.ndarray): A 1D array of unique time steps (in days) from the dataset.
-            tuple: var_list (list of list of lists): A list with a list of lists for each variable where each inner list contains the variable values
+            tuple: **t** (numpy.ndarray) and **var_list** (list of list of lists). (i) A 1D array of unique time steps (in days) from the dataset.
+            (ii) A list with a list of lists for each variable where each inner list contains the variable values
             at the corresponding point in `point_list` over time.
         """
         points = [self.geom.feature(name) for name in point_list]
@@ -163,37 +163,37 @@ class ComsolPostprocessor:
     def plot_profiles():
         pass
 
-    def duplicate_plot(self,
-                       template: str,
-                       expression: str,
-                       unit: str | None = None,
-                       label: str | None = None,
-                       color_table: str | None = None,
-                       color_table_discrete: int | None = None,
-                       color_table_reverse: bool = False,
-                       color_table_sym: bool = False,
-                       dataset: str | None = None,
-                       time: float | None = None,
-                       rangelist: list | None = None,
-                       export: bool = False,
-                       export_properties: dict | None = None,
-                       export_path: str | None = None,
-                       ):
+    def edit_plot(self,
+                    duplicate: bool,
+                    template: str,
+                    surface_dict_list: dict | list,
+                    label: str | None = None,                    
+                    dataset: str | None = None,
+                    time: float | None = None,
+                    export: bool = False,
+                    export_properties: dict | None = None,
+                    export_path: str | None = None,
+                    ):
         """
         Plot the results of a COMSOL simulation using a template of a 2D or 3D surface.
 
         Parameters:
+            duplicate (bool): If True, a new plot group is created. If False, the existing plot group is used.
             template (str): The tag of the template to use for the plot.
-            expression (str): The expression to plot.
-            unit (str or None): The unit of the expression. If None default unit is used.
-            label (str or None): The label to use for the plot. If None, the template label is used.
-            color_table (str or None): The name of the color table to use for the plot. If None, the template color table is used.
-            color_table_discrete (int or None): The number of discrete colors to use for the plot. If None, the color table is used as default.
-            color_table_reverse (bool): If True, the color table is reversed. Defaults to False.
-            color_table_sym (bool): If True, the color table is symmetric. Defaults to False.
+            label (str or None): The label of the plot group. If None, the label is not set. If duplicate is False, plot group name will not change but label will be used as name of exported file.
+            surface (dict or list): A dictionary (or a list of dictionaries) with the properties of the surfaces to plot. The keys are:
+                surface = {
+                    'dataset': (str or 'parent'), The name of the dataset to use for the plot. If parent, the plot group dataset is used.
+                    'expression': (str), The expression to plot.
+                    'unit': (str or None), The unit of the expression. If None default unit is used.
+                    'color_table': (str or None), The name of the color table to use for the plot. If None, the template color table is used.
+                    'color_table_discrete': (int or False), The number of discrete colors to use for the plot. If False, the color table is used as default.
+                    'color_table_reverse': (bool), If True, the color table is reversed. Defaults to False.
+                    'color_table_sym': (bool), If True, the color table is symmetric. Defaults to False.
+                    'rangelist': (list or None), The range of the plot. If None, automatic range is used.
+                }
             dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
             time (float or None): The time step to use for the plot. If None, the template time step is used.
-            rangelist (list or None): The range of the plot. If None, automatic range is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (dict) [width, height, resolution, font_size]: A dictionary with the properties of the export. If None, the default properties are used.
             export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
@@ -203,29 +203,69 @@ class ComsolPostprocessor:
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
 
         original_pg = self.model.result(template)
-        plot_group = self.model.result().duplicate(f'pg{last_tag+1}', template)
+        if duplicate:
+            plot_group = self.model.result().duplicate(f'pg{last_tag+1}', template)
+        else:
+            plot_group = original_pg
+
         if label is not None: plot_group.label(label)
-        surface = plot_group.feature(plot_group.feature().tags()[0])
-        surface.set('expr', expression)
-        if unit is not None: surface.set('unit', unit)
+        if isinstance(surface_dict_list, list):
+            N_surfaces = len(surface_dict_list)
+        elif isinstance(surface_dict_list, dict):
+            N_surfaces = 1
+            surface_dict_list = [surface_dict_list]
 
-        if color_table is not None: surface.set('colortable', color_table)
-        if color_table_discrete is None: surface.set('colortabletype', 'continuous')
-        if color_table_discrete is not None:
-            surface.set('colortabletype', 'discrete')
-            surface.set('bandcount', float(color_table_discrete))
-        if color_table_reverse: surface.set('colortablerev', 'on')
-        if not color_table_reverse: surface.set('colortablerev', 'off')
-        if color_table_sym: surface.set('colortablesym', 'on')
-        if not color_table_sym: surface.set('colortablesym', 'off')
+        if N_surfaces == 1:
+            surface_dict = surface_dict_list[0]
+            surface = plot_group.feature(plot_group.feature().tags()[0])
+            surface.set('expr', surface_dict["expression"])
+            if surface_dict["unit"] is not None: surface.set('unit', surface_dict["unit"])
 
-        if dataset is not None: plot_group.set('data', dataset)
-        if time is not None: plot_group.set('t', float(time))
-        if rangelist is not None:
-            surface.set('rangecoloractive', 'on')
-            surface.set('rangecolormin', float(rangelist[0]))
-            surface.set('rangecolormax', float(rangelist[1]))
-        else: surface.set('rangecoloractive', 'off')
+            if surface_dict["color_table"] is not None: surface.set('colortable', surface_dict["color_table"])
+            if surface_dict["color_table_discrete"] is False: surface.set('colortabletype', 'continuous')
+            if surface_dict["color_table_discrete"]:
+                surface.set('colortabletype', 'discrete')
+                surface.set('bandcount', float(surface_dict["color_table_discrete"]))
+            if surface_dict["color_table_reverse"]: surface.set('colortablerev', 'on')
+            if not surface_dict["color_table_reverse"]: surface.set('colortablerev', 'off')
+            if surface_dict["color_table_sym"]: surface.set('colortablesym', 'on')
+            if not surface_dict["color_table_sym"]: surface.set('colortablesym', 'off')
+
+            if surface_dict["rangelist"] is not None:
+                surface.set('rangecoloractive', 'on')
+                surface.set('rangecolormin', float(surface_dict["rangelist"][0]))
+                surface.set('rangecolormax', float(surface_dict["rangelist"][1]))
+            else: surface.set('rangecoloractive', 'off')
+
+
+            if dataset is not None: plot_group.set('data', dataset)
+            if time is not None: plot_group.set('t', float(time))
+
+        elif N_surfaces > 1:
+            if dataset is not None: plot_group.set('data', dataset)
+            if time is not None: plot_group.set('t', float(time))
+
+            for i in range(N_surfaces):
+                surface_dict = surface_dict_list[i]
+                surface = plot_group.feature(plot_group.feature().tags()[i])
+                surface.set('expr', surface_dict["expression"])
+                if surface_dict["unit"] is not None: surface.set('unit', surface_dict["unit"])
+
+                if surface_dict["color_table"] is not None: surface.set('colortable', surface_dict["color_table"])
+                if surface_dict["color_table_discrete"] is False: surface.set('colortabletype', 'continuous')
+                if surface_dict["color_table_discrete"]:
+                    surface.set('colortabletype', 'discrete')
+                    surface.set('bandcount', float(surface_dict["color_table_discrete"]))
+                if surface_dict["color_table_reverse"]: surface.set('colortablerev', 'on')
+                if not surface_dict["color_table_reverse"]: surface.set('colortablerev', 'off')
+                if surface_dict["color_table_sym"]: surface.set('colortablesym', 'on')
+                if not surface_dict["color_table_sym"]: surface.set('colortablesym', 'off')
+
+                if surface_dict["rangelist"] is not None:
+                    surface.set('rangecoloractive', 'on')
+                    surface.set('rangecolormin', float(surface_dict["rangelist"][0]))
+                    surface.set('rangecolormax', float(surface_dict["rangelist"][1]))
+                else: surface.set('rangecoloractive', 'off')
 
         plot_group.run()
 
@@ -237,13 +277,13 @@ class ComsolPostprocessor:
             image_export = self.model.result().export().create('img1', 'Image')
 
             image_export.set('plotgroup', f'pg{last_tag+1}')
-            if label is not None: label_export = label
-            else: label_export = expression.replace('/', '_')
-            logger.info(f"Exporting image pg{last_tag+1}_{label_export}.png")
+            if label is None:
+                raise ValueError("If exporting, label must be set to name the exported file.")
+            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
             if export_path is None:
-                image_export.set('pngfilename', f'pg{last_tag+1}_{label_export}.png')
+                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
             else:
-                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label_export}.png')
+                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
             if export_properties is not None:
                 image_export.set('resolution', float(export_properties['resolution']))
                 image_export.set('unit', 'px')
