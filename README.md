@@ -1,103 +1,53 @@
-# pydelling
+![Diagram](docs/pydelling_logo.png)
 
-This repository contains the pydelling source code
+**pydelling** is a Python library developed at Amphos 21, primarily dedicated to mesh preprocessing for numerical modelling. It includes preprocessors for meshes generated with GiD, STL files, and others, enabling their use in simulation platforms such as **PFLOTRAN** and **OpenFOAM**, among others. The library also provides file readers and writers for **VTK** and **HDF5** formats, allowing users to customise datasets required during modelling workflows.
+
+Additionally, pydelling features the **PflotranManager** module, which facilitates executing multiple PFLOTRAN runs in sequence—either locally or on a high-performance computing (HPC) system—by dynamically modifying input files and relevant parameters. It also includes postprocessing tools for both **PFLOTRAN** and **COMSOL**.
+
+**pydelling** is a collaborative and continuously evolving project, with new features regularly integrated to address emerging modelling needs.
+
+## Installation notes
+**uv** package manager is required. It can be installed:
+- Linux o macOS: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+- Windows (powershell or via pip):
+    - `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+    - `pip install uv` and add pip scripts folder to Windows PATH
+
+### pydelling installation
+1. Create a new repository from [project_template_pydelling](https://gitlab.amphos21.com/digital-solutions/project_template_pydelling)
+2. Clone the repository in VS Code
+3. Create a virtual enviroment using `uv venv`
+4. Load pydelling using `git submodule update --init`
+5. Synchronize the libraries using `uv sync`
+6. Run the tests
+    - Unittest → pydelling
+    - test_*.py
+
+## Badge line coverage 
+<span style="background-color: yellow; color: black; padding: 2px 6px; border-radius: 3px;">Under construction</span>
 
 ## Release notes
 
 ### v1.0.2
 - Feat: [iGPReader.assign_material_from_stl()](https://gitlab.amphos21.com/aitirga/pydelling/-/blob/main/pydelling/readers/iGPReader/io/igp_reader.py#L932)
-    - A function has been added to assign materials based on a .stl file
+    - A function has been added to assign materials based on a .stl file.
 
 ### v1.0.1
 - Fix: [PflotranManager](https://gitlab.amphos21.com/aitirga/pydelling/-/tree/main/pydelling/managers?ref_type=heads)
-    - `-pflotran_dir` was added to improve flexibility when running in local
+    - `-pflotran_dir` was added to improve flexibility when running in local.
     - SSH reconnection was added to avoid desconnection after a certain time when running or waiting during a long time.
 
-## Getting started test
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin http://gitlab.amphos21.com/aitirga/pydelling.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](http://gitlab.amphos21.com/aitirga/pydelling/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+1. Create a new branch with the name `feature/[tag]` or `refactor/[tag]`, etc.
+2. Stick to the naming agreement:
+    - Files: snake_case
+    - Class: CamelCase
+    - Functions: snake_case
+3. If new functionalites are added, create the corresponding tests and code snippets.
+4. Create a merge request.
+5. If the branch pass all tests the merge will be approved.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
 
 ## License
 For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
