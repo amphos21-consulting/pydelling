@@ -35,8 +35,10 @@ class ComsolManager:
         def __init__(self, 
                      file_path:  str, 
                      study: str, 
+                     parameter_type: str = 'param',
                      parameter: str = None,
                      parameter_value: float = None,
+                     variable_tag: str = None,
                      save_name: str = None,
                      ):
             """
@@ -45,17 +47,20 @@ class ComsolManager:
             Args:
                 file_path (str): Path to the COMSOL model file (.mph).
                 study (str): The study tag to be run in the COMSOL model.
+                parameter_type (str, optional): The type of parameter to be modified before running the study. Options are 'param' for global parameters or 'var' for variables. Defaults to 'param'.
                 parameter (str, optional): The parameter tag to be modified before running the study. If not provided, no parameter will be modified. Defaults to None.
-                parameter_value (float, optional): The value to set for the specified parameter. Required if parameter is provided. Defaults to None.
+                parameter_value (str, optional): The value (and units if needed) as a string to set for the specified parameter. Required if parameter is provided. Defaults to None.
+                variable_tag (str, optional): The variable tag to be modified before running the study. Required if parameter_type is 'var'. Defaults to None.
                 save_name (str, optional): The name to save the results file. If not provided the original file will be overwritten. Defaults to None.
             """
             self.file_path = file_path
             self.study = study
+            self.parameter_type = parameter_type
             self.parameter = parameter
             self.parameter_value = parameter_value
+            self.variable_tag = variable_tag
             self.save_name = save_name
             
-
 
     def run_batch(self,
                   models: list[ComsolModel],
@@ -63,68 +68,107 @@ class ComsolManager:
         """
         Run a batch of different COMSOL files.
         Args:
-            models (list[Model]): A list of Model instances representing the COMSOL models to be run.
+            models (list[Model]): A list of ComsolModel instances representing the COMSOL models to be run.
         """
 
-        def _run_model(self,
+        self.models_dict = models
+        self._load_models()
+        self._run_parallel()
+
+    def run_parametric_sweep(self,
+                             models: list[ComsolModel],
+                             ):
+        """
+        Run a parametric sweep for a list of COMSOL models.
+        A parameter must be defined in the ComsolModel class
+        Args:
+            models (list[Model]): A list of ComsolModel instances representing the COMSOL models to be run. If ComsolModel.save_name is not defined, an automatic name will be generated.
+        """
+
+        self.models_dict = models
+        for model in self.models_dict:
+            if model.save_name is None:
+                model.save_name = model.file_path.split('.mph')[0] + f'_{model.parameter}_{model.parameter_value}.mph'
+            copyfile(model.file_path, model.save_name)
+            model.file_path = model.save_name
+
+        
+        self._load_models()
+
+        for i in range(len(self.models_dict)):
+            if model.parameter_type is 'param':
+                self.models[i].param().set(model.parameter, model.parameter_value)
+            if model.parameter_type is 'var':
+                self.models[i].variable(model.variable_tag).set(model.parameter, model.parameter_value)
+            else:
+                raise ValueError("parameter_type must be 'param' or 'var'")
+
+        self._run_parallel()
+
+
+    def _load_models(self,
+                     ):
+        self.comsol_models = []
+        self.models = []
+        for i in range(len(self.models_dict)):
+            self.comsol_models.append(self.client.load(self.models_dict[i].file_path))
+            self.models.append(self.comsol_models[i].java)
+
+    def _run_model(self,
                        input_model: 'ComsolManager.ComsolModel', 
                        comsol_model: mph.model):
-            """
-            Run a single COMSOL model using the provided client.
+        """
+        Run a single COMSOL model using the provided client.
 
-            Args:
-                input_model (ComsolModel): The Model instance representing the COMSOL model to be run.
-                comsol_model (mph.model): The COMSOL model object loaded in the client.
-            """
-            # Load the COMSOL model
-            model = comsol_model.java
+        Args:
+            input_model (ComsolModel): The Model instance representing the COMSOL model to be run.
+            comsol_model (mph.model): The COMSOL model object loaded in the client.
+        """
+        # Load the COMSOL model
+        model = comsol_model.java
 
-            # # Set parameter if provided
-            # if model.parameter and model.parameter_value is not None:
-            #     comsol_model.param.set(model.parameter, model.parameter_value)
+        # Run the specified study
+        try:
+            logger.info(f"Running model '{input_model.file_path}'")
+            model.study(input_model.study).run()
+        except Exception as e:
+            logger.error(f"Error running study '{input_model.study}' in model '{input_model.file_path}': {e}")
+        
 
-            # Run the specified study
-            try:
-                logger.info(f"Running model '{input_model.file_path}'")
-                model.study(input_model.study).run()
-            except Exception as e:
-                logger.error(f"Error running study '{input_model.study}' in model '{input_model.file_path}': {e}")
-            
+        # Save the results
+        if input_model.save_name:
+            model.save(str(input_model.save_name))
+        else:
+            model.save(str(input_model.file_path))
 
-            # Save the results
-            if input_model.save_name:
-                model.save(str(input_model.save_name))
-            else:
-                model.save(str(input_model.file_path))
+        logger.info(f"Model '{input_model.file_path}' completed and saved.")
+        return 0
 
-            return 0
-
+    def _run_parallel(self,
+                      ):
+        
         class Thread:
             def __init__(self,
                          t: threading.Thread,
                          client_id: int):
                 self.t = t
                 self.client_id = client_id
-    
+
         threads = []
         thread_client = []
-        n_models = len(models)
+        n_models = len(self.models_dict)
         n_runs = 0
         
         status1 = False
         status2 = False
     
-        comsol_models = []
-        for i in range(n_models):
-            comsol_models.append(self.client.load(models[i].file_path))
-        
         i = 0
         # Maximum 2 clients simultaneously
         with tqdm(total=n_models, desc="Running COMSOL simulations") as pbar:
             while i < n_models or n_runs > 0:
                 while n_runs < 2 and i < n_models:
                     if not status1:
-                        t = threading.Thread(target=_run_model, args=(self, models[i], comsol_models[i]))
+                        t = threading.Thread(target=self._run_model, args=(self.models_dict[i], self.comsol_models[i]))
                         tclass = Thread(t, 1)
                         status1 = True
                         t.start()
@@ -134,7 +178,7 @@ class ComsolManager:
                     time.sleep(0.1)
                     
                     if not status2:
-                        t = threading.Thread(target=_run_model, args=(self, models[i], comsol_models[i]))
+                        t = threading.Thread(target=self._run_model, args=(self.models_dict[i], self.comsol_models[i]))
                         tclass = Thread(t, 2)
                         status2 = True
                         t.start()
@@ -154,6 +198,3 @@ class ComsolManager:
                         pbar.update(1)
                         time.sleep(0.1)
                 time.sleep(0.1)
-
-
-        
