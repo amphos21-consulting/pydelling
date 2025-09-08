@@ -34,7 +34,7 @@ class ComsolManager:
 
         def __init__(self, 
                      file_path:  str, 
-                     study: str, 
+                     study: str | list, 
                      parameter_type: str = 'param',
                      parameter: str = None,
                      parameter_value: float = None,
@@ -46,7 +46,7 @@ class ComsolManager:
 
             Args:
                 file_path (str): Path to the COMSOL model file (.mph).
-                study (str): The study tag to be run in the COMSOL model.
+                study (str): The study tag to be run in the COMSOL model, pr a list of studies to be run in sequence.
                 parameter_type (str, optional): The type of parameter to be modified before running the study. Options are 'param' for global parameters or 'var' for variables. Defaults to 'param'.
                 parameter (str, optional): The parameter tag to be modified before running the study. If not provided, no parameter will be modified. Defaults to None.
                 parameter_value (str, optional): The value (and units if needed) as a string to set for the specified parameter. Required if parameter is provided. Defaults to None.
@@ -104,6 +104,34 @@ class ComsolManager:
                 raise ValueError("parameter_type must be 'param' or 'var'")
 
         self._run_parallel()
+
+    def run(self,
+            model_dict: ComsolModel,
+            ):
+        """
+        Run a single COMSOL model.
+        Args:
+            model_dict (ComsolModel): A ComsolModel instance representing the COMSOL model to be run.
+        """
+        self.models_dict = [model_dict]
+        self.comsol_models = [self.client.load(self.models_dict[0].file_path)]
+        self.models = [self.comsol_models[0].java]
+        self._run_model(self.models_dict[0], self.comsol_models[0])
+
+    def run_sequence_studies(self,
+                             model_dict: ComsolModel,):
+        """
+        Run a sequence of studies in a COMSOL Model.
+        Args:
+            model_dict (ComsolModel): A ComsolModel instance representing the COMSOL model to be run.
+        """
+        self.models_dict = [model_dict]
+        self.comsol_models = [self.client.load(self.models_dict[0].file_path)]
+        self.models = [self.comsol_models[0].java]
+        logger.info(f"Running model '{self.models_dict[0].file_path}'")
+        self._run_studies(0)
+        
+
 
 
     def _load_models(self,
@@ -198,3 +226,32 @@ class ComsolManager:
                         pbar.update(1)
                         time.sleep(0.1)
                 time.sleep(0.1)
+
+    def _run_studies(self,
+                   model_index: int, 
+                    ):
+        """
+        Run a study of a COMSOL model using the provided client.
+
+        Args:
+            model_index (int): The index of the ComsolModel instance in self.models_dict to be run.
+        """
+        # Run the specified study
+        for s in range(len(self.models_dict[model_index].study)):
+            try:
+                logger.info(f"Running study '{self.models_dict[model_index].study[s]}'")
+                self.models[model_index].study(self.models_dict[model_index].study[s]).run()
+                # Save the results
+                logger.info(f"Study '{self.models_dict[model_index].study[s]}' completed. Saving results...")
+                if self.models_dict[model_index].save_name:
+                    self.models[model_index].save(str(self.models_dict[model_index].save_name))
+                else:
+                    self.models[model_index].save(str(self.models_dict[model_index].file_path))
+
+            except Exception as e:
+                logger.error(f"Error running study '{self.models_dict[model_index].study[s]}' in model '{self.models_dict[model_index].file_path}': {e}")
+        
+        
+        logger.info(f"Model '{self.models_dict[model_index].file_path}' completed and saved.")
+        return 0
+
