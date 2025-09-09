@@ -2,8 +2,8 @@ from pathlib import Path
 from pydelling.utils import create_results_folder
 import logging
 import mph
+import time, re
 import threading
-import time
 from tqdm import tqdm
 from shutil import copyfile
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ class ComsolManager:
             version (str | None): The version of COMSOL installed. If None, the latest version will be used.
         """
         self.client = mph.start(version=version)
+
         
 
     class ComsolModel:
@@ -73,7 +74,9 @@ class ComsolManager:
 
         self.models_dict = models
         self._load_models()
-        self._run_parallel()
+        # self._run_parallel()
+        self._run_in_series()
+        self._clean()
 
     def run_parametric_sweep(self,
                              models: list[ComsolModel],
@@ -97,13 +100,15 @@ class ComsolManager:
 
         for i in range(len(self.models_dict)):
             if model.parameter_type is 'param':
-                self.models[i].param().set(model.parameter, model.parameter_value)
+                self.models[i].param().set(self.models_dict[i].parameter, self.models_dict[i].parameter_value)
             if model.parameter_type is 'var':
-                self.models[i].variable(model.variable_tag).set(model.parameter, model.parameter_value)
+                self.models[i].variable(self.models_dict[i].variable_tag).set(self.models_dict[i].parameter, self.models_dict[i].parameter_value)
             else:
                 raise ValueError("parameter_type must be 'param' or 'var'")
 
-        self._run_parallel()
+        # self._run_parallel()
+        self._run_in_series()
+        self._clean()
 
     def run(self,
             model_dict: ComsolModel,
@@ -116,7 +121,9 @@ class ComsolManager:
         self.models_dict = [model_dict]
         self.comsol_models = [self.client.load(self.models_dict[0].file_path)]
         self.models = [self.comsol_models[0].java]
-        self._run_model(self.models_dict[0], self.comsol_models[0])
+        self.threads = [None]
+        self._run_model()
+        self._clean()
 
     def run_sequence_studies(self,
                              model_dict: ComsolModel,):
@@ -128,8 +135,10 @@ class ComsolManager:
         self.models_dict = [model_dict]
         self.comsol_models = [self.client.load(self.models_dict[0].file_path)]
         self.models = [self.comsol_models[0].java]
+        self.threads = [None]
         logger.info(f"Running model '{self.models_dict[0].file_path}'")
         self._run_studies(0)
+        self._clean()
         
 
 
@@ -138,94 +147,155 @@ class ComsolManager:
                      ):
         self.comsol_models = []
         self.models = []
+        self.threads = []
         for i in range(len(self.models_dict)):
             self.comsol_models.append(self.client.load(self.models_dict[i].file_path))
             self.models.append(self.comsol_models[i].java)
+            self.threads.append(None)
+
+    def _run_modelutil(self,
+                       model_index: int = 0):
+        """
+        Run a study of a COMSOL model reading COMSOL log, showing a progress bar.
+        Args:
+            model (mph.model.java): The COMSOL model object loaded in the client.
+            model_index (int): The index of the ComsolModel instance in self.models_dict to be run.
+        """
+        logfile = Path(f"./logs/temp_{self.models_dict[model_index].file_path}_{int(time.time())}.log")
+        if logfile.exists():
+            logfile.unlink()
+        
+
+        from com.comsol.model.util import ModelUtil
+        ModelUtil.showProgress(str(logfile))
+
+        def run(model, study):
+            model.study(study).run()
+        
+        # Read COMSOL log file to show progress bar
+        self.threads[model_index] = threading.Thread(target=run, args=(self.models[model_index], self.models_dict[model_index].study))
+        self.threads[model_index].start()
+
+        pat = re.compile(r"Current Progress:\s+(\d+)\s*%")
+
+        with tqdm(total=100, desc=f"     Running {self.models_dict[model_index].file_path}/{self.models_dict[model_index].study}", unit="%") as pbar:
+            last = 0
+            while self.threads[model_index].is_alive() or logfile.exists() or last < 100:
+                if logfile.exists():
+                    with logfile.open(encoding="utf-8") as f:
+                        for line in f:
+                            m = pat.search(line)
+
+                            if m:
+                                pct = int(m.group(1))
+                                if pct > last:
+                                    pbar.update(pct - last)
+                                    last = pct              
+
+                if not self.threads[model_index].is_alive() and last >= 100:
+                    break
+                time.sleep(0.1)
+        self.threads[model_index].join()
+
+
 
     def _run_model(self,
-                       input_model: 'ComsolManager.ComsolModel', 
-                       comsol_model: mph.model):
+                   model_index: int = 0,
+                   ):
         """
         Run a single COMSOL model using the provided client.
 
         Args:
-            input_model (ComsolModel): The Model instance representing the COMSOL model to be run.
-            comsol_model (mph.model): The COMSOL model object loaded in the client.
+            model_index (int): The index of the ComsolModel instance in self.models_dict to be run.
         """
-        # Load the COMSOL model
-        model = comsol_model.java
-
         # Run the specified study
         try:
-            logger.info(f"Running model '{input_model.file_path}'")
-            model.study(input_model.study).run()
+            logger.info(f"Running model '{self.models_dict[model_index].file_path}'")
+            # self.models[model_index].study(self.models_dict[model_index].study).run()
+            self._run_modelutil(model_index)
         except Exception as e:
-            logger.error(f"Error running study '{input_model.study}' in model '{input_model.file_path}': {e}")
+            logger.error(f"Error running study '{self.models_dict[model_index].study}' in model '{self.models_dict[model_index].file_path}': {e}")
         
 
         # Save the results
-        if input_model.save_name:
-            model.save(str(input_model.save_name))
+        if self.models_dict[model_index].save_name:
+            self.models[model_index].save(str(self.models_dict[model_index].save_name))
+            logger.info(f"Model '{self.models_dict[model_index].save_name}' completed and saved.")
         else:
-            model.save(str(input_model.file_path))
+            self.models[model_index].save(str(self.models_dict[model_index].file_path))
+            logger.info(f"Model '{self.models_dict[model_index].file_path}' completed and saved.")
 
-        logger.info(f"Model '{input_model.file_path}' completed and saved.")
         return 0
 
     def _run_parallel(self,
                       ):
-        
-        class Thread:
-            def __init__(self,
-                         t: threading.Thread,
-                         client_id: int):
-                self.t = t
-                self.client_id = client_id
+        """
+        Run COMSOL models in parallel.
+        Warning: This method is currently disabled due to mph API does not allow it and it waits to a process to end before starting the next one, even in independent threads.
+        Use _run_in_series instead.
+        """
+        # class Thread:
+        #     def __init__(self,
+        #                  t: threading.Thread,
+        #                  client_id: int):
+        #         self.t = t
+        #         self.client_id = client_id
 
-        threads = []
-        thread_client = []
-        n_models = len(self.models_dict)
-        n_runs = 0
+        # threads = []
+        # thread_client = []
+        # n_models = len(self.models_dict)
+        # n_runs = 0
         
-        status1 = False
-        status2 = False
+        # status1 = False
+        # status2 = False
     
-        i = 0
-        # Maximum 2 clients simultaneously
-        with tqdm(total=n_models, desc="Running COMSOL simulations") as pbar:
-            while i < n_models or n_runs > 0:
-                while n_runs < 2 and i < n_models:
-                    if not status1:
-                        t = threading.Thread(target=self._run_model, args=(self.models_dict[i], self.comsol_models[i]))
-                        tclass = Thread(t, 1)
-                        status1 = True
-                        t.start()
-                        threads.append(tclass)
-                        i += 1
-                        n_runs += 1
-                    time.sleep(0.1)
+        # i = 0
+        # # Maximum 2 clients simultaneously
+        # with tqdm(total=n_models, desc="Running COMSOL simulations") as pbar:
+        #     while i < n_models or n_runs > 0:
+        #         while n_runs < 2 and i < n_models:
+        #             if not status1:
+        #                 t = threading.Thread(target=self._run_model, args=([i]))
+        #                 tclass = Thread(t, 1)
+        #                 status1 = True
+        #                 t.start()
+        #                 threads.append(tclass)
+        #                 i += 1
+        #                 n_runs += 1
+        #             time.sleep(0.1)
                     
-                    if not status2:
-                        t = threading.Thread(target=self._run_model, args=(self.models_dict[i], self.comsol_models[i]))
-                        tclass = Thread(t, 2)
-                        status2 = True
-                        t.start()
-                        threads.append(tclass)
-                        i += 1
-                        n_runs += 1
+        #             if not status2:
+        #                 t = threading.Thread(target=self._run_model, args=([i]))
+        #                 tclass = Thread(t, 2)
+        #                 status2 = True
+        #                 t.start()
+        #                 threads.append(tclass)
+        #                 i += 1
+        #                 n_runs += 1
 
-                for t in threads[:]:
-                    if not t.t.is_alive():
-                        if t.client_id == 1:
-                            status1 = False
-                        if t.client_id == 2:
-                            status2 = False
-                        threads.remove(t)
-                        n_runs -= 1
+        #         for t in threads[:]:
+        #             if not t.t.is_alive():
+        #                 if t.client_id == 1:
+        #                     status1 = False
+        #                 if t.client_id == 2:
+        #                     status2 = False
+        #                 threads.remove(t)
+        #                 n_runs -= 1
                         
-                        pbar.update(1)
-                        time.sleep(0.1)
-                time.sleep(0.1)
+        #                 pbar.update(1)
+        #                 time.sleep(0.1)
+        #         time.sleep(0.1)
+        # for t in threads[:]:
+        #     t.t.join()
+        logger.error("Parallel execution is currently disabled. Use _run_in_series instead.")
+
+    def _run_in_series(self,
+                       ):
+        """
+        Run COMSOL models in series.
+        """
+        for i in tqdm(range(len(self.models_dict)),desc="Running COMSOL simulations"):
+            self._run_model(i)
 
     def _run_studies(self,
                    model_index: int, 
@@ -240,7 +310,7 @@ class ComsolManager:
         for s in range(len(self.models_dict[model_index].study)):
             try:
                 logger.info(f"Running study '{self.models_dict[model_index].study[s]}'")
-                self.models[model_index].study(self.models_dict[model_index].study[s]).run()
+                self._run_modelutil(self.models[model_index], self.models_dict[model_index].file_path, self.models_dict[model_index].study[s])
                 # Save the results
                 logger.info(f"Study '{self.models_dict[model_index].study[s]}' completed. Saving results...")
                 if self.models_dict[model_index].save_name:
@@ -255,3 +325,14 @@ class ComsolManager:
         logger.info(f"Model '{self.models_dict[model_index].file_path}' completed and saved.")
         return 0
 
+    def _clean(self):
+        """
+        Clean temporary log files except the last one.
+        """
+        
+        time.sleep(0.1)
+        for logfile in Path('./logs/').glob('temp_*.log'):
+            try:
+                logfile.unlink()
+            except PermissionError:
+                pass
