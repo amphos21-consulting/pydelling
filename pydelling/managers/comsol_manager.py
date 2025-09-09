@@ -20,6 +20,7 @@ class ComsolManager:
                  ):
         """
         Initialize the ComsolManager.
+        Warning: A valid COMSOL installation is required to use this class as well as java 11 or higher. Moreover, the oficial version of python is recommended, since the Microsoft Store version could cause issues with the COMSOL API.
 
         Args:
             version (str | None): The version of COMSOL installed. If None, the latest version will be used.
@@ -154,12 +155,15 @@ class ComsolManager:
             self.threads.append(None)
 
     def _run_modelutil(self,
-                       model_index: int = 0):
+                       model_index: int = 0,
+                       study_index: int = None,
+                       ):
         """
         Run a study of a COMSOL model reading COMSOL log, showing a progress bar.
         Args:
             model (mph.model.java): The COMSOL model object loaded in the client.
             model_index (int): The index of the ComsolModel instance in self.models_dict to be run.
+            study_index (int): The index of the study if model.study is a list.
         """
         logfile = Path(f"./logs/temp_{self.models_dict[model_index].file_path}_{int(time.time())}.log")
         if logfile.exists():
@@ -173,12 +177,20 @@ class ComsolManager:
             model.study(study).run()
         
         # Read COMSOL log file to show progress bar
-        self.threads[model_index] = threading.Thread(target=run, args=(self.models[model_index], self.models_dict[model_index].study))
+        if study_index is None:
+            self.threads[model_index] = threading.Thread(target=run, args=(self.models[model_index], self.models_dict[model_index].study))
+        else:
+            self.threads[model_index] = threading.Thread(target=run, args=(self.models[model_index], self.models_dict[model_index].study[study_index]))
         self.threads[model_index].start()
 
         pat = re.compile(r"Current Progress:\s+(\d+)\s*%")
 
-        with tqdm(total=100, desc=f"     Running {self.models_dict[model_index].file_path}/{self.models_dict[model_index].study}", unit="%") as pbar:
+        if study_index is None:
+            label = self.models_dict[model_index].study
+        else:
+            label = self.models_dict[model_index].study[study_index]
+
+        with tqdm(total=100, desc=f"     Running {self.models_dict[model_index].file_path}/{label}", unit="%") as pbar:
             last = 0
             while self.threads[model_index].is_alive() or logfile.exists() or last < 100:
                 if logfile.exists():
@@ -310,7 +322,7 @@ class ComsolManager:
         for s in range(len(self.models_dict[model_index].study)):
             try:
                 logger.info(f"Running study '{self.models_dict[model_index].study[s]}'")
-                self._run_modelutil(self.models[model_index], self.models_dict[model_index].file_path, self.models_dict[model_index].study[s])
+                self._run_modelutil(model_index, s)
                 # Save the results
                 logger.info(f"Study '{self.models_dict[model_index].study[s]}' completed. Saving results...")
                 if self.models_dict[model_index].save_name:
