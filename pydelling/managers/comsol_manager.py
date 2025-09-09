@@ -42,6 +42,8 @@ class ComsolManager:
                      parameter_value: float = None,
                      variable_tag: str = None,
                      save_name: str = None,
+                     model_input: list = None,
+                     model_input_value: list = None,
                      ):
             """
             Initialize the Comsol Model.
@@ -54,6 +56,8 @@ class ComsolManager:
                 parameter_value (str, optional): The value (and units if needed) as a string to set for the specified parameter. Required if parameter is provided. Defaults to None.
                 variable_tag (str, optional): The variable tag to be modified before running the study. Required if parameter_type is 'var'. Defaults to None.
                 save_name (str, optional): The name to save the results file. If not provided the original file will be overwritten. Defaults to None.
+                model_input (list, optional): A list with two elements: [component_tag, modelinput_tag] to set a Model Input before running the study. If not provided, no Model Input will be modified. Defaults to None. Only used in run_sequence_studies.
+                model_input_value (list, optional): A list of values (and units if needed). Defaults to None. Only used in run_sequence_studies.
             """
             self.file_path = file_path
             self.study = study
@@ -62,6 +66,8 @@ class ComsolManager:
             self.parameter_value = parameter_value
             self.variable_tag = variable_tag
             self.save_name = save_name
+            self.model_input = model_input
+            self.model_input_value = model_input_value
             
 
     def run_batch(self,
@@ -130,6 +136,8 @@ class ComsolManager:
                              model_dict: ComsolModel,):
         """
         Run a sequence of studies in a COMSOL Model.
+        model_dict.study must be a list of studies to be run in sequence.
+        If Model Input must be changes provide model_dict.model_input=[component_tag, modelinput_tag] and model_dict.model_input_value a list of values
         Args:
             model_dict (ComsolModel): A ComsolModel instance representing the COMSOL model to be run.
         """
@@ -165,7 +173,8 @@ class ComsolManager:
             model_index (int): The index of the ComsolModel instance in self.models_dict to be run.
             study_index (int): The index of the study if model.study is a list.
         """
-        logfile = Path(f"./logs/temp_{self.models_dict[model_index].file_path}_{int(time.time())}.log")
+        
+        logfile = Path(f"./logs/temp_{Path(self.models_dict[model_index].file_path).name}_{int(time.time())}.log")
         if logfile.exists():
             logfile.unlink()
         
@@ -190,7 +199,7 @@ class ComsolManager:
         else:
             label = self.models_dict[model_index].study[study_index]
 
-        with tqdm(total=100, desc=f"     Running {self.models_dict[model_index].file_path}/{label}", unit="%") as pbar:
+        with tqdm(total=100, desc=f"     Running {Path(self.models_dict[model_index].file_path).name}/{label}", unit="%") as pbar:
             last = 0
             while self.threads[model_index].is_alive() or logfile.exists() or last < 100:
                 if logfile.exists():
@@ -321,6 +330,8 @@ class ComsolManager:
         # Run the specified study
         for s in range(len(self.models_dict[model_index].study)):
             try:
+                if self.models_dict[model_index].model_input is not None:
+                    self.models[model_index].component(self.models_dict[model_index].model_input[0]).common(self.models_dict[model_index].model_input[1]).set('minpScalar',self.models_dict[model_index].model_input_value[s])
                 logger.info(f"Running study '{self.models_dict[model_index].study[s]}'")
                 self._run_modelutil(model_index, s)
                 # Save the results
