@@ -61,6 +61,9 @@ class BaseManager(ABC):
         # Set ssh
         if run_on in ['jureca', 'lumi']:
             self.set_ssh(user=user, pkey_path=pkey_path, project_name=project_name, password=password, platform=run_on)
+            self.on_remote = True
+        else:
+            self.on_remote = False
 
         self.is_dummy = dummy
         shell_script = Path(shell_script).absolute() if shell_script is not None else None
@@ -199,7 +202,7 @@ class BaseManager(ABC):
         else:
             for callback in study.callbacks:
                 if callback.kind == 'pre':
-                    callback.run()
+                    callback.run(self.on_remote)
             study.to_file(self.results_folder / study.name)
 
             # Run the study
@@ -234,7 +237,7 @@ class BaseManager(ABC):
                     step.run()
             for callback in study.callbacks:
                 if callback.kind == 'post':
-                    callback.run()
+                    callback.run(self.on_remote)
 
             study.post_run()
 
