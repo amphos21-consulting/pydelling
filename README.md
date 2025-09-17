@@ -28,6 +28,10 @@ Additionally, pydelling features the **PflotranManager** module, which facilitat
 <span style="background-color: yellow; color: black; padding: 2px 6px; border-radius: 3px;">Under construction</span>
 
 ## Release notes
+### v1.0.4
+- Fix: [ClosedStlGenerator](https://gitlab.amphos21.com/aitirga/pydelling/-/blob/main/pydelling/preprocessing/closed_stl_generator.py?ref_type=heads)
+    - The class was deprecated and was updated again.
+
 ### v1.0.3
 - Fix: [PflotranManager](https://gitlab.amphos21.com/aitirga/pydelling/-/tree/main/pydelling/managers?ref_type=heads)
     - Callbacks had a bug due to conflicts when passing variables that set always `on_remote` variable to `True`.
