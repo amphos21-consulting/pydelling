@@ -17,8 +17,11 @@ class BaseCallback(ABC):
         self.process_kwargs()
 
     @abstractmethod
-    def run(self):
-        """This method executes the callback."""
+    def run(self, on_remote=False):
+        """This method executes the callback.
+        Args:
+            on_remote (optional): Indicates if running on remote. Default is None.
+        """
         self.is_run = True
         logger.info(f"Running callback {self.__class__.__name__} for study {self.study.name}")
         pass

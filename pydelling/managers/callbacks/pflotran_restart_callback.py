@@ -17,9 +17,8 @@ class PflotranRestartCallback(BaseCallback):
                  on_remote: bool = False, **kwargs):
         super().__init__(manager, study, 'pre', on_remote=on_remote, **kwargs)
 
-    def run(self):
+    def run(self, on_remote):
         """This method should detect the hdf5 file in the previous study and copy it to the current study"""
-        on_remote = self.kwargs['on_remote'] if 'on_remote' in self.kwargs else False
         if not on_remote:
             if self.study.idx > 0:
                 prev_study: PflotranStudy = list(self.manager.studies.values())[self.study.idx - 1]
