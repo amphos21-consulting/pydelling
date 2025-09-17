@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import mph
 import re
+import jpype
 from tqdm import tqdm
 import logging
 from pathlib import Path
@@ -39,6 +40,63 @@ class ComsolPostprocessor:
         self.comp = self.model.modelNode(comp_tag)
         self.geom = self.comp.geom(geom_tag)
 
+    class ComsolSurface:
+        """
+        A class to handle the properties of a COMSOL Surface.
+        """
+        def __init__(self,
+                     dataset: str,
+                     expression: str,
+                     unit: str | None = None,
+                     color_table: str | None = None,
+                     color_table_discrete: int | bool = False,
+                     color_table_reverse: bool = False,
+                     color_table_sym: bool = False,
+                     rangelist: list | None = None,
+                     selection: list | None = None | bool,
+                     ):
+            """
+            A class to handle the properties of a COMSOL Surface.
+            Parameters:
+                dataset (str): The name of the dataset to use for the plot. If parent, the plot group dataset is used.
+                expression (str): The expression to plot.
+                unit (str or None): The unit of the expression. If None default unit is used.
+                color_table (str or None): The name of the color table to use for the plot. If None, the template color table is used.
+                color_table_discrete (int or False): The number of discrete colors to use for the plot. If False, the color table is used as default.
+                color_table_reverse (bool): If True, the color table is reversed. Defaults to False.
+                color_table_sym (bool): If True, the color table is symmetric. Defaults to False.
+                rangelist (list or None): The range of the plot. If None, automatic range is used.
+                selection (list or None or False): A list of the domains in the selection. If None, the template selection is used. If False, all domains are used.
+            """
+            self.dataset = dataset
+            self.expression = expression
+            self.unit = unit
+            self.color_table = color_table
+            self.color_table_discrete = color_table_discrete
+            self.color_table_reverse = color_table_reverse
+            self.color_table_sym = color_table_sym
+            self.rangelist = rangelist
+            self.selection = selection
+    
+    class ComsolExportPlot:
+        def __init__(self,
+                     width: int,
+                     height: int,
+                     resolution: int,
+                     font_size: int,
+                     ):
+            """
+            A class to handle the properties of a COMSOL plot export.
+            Parameters:
+                width (int): The width of the plot in pixels.
+                height (int): The height of the plot in pixels.
+                resolution (int): The resolution of the plot in dpi.
+                font_size (int): The font size of the plot.
+            """
+            self.width = width
+            self.height = height
+            self.resolution = resolution
+            self.font_size = font_size
 
     def get_variable_evolution_at_point(self, 
                                         dataset: str, 
@@ -105,7 +163,6 @@ class ComsolPostprocessor:
                                   var_list: list,
                                   point_list: list,
                                   order: int = 0,
-                                  export: bool = True,
                                   file_name: str = 'point_evaluation.xlsx',
                                   ):
         """
@@ -164,16 +221,16 @@ class ComsolPostprocessor:
         pass
 
     def edit_plot(self,
-                    duplicate: bool,
-                    template: str,
-                    surface_dict_list: dict | list,
-                    label: str | None = None,                    
-                    dataset: str | None = None,
-                    time: float | None = None,
-                    export: bool = False,
-                    export_properties: dict | None = None,
-                    export_path: str | None = None,
-                    ):
+                  duplicate: bool,
+                  template: str,
+                  surface_dict_list: ComsolSurface | list[ComsolSurface],
+                  label: str | None = None,                    
+                  dataset: str | None = None,
+                  time: float | None = None,
+                  export: bool = False,
+                  export_properties: ComsolExportPlot | None = None,
+                  export_path: str | None = None,
+                ):
         """
         Plot the results of a COMSOL simulation using a template of a 2D or 3D surface.
 
@@ -181,21 +238,11 @@ class ComsolPostprocessor:
             duplicate (bool): If True, a new plot group is created. If False, the existing plot group is used.
             template (str): The tag of the template to use for the plot.
             label (str or None): The label of the plot group. If None, the label is not set. If duplicate is False, plot group name will not change but label will be used as name of exported file.
-            surface (dict or list): A dictionary (or a list of dictionaries) with the properties of the surfaces to plot. The keys are:
-                surface = {
-                    'dataset': (str or 'parent'), The name of the dataset to use for the plot. If parent, the plot group dataset is used.
-                    'expression': (str), The expression to plot.
-                    'unit': (str or None), The unit of the expression. If None default unit is used.
-                    'color_table': (str or None), The name of the color table to use for the plot. If None, the template color table is used.
-                    'color_table_discrete': (int or False), The number of discrete colors to use for the plot. If False, the color table is used as default.
-                    'color_table_reverse': (bool), If True, the color table is reversed. Defaults to False.
-                    'color_table_sym': (bool), If True, the color table is symmetric. Defaults to False.
-                    'rangelist': (list or None), The range of the plot. If None, automatic range is used.
-                }
+            surface_dict_list (ComsolSurface or list of ComsolSurface): A ComsolSurface object or a list of ComsolSurface objects with the properties of the surface plot(s).
             dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
             time (float or None): The time step to use for the plot. If None, the template time step is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
-            export_properties (dict) [width, height, resolution, font_size]: A dictionary with the properties of the export. If None, the default properties are used.
+            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
             export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
         """
 
@@ -215,31 +262,46 @@ class ComsolPostprocessor:
             N_surfaces = 1
             surface_dict_list = [surface_dict_list]
 
-        if N_surfaces == 1:
-            surface_dict = surface_dict_list[0]
-            surface = plot_group.feature(plot_group.feature().tags()[0])
-            surface.set('expr', surface_dict["expression"])
-            if surface_dict["unit"] is not None: surface.set('unit', surface_dict["unit"])
+        def config_surface(surface, surface_dict):
+            surface.set('expr', surface_dict.expression)
+            if surface_dict.unit is not None: surface.set('unit', surface_dict.unit)
 
-            if surface_dict["color_table"] is not None: surface.set('colortable', surface_dict["color_table"])
-            if surface_dict["color_table_discrete"] is False: surface.set('colortabletype', 'continuous')
-            if surface_dict["color_table_discrete"]:
+            if surface_dict.color_table is not None: surface.set('colortable', surface_dict.color_table)
+            if surface_dict.color_table_discrete is False: surface.set('colortabletype', 'continuous')
+            if surface_dict.color_table_discrete:
                 surface.set('colortabletype', 'discrete')
-                surface.set('bandcount', float(surface_dict["color_table_discrete"]))
-            if surface_dict["color_table_reverse"]: surface.set('colortablerev', 'on')
-            if not surface_dict["color_table_reverse"]: surface.set('colortablerev', 'off')
-            if surface_dict["color_table_sym"]: surface.set('colortablesym', 'on')
-            if not surface_dict["color_table_sym"]: surface.set('colortablesym', 'off')
+                surface.set('bandcount', float(surface_dict.color_table_discrete))
+            if surface_dict.color_table_reverse: surface.set('colortablerev', 'on')
+            if not surface_dict.color_table_reverse: surface.set('colortablerev', 'off')
+            if surface_dict.color_table_sym: surface.set('colortablesym', 'on')
+            if not surface_dict.color_table_sym: surface.set('colortablesym', 'off')
 
-            if surface_dict["rangelist"] is not None:
+            if surface_dict.rangelist is not None:
                 surface.set('rangecoloractive', 'on')
-                surface.set('rangecolormin', float(surface_dict["rangelist"][0]))
-                surface.set('rangecolormax', float(surface_dict["rangelist"][1]))
+                surface.set('rangecolormin', float(surface_dict.rangelist[0]))
+                surface.set('rangecolormax', float(surface_dict.rangelist[1]))
             else: surface.set('rangecoloractive', 'off')
 
+            if surface_dict.selection is not None:
+                try:
+                    surface.feature('sel1')
+                except:
+                    surface.create('sel1', 'Selection')
+
+                if surface_dict.selection is False:
+                    surface.feature('sel1').active(False)
+                else:
+                    JIntArray = jpype.JArray(jpype.JInt)
+                    intlist = JIntArray(surface_dict.selection)
+                    surface.feature('sel1').selection().set(intlist)
 
             if dataset is not None: plot_group.set('data', dataset)
             if time is not None: plot_group.set('t', float(time))
+
+        if N_surfaces == 1:
+            surface_dict = surface_dict_list[0]
+            surface = plot_group.feature(plot_group.feature().tags()[0])
+            config_surface(surface, surface_dict)
 
         elif N_surfaces > 1:
             if dataset is not None: plot_group.set('data', dataset)
@@ -248,24 +310,7 @@ class ComsolPostprocessor:
             for i in range(N_surfaces):
                 surface_dict = surface_dict_list[i]
                 surface = plot_group.feature(plot_group.feature().tags()[i])
-                surface.set('expr', surface_dict["expression"])
-                if surface_dict["unit"] is not None: surface.set('unit', surface_dict["unit"])
-
-                if surface_dict["color_table"] is not None: surface.set('colortable', surface_dict["color_table"])
-                if surface_dict["color_table_discrete"] is False: surface.set('colortabletype', 'continuous')
-                if surface_dict["color_table_discrete"]:
-                    surface.set('colortabletype', 'discrete')
-                    surface.set('bandcount', float(surface_dict["color_table_discrete"]))
-                if surface_dict["color_table_reverse"]: surface.set('colortablerev', 'on')
-                if not surface_dict["color_table_reverse"]: surface.set('colortablerev', 'off')
-                if surface_dict["color_table_sym"]: surface.set('colortablesym', 'on')
-                if not surface_dict["color_table_sym"]: surface.set('colortablesym', 'off')
-
-                if surface_dict["rangelist"] is not None:
-                    surface.set('rangecoloractive', 'on')
-                    surface.set('rangecolormin', float(surface_dict["rangelist"][0]))
-                    surface.set('rangecolormax', float(surface_dict["rangelist"][1]))
-                else: surface.set('rangecoloractive', 'off')
+                config_surface(surface, surface_dict)
 
         plot_group.run()
 
@@ -285,14 +330,53 @@ class ComsolPostprocessor:
             else:
                 image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
             if export_properties is not None:
-                image_export.set('resolution', float(export_properties['resolution']))
+                image_export.set('resolution', float(export_properties.resolution))
                 image_export.set('unit', 'px')
                 image_export.set('size','manualweb')
-                image_export.set('width', float(export_properties['width']))
-                image_export.set('height', float(export_properties['height']))
-                image_export.set('fontsize', float(export_properties['font_size']))
+                image_export.set('width', float(export_properties.width))
+                image_export.set('height', float(export_properties.height))
+                image_export.set('fontsize', float(export_properties.font_size))
             image_export.run()
         
+    def run_derived_value(self,
+                          derived_value_tag: str,
+                          table_tag: str | None = None,
+                          export_path: str | None = None,
+                          ifexists: str = 'overwrite',
+                          ):
+        """
+        Run a derived value and optionally export the results to a file.
+        Arguments:
+            derived_value_tag (str): The tag of the derived value to run.
+            table_tag (str | None): The tag of the table to export the results to. If None, a new table is created.
+            export_path (str | None): The path to export the results to. If None, the results are not exported.
+            ifexists (str): What to do if the export file already exists. Options are 'overwrite' and 'append'. Defaults to 'overwrite'.
+        """
+        if table_tag is None:
+            tables = self.model.result().table().tags()
+            last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tables if tag.startswith('tbl') and re.findall(r'\d+', str(tag))])
+            table_tag = f'tbl{last_tag+1}'
+            self.model.result().table().create(table_tag, 'Table')
+        else:
+            self.model.result().table(table_tag).clearTableData()
+        
+        logger.info(f"Running derived value {derived_value_tag}")
+        self.model.result().numerical(derived_value_tag).set('table', table_tag)
+        self.model.result().numerical(derived_value_tag).setResult()
+
+        if export_path is not None:
+            logger.info(f"Exporting derived value {derived_value_tag} to {export_path}")
+            export_list = self.model.result().export().tags()
+            if 'tbl1' in export_list:
+                export = self.model.result().export('tbl1')
+            else:
+                export = self.model.result().export().create('tbl1', 'Table')
+            export.set('header', False)
+            export.set('table', table_tag)
+            export.set('ifexists', ifexists)
+            export.set('filename', export_path)
+            export.run()
+
 
     def create_special_dataset():
         pass
