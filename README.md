@@ -28,6 +28,9 @@ Additionally, pydelling features the **PflotranManager** module, which facilitat
 <span style="background-color: yellow; color: black; padding: 2px 6px; border-radius: 3px;">Under construction</span>
 
 ## Release notes
+### v1.0.3
+- Fix: [PflotranManager](https://gitlab.amphos21.com/aitirga/pydelling/-/tree/main/pydelling/managers?ref_type=heads)
+    - Callbacks had a bug due to conflicts when passing variables that set always `on_remote` variable to `True`.
 
 ### v1.0.2
 - Feat: [iGPReader.assign_material_from_stl()](https://gitlab.amphos21.com/aitirga/pydelling/-/blob/main/pydelling/readers/iGPReader/io/igp_reader.py#L932)
