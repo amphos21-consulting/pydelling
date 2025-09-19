@@ -70,9 +70,10 @@ class ComsolPostprocessor:
                 rangelist (list or None): The range of the plot. If None, automatic range is used.
                 selection (list or str or None): A list of the domains in the selection. If 'all', all the domains are used. If a selection_tag is given, it is used. If None, the template selection is used.
             """
-            self.dataset = dataset
             self.expression = expression
             self.unit = unit
+            self.dataset = dataset
+            self.dataset_time = dataset_time
             self.color_table = color_table
             self.color_table_discrete = color_table_discrete
             self.color_table_reverse = color_table_reverse
