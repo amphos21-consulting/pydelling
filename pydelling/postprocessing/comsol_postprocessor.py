@@ -312,7 +312,7 @@ class ComsolPostprocessor:
         if label is not None: plot_group.label(label)
         if isinstance(surface_dict_list, list):
             N_surfaces = len(surface_dict_list)
-        elif isinstance(surface_dict_list, self.ComsolSurface):
+        else:
             N_surfaces = 1
             surface_dict_list = [surface_dict_list]
 
