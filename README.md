@@ -28,6 +28,12 @@ Additionally, pydelling features the **PflotranManager** module, which facilitat
 <span style="background-color: yellow; color: black; padding: 2px 6px; border-radius: 3px;">Under construction</span>
 
 ## Release notes
+### v1.0.5
+- Feat: [ComsolManager](https://gitlab.amphos21.com/aitirga/pydelling/-/blob/main/pydelling/managers/comsol_manager.py?ref_type=heads)
+    - A class that allows to run in batch several COMSOL files or a parametric sweep of one .mph file.
+- Feat: [ComsolPostprocessor](https://gitlab.amphos21.com/aitirga/pydelling/-/blob/main/pydelling/postprocessing/comsol_postprocessor.py?ref_type=heads)
+    - A class to automatize the postprocessing of COMSOL models
+
 ### v1.0.4
 - Fix: [ClosedStlGenerator](https://gitlab.amphos21.com/aitirga/pydelling/-/blob/main/pydelling/preprocessing/closed_stl_generator.py?ref_type=heads)
     - The class was deprecated and was updated again.
