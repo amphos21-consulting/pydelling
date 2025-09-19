@@ -44,6 +44,7 @@ dependencies = [
     "docker>=7.1.0",
     "extra-streamlit-components>=0.1.71",
     "translate>=3.6.1",
+    "mph>=1.2.4",
 ]
 
 [tool.hatch.build.targets."pydelling"]
