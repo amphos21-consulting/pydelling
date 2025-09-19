@@ -45,28 +45,30 @@ class ComsolPostprocessor:
         A class to handle the properties of a COMSOL Surface.
         """
         def __init__(self,
-                     dataset: str,
                      expression: str,
                      unit: str | None = None,
+                     dataset: str | None = None,
+                     dataset_time: float | None = None,
                      color_table: str | None = None,
                      color_table_discrete: int | bool = False,
                      color_table_reverse: bool = False,
                      color_table_sym: bool = False,
                      rangelist: list | None = None,
-                     selection: list | None = None | bool,
+                     selection: list | str | None = None,
                      ):
             """
             A class to handle the properties of a COMSOL Surface.
             Parameters:
-                dataset (str): The name of the dataset to use for the plot. If parent, the plot group dataset is used.
                 expression (str): The expression to plot.
                 unit (str or None): The unit of the expression. If None default unit is used.
+                dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
+                dataset_time (float or None): The time to use for the dataset, needed if dataset is not "parent". If None, the template time is used.
                 color_table (str or None): The name of the color table to use for the plot. If None, the template color table is used.
                 color_table_discrete (int or False): The number of discrete colors to use for the plot. If False, the color table is used as default.
                 color_table_reverse (bool): If True, the color table is reversed. Defaults to False.
                 color_table_sym (bool): If True, the color table is symmetric. Defaults to False.
                 rangelist (list or None): The range of the plot. If None, automatic range is used.
-                selection (list or None or False): A list of the domains in the selection. If None, the template selection is used. If False, all domains are used.
+                selection (list or str or None): A list of the domains in the selection. If 'all', all the domains are used. If a selection_tag is given, it is used. If None, the template selection is used.
             """
             self.dataset = dataset
             self.expression = expression
@@ -77,7 +79,60 @@ class ComsolPostprocessor:
             self.color_table_sym = color_table_sym
             self.rangelist = rangelist
             self.selection = selection
-    
+        
+    class ComsolLine:
+        """
+        A class to handle the properties of a COMSOL Line.
+        """
+        def __init__(self,
+                        expression: str,
+                        unit: str | None = None,
+                        dataset: str | None = None,
+                        dataset_param: str | None = None,
+                        dataset_time: list[float] | None = None,
+                        xdata: str | None = None,
+                        xdataexpr: str | None = None,
+                        xdataunit: str | None = None,
+                        linecolor: str | None = None,
+                        colorcycle: str | None = None,
+                        linestyle: str | None = None,
+                        linewidth: float | None = None,
+                        marker: str | None = None,
+                        selection: str | list | None = None,
+                        ):
+            """
+            A class to handle the properties of a COMSOL Line.
+            Parameters:
+                expression (str): The expression to plot.
+                unit (str or None): The unit of the expression. If None default unit is used.
+                dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
+                dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, the template parameter is used.
+                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, the template time is used.
+                xdata (str or None): Can be "arc" or "expr" for line graphs or "solution" or "expr" for point graphs. If None, the default x-axis is used.
+                xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used.
+                xdataunit (str or None): The unit of the x-axis expression. If None, default unit is used.
+                linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, the template color is used.
+                colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, the template color cycle is used.
+                linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, the template style is used.
+                linewidth (float or None): The width of the line in points. If None, the template width is used.
+                marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, the template marker is used.
+                selection (str or list or None): A list of points that will be plotted (in point graphs). If "all", all points are plotted. If a selection_tag is given, it is used. If None, the template selection is used.
+            """
+            self.expression = expression
+            self.unit = unit
+            self.dataset = dataset
+            self.dataset_param = dataset_param
+            self.dataset_time = dataset_time
+            self.xdata = xdata
+            self.xdataexpr = xdataexpr
+            self.xdataunit = xdataunit
+            self.linecolor = linecolor
+            self.colorcycle = colorcycle
+            self.linestyle = linestyle
+            self.linewidth = linewidth
+            self.marker = marker
+            self.selection = selection
+
     class ComsolExportPlot:
         def __init__(self,
                      width: int,
@@ -217,10 +272,8 @@ class ComsolPostprocessor:
 
         return df
 
-    def plot_profiles():
-        pass
 
-    def edit_plot(self,
+    def edit_surface_plot(self,
                   duplicate: bool,
                   template: str,
                   surface_dict_list: ComsolSurface | list[ComsolSurface],
@@ -239,7 +292,7 @@ class ComsolPostprocessor:
             template (str): The tag of the template to use for the plot.
             label (str or None): The label of the plot group. If None, the label is not set. If duplicate is False, plot group name will not change but label will be used as name of exported file.
             surface_dict_list (ComsolSurface or list of ComsolSurface): A ComsolSurface object or a list of ComsolSurface objects with the properties of the surface plot(s).
-            dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
+            dataset (str or None): The name of the dataset to use for the plot group. If None, the template dataset is used.
             time (float or None): The time step to use for the plot. If None, the template time step is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
@@ -258,11 +311,13 @@ class ComsolPostprocessor:
         if label is not None: plot_group.label(label)
         if isinstance(surface_dict_list, list):
             N_surfaces = len(surface_dict_list)
-        elif isinstance(surface_dict_list, dict):
+        elif isinstance(surface_dict_list, self.ComsolSurface):
             N_surfaces = 1
             surface_dict_list = [surface_dict_list]
 
-        def config_surface(surface, surface_dict):
+        def config_surface(surface, surface_dict, plot_group):
+            if surface_dict.dataset is not None: surface.set('data', surface_dict.dataset)
+            if surface_dict.dataset_time is not None: surface.set('t', float(surface_dict.dataset_time))
             surface.set('expr', surface_dict.expression)
             if surface_dict.unit is not None: surface.set('unit', surface_dict.unit)
 
@@ -287,9 +342,11 @@ class ComsolPostprocessor:
                     surface.feature('sel1')
                 except:
                     surface.create('sel1', 'Selection')
-
-                if surface_dict.selection is False:
-                    surface.feature('sel1').active(False)
+                if isinstance(surface_dict.selection, str):
+                    if surface_dict.selection == 'all':
+                        surface.feature('sel1').active(False)
+                    else:
+                        surface.feature('sel1').selection().named(surface_dict.selection)
                 else:
                     JIntArray = jpype.JArray(jpype.JInt)
                     intlist = JIntArray(surface_dict.selection)
@@ -301,7 +358,7 @@ class ComsolPostprocessor:
         if N_surfaces == 1:
             surface_dict = surface_dict_list[0]
             surface = plot_group.feature(plot_group.feature().tags()[0])
-            config_surface(surface, surface_dict)
+            config_surface(surface, surface_dict, plot_group)
 
         elif N_surfaces > 1:
             if dataset is not None: plot_group.set('data', dataset)
@@ -310,7 +367,7 @@ class ComsolPostprocessor:
             for i in range(N_surfaces):
                 surface_dict = surface_dict_list[i]
                 surface = plot_group.feature(plot_group.feature().tags()[i])
-                config_surface(surface, surface_dict)
+                config_surface(surface, surface_dict, plot_group)
 
         plot_group.run()
 
@@ -378,8 +435,240 @@ class ComsolPostprocessor:
             export.run()
 
 
-    def create_special_dataset():
-        pass
+    def edit_line_graph(self,
+                        duplicate: bool,
+                        template: str,
+                        line_dict_list: ComsolLine | list[ComsolLine],
+                        label: str | None = None,                    
+                        dataset: str | None = None,
+                        time: list[float] | None = None,
+                        export: bool = False,
+                        export_properties: ComsolExportPlot | None = None,
+                        export_path: str | None = None,
+                        ):
+        """
+        Plot the results of a COMSOL simulation using a template of a 1D line graph.
+
+        Parameters:
+            duplicate (bool): If True, a new plot group is created. If False, the existing plot group is used.
+            template (str): The tag of the template to use for the plot.
+            label (str or None): The label of the plot group. If None, the label is not set. If duplicate is False, plot group name will not change but label will be used as name of exported file.
+            line_dict_list (ComsolLine or list of ComsolLine): A ComsolLine object or a list of ComsolLine objects with the properties of the line plot(s).
+            dataset (str or None): The name of the dataset to use for the plot group. If None, the template dataset is used.
+            time (list of float or None): The time steps to use for the plot. If None, the template time step is used.
+            export (bool): If True, the plot is exported to a file. Defaults to False.
+            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
+            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
+        """
+        tags = self.model.result().tags()
+        last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
+
+        original_pg = self.model.result(template)
+        if duplicate:
+            plot_group = self.model.result().duplicate(f'pg{last_tag+1}', template)
+        else:
+            plot_group = original_pg
+
+        if label is not None: plot_group.label(label)
+        if isinstance(line_dict_list, list):
+            N_lines = len(line_dict_list)
+        elif isinstance(line_dict_list, self.ComsolLine):
+            N_lines = 1
+            line_dict_list = [line_dict_list]
+        
+        if time is not None:
+            for n in range(len(time)):
+                time[n] = float(time[n])
+            plot_group.set('t', time)
+
+        def config_line(line, line_dict, plot_group):
+            if line_dict.dataset is not None: line.set('data', line_dict.dataset)
+            if line_dict.dataset_param is not None: line.set('solutionparams', line_dict.dataset_param)
+            if line_dict.dataset_time is not None:
+                for n in range(len(line_dict.dataset_time)):
+                    line_dict.dataset_time[n] = float(line_dict.dataset_time[n])
+                line.set('t', line_dict.dataset_time)
+                
+            line.set('expr', line_dict.expression)
+            if line_dict.unit is not None: line.set('unit', line_dict.unit)
+            if line_dict.xdata is not None:
+                line.set('xdata', line_dict.xdata)
+                if line_dict.xdata == 'expr':
+                    if line_dict.xdataexpr is None:
+                        raise ValueError("If xdata is 'expr', xdataexpr must be provided.")
+                    else:
+                        line.set('xdataexpr', line_dict.xdataexpr)
+                    if line_dict.xdataunit is not None:
+                        line.set('xdataunit', line_dict.xdataunit)
+            if line_dict.linecolor is not None: line.set('linecolor', line_dict.linecolor)
+            if line_dict.colorcycle is not None: line.set('colorcycle', line_dict.colorcycle)
+            if line_dict.linestyle is not None: line.set('linestyle', line_dict.linestyle)
+            if line_dict.linewidth is not None: line.set('linewidth', float(line_dict.linewidth))
+            if line_dict.marker is not None:
+                line.set('linemarker', line_dict.marker)
+                line.set('markerpos', 'datapoints')
+        
+        if N_lines == 1:
+            line_dict = line_dict_list[0]
+            line = plot_group.feature(plot_group.feature().tags()[0])
+            config_line(line, line_dict, plot_group)
+        elif N_lines > 1:
+            if dataset is not None: plot_group.set('data', dataset)
+
+            for i in range(N_lines):
+                line_dict = line_dict_list[i]
+                line = plot_group.feature(plot_group.feature().tags()[i])
+                config_line(line, line_dict, plot_group)
+        
+        plot_group.run()
+
+        if export:
+            # Check if 'img1' already exists, if so, remove it before creating
+            export_tags = self.model.result().export().tags()
+            if 'img1' in export_tags:
+                image_export = self.model.result().export().remove('img1')
+            image_export = self.model.result().export().create('img1', 'Image')
+
+            image_export.set('plotgroup', f'pg{last_tag+1}')
+            if label is None:
+                raise ValueError("If exporting, label must be set to name the exported file.")
+            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
+            if export_path is None:
+                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
+            else:
+                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
+            if export_properties is not None:
+                image_export.set('resolution', float(export_properties.resolution))
+                image_export.set('unit', 'px')
+                image_export.set('size','manualweb')
+                image_export.set('width', float(export_properties.width))
+                image_export.set('height', float(export_properties.height))
+                image_export.set('fontsize', float(export_properties.font_size))
+            image_export.run()
+
+    def edit_point_graph(self,
+                        duplicate: bool,
+                        template: str,
+                        line_dict_list: ComsolLine | list[ComsolLine],
+                        label: str | None = None,                    
+                        dataset: str | None = None,
+                        time: str | list[float] | None = None,
+                        export: bool = False,
+                        export_properties: ComsolExportPlot | None = None,
+                        export_path: str | None = None,
+                        ):
+        """
+        Plot the results of a COMSOL simulation using a template of a 1D point graph.
+
+        Parameters:
+            duplicate (bool): If True, a new plot group is created. If False, the existing plot group is used.
+            template (str): The tag of the template to use for the plot.
+            label (str or None): The label of the plot group. If None, the label is not set. If duplicate is False, plot group name will not change but label will be used as name of exported file.
+            line_dict_list (ComsolLine or list of ComsolLine): A ComsolLine object or a list of ComsolLine objects with the properties of the line plot(s).
+            dataset (str or None): The name of the dataset to use for the plot group. If None, the template dataset is used.
+            time (str or list of float or None): The time steps to use for the plot. If "all", all time steps are used. If None, the template time step is used.
+            export (bool): If True, the plot is exported to a file. Defaults to False.
+            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
+            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
+        """
+        tags = self.model.result().tags()
+        last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
+
+        original_pg = self.model.result(template)
+        if duplicate:
+            plot_group = self.model.result().duplicate(f'pg{last_tag+1}', template)
+        else:
+            plot_group = original_pg
+
+        if label is not None: plot_group.label(label)
+        if isinstance(line_dict_list, list):
+            N_lines = len(line_dict_list)
+        elif isinstance(line_dict_list, self.ComsolLine):
+            N_lines = 1
+            line_dict_list = [line_dict_list]
+        
+        if time is not None:
+            if time == 'all':
+                plot_group.set('innerinput', 'all')
+            else:
+                for n in range(len(time)):
+                    time[n] = float(time[n])
+                plot_group.set('t', time)
+
+        def config_line(line, line_dict, plot_group):
+            if line_dict.dataset is not None: line.set('data', line_dict.dataset)
+            if line_dict.dataset_param is not None: line.set('solutionparams', line_dict.dataset_param)
+            if line_dict.dataset_time is not None:
+                for n in range(len(line_dict.dataset_time)):
+                    line_dict.dataset_time[n] = float(line_dict.dataset_time[n])
+                line.set('t', line_dict.dataset_time)
+                
+            if line_dict.selection is not None:
+                if isinstance(line_dict.selection, str):
+                    if line_dict.selection == 'all':
+                        line.selection().all()
+                    else:
+                        line.selection().named(line_dict.selection)
+                else:
+                    line.selection().set(line_dict.selection)
+
+            line.set('expr', line_dict.expression)
+            if line_dict.unit is not None: line.set('unit', line_dict.unit)
+            if line_dict.xdata is not None:
+                line.set('xdata', line_dict.xdata)
+                if line_dict.xdata == 'expr':
+                    if line_dict.xdataexpr is None:
+                        raise ValueError("If xdata is 'expr', xdataexpr must be provided.")
+                    else:
+                        line.set('xdataexpr', line_dict.xdataexpr)
+                if line_dict.xdataunit is not None:
+                    line.set('xdataunit', line_dict.xdataunit)
+
+            if line_dict.linecolor is not None: line.set('linecolor', line_dict.linecolor)
+            if line_dict.colorcycle is not None: line.set('colorcycle', line_dict.colorcycle)
+            if line_dict.linestyle is not None: line.set('linestyle', line_dict.linestyle)
+            if line_dict.linewidth is not None: line.set('linewidth', float(line_dict.linewidth))
+            if line_dict.marker is not None:
+                line.set('linemarker', line_dict.marker)
+                line.set('markerpos', 'datapoints')
+        
+        if N_lines == 1:
+            line_dict = line_dict_list[0]
+            line = plot_group.feature(plot_group.feature().tags()[0])
+            config_line(line, line_dict, plot_group)
+        elif N_lines > 1:
+            if dataset is not None: plot_group.set('data', dataset)
+
+            for i in range(N_lines):
+                line_dict = line_dict_list[i]
+                line = plot_group.feature(plot_group.feature().tags()[i])
+                config_line(line, line_dict, plot_group)
+        
+        plot_group.run()
+
+        if export:
+            # Check if 'img1' already exists, if so, remove it before creating
+            export_tags = self.model.result().export().tags()
+            if 'img1' in export_tags:
+                image_export = self.model.result().export().remove('img1')
+            image_export = self.model.result().export().create('img1', 'Image')
+
+            image_export.set('plotgroup', f'pg{last_tag+1}')
+            if label is None:
+                raise ValueError("If exporting, label must be set to name the exported file.")
+            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
+            if export_path is None:
+                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
+            else:
+                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
+            if export_properties is not None:
+                image_export.set('resolution', float(export_properties.resolution))
+                image_export.set('unit', 'px')
+                image_export.set('size','manualweb')
+                image_export.set('width', float(export_properties.width))
+                image_export.set('height', float(export_properties.height))
+                image_export.set('fontsize', float(export_properties.font_size))
+            image_export.run()
 
     def save(self, save_path: str = None):
         """
