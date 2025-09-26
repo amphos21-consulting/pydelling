@@ -1,21 +1,20 @@
-image: python:3.9
+image: python:3.11
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
 
 stages:
   - test
+  - build-docs
   - pages
+  - wiki
 
-pages:
-  script:
-    - pip install mkdocs mkdocstrings[python]
-    - pip install mkdocs-material
-    - mkdocs build
-    - mv site public
-  artifacts:
-    paths:
-      - public
-  only:
-    - main  # Adjust if you deploy from a different branch
-
+# Test stage with coverage reporting
 test:
   stage: test
   image: docker:latest
@@ -29,5 +28,173 @@ test:
   script:
     - apk update
     - apk add just
-    - just up; just test
+    # Run tests with coverage and copy reports to host (all in one command)
+    - just ci-test-reports
   
+  after_script:
+    - docker compose down --remove-orphans || true
+  
+# This is broken for now, error 400 in gitlab
+#  artifacts:
+#    when: always
+#    paths:
+#      - coverage.xml
+#      - report.xml
+#      - htmlcov/
+#    reports:
+#      junit: report.xml
+#      coverage_report:
+#        coverage_format: cobertura
+#        path: coverage.xml
+#    expire_in: 1 week
+#
+## Documentation build stage
+#build-docs:
+#  stage: build-docs
+#  image: docker:latest
+#  services:
+#   - name: docker:dind
+#     
+#  variables:
+#    DOCKER_DRIVER: overlay2
+#    DOCKER_TLS_CERTDIR: ""
+#    NO_PROXY: "gitlab.amphos21.com"
+#    
+#  before_script:
+#    - apk update
+#    - apk add just
+#    
+#  script:
+#    - just build  
+#    - docker compose run --rm -v $(pwd):/host pydelling sh -c "make docs-install && make docs-build && cp -r /app/site /host/site"
+#  
+#  after_script:
+#    - docker compose down --remove-orphans || true
+#  artifacts:
+#    name: "docs_$CI_COMMIT_SHORT_SHA"
+#    paths:
+#      - site/
+#    expire_in: 1 day
+#  only:
+#    - main
+#    - merge_requests
+#    - feature/add_documentation
+#
+## GitLab Pages deployment
+#pages:
+#  stage: pages
+#  image: python:3.11
+#  dependencies:
+#    - build-docs
+#  script:
+#    # Copy the built site to public directory for GitLab Pages
+#    - mkdir -p public
+#    - cp -r site/* public/
+#  artifacts:
+#    paths:
+#      - public/
+#    expire_in: 30 days
+#  only:
+#    - main
+#    - feature/add_documentation
+#
+## Wiki preparation and upload
+#wiki-sync:
+#  stage: wiki
+#  image: docker:latest
+#  services:
+#   - name: docker:dind
+#     
+#  variables:
+#    DOCKER_DRIVER: overlay2
+#    DOCKER_TLS_CERTDIR: ""
+#    
+#  dependencies:
+#    - build-docs
+#    
+#  before_script:
+#    - apk update
+#    - apk add just git pandoc
+#    
+#  script:
+#    - just build 
+#    - docker compose run --rm -v $(pwd):/host pydelling sh -c "make docs-install && make docs-wiki-prepare && cp -r /app/wiki-export /host/wiki-export 2>/dev/null || echo 'No wiki files to copy'"
+#    # Clone the wiki repository using CI job token
+#    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.wiki.git wiki-repo
+#    - cd wiki-repo
+#    - git config user.name "GitLab CI"
+#    - git config user.email "gitlab-ci@${CI_SERVER_HOST}"
+#    # Copy prepared wiki files
+#    - cp -r ../wiki-export/* . 2>/dev/null || echo "No wiki files to copy"
+#    # Create/update home page
+#    - |
+#      if [ ! -f "home.md" ]; then
+#        cat > home.md << 'EOF'
+#      # pydelling Documentation
+#      
+#      Welcome to the pydelling wiki! This documentation is automatically generated from the main repository.
+#      
+#      ## Navigation
+#      
+#      - [Installation](docs-installation)
+#      - [Getting Started](docs-getting_started)
+#      - [Usage Guide](docs-usage)
+#      - [API Reference](api-reference)
+#      
+#      ## Links
+#      
+#      - [Main Repository](${CI_PROJECT_URL})
+#      - [Full Documentation Site](${CI_PAGES_URL})
+#      
+#      ---
+#      *This wiki is automatically updated from the main repository documentation.*
+#      EOF
+#      fi
+#    # Add and commit changes
+#    - git add .
+#    - git diff --staged --quiet || git commit -m "Auto-update wiki from CI pipeline ${CI_PIPELINE_ID}"
+#    - git push origin master || git push origin main
+#    
+#  after_script:
+#    - docker compose down --remove-orphans || true
+#    # Clone the wiki repository using CI job token
+#    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.wiki.git wiki-repo
+#    - cd wiki-repo
+#    - git config user.name "GitLab CI"
+#    - git config user.email "gitlab-ci@${CI_SERVER_HOST}"
+#    # Copy prepared wiki files
+#    - cp -r ../wiki-export/* . 2>/dev/null || echo "No wiki files to copy"
+#    # Create/update home page
+#    - |
+#      if [ ! -f "home.md" ]; then
+#        cat > home.md << 'EOF'
+#      # pydelling Documentation
+#      
+#      Welcome to the pydelling wiki! This documentation is automatically generated from the main repository.
+#      
+#      ## Navigation
+#      
+#      - [Installation](docs-installation)
+#      - [Getting Started](docs-getting_started)
+#      - [Usage Guide](docs-usage)
+#      - [API Reference](api-reference)
+#      
+#      ## Links
+#      
+#      - [Main Repository](${CI_PROJECT_URL})
+#      - [Full Documentation Site](${CI_PAGES_URL})
+#      
+#      ---
+#      *This wiki is automatically updated from the main repository documentation.*
+#      EOF
+#      fi
+#    # Add and commit changes
+#    - git add .
+#    - git diff --staged --quiet || git commit -m "Auto-update wiki from CI pipeline ${CI_PIPELINE_ID}"
+#    - git push origin master || git push origin main
+#  only:
+#    - main
+#    - feature/add_documentation
+#  when: manual
+#  allow_failure: true
+#  

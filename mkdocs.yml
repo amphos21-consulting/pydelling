@@ -1,48 +1,198 @@
-site_name: pydelling documentation
-theme:
-  features:
-    - navigation.sections
-    - navigation.expand
-  name: material
-  palette:
-    primary: red
+site_name: pydelling - Numerical Modeling Toolkit
+site_description: Comprehensive Python library for mesh preprocessing and numerical modeling workflows
+site_url: https://gitlab.amphos21.com/aitirga/pydelling
+repo_url: https://gitlab.amphos21.com/aitirga/pydelling
+repo_name: GitLab Repository
+edit_uri: edit/main/docs/
 
+# Navigation
 nav:
-  - "Getting started": docs-getting_started.md
-  - "Usage examples": docs-usage.md
-  - "Interpolation":
-      - "Sparse interpolator": interpolation/docs-paraview-filters-append_arc_length.md
-      - "KDE estimator": interpolation/docs-interpolation-kde.md
-  - "Preprocessing":
-      - "Dfn Preprocessor": preprocessing/docs-preprocessing-dfn_preprocessor.md
-      - "Dfn Upscaler": preprocessing/docs-preprocessing-dfn_upscaler.md
-      - "Mesh preprocessor": preprocessing/docs-preprocessing-mesh_preprocessor.md
-  - "Utilities":
-      - "Geometry operations": utilities/docs-utilities-geometry.md
-      - "General utilities": utilities/docs-utilities-general.md
-  - "Readers":
-      - "Centroid reader": readers/docs-readers-centroid.md
-      - "ConnectFlow reader": readers/docs-readers-connectflow.md
-      - "ConnectFlow Mesh reader": readers/docs-readers-connectflowmesh.md
-      - "FEM reader": readers/docs-readers-fem.md
-      - "OpenFOAM reader": readers/docs-readers-openfoam.md
-      - "PFLOTRAN observation point reader": readers/docs-readers-pflotran_observation_point.md
-  - "Writers":
-      - "PFLOTRAN HDF5 centroid writer": writers/docs-writers-pflotran_hdf5_centroid.md
-      - "PFLOTRAN HDF5 raster writer": writers/docs-writers-pflotran_hdf5_raster.md
-      - "OpenFOAM variable writer": writers/docs-writers-openfoam_variable.md
-  - "Paraview processor":
-      - "Filters":
-          - "AppendArcLength": paraview_processor/docs-paraview-filters-append_arc_length.md
-          - "Calculator": paraview_processor/docs-paraview-filters-calculator.md
-          - "CellDataToPointData": paraview_processor/docs-paraview-filters-cell_data_to_point_data.md
-          - "Clip": paraview_processor/docs-paraview-filters-clip.md
-          - "StreamTracerWithCustomSource": paraview_processor/docs-paraview-filters-stream_tracer_with_custom_source.md
+  - Home: index.md
+  - Getting Started: 
+    - Installation: docs-installation.md
+    - Quick Start: docs-getting_started.md
+    - Usage Guide: docs-usage.md
+  
+  - API Reference:
+    - Overview: api-reference.md
+    - Readers: readers/api.md
+    - Writers: writers/api.md
+    - Preprocessing: preprocessing/api.md
+    - Managers: managers/api.md
+    - Interpolation: interpolation/api.md
+    - Utilities: utilities/api.md
+    - ParaView Processor: paraview_processor/api.md
+  
+  - Examples:
+    - Code Snippets: examples/code-snippets.md
+    - Tutorials: examples/tutorials.md
+    - Use Cases: examples/use-cases.md
+  
+  - Development:
+    - Contributing: development/contributing.md
+    - Development Setup: development/setup.md
+    - Testing: development/testing.md
+    - GitLab CI Documentation: development/gitlab-ci-docs.md
+    - Release Notes: development/releases.md
 
+# Theme configuration
+theme:
+  name: material
+  
+  # Theme features
+  features:
+#    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+    - content.tabs.link
+    - toc.integrate
+    - header.autohide
+  
+  # Color palette
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: pydelling-green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+        primary: deep orange
 
+    
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: pydelling-green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  # Fonts
+  font:
+    text: Roboto
+    code: Roboto Mono
+  
+  # Logo and favicon
+  logo: pydelling_logo_square.png
+  favicon: pydelling_logo_square.png
+  
+  # Language
+  language: en
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - abbr
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - toc:
+      permalink: true
+      permalink_title: Anchor link to this section
+      toc_depth: 4
+      baselevel: 1
+      anchorlink: true
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: amphos21
+      repo: pydelling
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Plugins
 plugins:
-- mkdocstrings:
-    default_handler: python
-- search
-repo_url: https://github.com/aitirga/edusheets
-repo_name: GitHub repository
+  - search
+  
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [.]
+          options:
+            show_source: false
+            show_root_heading: true
+            show_root_toc_entry: true
+            heading_level: 2
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: alphabetical
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: true
+            merge_init_into_class: true
+            show_submodules: true
+            show_bases: false
+            show_inheritance_diagram: false
+
+# Extra CSS and JavaScript
+extra_css:
+  - stylesheets/extra.css
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
+
+extra_javascript:
+  - javascripts/anchor-fix.js
+  - javascripts/katex.js
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js
+
+# Extra configuration
+extra:
+  version:
+    provider: mike
+  
+  social:
+    - icon: fontawesome/brands/gitlab
+      link: https://gitlab.amphos21.com/aitirga/pydelling
+      name: GitLab Repository
+    
+    - icon: fontawesome/solid/globe
+      link: https://amphos21.com
+      name: Amphos 21 Website
+    
+    - icon: fontawesome/solid/envelope
+      link: mailto:digital-solutions@amphos21.com
+      name: Contact Us
+
+  generator: false
+
+# Copyright
+copyright: Copyright &copy; 2024 Amphos 21 - Digital Solutions Team

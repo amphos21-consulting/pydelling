@@ -6,6 +6,7 @@ from .structured_list_reader import StructuredListReader
 from .open_foam_reader import OpenFoamReader
 from .streamline_reader import StreamlineReader
 from .vtk_reader import VtkReader
+from .tiff_reader import TiffReader
 from .iGPReader.io.igp_reader import iGPReader
 from .connect_flow_reader import ConnectFlowReader
 from .pflotran_processing_utils import PflotranProcessingUtils
