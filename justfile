@@ -22,6 +22,20 @@ shell: up
 test: up
 	docker compose exec pydelling python -m unittest discover
 
+coverage: up
+	docker compose exec pydelling python -m pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --cov-report=term
+
+#Run tests with coverage for CI (includes Cobertura format)
+test-ci: up
+	docker compose exec pydelling python -m pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short
+
+#Run tests with coverage for CI and copy reports to host
+ci-test-reports: up
+	docker compose exec pydelling python -m pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short
+	docker compose cp pydelling:/app/coverage.xml ./coverage.xml
+	docker compose cp pydelling:/app/report.xml ./report.xml
+	docker compose cp pydelling:/app/htmlcov ./htmlcov || echo "HTML coverage report not found"
+
 #Build production image
 compile: up
 	## Build docker image

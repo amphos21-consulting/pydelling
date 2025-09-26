@@ -1,1 +1,0 @@
-:::pydelling.writers.OpenFoamVariableWriter
