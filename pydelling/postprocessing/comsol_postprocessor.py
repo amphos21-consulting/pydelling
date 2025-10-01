@@ -640,14 +640,14 @@ class ComsolPostprocessor:
 
     def export_image(self,
                      plotgroup_tag: str,
-                     export_properties: ComsolExportPlot | None = None,
-                     export_path: str):
+                     export_path: str,
+                     export_properties: ComsolExportPlot | None = None,):
         """
         Export a plot group to an image file.
         Parameters:
             plotgroup_tag (str): The tag of the plot group to export.
-            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
             export_path (str): The path to the folder to save the exported plot.
+            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
         """
         # Check if 'img1' already exists, if so, remove it before creating
         export_tags = self.model.result().export().tags()

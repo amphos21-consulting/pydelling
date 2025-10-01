@@ -1,8 +1,16 @@
 import unittest
 from pydelling.postprocessing.comsol_postprocessor import ComsolPostprocessor
 from pydelling.utils.configuration_utils import test_data_path
+import mph
 
-@unittest.skip("ComsolManager and ComsolPostprocessor tests only run locally with a valid COMSOL installation.")
+def skip_comsol_tests():
+    try:
+        mph.start()
+        return False
+    except:
+        return True
+
+@unittest.skipIf(skip_comsol_tests(), "COMSOL tests are skipped because COMSOL is not installed.")
 class TestComsolPostprocessor(unittest.TestCase):
     def setUp(self):
         # Initialize the ComsolPostprocessor with a test file
