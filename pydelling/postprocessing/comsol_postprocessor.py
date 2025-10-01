@@ -283,7 +283,7 @@ class ComsolPostprocessor:
                   time: float | None = None,
                   export: bool = False,
                   export_properties: ComsolExportPlot | None = None,
-                  export_path: str | None = None,
+                  export_folder: str | None = None,
                 ):
         """
         Plot the results of a COMSOL simulation using a template of a 2D or 3D surface.
@@ -297,7 +297,7 @@ class ComsolPostprocessor:
             time (float or None): The time step to use for the plot. If None, the template time step is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
-            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
+            export_folder (str or None): The path to the folder to save the exported plot. If None, the default path is used.
         """
 
         tags = self.model.result().tags()
@@ -373,28 +373,17 @@ class ComsolPostprocessor:
         plot_group.run()
 
         if export:
-            # Check if 'img1' already exists, if so, remove it before creating
-            export_tags = self.model.result().export().tags()
-            if 'img1' in export_tags:
-                image_export = self.model.result().export().remove('img1')
-            image_export = self.model.result().export().create('img1', 'Image')
-
-            image_export.set('plotgroup', f'pg{last_tag+1}')
             if label is None:
                 raise ValueError("If exporting, label must be set to name the exported file.")
-            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
-            if export_path is None:
-                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
+            
+            if export_folder is not None:
+                export_path = f'{export_folder}/pg{last_tag+1}_{label}.png'
             else:
-                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
-            if export_properties is not None:
-                image_export.set('resolution', float(export_properties.resolution))
-                image_export.set('unit', 'px')
-                image_export.set('size','manualweb')
-                image_export.set('width', float(export_properties.width))
-                image_export.set('height', float(export_properties.height))
-                image_export.set('fontsize', float(export_properties.font_size))
-            image_export.run()
+                export_path = f'pg{last_tag+1}_{label}.png'
+            
+            self.export_image(plotgroup_tag=f'pg{last_tag+1}',
+                              export_properties=export_properties,
+                              export_path=export_path)
         
     def run_derived_value(self,
                           derived_value_tag: str,
@@ -445,7 +434,7 @@ class ComsolPostprocessor:
                         time: list[float] | None = None,
                         export: bool = False,
                         export_properties: ComsolExportPlot | None = None,
-                        export_path: str | None = None,
+                        export_folder: str | None = None,
                         ):
         """
         Plot the results of a COMSOL simulation using a template of a 1D line graph.
@@ -459,7 +448,7 @@ class ComsolPostprocessor:
             time (list of float or None): The time steps to use for the plot. If None, the template time step is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
-            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
+            export_folder (str or None): The path to the folder to save the exported plot. If None, the default path is used.
         """
         tags = self.model.result().tags()
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
@@ -524,28 +513,17 @@ class ComsolPostprocessor:
         plot_group.run()
 
         if export:
-            # Check if 'img1' already exists, if so, remove it before creating
-            export_tags = self.model.result().export().tags()
-            if 'img1' in export_tags:
-                image_export = self.model.result().export().remove('img1')
-            image_export = self.model.result().export().create('img1', 'Image')
-
-            image_export.set('plotgroup', f'pg{last_tag+1}')
             if label is None:
                 raise ValueError("If exporting, label must be set to name the exported file.")
-            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
-            if export_path is None:
-                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
+            
+            if export_folder is not None:
+                export_path = f'{export_folder}/pg{last_tag+1}_{label}.png'
             else:
-                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
-            if export_properties is not None:
-                image_export.set('resolution', float(export_properties.resolution))
-                image_export.set('unit', 'px')
-                image_export.set('size','manualweb')
-                image_export.set('width', float(export_properties.width))
-                image_export.set('height', float(export_properties.height))
-                image_export.set('fontsize', float(export_properties.font_size))
-            image_export.run()
+                export_path = f'pg{last_tag+1}_{label}.png'
+            
+            self.export_image(plotgroup_tag=f'pg{last_tag+1}',
+                              export_properties=export_properties,
+                              export_path=export_path)
 
     def edit_point_graph(self,
                         duplicate: bool,
@@ -556,7 +534,7 @@ class ComsolPostprocessor:
                         time: str | list[float] | None = None,
                         export: bool = False,
                         export_properties: ComsolExportPlot | None = None,
-                        export_path: str | None = None,
+                        export_folder: str | None = None,
                         ):
         """
         Plot the results of a COMSOL simulation using a template of a 1D point graph.
@@ -570,7 +548,7 @@ class ComsolPostprocessor:
             time (str or list of float or None): The time steps to use for the plot. If "all", all time steps are used. If None, the template time step is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
-            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
+            export_folder (str or None): The path to the folder to save the exported plot. If None, the default path is used.
         """
         tags = self.model.result().tags()
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
@@ -648,28 +626,47 @@ class ComsolPostprocessor:
         plot_group.run()
 
         if export:
-            # Check if 'img1' already exists, if so, remove it before creating
-            export_tags = self.model.result().export().tags()
-            if 'img1' in export_tags:
-                image_export = self.model.result().export().remove('img1')
-            image_export = self.model.result().export().create('img1', 'Image')
-
-            image_export.set('plotgroup', f'pg{last_tag+1}')
             if label is None:
                 raise ValueError("If exporting, label must be set to name the exported file.")
-            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
-            if export_path is None:
-                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
+            
+            if export_folder is not None:
+                export_path = f'{export_folder}/pg{last_tag+1}_{label}.png'
             else:
-                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
-            if export_properties is not None:
-                image_export.set('resolution', float(export_properties.resolution))
-                image_export.set('unit', 'px')
-                image_export.set('size','manualweb')
-                image_export.set('width', float(export_properties.width))
-                image_export.set('height', float(export_properties.height))
-                image_export.set('fontsize', float(export_properties.font_size))
-            image_export.run()
+                export_path = f'pg{last_tag+1}_{label}.png'
+            
+            self.export_image(plotgroup_tag=f'pg{last_tag+1}',
+                              export_properties=export_properties,
+                              export_path=export_path)
+
+    def export_image(self,
+                     plotgroup_tag: str,
+                     export_properties: ComsolExportPlot | None = None,
+                     export_path: str):
+        """
+        Export a plot group to an image file.
+        Parameters:
+            plotgroup_tag (str): The tag of the plot group to export.
+            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
+            export_path (str): The path to the folder to save the exported plot.
+        """
+        # Check if 'img1' already exists, if so, remove it before creating
+        export_tags = self.model.result().export().tags()
+        if 'img1' in export_tags:
+            image_export = self.model.result().export().remove('img1')
+        image_export = self.model.result().export().create('img1', 'Image')
+
+        image_export.set('plotgroup', plotgroup_tag)        
+        logger.info(f"Exporting image {export_path}")
+        
+        if export_properties is not None:
+            image_export.set('resolution', float(export_properties.resolution))
+            image_export.set('unit', 'px')
+            image_export.set('size','manualweb')
+            image_export.set('width', float(export_properties.width))
+            image_export.set('height', float(export_properties.height))
+            image_export.set('fontsize', float(export_properties.font_size))
+        image_export.run()
+
 
     def save(self, save_path: str = None):
         """
