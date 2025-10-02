@@ -42,13 +42,75 @@ class TestComsolPostprocessor(unittest.TestCase):
         self.assertEqual(int(df_test['t'][68]*10), 67)
         self.assertEqual(int(df_test['p_pt6'][68]), 44572)
 
-    def test_duplicate_plot(self):
+    def test_edit_surface_plot(self):
         comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
-        new_plot = comsol.model.result().duplicate("pg99", "pg4")
-        # Check if the new plot was created successfully
-        self.assertIsNotNone(new_plot)
-        # Check if the new plot has the expected name
-        self.assertEqual(new_plot.tag(), "pg99")
+        surface1 = comsol.ComsolSurface(
+            dataset = 'parent',
+            expression = 'p',
+            unit = 'kPa',
+            color_table = 'Rainbow',
+            color_table_discrete = 10,
+            color_table_reverse = False,
+            color_table_sym = False,
+            rangelist = None,
+            selection = False,
+        )
+
+        surface2 = comsol.ComsolSurface(
+            dataset = 'parent',
+            expression = 'dl.U',
+            unit = 'm/s',
+            color_table = 'Dipole',
+            color_table_discrete = 10,
+            color_table_reverse = False,
+            color_table_sym = False,
+            rangelist = None,
+            selection = [2],
+        )
+
+        comsol.edit_surface_plot(True,'pg4', [surface1, surface2], label="Mix", dataset='dset1', time=5)
+
+    def test_edit_line_graph(self):
+        comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
+        line1 = comsol.ComsolLine(
+            dataset = 'cln1',
+            expression = 'p',
+            unit = 'kPa',
+            xdata = 'expr',
+            xdataexpr = 'z',
+            xdataunit = 'mm',
+            dataset_param="parent"
+        )
+
+        line2 = comsol.ComsolLine(
+            dataset = 'cln1',
+            expression = 'dl.U',
+            unit = 'm/s',
+            xdata = 'expr',
+            xdataexpr = 'z',
+            xdataunit = 'mm',
+            dataset_param="parent",
+            linecolor="cyclereset"
+        )
+        comsol.edit_line_graph(True,'pg7', [line1, line2], label="Line_Mix", time=[1,3,5])
+
+    def test_edit_point_graph(self):
+        comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
+        line1 = comsol.ComsolLine(
+            dataset = 'parent',
+            expression = 'p',
+            unit = 'kPa',
+            xdata = 'expr',
+            xdataexpr = 't',
+            xdataunit = 'd',
+            dataset_param="parent",
+            marker="cycle",
+            selection=[7,4,10],
+            linestyle='none',
+        )
+
+        comsol.edit_point_graph(True,'pg6', line1, label="Evolution", time="all")
+
 
 if __name__ == '__main__':
     unittest.main()
