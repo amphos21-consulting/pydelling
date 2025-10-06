@@ -111,6 +111,5 @@ class TestComsolPostprocessor(unittest.TestCase):
 
         comsol.edit_point_graph(True,'pg6', line1, label="Evolution", time="all")
 
-
 if __name__ == '__main__':
     unittest.main()

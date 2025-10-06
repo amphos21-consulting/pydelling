@@ -39,6 +39,8 @@ class ComsolPostprocessor:
         self.model = self.model_standalone.java
         self.comp = self.model.modelNode(comp_tag)
         self.geom = self.comp.geom(geom_tag)
+        self.childs = []
+        self.export_configuration = None
 
     class ComsolSurface:
         """
@@ -134,7 +136,370 @@ class ComsolPostprocessor:
             self.marker = marker
             self.selection = selection
 
-    class ComsolExportPlot:
+    class _PlotGroup1D:
+        def __init__(self,
+                     postprocessor: 'ComsolPostprocessor',
+                     tag: str | None = None,
+                     dataset: str | None = None,
+                     label: str | None = None,
+                     time: list[float] | str = "all",
+                     xlabel: str | None = None,
+                     ylabel: str | None = None,
+                     xrange: list | None = None,
+                     yrange: list | None = None,
+                     xlog: bool = False,
+                     ylog: bool = False,
+                     axisprecision: int = 4,
+                     twoyaxes: bool = False,
+                     yseclabel: str | None = None,
+                     ysecrange: list | None = None,
+                     yseclog: bool = False,
+                     legendactive: bool = True,
+                     legendpos: str | None = None,
+                     ):
+            """
+            A class to handle the properties of a COMSOL 1D Plot Group.
+            Parameters:
+                postprocessor: The COMSOL postprocessor object from ComsolPostprocessor.
+                tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
+                dataset (str or None): The name of the dataset to use for the plot group. If None, dataset is not set. Defaults to None.
+                label (str or None): The label of the plot group. If None, the label is not set. Defaults to None.
+                time (list of float or "all"): The time steps to use for the plot group. If "all", all time steps are used. Defaults to "all".
+                xlabel (str or None): The label of the x-axis. If None, the label is not set. Defaults to None.
+                ylabel (str or None): The label of the y-axis. If None, the label is not set. Defaults to None.
+                xrange (list or None): The range of the x-axis. If None, automatic range is used. Defaults to None.
+                yrange (list or None): The range of the y-axis. If None, automatic range is used. Defaults to None.
+                xlog (bool): If True, the x-axis is logarithmic. Defaults to False.
+                ylog (bool): If True, the y-axis is logarithmic. Defaults to False.
+                axisprecision (int): The number of decimal places to use for the axis labels. Defaults to 4.
+                twoyaxes (bool): If True, a second y-axis is added to the plot. Defaults to False.
+                yseclabel (str or None): The label of the second y-axis. If None, the label is not set. Defaults to None.
+                ysecrange (list or None): The range of the second y-axis. If None, automatic range is used. Defaults to None.
+                yseclog (bool): If True, the second y-axis is logarithmic. Defaults to False.
+                legendactive (bool): If True, the legend is shown. Defaults to True.
+                legendpos (str or None): The position of the legend. Valid values are upperright | middleright | lowerright | upperleft | middleleft | lowerleft | middleright | center | middleleft. If None, the position is not set. Defaults to None.
+            Returns:
+                A Comsol API PlotGroup1D object.
+            """
+            self.postprocessor = postprocessor
+            self.model = postprocessor.model
+            self.dataset = dataset
+            self.label = label
+            self.time = time
+            self.xlabel = xlabel
+            self.ylabel = ylabel
+            self.xrange = xrange
+            self.yrange = yrange
+            self.xlog = xlog
+            self.ylog = ylog
+            self.axisprecision = axisprecision
+            self.twoyaxes = twoyaxes
+            self.yseclabel = yseclabel
+            self.ysecrange = ysecrange
+            self.yseclog = yseclog
+            self.legendactive = legendactive
+            self.legendpos = legendpos
+            self.childs = []
+
+            if tag is None:
+                tags = self.model.result().tags()
+                last_tag = max([int(re.findall(r'\d+', str(temptag))[0]) for temptag in tags if re.findall(r'\d+', str(temptag))])
+                tag = f'pg{last_tag+1}'
+                self.tag = tag
+                self._api = self.model.result().create(self.tag, 'PlotGroup1D')
+                logger.info(f"Plot Group {self.tag} created.")
+            else:
+                self.tag = tag
+                self._api = self.model.result(self.tag)
+                logger.info(f"Plot Group {self.tag} loaded.")
+                for child_tag in self._api.feature().tags():
+                    child_type = self._api.feature(child_tag).getType()
+                    if child_type == 'LineGraph':
+                        linegraph = self.line_graph(tag=child_tag)
+                        self.childs.append(linegraph)
+                    else:
+                        logger.warning(f"Feature type {child_type} not recognized.")
+                        self.childs.append(child_type)
+                
+            
+            self.postprocessor.childs.append(self)
+
+            self.apply()
+        
+        def apply(self):
+            """
+            Apply the changes of the PlotGroup1D to the COMSOL API model.
+            """
+            if self.dataset is not None: self._api.set('data', self.dataset)
+            if self.label is not None: self._api.label(self.label)
+            if self.time is not None:
+                if self.time == 'all':
+                    self._api.set('innerinput', 'all')
+                else:
+                    for n in range(len(self.time)):
+                        self.time[n] = float(self.time[n])
+                    self._api.set('t', self.time)
+            if self.xlabel is not None: self._api.set('xlabel', self.xlabel)
+            if self.ylabel is not None: self._api.set('ylabel', self.ylabel)
+            if self.xrange is not None:
+                self._api.set('xmin', self.postprocessor.__java_double__(self.xrange[0]))
+                self._api.set('xmax', self.postprocessor.__java_double__(self.xrange[1]))
+            if self.yrange is not None:
+                self._api.set('ymin', self.postprocessor.__java_double__(self.yrange[0]))
+                self._api.set('ymax', self.postprocessor.__java_double__(self.yrange[1]))
+            if self.xlog: self._api.set('xlog', 'on')
+            else: self._api.set('xlog', 'off')
+            if self.ylog: self._api.set('ylog', 'on')
+            else: self._api.set('ylog', 'off')
+            self._api.set('axisprecision', self.postprocessor.__java_int__(self.axisprecision))
+            self._api.set('twoyaxes', self.twoyaxes)
+            if self.yseclabel is not None: self._api.set('yseclabel', self.yseclabel)
+            if self.ysecrange is not None:
+                self._api.set('yminsec', self.postprocessor.__java_double__(self.ysecrange[0]))
+                self._api.set('ymaxsec', self.postprocessor.__java_double__(self.ysecrange[1]))
+            if self.yseclog: self._api.set('ylogsec', 'on')
+            else: self._api.set('ylogsec', 'off')
+            if self.legendactive: self._api.set('legendactive', 'on')
+            else: self._api.set('legendactive', 'off')
+            if self.legendpos is not None: self._api.set('legendpos', self.legendpos)
+
+            # for child in self.childs:
+            #     child.apply()
+
+        def run(self):
+            """
+            Run the PlotGroup1D to update the plot.
+            """
+            logger.info(f"Running Plot Group {self.tag}...")
+            self._api.run()
+            logger.info(f"Plot Group {self.tag} finished.")
+
+        def export(self,
+                   export_path: str | None = None):
+            """
+            Export the PlotGroup1D to a PNG file.
+            Parameters:
+                export_path (str or None): The path to save the PNG file. If None, the file is saved in the current directory with the name of the plot group tag. Defaults to None.
+            Warning:
+                If the ComsolPostprocessor.export_properties() is not used, the export properties will be the default ones.
+            """
+            self._api.run()
+            file_parent = Path(self.postprocessor.file_path).parent
+            if export_path is None: export_path = f"{file_parent}/{self.tag}.png"
+            self.postprocessor._export(self.tag, export_path)
+
+
+        class _LineGraph:
+            """
+            A class to handle the properties of a COMSOL Line Graph.
+            """
+            def __init__(self,
+                         plotgroup: 'ComsolPostprocessor._PlotGroup1D',
+                            tag: str | None = None,
+                            expression: str | None = None,
+                            unit: str | None = None,
+                            dataset: str | None | str = 'parent',
+                            dataset_param: str | None = None,
+                            dataset_time: list[float] | None = None,
+                            selection: str | list | None = None,
+                            xdata: str | None = None,
+                            xdataexpr: str | None = None,
+                            xdataunit: str | None = None,
+                            linecolor: str | None = None,
+                            colorcycle: str | None = None,
+                            linestyle: str | None = None,
+                            linewidth: float | None = None,
+                            marker: str | None = None,
+                            ):
+                """
+                A class to handle the properties of a COMSOL Line Graph.
+                Parameters:
+                    plotgroup: The COMSOL PlotGroup1D object from ComsolPostprocessor._PlotGroup1D.
+                    tag (str or None): The tag of the line graph to edit. If None, a new line graph is created. Defaults to None.
+                    expression (str or None): The expression to plot. If None, the expression is not set. Defaults to 'parent'.
+                    unit (str or None): The unit of the expression. If None default unit is used.
+                    dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
+                    dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, the template parameter is used.
+                    dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, the template time is used.
+                    selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
+                    xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used.
+                    xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used.
+                    xdataunit (str or None): The unit of the x-axis expression. If None, default unit is used.
+                    linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, the template color is used.
+                    colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, the template color cycle is used.
+                    linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, the template style is used.
+                    linewidth (float or None): The width of the line in points. If None, the template width is used.
+                    marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, the template marker is used.
+                """
+                self.plotgroup = plotgroup
+                self.postprocessor = self.plotgroup.postprocessor
+                self.model = self.postprocessor.model
+                self.expression = expression
+                self.unit = unit
+                self.dataset = dataset
+                self.dataset_param = dataset_param
+                self.dataset_time = dataset_time
+                self.xdata = xdata
+                self.xdataexpr = xdataexpr
+                self.xdataunit = xdataunit
+                self.linecolor = linecolor
+                self.colorcycle = colorcycle
+                self.linestyle = linestyle
+                self.linewidth = linewidth
+                self.marker = marker
+                
+                if tag is None:
+                    tags = self.plotgroup._api.feature().tags()
+                    try :last_tag = max([int(re.findall(r'\d+', str(temptag))[0]) for temptag in tags if re.findall(r'lngr\d+', str(temptag))])
+                    except: last_tag = 0
+                    tag = f'lngr{last_tag+1}'
+                    self.tag = tag
+                    self._api = self.model.result(self.plotgroup.tag).create(self.tag, 'LineGraph')
+                    logger.info(f"Line Graph {self.tag} created.")
+                else:
+                    self.tag = tag
+                    self._api = self.model.result(self.plotgroup.tag).feature(self.tag)
+                    logger.info(f"Line Graph {self.tag} loaded.")
+                    
+                self.apply()
+
+            def apply(self):
+                """
+                Apply the changes of the LineGraph to the COMSOL API model.
+                """
+                if self.dataset is not None: self._api.set('data', self.dataset)
+                if self.expression is not None: self._api.set('expr', self.expression)
+                if self.unit is not None: self._api.set('unit', self.unit)
+                if self.dataset_param is not None: self._api.set('solutionparams', self.dataset_param)
+                if self.dataset_time is not None: self._api.set('t', self.dataset_time)
+                if self.xdata is not None:
+                    self._api.set('xdata', self.xdata)
+                    if self.xdataexpr is None:
+                        raise ValueError("If xdata is 'expr', xdataexpr must be provided.")
+                    else:
+                        self._api.set('xdataexpr', self.xdataexpr)
+                    if self.xdataunit is not None: self._api.set('xdataunit', self.xdataunit)
+                if self.linecolor is not None: self._api.set('linecolor', self.linecolor)
+                if self.colorcycle is not None: self._api.set('colorcycle', self.colorcycle)
+                if self.linestyle is not None: self._api.set('linestyle', self.linestyle)
+                if self.linewidth is not None: self._api.set('linewidth', self.postprocessor.__java_double__(self.linewidth))
+                if self.marker is not None:
+                    self._api.set('linemarker', self.marker)
+                    self._api.set('markerpos', 'datapoints')
+                
+
+        def line_graph(self,
+                        tag: str | None = None,
+                        expression: str | None = None,
+                        unit: str | None = None,
+                        dataset: str | None | str = 'parent',
+                        dataset_param: str | None = None,
+                        dataset_time: list[float] | None = None,
+                        selection: str | list | None = None,
+                        xdata: str | None = None,
+                        xdataexpr: str | None = None,
+                        xdataunit: str | None = None,
+                        linecolor: str | None = None,
+                        colorcycle: str | None = None,
+                        linestyle: str | None = None,
+                        linewidth: float | None = None,
+                        marker: str | None = None,
+                            ):
+            """
+            A class to handle the properties of a COMSOL Line Graph.
+            Parameters:
+                tag (str or None): The tag of the line graph to edit. If None, a new line graph is created. Defaults to None.
+                expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
+                unit (str or None): The unit of the expression. If None default unit is used.
+                dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used. Defaults to 'parent'.
+                dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, the template parameter is used.
+                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, the template time is used.
+                selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
+                xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used.
+                xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used.
+                xdataunit (str or None): The unit of the x-axis expression. If None, default unit is used.
+                linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, the template color is used.
+                colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, the template color cycle is used.
+                linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, the template style is used.
+                linewidth (float or None): The width of the line in points. If None, the template width is used.
+                marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, the template marker is used.
+            Returns:
+                A LineGraph object.
+            """
+            linegraph = self._LineGraph(self, tag, expression, unit, dataset, dataset_param, dataset_time, selection, xdata, xdataexpr, xdataunit, linecolor, colorcycle, linestyle, linewidth, marker)
+            self.childs.append(linegraph)
+            return linegraph
+
+    def plot_group_1D(self,
+                    tag: str | None = None,
+                    dataset: str | None = None,
+                    label: str | None = None,
+                    time: list[float] | str = "all",
+                    xlabel: str | None = None,
+                    ylabel: str | None = None,
+                    xrange: list | None = None,
+                    yrange: list | None = None,
+                    xlog: bool = False,
+                    ylog: bool = False,
+                    axisprecision: int = 4,
+                    twoyaxes: bool = False,
+                    yseclabel: str | None = None,
+                    ysecrange: list | None = None,
+                    yseclog: bool = False,
+                    legendactive: bool = True,
+                    legendpos: str | None = None,):
+        """
+        Create a 1D Plot Group for COMSOL postprocessing.
+        
+        This method creates an instance of the PlotGroup1D class, passing the model
+        and all necessary parameters.
+        
+        Parameters:
+            tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
+            dataset (str or None): The name of the dataset to use for the plot group. If None, the dataset is not set. Defaults to None.
+            label (str or None): The title of the plot group. If None, the title is not set. Defaults to None.
+            time (list of float or "all"): The time steps to use for the plot group. If "all", all time steps are used. Defaults to "all".
+            xlabel (str or None): The label of the x-axis. If None, the label is not set. Defaults to None.
+            ylabel (str or None): The label of the y-axis. If None, the label is not set. Defaults to None.
+            xrange (list or None): The range of the x-axis. If None, automatic range is used. Defaults to None.
+            yrange (list or None): The range of the y-axis. If None, automatic range is used. Defaults to None.
+            xlog (bool): If True, the x-axis is logarithmic. Defaults to False.
+            ylog (bool): If True, the y-axis is logarithmic. Defaults to False.
+            axisprecision (int): The number of decimal places to use for the axis labels. Defaults to 4.
+            twoyaxes (bool): If True, a second y-axis is added to the plot. Defaults to False.
+            yseclabel (str or None): The label of the second y-axis. If None, the label is not set. Defaults to None.
+            ysecrange (list or None): The range of the second y-axis. If None, automatic range is used. Defaults to None.
+            yseclog (bool): If True, the second y-axis is logarithmic. Defaults to False.
+            legendactive (bool): If True, the legend is shown. Defaults to True.
+            legendpos (str or None): The position of the legend. Valid values are upperright | middleright | lowerright | upperleft | middleleft | lowerleft | middleright | center | middleleft. If None, the position is not set. Defaults to None.        
+        Returns:
+            A PlotGroup1D object.
+        """
+        plotgroup = self._PlotGroup1D(
+            self,
+            tag,
+            dataset,
+            label,
+            time,
+            xlabel,
+            ylabel,
+            xrange,
+            yrange,
+            xlog,
+            ylog,
+            axisprecision,
+            twoyaxes,
+            yseclabel,
+            ysecrange,
+            yseclog,
+            legendactive,
+            legendpos,
+        )
+
+        self.childs.append(plotgroup)
+        return plotgroup
+
+    class _ExportProperties:
         def __init__(self,
                      width: int,
                      height: int,
@@ -153,6 +518,50 @@ class ComsolPostprocessor:
             self.height = height
             self.resolution = resolution
             self.font_size = font_size
+    
+    def export_properties(self,
+                     width: int,
+                     height: int,
+                     resolution: int,
+                     font_size: int,
+                     ):
+            """
+            A class to handle the properties of a COMSOL plot export.
+            Parameters:
+                width (int): The width of the plot in pixels.
+                height (int): The height of the plot in pixels.
+                resolution (int): The resolution of the plot in dpi.
+                font_size (int): The font size of the plot.
+            """
+            export_config = self._ExportProperties(self, width, height, resolution, font_size)
+            self.export_properties = export_config
+        
+    def _export(self, plotgroup_tag: str, export_path: str):
+        """
+        Export a plot group to a PNG file.
+        Parameters:
+            plotgroup_tag (str): The tag of the plot group to export.
+            export_path (str): The path to save the PNG file.
+        Warning:
+            If the ComsolPostprocessor.export_properties() is not used, the export properties will be the default ones.
+        """
+        export_tags = self.model.result().export().tags()
+        if 'img1' in export_tags:
+            image_export = self.model.result().export().remove('img1')
+        image_export = self.model.result().export().create('img1', 'Image')
+
+        image_export.set('plotgroup', plotgroup_tag)        
+        logger.info(f"Exporting image {export_path}")
+        image_export.set('pngfilename', export_path)
+        if self.export_configuration is not None:
+            image_export.set('unit', 'px')
+            image_export.set('size', 'manualweb')
+            image_export.set('width', self.export_configuration.width)
+            image_export.set('height', self.export_configuration.height)
+            image_export.set('resolution', self.export_configuration.resolution)
+            image_export.set('fontsize', self.export_configuration.font_size)
+        image_export.run()
+
 
     def get_variable_evolution_at_point(self, 
                                         dataset: str, 
@@ -273,6 +682,70 @@ class ComsolPostprocessor:
 
         return df
 
+    def get_dependent_variables(self,
+                                solution: str | None = None,
+                                dataset: str | None = None) -> list:
+        """
+        Get the dependent variables of a solution.
+
+        Parameters:
+            solution (str or None): The tag of the solution. If None, dataset must be given.
+            dataset (str or None): The tag of the dataset. If None, solution must be given.
+
+        Returns:
+            list: A list of dependent variable names.
+        """
+        
+        if solution is None:
+            if dataset is None:
+                raise ValueError("Either solution or dataset must be provided.")
+            else:
+                solution = self.model.result().dataset(dataset).getString('solution')
+
+        var_list = []
+        for i in self.model.sol(solution).feature('v1').feature().iterator():
+            var_list.append(str(i.tag()).split('_',1)[1])
+
+        self.variables = var_list
+        return var_list
+
+    def save(self, save_path: str = None):
+        """
+        Save the COMSOL model to a file.
+        Parameters:
+            save_path (str): The path to save the COMSOL model. If None, the original file path is overwritten.
+        """
+        if save_path is None: self.model.save(self.file_path)
+        else: self.model.save(save_path)
+
+    def __java_str__(self, obj):
+        return jpype.JString(obj)
+    
+    def __java_double__(self, obj):
+        return jpype.JDouble(obj)
+    
+    def __java_int__(self, obj):
+        return jpype.JInt(obj)
+    
+    class ComsolExportPlot:
+        def __init__(self,
+                     width: int,
+                     height: int,
+                     resolution: int,
+                     font_size: int,
+                     ):
+            """
+            A class to handle the properties of a COMSOL plot export.
+            Parameters:
+                width (int): The width of the plot in pixels.
+                height (int): The height of the plot in pixels.
+                resolution (int): The resolution of the plot in dpi.
+                font_size (int): The font size of the plot.
+            """
+            self.width = width
+            self.height = height
+            self.resolution = resolution
+            self.font_size = font_size
 
     def edit_surface_plot(self,
                   duplicate: bool,
@@ -283,7 +756,7 @@ class ComsolPostprocessor:
                   time: float | None = None,
                   export: bool = False,
                   export_properties: ComsolExportPlot | None = None,
-                  export_folder: str | None = None,
+                  export_path: str | None = None,
                 ):
         """
         Plot the results of a COMSOL simulation using a template of a 2D or 3D surface.
@@ -297,7 +770,7 @@ class ComsolPostprocessor:
             time (float or None): The time step to use for the plot. If None, the template time step is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
-            export_folder (str or None): The path to the folder to save the exported plot. If None, the default path is used.
+            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
         """
 
         tags = self.model.result().tags()
@@ -373,17 +846,28 @@ class ComsolPostprocessor:
         plot_group.run()
 
         if export:
+            # Check if 'img1' already exists, if so, remove it before creating
+            export_tags = self.model.result().export().tags()
+            if 'img1' in export_tags:
+                image_export = self.model.result().export().remove('img1')
+            image_export = self.model.result().export().create('img1', 'Image')
+
+            image_export.set('plotgroup', f'pg{last_tag+1}')
             if label is None:
                 raise ValueError("If exporting, label must be set to name the exported file.")
-            
-            if export_folder is not None:
-                export_path = f'{export_folder}/pg{last_tag+1}_{label}.png'
+            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
+            if export_path is None:
+                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
             else:
-                export_path = f'pg{last_tag+1}_{label}.png'
-            
-            self.export_image(plotgroup_tag=f'pg{last_tag+1}',
-                              export_properties=export_properties,
-                              export_path=export_path)
+                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
+            if export_properties is not None:
+                image_export.set('resolution', float(export_properties.resolution))
+                image_export.set('unit', 'px')
+                image_export.set('size','manualweb')
+                image_export.set('width', float(export_properties.width))
+                image_export.set('height', float(export_properties.height))
+                image_export.set('fontsize', float(export_properties.font_size))
+            image_export.run()
         
     def run_derived_value(self,
                           derived_value_tag: str,
@@ -434,7 +918,7 @@ class ComsolPostprocessor:
                         time: list[float] | None = None,
                         export: bool = False,
                         export_properties: ComsolExportPlot | None = None,
-                        export_folder: str | None = None,
+                        export_path: str | None = None,
                         ):
         """
         Plot the results of a COMSOL simulation using a template of a 1D line graph.
@@ -448,7 +932,7 @@ class ComsolPostprocessor:
             time (list of float or None): The time steps to use for the plot. If None, the template time step is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
-            export_folder (str or None): The path to the folder to save the exported plot. If None, the default path is used.
+            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
         """
         tags = self.model.result().tags()
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
@@ -513,17 +997,28 @@ class ComsolPostprocessor:
         plot_group.run()
 
         if export:
+            # Check if 'img1' already exists, if so, remove it before creating
+            export_tags = self.model.result().export().tags()
+            if 'img1' in export_tags:
+                image_export = self.model.result().export().remove('img1')
+            image_export = self.model.result().export().create('img1', 'Image')
+
+            image_export.set('plotgroup', f'pg{last_tag+1}')
             if label is None:
                 raise ValueError("If exporting, label must be set to name the exported file.")
-            
-            if export_folder is not None:
-                export_path = f'{export_folder}/pg{last_tag+1}_{label}.png'
+            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
+            if export_path is None:
+                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
             else:
-                export_path = f'pg{last_tag+1}_{label}.png'
-            
-            self.export_image(plotgroup_tag=f'pg{last_tag+1}',
-                              export_properties=export_properties,
-                              export_path=export_path)
+                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
+            if export_properties is not None:
+                image_export.set('resolution', float(export_properties.resolution))
+                image_export.set('unit', 'px')
+                image_export.set('size','manualweb')
+                image_export.set('width', float(export_properties.width))
+                image_export.set('height', float(export_properties.height))
+                image_export.set('fontsize', float(export_properties.font_size))
+            image_export.run()
 
     def edit_point_graph(self,
                         duplicate: bool,
@@ -534,7 +1029,7 @@ class ComsolPostprocessor:
                         time: str | list[float] | None = None,
                         export: bool = False,
                         export_properties: ComsolExportPlot | None = None,
-                        export_folder: str | None = None,
+                        export_path: str | None = None,
                         ):
         """
         Plot the results of a COMSOL simulation using a template of a 1D point graph.
@@ -548,7 +1043,7 @@ class ComsolPostprocessor:
             time (str or list of float or None): The time steps to use for the plot. If "all", all time steps are used. If None, the template time step is used.
             export (bool): If True, the plot is exported to a file. Defaults to False.
             export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
-            export_folder (str or None): The path to the folder to save the exported plot. If None, the default path is used.
+            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
         """
         tags = self.model.result().tags()
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
@@ -626,28 +1121,39 @@ class ComsolPostprocessor:
         plot_group.run()
 
         if export:
+            # Check if 'img1' already exists, if so, remove it before creating
+            export_tags = self.model.result().export().tags()
+            if 'img1' in export_tags:
+                image_export = self.model.result().export().remove('img1')
+            image_export = self.model.result().export().create('img1', 'Image')
+
+            image_export.set('plotgroup', f'pg{last_tag+1}')
             if label is None:
                 raise ValueError("If exporting, label must be set to name the exported file.")
-            
-            if export_folder is not None:
-                export_path = f'{export_folder}/pg{last_tag+1}_{label}.png'
+            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
+            if export_path is None:
+                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
             else:
-                export_path = f'pg{last_tag+1}_{label}.png'
-            
-            self.export_image(plotgroup_tag=f'pg{last_tag+1}',
-                              export_properties=export_properties,
-                              export_path=export_path)
+                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
+            if export_properties is not None:
+                image_export.set('resolution', float(export_properties.resolution))
+                image_export.set('unit', 'px')
+                image_export.set('size','manualweb')
+                image_export.set('width', float(export_properties.width))
+                image_export.set('height', float(export_properties.height))
+                image_export.set('fontsize', float(export_properties.font_size))
+            image_export.run()
 
     def export_image(self,
                      plotgroup_tag: str,
                      export_path: str,
-                     export_properties: ComsolExportPlot | None = None,):
+                     export_properties: _ExportProperties | None = None,):
         """
         Export a plot group to an image file.
         Parameters:
             plotgroup_tag (str): The tag of the plot group to export.
             export_path (str): The path to the folder to save the exported plot.
-            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
+            export_properties (_ExportProperties | None): A _ExportProperties object with the properties of the export. If None, the default properties are used.
         """
         # Check if 'img1' already exists, if so, remove it before creating
         export_tags = self.model.result().export().tags()
@@ -666,13 +1172,3 @@ class ComsolPostprocessor:
             image_export.set('height', float(export_properties.height))
             image_export.set('fontsize', float(export_properties.font_size))
         image_export.run()
-
-
-    def save(self, save_path: str = None):
-        """
-        Save the COMSOL model to a file.
-        Parameters:
-            save_path (str): The path to save the COMSOL model. If None, the original file path + _postprocess is used.
-        """
-        if save_path is None: self.model.save(self.file_path.split('.')[0] + '_postprocess.mph')
-        else: self.model.save(save_path)
