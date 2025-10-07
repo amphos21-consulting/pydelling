@@ -70,46 +70,38 @@ class TestComsolPostprocessor(unittest.TestCase):
 
         comsol.edit_surface_plot(True,'pg4', [surface1, surface2], label="Mix", dataset='dset1', time=5)
 
-    def test_edit_line_graph(self):
+    def test_plot_group_1D(self):
         comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
-        line1 = comsol.ComsolLine(
-            dataset = 'cln1',
-            expression = 'p',
-            unit = 'kPa',
-            xdata = 'expr',
-            xdataexpr = 'z',
-            xdataunit = 'mm',
-            dataset_param="parent"
-        )
+        plotgroup = comsol.plot_group_1D(tag='pg7', legendactive=True, legendpos='upperright')
+        plotgroup.childs[0].expression = 'p'
+        plotgroup.childs[0].unit = 'MPa'
+        plotgroup.apply()
 
-        line2 = comsol.ComsolLine(
-            dataset = 'cln1',
-            expression = 'dl.U',
-            unit = 'm/s',
-            xdata = 'expr',
-            xdataexpr = 'z',
-            xdataunit = 'mm',
-            dataset_param="parent",
-            linecolor="cyclereset"
-        )
-        comsol.edit_line_graph(True,'pg7', [line1, line2], label="Line_Mix", time=[1,3,5])
+        line_graph = plotgroup.line_graph(tag='lngr1', expression='p', unit='kPa', legend=True, legendmethod='evaluated', legendpattern='t = eval(t,d) d')
+        line_graph.linecolor = 'cyclereset'
+        line_graph.apply()
 
-    def test_edit_point_graph(self):
+        plotgroup2 = plotgroup.duplicate()
+        plotgroup2.childs[0].expression = 'dl.U'
+        plotgroup2.ylabel = 'Velocity (m/s)'
+        plotgroup2.legendlayout = 'outside'
+        plotgroup2.legendpos = 'right'
+        plotgroup2.apply()
+
+        plotgroup3 = comsol.plot_group_1D(dataset='cln1', label='Mixed Line Graph', legendactive=True, legendpos='upperright', time=[1,3,5], twoyaxes=True)
+        line1 = plotgroup3.line_graph(expression='p', unit='kPa', xdata='expr', xdataexpr='z', xdataunit='mm')
+        line2 = plotgroup3.line_graph(expression='dl.U', unit='m/s', xdata='expr', xdataexpr='z', xdataunit='mm', linecolor="cyclereset", linestyle='dashed', plotonsecyaxis=True)
+    
+        
+        plotgroup4 = comsol.plot_group_1D(tag='pg6', legendactive=True, legendlayout='outside', legendpos='top', legendcolumncount=2)
+        pointgraph = plotgroup4.point_graph(tag='ptgr1',legend=True, legendmethod='manual', legendmanuallist=['P1', 'P2', 'P3', 'P4', 'P5', 'P6'])
+
+    def test_export(self):
         comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
-        line1 = comsol.ComsolLine(
-            dataset = 'parent',
-            expression = 'p',
-            unit = 'kPa',
-            xdata = 'expr',
-            xdataexpr = 't',
-            xdataunit = 'd',
-            dataset_param="parent",
-            marker="cycle",
-            selection=[7,4,10],
-            linestyle='none',
-        )
-
-        comsol.edit_point_graph(True,'pg6', line1, label="Evolution", time="all")
-
+        plotgroup = comsol.plot_group_1D(tag='pg7', legendactive=True, legendpos='upperright')
+        comsol.export_properties(width=900, height=600, resolution=96, font_size=22, title=False, legend=True, axes=True, grid=True, logo=False)
+        plotgroup.export()
+            
+        
 if __name__ == '__main__':
     unittest.main()

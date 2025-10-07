@@ -83,59 +83,6 @@ class ComsolPostprocessor:
             self.rangelist = rangelist
             self.selection = selection
         
-    class ComsolLine:
-        """
-        A class to handle the properties of a COMSOL Line.
-        """
-        def __init__(self,
-                        expression: str,
-                        unit: str | None = None,
-                        dataset: str | None = None,
-                        dataset_param: str | None = None,
-                        dataset_time: list[float] | None = None,
-                        xdata: str | None = None,
-                        xdataexpr: str | None = None,
-                        xdataunit: str | None = None,
-                        linecolor: str | None = None,
-                        colorcycle: str | None = None,
-                        linestyle: str | None = None,
-                        linewidth: float | None = None,
-                        marker: str | None = None,
-                        selection: str | list | None = None,
-                        ):
-            """
-            A class to handle the properties of a COMSOL Line.
-            Parameters:
-                expression (str): The expression to plot.
-                unit (str or None): The unit of the expression. If None default unit is used.
-                dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used.
-                dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, the template parameter is used.
-                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, the template time is used.
-                xdata (str or None): Can be "arc" or "expr" for line graphs or "solution" or "expr" for point graphs. If None, the default x-axis is used.
-                xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used.
-                xdataunit (str or None): The unit of the x-axis expression. If None, default unit is used.
-                linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, the template color is used.
-                colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, the template color cycle is used.
-                linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, the template style is used.
-                linewidth (float or None): The width of the line in points. If None, the template width is used.
-                marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, the template marker is used.
-                selection (str or list or None): A list of points that will be plotted (in point graphs). If "all", all points are plotted. If a selection_tag is given, it is used. If None, the template selection is used.
-            """
-            self.expression = expression
-            self.unit = unit
-            self.dataset = dataset
-            self.dataset_param = dataset_param
-            self.dataset_time = dataset_time
-            self.xdata = xdata
-            self.xdataexpr = xdataexpr
-            self.xdataunit = xdataunit
-            self.linecolor = linecolor
-            self.colorcycle = colorcycle
-            self.linestyle = linestyle
-            self.linewidth = linewidth
-            self.marker = marker
-            self.selection = selection
-
     class _PlotGroup1D:
         def __init__(self,
                      postprocessor: 'ComsolPostprocessor',
@@ -221,17 +168,12 @@ class ComsolPostprocessor:
                 for child_tag in self._api.feature().tags():
                     child_type = self._api.feature(child_tag).getType()
                     if child_type == 'LineGraph':
-                        linegraph = self.line_graph(tag=child_tag)
-                        self.childs.append(linegraph)
-                    if child_type == 'PointGraph':
-                        pointgraph = self.point_graph(tag=child_tag)
-                        self.childs.append(pointgraph)
+                        self.line_graph(tag=child_tag)
+                    elif child_type == 'PointGraph':
+                        self.point_graph(tag=child_tag)
                     else:
-                        logger.warning(f"Feature type {child_type} not recognized.")
+                        logger.warning(f"Feature type {child_type} in {child_tag} not recognized.")
                         self.childs.append(child_type)
-                
-            
-            self.postprocessor.childs.append(self)
 
             self.apply()
         
@@ -280,7 +222,14 @@ class ComsolPostprocessor:
                 if self.legendactive: self._api.set('legendactive', 'on')
                 else: self._api.set('legendactive', 'off')
             if self.legendlayout is not None: self._api.set('legendlayout', self.legendlayout)
-            if self.legendpos is not None: self._api.set('legendpos', self.legendpos)
+            if self.legendpos is not None:
+                legendlayout = self.legendlayout
+                if self.legendlayout is None:
+                    legendlayout = self._api.getString('legendlayout')
+                if legendlayout == 'inside':
+                    self._api.set('legendpos', self.legendpos)
+                if legendlayout == 'outside':
+                    self._api.set('legendposoutside', self.legendpos)
             if self.legendcolumncount is not None:
                 if self.legendpos in ['top', 'bottom']:
                     self._api.set('legendrowcount', self.postprocessor.__java_int__(self.legendcolumncount))
@@ -289,8 +238,8 @@ class ComsolPostprocessor:
                         self._api.set('legendrowcount', self.postprocessor.__java_int__(self.legendcolumncount))
                 self._api.set('legendcolumncount', self.postprocessor.__java_int__(self.legendcolumncount))
 
-            # for child in self.childs:
-            #     child.apply()
+            for child in self.childs:
+                child.apply()
 
         def run(self):
             """
@@ -299,6 +248,19 @@ class ComsolPostprocessor:
             logger.info(f"Running Plot Group {self.tag}...")
             self._api.run()
             logger.info(f"Plot Group {self.tag} finished.")
+
+        def duplicate(self):
+            """
+            Duplicates the Plot Group
+            Returns:
+                A PlotGroup1D object.
+            """
+            tags = self.model.result().tags()
+            last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
+            logger.info(f"Duplicating Plot Group {self.tag} to pg{last_tag+1}...")
+            self.model.result().duplicate(f'pg{last_tag+1}', self.tag)
+            plot_group = self.postprocessor.plot_group_1D(tag=f'pg{last_tag+1}')
+            return plot_group
 
         def export(self,
                    export_path: str | None = None):
@@ -336,6 +298,7 @@ class ComsolPostprocessor:
                             linestyle: str | None = None,
                             linewidth: float | None = None,
                             marker: str | None = None,
+                            plotonsecyaxis: bool | None = None,
                             legend: bool | None = None,
                             legendmethod: str | None = None,
                             legendmanuallist: list | None = None,
@@ -351,18 +314,19 @@ class ComsolPostprocessor:
                     tag (str or None): The tag of the line graph to edit. If None, a new line graph is created. Defaults to None.
                     expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
                     unit (str or None): The unit of the expression. If None, unit is not set. Defaults to None.
-                    dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used. Defaults to None.
-                    dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, the template parameter is used. Defaults to None.
-                    dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, the template time is used. Defaults to None.
+                    dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
+                    dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, dataset_param is not set. Defaults to None.
+                    dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
                     selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
                     xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used. Defaults to None.
                     xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used. Defaults to None.
                     xdataunit (str or None): The unit of the x-axis expression. If None, default unit is used. Defaults to None.
-                    linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, the template color is used. Defaults to None.
-                    colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, the template color cycle is used. Defaults to None.
-                    linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, the template style is used. Defaults to None.
-                    linewidth (float or None): The width of the line in points. If None, the template width is used. Defaults to None.
-                    marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, the template marker is used. Defaults to None.
+                    linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, linecolor is not set. Defaults to None.
+                    colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, color cycle is not set. Defaults to None.
+                    linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, linestyle is not set. Defaults to None.
+                    linewidth (float or None): The width of the line in points. If None, linewidth is not set. Defaults to None.
+                    marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, marker is not set. Defaults to None.
+                    plotonsecyaxis (bool or None): If True, the line is plotted on the secondary y-axis. If None, plotonsecyaxis is not set. Defaults to None.
                     legend (bool or None): If True, the legend is shown for this line. If None, the default legend setting is used. Defaults to None.
                     legendmethod (str or None): Valid values are "automatic", "manual" or "evaluated". If None, legendmethod is not set. Defaults to None.
                     legendmanualist (list or None): A list of strings to use for the legend when legendmethod is "manual". If None, legendmanualist is not set. Defaults to None.
@@ -388,6 +352,7 @@ class ComsolPostprocessor:
                 self.linestyle = linestyle
                 self.linewidth = linewidth
                 self.marker = marker
+                self.plotonsecyaxis = plotonsecyaxis
                 self.legend = legend
                 self.legendmethod = legendmethod
                 self.legendmanuallist = legendmanuallist
@@ -429,14 +394,9 @@ class ComsolPostprocessor:
                         self._api.selection().set(self.selection)
                     else:
                         raise ValueError("Selection must be 'all', a selection tag (str) or a list of integers.")
-                if self.xdata is not None:
-                    self._api.set('xdata', self.xdata)
-                    if self.xdataexpr is None:
-                        if self.xdata == 'expr':
-                            raise ValueError("If xdata is 'expr', xdataexpr must be provided.")
-                        else:
-                            self._api.set('xdataexpr', self.xdataexpr)
-                    if self.xdataunit is not None: self._api.set('xdataunit', self.xdataunit)
+                if self.xdata is not None: self._api.set('xdata', self.xdata)
+                if self.xdataexpr is not None:self._api.set('xdataexpr', self.xdataexpr)
+                if self.xdataunit is not None: self._api.set('xdataunit', self.xdataunit)
                 if self.linecolor is not None: self._api.set('linecolor', self.linecolor)
                 if self.colorcycle is not None: self._api.set('colorcycle', self.colorcycle)
                 if self.linestyle is not None: self._api.set('linestyle', self.linestyle)
@@ -444,11 +404,12 @@ class ComsolPostprocessor:
                 if self.marker is not None:
                     self._api.set('linemarker', self.marker)
                     self._api.set('markerpos', 'datapoints')
+                if self.plotonsecyaxis is not None: self._api.set('plotonsecyaxis', self.plotonsecyaxis)
                 if self.legend is not None:
                     if self.legend: self._api.set('legend', 'on')
                     else: self._api.set('legend', 'off')
                 if self.legendmethod is not None: self._api.set('legendmethod', self.legendmethod)
-                if self.legendmanuallist is not None: self._api.set('legendmanuallist', self.legendmanuallist)
+                if self.legendmanuallist is not None: self._api.set('legends', self.legendmanuallist)
                 if self.legendprefix is not None: self._api.set('legendprefix', self.legendprefix)
                 if self.legendsuffix is not None: self._api.set('legendsuffix', self.legendsuffix)
                 if self.legendpattern is not None: self._api.set('legendpattern', self.legendpattern)
@@ -471,6 +432,7 @@ class ComsolPostprocessor:
                             linestyle: str | None = None,
                             linewidth: float | None = None,
                             marker: str | None = None,
+                            plotonsecyaxis: bool | None = None,
                             legend: bool | None = None,
                             legendmethod: str | None = None,
                             legendmanuallist: list | None = None,
@@ -485,18 +447,19 @@ class ComsolPostprocessor:
                 tag (str or None): The tag of the line graph to edit. If None, a new line graph is created. Defaults to None.
                 expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
                 unit (str or None): The unit of the expression. If None, unit is not set. Defaults to None.
-                dataset (str or None): The name of the dataset to use for the plot. If None, the template dataset is used. Defaults to None.
-                dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, the template parameter is used. Defaults to None.
-                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, the template time is used. Defaults to None.
+                dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
+                dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, dataset_param is not set. Defaults to None.
+                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
                 selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
                 xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used. Defaults to None.
                 xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used. Defaults to None.
                 xdataunit (str or None): The unit of the x-axis expression. If None, default unit is used. Defaults to None.
-                linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, the template color is used. Defaults to None.
-                colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, the template color cycle is used. Defaults to None.
-                linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, the template style is used. Defaults to None.
-                linewidth (float or None): The width of the line in points. If None, the template width is used. Defaults to None.
-                marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, the template marker is used. Defaults to None.
+                linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, linecolor is not set. Defaults to None.
+                colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, color cycle is not set. Defaults to None.
+                linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, linestyle is not set. Defaults to None.
+                linewidth (float or None): The width of the line in points. If None, linewidth is not set. Defaults to None.
+                marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, marker is not set. Defaults to None.
+                plotonsecyaxis (bool or None): If True, the line is plotted on the secondary y-axis. If None, plotonsecyaxis is not set. Defaults to None.
                 legend (bool or None): If True, the legend is shown for this line. If None, the default legend setting is used. Defaults to None.
                 legendmethod (str or None): Valid values are "automatic", "manual" or "evaluated". If None, legendmethod is not set. Defaults to None.
                 legendmanualist (list or None): A list of strings to use for the legend when legendmethod is "manual". If None, legendmanualist is not set. Defaults to None.
@@ -507,7 +470,7 @@ class ComsolPostprocessor:
             Returns:
                 A LineGraph object.
             """
-            linegraph = self._LineGraph(self, tag, expression, unit, dataset, dataset_param, dataset_time, selection, xdata, xdataexpr, xdataunit, linecolor, colorcycle, linestyle, linewidth, marker, legend, legendmethod, legendmanuallist, legendprefix, legendsuffix, legendpattern, legendexprprecision)
+            linegraph = self._LineGraph(self, tag, expression, unit, dataset, dataset_param, dataset_time, selection, xdata, xdataexpr, xdataunit, linecolor, colorcycle, linestyle, linewidth, marker, plotonsecyaxis, legend, legendmethod, legendmanuallist, legendprefix, legendsuffix, legendpattern, legendexprprecision)
             self.childs.append(linegraph)
             return linegraph
         
@@ -532,6 +495,7 @@ class ComsolPostprocessor:
                             linestyle: str | None = None,
                             linewidth: float | None = None,
                             marker: str | None = None,
+                            plotonsecyaxis: bool | None = None,
                             legend: bool | None = None,
                             legendmethod: str | None = None,
                             legendmanuallist: list | None = None,
@@ -548,17 +512,18 @@ class ComsolPostprocessor:
                     expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
                     unit (str or None): The unit of the expression. If None default unit is used.
                     dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
-                    dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, the template parameter is used. Defaults to None.
-                    dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, the template time is used. Defaults to None.
+                    dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, dataset_param is not set. Defaults to None.
+                    dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
                     selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
                     xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used. Defaults to None.
                     xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used. Defaults to None.
                     xdataunit (str or None): The unit of the x-axis expression. If None, default unit is used. Defaults to None.
-                    linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, the template color is used. Defaults to None.
-                    colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, the template color cycle is used. Defaults to None.
-                    linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, the template style is used. Defaults to None.
-                    linewidth (float or None): The width of the line in points. If None, the template width is used. Defaults to None.
-                    marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, the template marker is used. Defaults to None.
+                    linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, linecolor is not set. Defaults to None.
+                    colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, colorcycle is not set. Defaults to None.
+                    linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, linestyle is not set. Defaults to None.
+                    linewidth (float or None): The width of the line in points. If None, linewidth is not set. Defaults to None.
+                    marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, marker is not set. Defaults to None.
+                    plotonsecyaxis (bool or None): If True, the line is plotted on the secondary y-axis. If None, plotonsecyaxis is not set. Defaults to None.
                     legend (bool or None): If True, the legend is shown for this line. If None, the default legend setting is used. Defaults to None.
                     legendmethod (str or None): Valid values are "automatic", "manual" or "evaluated". If None, legendmethod is not set. Defaults to None.
                     legendmanualist (list or None): A list of strings to use for the legend when legendmethod is "manual". If None, legendmanualist is not set. Defaults to None.
@@ -584,6 +549,7 @@ class ComsolPostprocessor:
                 self.linestyle = linestyle
                 self.linewidth = linewidth
                 self.marker = marker
+                self.plotonsecyaxis = plotonsecyaxis
                 self.legend = legend
                 self.legendmethod = legendmethod
                 self.legendmanuallist = legendmanuallist
@@ -625,14 +591,9 @@ class ComsolPostprocessor:
                         self._api.selection().set(self.selection)
                     else:
                         raise ValueError("Selection must be 'all', a selection tag (str) or a list of integers.")
-                if self.xdata is not None:
-                    self._api.set('xdata', self.xdata)
-                    if self.xdataexpr is None:
-                        if self.xdata == 'expr':
-                            raise ValueError("If xdata is 'expr', xdataexpr must be provided.")
-                    else:
-                        self._api.set('xdataexpr', self.xdataexpr)
-                    if self.xdataunit is not None: self._api.set('xdataunit', self.xdataunit)
+                if self.xdata is not None: self._api.set('xdata', self.xdata)
+                if self.xdataexpr is not None:self._api.set('xdataexpr', self.xdataexpr)
+                if self.xdataunit is not None: self._api.set('xdataunit', self.xdataunit)
                 if self.linecolor is not None: self._api.set('linecolor', self.linecolor)
                 if self.colorcycle is not None: self._api.set('colorcycle', self.colorcycle)
                 if self.linestyle is not None: self._api.set('linestyle', self.linestyle)
@@ -640,11 +601,12 @@ class ComsolPostprocessor:
                 if self.marker is not None:
                     self._api.set('linemarker', self.marker)
                     self._api.set('markerpos', 'datapoints')
+                if self.plotonsecyaxis is not None: self._api.set('plotonsecyaxis', self.plotonsecyaxis)
                 if self.legend is not None:
                     if self.legend: self._api.set('legend', 'on')
                     else: self._api.set('legend', 'off')
                 if self.legendmethod is not None: self._api.set('legendmethod', self.legendmethod)
-                if self.legendmanuallist is not None: self._api.set('legendmanuallist', self.legendmanuallist)
+                if self.legendmanuallist is not None: self._api.set('legends', self.legendmanuallist)
                 if self.legendprefix is not None: self._api.set('legendprefix', self.legendprefix)
                 if self.legendsuffix is not None: self._api.set('legendsuffix', self.legendsuffix)
                 if self.legendpattern is not None: self._api.set('legendpattern', self.legendpattern)
@@ -667,6 +629,7 @@ class ComsolPostprocessor:
                         linestyle: str | None = None,
                         linewidth: float | None = None,
                         marker: str | None = None,
+                        plotonsecyaxis: bool | None = None,
                         legend: bool | None = None,
                         legendmethod: str | None = None,
                         legendmanuallist: list | None = None,
@@ -682,17 +645,18 @@ class ComsolPostprocessor:
                 expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
                 unit (str or None): The unit of the expression. If None default unit is used.
                 dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
-                dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, the template parameter is used. Defaults to None.
-                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, the template time is used. Defaults to None.
+                dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, dataset_param is not set. Defaults to None.
+                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
                 selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
                 xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used. Defaults to None.
                 xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used. Defaults to None.
                 xdataunit (str or None): The unit of the x-axis expression. If None, default unit is used. Defaults to None.
-                linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, the template color is used. Defaults to None.
-                colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, the template color cycle is used. Defaults to None.
-                linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, the template style is used. Defaults to None.
-                linewidth (float or None): The width of the line in points. If None, the template width is used. Defaults to None.
-                marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, the template marker is used. Defaults to None.
+                linecolor (str or None): The color of the line. Valid values are "cycle", "cyclereset", "black", "blue", "gray", "green", "magenta", "red", "white" and "yellow". If None, linecolor is not set. Defaults to None.
+                colorcycle (str or None): The color cycle to use for the line. Valid values are "default" or "long". If None, colorcycle is not set. Defaults to None.
+                linestyle (str or None): The style of the line. Valid values are "none", "cycle", "solid", "dashed", "dotted" and "dashdot". If None, linestyle is not set. Defaults to None.
+                linewidth (float or None): The width of the line in points. If None, linewidth is not set. Defaults to None.
+                marker (str or None): The marker to use for the line. Valid values are "none", "cycle", "asterisk", "circle", "diamond", "plus", "point", "square", "star" and "triangle". Color and width are the same than linecolor and linewidth. If None, marker is not set. Defaults to None.
+                plotonsecyaxis (bool or None): If True, the line is plotted on the secondary y-axis. If None, plotonsecyaxis is not set. Defaults to None.
                 legend (bool or None): If True, the legend is shown for this line. If None, the default legend setting is used. Defaults to None.
                 legendmethod (str or None): Valid values are "automatic", "manual" or "evaluated". If None, legendmethod is not set. Defaults to None.
                 legendmanualist (list or None): A list of strings to use for the legend when legendmethod is "manual". If None, legendmanualist is not set. Defaults to None.
@@ -703,7 +667,7 @@ class ComsolPostprocessor:
             Returns:
                 A PointGraph object.
             """
-            pointgraph = self._PointGraph(self, tag, expression, unit, dataset, dataset_param, dataset_time, selection, xdata, xdataexpr, xdataunit, linecolor, colorcycle, linestyle, linewidth, marker, legend, legendmethod, legendmanuallist, legendprefix, legendsuffix, legendpattern, legendexprprecision)
+            pointgraph = self._PointGraph(self, tag, expression, unit, dataset, dataset_param, dataset_time, selection, xdata, xdataexpr, xdataunit, linecolor, colorcycle, linestyle, linewidth, marker, plotonsecyaxis, legend, legendmethod, legendmanuallist, legendprefix, legendsuffix, legendpattern, legendexprprecision)
             self.childs.append(pointgraph)
             return pointgraph
 
@@ -777,7 +741,6 @@ class ComsolPostprocessor:
             legendpos,
             legendcolumncount,
         )
-
         self.childs.append(plotgroup)
         return plotgroup
 
@@ -1065,8 +1028,9 @@ class ComsolPostprocessor:
         Parameters:
             save_path (str): The path to save the COMSOL model. If None, the original file path is overwritten.
         """
-        if save_path is None: self.model.save(self.file_path)
-        else: self.model.save(save_path, True)
+        if save_path is None: save_path = self.file_path
+        logger.info(f"Saving COMSOL model to {save_path}")
+        self.model.save(save_path, True)
 
     def __java_str__(self, obj):
         return jpype.JString(obj)
@@ -1257,242 +1221,6 @@ class ComsolPostprocessor:
             export.set('ifexists', ifexists)
             export.set('filename', export_path)
             export.run()
-
-
-    def edit_line_graph(self,
-                        duplicate: bool,
-                        template: str,
-                        line_dict_list: ComsolLine | list[ComsolLine],
-                        label: str | None = None,                    
-                        dataset: str | None = None,
-                        time: list[float] | None = None,
-                        export: bool = False,
-                        export_properties: ComsolExportPlot | None = None,
-                        export_path: str | None = None,
-                        ):
-        """
-        Plot the results of a COMSOL simulation using a template of a 1D line graph.
-
-        Parameters:
-            duplicate (bool): If True, a new plot group is created. If False, the existing plot group is used.
-            template (str): The tag of the template to use for the plot.
-            label (str or None): The label of the plot group. If None, the label is not set. If duplicate is False, plot group name will not change but label will be used as name of exported file.
-            line_dict_list (ComsolLine or list of ComsolLine): A ComsolLine object or a list of ComsolLine objects with the properties of the line plot(s).
-            dataset (str or None): The name of the dataset to use for the plot group. If None, the template dataset is used.
-            time (list of float or None): The time steps to use for the plot. If None, the template time step is used.
-            export (bool): If True, the plot is exported to a file. Defaults to False.
-            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
-            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
-        """
-        tags = self.model.result().tags()
-        last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
-
-        original_pg = self.model.result(template)
-        if duplicate:
-            plot_group = self.model.result().duplicate(f'pg{last_tag+1}', template)
-        else:
-            plot_group = original_pg
-
-        if label is not None: plot_group.label(label)
-        if isinstance(line_dict_list, list):
-            N_lines = len(line_dict_list)
-        elif isinstance(line_dict_list, self.ComsolLine):
-            N_lines = 1
-            line_dict_list = [line_dict_list]
-        
-        if time is not None:
-            for n in range(len(time)):
-                time[n] = float(time[n])
-            plot_group.set('t', time)
-
-        def config_line(line, line_dict, plot_group):
-            if line_dict.dataset is not None: line.set('data', line_dict.dataset)
-            if line_dict.dataset_param is not None: line.set('solutionparams', line_dict.dataset_param)
-            if line_dict.dataset_time is not None:
-                for n in range(len(line_dict.dataset_time)):
-                    line_dict.dataset_time[n] = float(line_dict.dataset_time[n])
-                line.set('t', line_dict.dataset_time)
-                
-            line.set('expr', line_dict.expression)
-            if line_dict.unit is not None: line.set('unit', line_dict.unit)
-            if line_dict.xdata is not None:
-                line.set('xdata', line_dict.xdata)
-                if line_dict.xdata == 'expr':
-                    if line_dict.xdataexpr is None:
-                        raise ValueError("If xdata is 'expr', xdataexpr must be provided.")
-                    else:
-                        line.set('xdataexpr', line_dict.xdataexpr)
-                    if line_dict.xdataunit is not None:
-                        line.set('xdataunit', line_dict.xdataunit)
-            if line_dict.linecolor is not None: line.set('linecolor', line_dict.linecolor)
-            if line_dict.colorcycle is not None: line.set('colorcycle', line_dict.colorcycle)
-            if line_dict.linestyle is not None: line.set('linestyle', line_dict.linestyle)
-            if line_dict.linewidth is not None: line.set('linewidth', float(line_dict.linewidth))
-            if line_dict.marker is not None:
-                line.set('linemarker', line_dict.marker)
-                line.set('markerpos', 'datapoints')
-        
-        if N_lines == 1:
-            line_dict = line_dict_list[0]
-            line = plot_group.feature(plot_group.feature().tags()[0])
-            config_line(line, line_dict, plot_group)
-        elif N_lines > 1:
-            if dataset is not None: plot_group.set('data', dataset)
-
-            for i in range(N_lines):
-                line_dict = line_dict_list[i]
-                line = plot_group.feature(plot_group.feature().tags()[i])
-                config_line(line, line_dict, plot_group)
-        
-        plot_group.run()
-
-        if export:
-            # Check if 'img1' already exists, if so, remove it before creating
-            export_tags = self.model.result().export().tags()
-            if 'img1' in export_tags:
-                image_export = self.model.result().export().remove('img1')
-            image_export = self.model.result().export().create('img1', 'Image')
-
-            image_export.set('plotgroup', f'pg{last_tag+1}')
-            if label is None:
-                raise ValueError("If exporting, label must be set to name the exported file.")
-            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
-            if export_path is None:
-                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
-            else:
-                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
-            if export_properties is not None:
-                image_export.set('resolution', float(export_properties.resolution))
-                image_export.set('unit', 'px')
-                image_export.set('size','manualweb')
-                image_export.set('width', float(export_properties.width))
-                image_export.set('height', float(export_properties.height))
-                image_export.set('fontsize', float(export_properties.font_size))
-            image_export.run()
-
-    def edit_point_graph(self,
-                        duplicate: bool,
-                        template: str,
-                        line_dict_list: ComsolLine | list[ComsolLine],
-                        label: str | None = None,                    
-                        dataset: str | None = None,
-                        time: str | list[float] | None = None,
-                        export: bool = False,
-                        export_properties: ComsolExportPlot | None = None,
-                        export_path: str | None = None,
-                        ):
-        """
-        Plot the results of a COMSOL simulation using a template of a 1D point graph.
-
-        Parameters:
-            duplicate (bool): If True, a new plot group is created. If False, the existing plot group is used.
-            template (str): The tag of the template to use for the plot.
-            label (str or None): The label of the plot group. If None, the label is not set. If duplicate is False, plot group name will not change but label will be used as name of exported file.
-            line_dict_list (ComsolLine or list of ComsolLine): A ComsolLine object or a list of ComsolLine objects with the properties of the line plot(s).
-            dataset (str or None): The name of the dataset to use for the plot group. If None, the template dataset is used.
-            time (str or list of float or None): The time steps to use for the plot. If "all", all time steps are used. If None, the template time step is used.
-            export (bool): If True, the plot is exported to a file. Defaults to False.
-            export_properties (ComsolExportProperties | None): A ComsolExportProperties object with the properties of the export. If None, the default properties are used.
-            export_path (str or None): The path to the folder to save the exported plot. If None, the default path is used.
-        """
-        tags = self.model.result().tags()
-        last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
-
-        original_pg = self.model.result(template)
-        if duplicate:
-            plot_group = self.model.result().duplicate(f'pg{last_tag+1}', template)
-        else:
-            plot_group = original_pg
-
-        if label is not None: plot_group.label(label)
-        if isinstance(line_dict_list, list):
-            N_lines = len(line_dict_list)
-        elif isinstance(line_dict_list, self.ComsolLine):
-            N_lines = 1
-            line_dict_list = [line_dict_list]
-        
-        if time is not None:
-            if time == 'all':
-                plot_group.set('innerinput', 'all')
-            else:
-                for n in range(len(time)):
-                    time[n] = float(time[n])
-                plot_group.set('t', time)
-
-        def config_line(line, line_dict, plot_group):
-            if line_dict.dataset is not None: line.set('data', line_dict.dataset)
-            if line_dict.dataset_param is not None: line.set('solutionparams', line_dict.dataset_param)
-            if line_dict.dataset_time is not None:
-                for n in range(len(line_dict.dataset_time)):
-                    line_dict.dataset_time[n] = float(line_dict.dataset_time[n])
-                line.set('t', line_dict.dataset_time)
-                
-            if line_dict.selection is not None:
-                if isinstance(line_dict.selection, str):
-                    if line_dict.selection == 'all':
-                        line.selection().all()
-                    else:
-                        line.selection().named(line_dict.selection)
-                else:
-                    line.selection().set(line_dict.selection)
-
-            line.set('expr', line_dict.expression)
-            if line_dict.unit is not None: line.set('unit', line_dict.unit)
-            if line_dict.xdata is not None:
-                line.set('xdata', line_dict.xdata)
-                if line_dict.xdata == 'expr':
-                    if line_dict.xdataexpr is None:
-                        raise ValueError("If xdata is 'expr', xdataexpr must be provided.")
-                    else:
-                        line.set('xdataexpr', line_dict.xdataexpr)
-                if line_dict.xdataunit is not None:
-                    line.set('xdataunit', line_dict.xdataunit)
-
-            if line_dict.linecolor is not None: line.set('linecolor', line_dict.linecolor)
-            if line_dict.colorcycle is not None: line.set('colorcycle', line_dict.colorcycle)
-            if line_dict.linestyle is not None: line.set('linestyle', line_dict.linestyle)
-            if line_dict.linewidth is not None: line.set('linewidth', float(line_dict.linewidth))
-            if line_dict.marker is not None:
-                line.set('linemarker', line_dict.marker)
-                line.set('markerpos', 'datapoints')
-        
-        if N_lines == 1:
-            line_dict = line_dict_list[0]
-            line = plot_group.feature(plot_group.feature().tags()[0])
-            config_line(line, line_dict, plot_group)
-        elif N_lines > 1:
-            if dataset is not None: plot_group.set('data', dataset)
-
-            for i in range(N_lines):
-                line_dict = line_dict_list[i]
-                line = plot_group.feature(plot_group.feature().tags()[i])
-                config_line(line, line_dict, plot_group)
-        
-        plot_group.run()
-
-        if export:
-            # Check if 'img1' already exists, if so, remove it before creating
-            export_tags = self.model.result().export().tags()
-            if 'img1' in export_tags:
-                image_export = self.model.result().export().remove('img1')
-            image_export = self.model.result().export().create('img1', 'Image')
-
-            image_export.set('plotgroup', f'pg{last_tag+1}')
-            if label is None:
-                raise ValueError("If exporting, label must be set to name the exported file.")
-            logger.info(f"Exporting image pg{last_tag+1}_{label}.png")
-            if export_path is None:
-                image_export.set('pngfilename', f'pg{last_tag+1}_{label}.png')
-            else:
-                image_export.set('pngfilename', f'{export_path}/pg{last_tag+1}_{label}.png')
-            if export_properties is not None:
-                image_export.set('resolution', float(export_properties.resolution))
-                image_export.set('unit', 'px')
-                image_export.set('size','manualweb')
-                image_export.set('width', float(export_properties.width))
-                image_export.set('height', float(export_properties.height))
-                image_export.set('fontsize', float(export_properties.font_size))
-            image_export.run()
 
     def export_image(self,
                      plotgroup_tag: str,
