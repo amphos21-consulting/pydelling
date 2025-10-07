@@ -339,6 +339,7 @@ class ComsolPostprocessor:
                 self.dataset = dataset
                 self.dataset_param = dataset_param
                 self.dataset_time = dataset_time
+                self.selection = selection
                 self.xdata = xdata
                 self.xdataexpr = xdataexpr
                 self.xdataunit = xdataunit
@@ -372,6 +373,15 @@ class ComsolPostprocessor:
                 if self.unit is not None: self._api.set('unit', self.unit)
                 if self.dataset_param is not None: self._api.set('solutionparams', self.dataset_param)
                 if self.dataset_time is not None: self._api.set('t', self.dataset_time)
+                if self.selection is not None:
+                    if self.selection == 'all':
+                        self._api.selection().all()
+                    elif isinstance(self.selection, str):
+                        self._api.selection().named(self.selection)
+                    elif isinstance(self.selection, list):                        
+                        self._api.selection().set(self.selection)
+                    else:
+                        raise ValueError("Selection must be 'all', a selection tag (str) or a list of integers.")
                 if self.xdata is not None:
                     self._api.set('xdata', self.xdata)
                     if self.xdataexpr is None:
