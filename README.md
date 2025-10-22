@@ -28,6 +28,9 @@ Additionally, pydelling features the **PflotranManager** module, which facilitat
 <span style="background-color: yellow; color: black; padding: 2px 6px; border-radius: 3px;">Under construction</span>
 
 ## Release notes
+### v1.0.7
+- Feat: A class was added to summarize the mass balance errors from Pflotran results.
+
 ### v1.0.6
 - Fix: unit tests in CI pipeline
 
