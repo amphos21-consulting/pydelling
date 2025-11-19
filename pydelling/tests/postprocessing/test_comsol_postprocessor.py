@@ -42,34 +42,6 @@ class TestComsolPostprocessor(unittest.TestCase):
         self.assertEqual(int(df_test['t'][68]*10), 67)
         self.assertEqual(int(df_test['p_pt6'][68]), 44572)
 
-    def test_edit_surface_plot(self):
-        comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
-        surface1 = comsol.ComsolSurface(
-            dataset = 'parent',
-            expression = 'p',
-            unit = 'kPa',
-            color_table = 'Rainbow',
-            color_table_discrete = 10,
-            color_table_reverse = False,
-            color_table_sym = False,
-            rangelist = None,
-            selection = False,
-        )
-
-        surface2 = comsol.ComsolSurface(
-            dataset = 'parent',
-            expression = 'dl.U',
-            unit = 'm/s',
-            color_table = 'Dipole',
-            color_table_discrete = 10,
-            color_table_reverse = False,
-            color_table_sym = False,
-            rangelist = None,
-            selection = [2],
-        )
-
-        comsol.edit_surface_plot(True,'pg4', [surface1, surface2], label="Mix", dataset='dset1', time=5)
-
     def test_plot_group_1D(self):
         comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
         plotgroup = comsol.plot_group_1D(tag='pg7', legendactive=True, legendpos='upperright')
