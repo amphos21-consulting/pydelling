@@ -113,7 +113,7 @@ class ComsolPostprocessor:
                 tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
                 dataset (str or None): The name of the dataset to use for the plot group. If None, dataset is not set. Defaults to None.
                 label (str or None): The label of the plot group. If None, the label is not set. Defaults to None.
-                time (list of float or "all" or None): The time steps to use for the plot group. If "all", all time steps are used. If None, time is not set. Defaults to None.
+                time (list of float or "all" or "first" or "last" or None): The time steps to use for the plot group. If "all", all time steps are used. If None, time is not set. Defaults to None.
                 xlabel (str or bool or None): The label of the x-axis. If False, automatic axis is used. If None, the label is not set. Defaults to None.
                 ylabel (str or bool or None): The label of the y-axis. If False, automatic axis is used. If None, the label is not set. Defaults to None.
                 xrange (list or None): The range of the x-axis. If None, automatic range is used. Defaults to None.
@@ -160,11 +160,13 @@ class ComsolPostprocessor:
                 tag = f'pg{last_tag+1}'
                 self.tag = tag
                 self._api = self.model.result().create(self.tag, 'PlotGroup1D')
-                logger.info(f"Plot Group {self.tag} created.")
+                self.postprocessor.childs.append(self)
+                logger.info(f"1D Plot Group {self.tag} created.")
             else:
                 self.tag = tag
                 self._api = self.model.result(self.tag)
-                logger.info(f"Plot Group {self.tag} loaded.")
+                self.postprocessor.childs.append(self)
+                logger.info(f"1D Plot Group {self.tag} loaded.")
                 for child_tag in self._api.feature().tags():
                     child_type = self._api.feature(child_tag).getType()
                     if child_type == 'LineGraph':
@@ -186,6 +188,10 @@ class ComsolPostprocessor:
             if self.time is not None:
                 if self.time == 'all':
                     self._api.set('innerinput', 'all')
+                if self.time == 'first':
+                    self._api.set('looplevelinput','first')
+                if self.time == 'last':
+                    self._api.set('looplevelinput','last')
                 else:
                     for n in range(len(self.time)):
                         self.time[n] = float(self.time[n])
@@ -245,9 +251,9 @@ class ComsolPostprocessor:
             """
             Run the PlotGroup1D to update the plot.
             """
-            logger.info(f"Running Plot Group {self.tag}...")
+            logger.info(f"Running 1D Plot Group {self.tag}...")
             self._api.run()
-            logger.info(f"Plot Group {self.tag} finished.")
+            logger.info(f"1D Plot Group {self.tag} run completed.")
 
         def duplicate(self):
             """
@@ -288,7 +294,7 @@ class ComsolPostprocessor:
                             unit: str | None = None,
                             dataset: str | None = None,
                             dataset_param: str | None = None,
-                            dataset_time: list[float] | None = None,
+                            dataset_time: list[float] | str | None = None,
                             selection: str | list | None = None,
                             xdata: str | None = None,
                             xdataexpr: str | None = None,
@@ -316,7 +322,7 @@ class ComsolPostprocessor:
                     unit (str or None): The unit of the expression. If None, unit is not set. Defaults to None.
                     dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
                     dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, dataset_param is not set. Defaults to None.
-                    dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
+                    dataset_time (list of float or "all" or "first" or "last" or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
                     selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
                     xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used. Defaults to None.
                     xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used. Defaults to None.
@@ -368,10 +374,12 @@ class ComsolPostprocessor:
                     tag = f'lngr{last_tag+1}'
                     self.tag = tag
                     self._api = self.model.result(self.plotgroup.tag).create(self.tag, 'LineGraph')
+                    self.plotgroup.childs.append(self)
                     logger.info(f"Line Graph {self.tag} created.")
                 else:
                     self.tag = tag
                     self._api = self.model.result(self.plotgroup.tag).feature(self.tag)
+                    self.plotgroup.childs.append(self)
                     logger.info(f"Line Graph {self.tag} loaded.")
                     
                 self.apply()
@@ -384,7 +392,21 @@ class ComsolPostprocessor:
                 if self.expression is not None: self._api.set('expr', self.expression)
                 if self.unit is not None: self._api.set('unit', self.unit)
                 if self.dataset_param is not None: self._api.set('solutionparams', self.dataset_param)
-                if self.dataset_time is not None: self._api.set('t', self.dataset_time)
+                if self.dataset_time is not None:
+                    if self.dataset_time == 'all':
+                        self._api.set('innerinput', 'all')
+                    if self.dataset_time == 'first':
+                        self._api.set('looplevelinput','first')
+                    if self.dataset_time == 'last':
+                        self._api.set('looplevelinput','last')
+                    else:
+                        for n in range(len(self.dataset_time)):
+                            self.dataset_time[n] = float(self.dataset_time[n])
+                        self._api.set('t', self.dataset_time)
+                if self.dataset_time == 'first':
+                    self._api.set('looplevelinput','first')
+                if self.dataset_time == 'last':
+                    self._api.set('looplevelinput','last')
                 if self.selection is not None:
                     if self.selection == 'all':
                         self._api.selection().all()
@@ -415,14 +437,13 @@ class ComsolPostprocessor:
                 if self.legendpattern is not None: self._api.set('legendpattern', self.legendpattern)
                 if self.legendexprprecision is not None: self._api.set('legendexprprecision', self.postprocessor.__java_int__(self.legendexprprecision))
                 
-
         def line_graph(self,
                         tag: str | None = None,
                             expression: str | None = None,
                             unit: str | None = None,
                             dataset: str | None = None,
                             dataset_param: str | None = None,
-                            dataset_time: list[float] | None = None,
+                            dataset_time: list[float] | str | None = None,
                             selection: str | list | None = None,
                             xdata: str | None = None,
                             xdataexpr: str | None = None,
@@ -449,7 +470,7 @@ class ComsolPostprocessor:
                 unit (str or None): The unit of the expression. If None, unit is not set. Defaults to None.
                 dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
                 dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, dataset_param is not set. Defaults to None.
-                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
+                dataset_time (list of float or "all" or "first" or "last" or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
                 selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
                 xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used. Defaults to None.
                 xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used. Defaults to None.
@@ -471,7 +492,6 @@ class ComsolPostprocessor:
                 A LineGraph object.
             """
             linegraph = self._LineGraph(self, tag, expression, unit, dataset, dataset_param, dataset_time, selection, xdata, xdataexpr, xdataunit, linecolor, colorcycle, linestyle, linewidth, marker, plotonsecyaxis, legend, legendmethod, legendmanuallist, legendprefix, legendsuffix, legendpattern, legendexprprecision)
-            self.childs.append(linegraph)
             return linegraph
         
         class _PointGraph:
@@ -485,7 +505,7 @@ class ComsolPostprocessor:
                             unit: str | None = None,
                             dataset: str | None = None,
                             dataset_param: str | None = None,
-                            dataset_time: list[float] | None = None,
+                            dataset_time: list[float] | str | None = None,
                             selection: str | list | None = None,
                             xdata: str | None = None,
                             xdataexpr: str | None = None,
@@ -513,7 +533,7 @@ class ComsolPostprocessor:
                     unit (str or None): The unit of the expression. If None default unit is used.
                     dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
                     dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, dataset_param is not set. Defaults to None.
-                    dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
+                    dataset_time (list of float or 'all' or 'first' or 'last' or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
                     selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
                     xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used. Defaults to None.
                     xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used. Defaults to None.
@@ -565,10 +585,12 @@ class ComsolPostprocessor:
                     tag = f'ptgr{last_tag+1}'
                     self.tag = tag
                     self._api = self.model.result(self.plotgroup.tag).create(self.tag, 'PointGraph')
+                    self.plotgroup.childs.append(self)
                     logger.info(f"Point Graph {self.tag} created.")
                 else:
                     self.tag = tag
                     self._api = self.model.result(self.plotgroup.tag).feature(self.tag)
+                    self.plotgroup.childs.append(self)
                     logger.info(f"Point Graph {self.tag} loaded.")
 
                 self.apply()
@@ -581,7 +603,17 @@ class ComsolPostprocessor:
                 if self.expression is not None: self._api.set('expr', self.expression)
                 if self.unit is not None: self._api.set('unit', self.unit)
                 if self.dataset_param is not None: self._api.set('solutionparams', self.dataset_param)
-                if self.dataset_time is not None: self._api.set('t', self.dataset_time)
+                if self.dataset_time is not None:
+                    if self.dataset_time == 'all':
+                        self._api.set('innerinput', 'all')
+                    if self.dataset_time == 'first':
+                        self._api.set('looplevelinput','first')
+                    if self.dataset_time == 'last':
+                        self._api.set('looplevelinput','last')
+                    else:
+                        for n in range(len(self.dataset_time)):
+                            self.dataset_time[n] = float(self.dataset_time[n])
+                        self._api.set('t', self.dataset_time)
                 if self.selection is not None:
                     if self.selection == 'all':
                         self._api.selection().all()
@@ -612,14 +644,13 @@ class ComsolPostprocessor:
                 if self.legendpattern is not None: self._api.set('legendpattern', self.legendpattern)
                 if self.legendexprprecision is not None: self._api.set('legendexprprecision', self.postprocessor.__java_int__(self.legendexprprecision))
                 
-
         def point_graph(self,
                         tag: str | None = None,
                         expression: str | None = None,
                         unit: str | None = None,
                         dataset: str | None = None,
                         dataset_param: str | None = None,
-                        dataset_time: list[float] | None = None,
+                        dataset_time: list[float] | str | None = None,
                         selection: str | list | None = None,
                         xdata: str | None = None,
                         xdataexpr: str | None = None,
@@ -646,7 +677,7 @@ class ComsolPostprocessor:
                 unit (str or None): The unit of the expression. If None default unit is used.
                 dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
                 dataset_param (str or None): The parameter to use for the dataset, needed if dataset is not "parent". Valid values are "parent" or "manual". If None, dataset_param is not set. Defaults to None.
-                dataset_time (list of float or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
+                dataset_time (list of float or 'all' or 'first' or 'last' or None): The time steps to use for the dataset, needed if dataset_param is not "parent". If None, time is not set. Defaults to None.
                 selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
                 xdata (str or None): Can be "arc" or "expr". If None, the default x-axis is used. Defaults to None.
                 xdataexpr (str or None): The expression to use for the x-axis if xdata is "expr". If None, the default x-axis is used. Defaults to None.
@@ -668,7 +699,6 @@ class ComsolPostprocessor:
                 A PointGraph object.
             """
             pointgraph = self._PointGraph(self, tag, expression, unit, dataset, dataset_param, dataset_time, selection, xdata, xdataexpr, xdataunit, linecolor, colorcycle, linestyle, linewidth, marker, plotonsecyaxis, legend, legendmethod, legendmanuallist, legendprefix, legendsuffix, legendpattern, legendexprprecision)
-            self.childs.append(pointgraph)
             return pointgraph
 
     def plot_group_1D(self,
@@ -702,7 +732,7 @@ class ComsolPostprocessor:
             tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
             dataset (str or None): The name of the dataset to use for the plot group. If None, the dataset is not set. Defaults to None.
             label (str or None): The title of the plot group. If None, the title is not set. Defaults to None.
-            time (list of float or "all"): The time steps to use for the plot group. If "all", all time steps are used. Defaults to "all".
+            time (list of float or "all" or 'first' or 'last' or None): The time steps to use for the plot group. If "all", all time steps are used. If None, time is not set. Defaults to None.
             xlabel (str or None): The label of the x-axis. If None, the label is not set. Defaults to None.
             ylabel (str or None): The label of the y-axis. If None, the label is not set. Defaults to None.
             xrange (list or None): The range of the x-axis. If None, automatic range is used. Defaults to None.
@@ -741,8 +771,339 @@ class ComsolPostprocessor:
             legendpos,
             legendcolumncount,
         )
-        self.childs.append(plotgroup)
         return plotgroup
+
+    class _PlotGroup2D:
+        def __init__(self,
+                     postprocessor: 'ComsolPostprocessor',
+                     tag: str | None = None,
+                     dataset: str | None = None,
+                     label: str | None = None,
+                     time: float | str | None = None,
+                     selection: str | list | None = None,
+                     view: str | None = None,
+                     showlegends: bool | None = None,
+                     legendcolor: str | None = None,
+                     legendpos: str | None = None,
+                     showlegendsmaxmin: bool | None = None,
+                     showlegendsunit: bool | None = None,
+                     legendformattingactive: bool | None = None,
+                     legendnotation: str | None = None,
+                     legendprecision: int | None = None,
+                     ):
+            """
+            A class to handle the properties of a COMSOL 2D Plot Group.
+            Parameters:
+                postprocessor: The COMSOL Postprocessor object from ComsolPostprocessor.
+                tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
+                dataset (str or None): The name of the dataset to use for the plot group. If None, the dataset is not set. Defaults to None.
+                label (str or None): The label of the plot group. If None, the label is not set. Defaults to None.
+                time (float or None): The time step to use for the plot group. If None, the time is not set. Defaults to None.
+                selection (str or list or None): The selection to use for the plot group. If "all", all domains are selected. If a Explicit Selection tag is given, it is used. If a list of integers is given, those domains are selected. If None, the selection is not set. Defaults to None.
+                view (str or None): The tag of the view to use for the plot group or 'auto'. If None, the view is not set. Defaults to None.
+                showlegends (bool or None): If True, the color legend is shown. If None, the legend setting is not set. Defaults to None.
+                legendcolor (str or None): The color of the values of the legend. Valid values are black | blue | cyan | gray | green | magenta | red | white | yellow. If None, legendcolor is not set. Defaults to None.
+                legendpos (str or None): The position of the color legend. Valid values are alternating | bottom | left | leftdouble | right | rightdouble. If None, legendpos is not set. Defaults to None.
+                showlegendsmaxmin (bool or None): If True, the maximum and minimum values are shown on the legend. If None, showlegendsmaxmin setting is not set. Defaults to None.
+                showlegendsunit (bool or None): If True, the unit is shown on the legend. If None, showlegendsunit setting is not set. Defaults to None.
+                legendformattingactive (bool or None): If True, the formatting of the legend is active. If None, legendformattingactive setting is not set. Defaults to None.
+                legendnotation (str or None): The notation of the legend. Valid values are automatic | scientific | engineering. legendformattingactive must be True for the legendnotation to be set. If None, legendnotation is not set. Defaults to None.
+                legendprecision (int or None): The number of decimal places to use for the legend. legendformattingactive must be True for the legendprecision to be set. If None, legendprecision is not set. Defaults to None.
+            """
+            self.postprocessor = postprocessor
+            self.model = self.postprocessor.model
+            self.dataset = dataset
+            self.label = label
+            self.time = time
+            self.selection = selection
+            self.view = view
+            self.showlegends = showlegends
+            self.legendcolor = legendcolor
+            self.legendpos = legendpos
+            self.showlegendsmaxmin = showlegendsmaxmin
+            self.showlegendsunit = showlegendsunit
+            self.legendformattingactive = legendformattingactive
+            self.legendnotation = legendnotation
+            self.legendprecision = legendprecision
+            self.childs = []
+
+            if tag is None:
+                tags = self.model.result().tags()
+                last_tag = max([int(re.findall(r'\d+', str(temptag))[0]) for temptag in tags if re.findall(r'\d+', str(temptag))])
+                tag = f'pg{last_tag+1}'
+                self.tag = tag
+                self._api = self.model.result().create(self.tag, 'PlotGroup2D')
+                self.postprocessor.childs.append(self)
+                logger.info(f"2D Plot Group {self.tag} created.")
+            else:
+                self.tag = tag
+                self._api = self.model.result(self.tag)
+                self.postprocessor.childs.append(self)
+                logger.info(f"2D Plot Group {self.tag} loaded.")
+                for child_tag in self._api.feature().tags():
+                    child_type = self._api.feature(child_tag).getType()
+                    if child_type == 'Surface':
+                        self.surface(tag=child_tag)
+                    else:
+                        logger.warning(f"Feature type {child_type} in {child_tag} not recognized.")
+                        self.childs.append(child_type)
+
+            self.apply()
+
+        def apply(self):
+            """
+            Apply the changes of the PlotGroup2D to the COMSOL API model.
+            """
+            if self.dataset is not None: self._api.set('data', self.dataset)
+            if self.label is not None: self._api.label(self.label)
+            if self.time is not None:
+                    if self.time == 'all':
+                        self._api.set('innerinput', 'all')
+                    else:
+                        self._api.set('t', float(self.time))
+            if self.selection is not None:
+                if self.selection == 'all':
+                    self._api.selection().allGeom()
+                elif isinstance(self.selection, str):
+                    self._api.selection().named(self.selection)
+                elif isinstance(self.selection, list):                        
+                    self._api.selection().set(self.selection)
+                else:
+                    raise ValueError("Selection must be 'all', a selection tag (str) or a list of integers.")
+            if self.view is not None: self._api.set('view', self.view)
+            if self.showlegends is not None:
+                if self.showlegends: self._api.set('showlegends', 'on')
+                else: self._api.set('showlegends', 'off')
+            if self.legendcolor is not None: self._api.set('legendcolor', self.legendcolor)
+            if self.legendpos is not None: self._api.set('legendpos', self.legendpos)
+            if self.showlegendsmaxmin is not None: self._api.set('showlegendsmaxmin', self.showlegendsmaxmin)
+            if self.showlegendsunit is not None: self._api.set('showlegendsunit', self.showlegendsunit)
+            if self.legendformattingactive is not None: self._api.set('legendactive', self.legendformattingactive)
+            if self.legendnotation is not None: self._api.set('legendnotation', self.legendnotation)
+            if self.legendprecision is not None: self._api.set('legendprecision', self.postprocessor.__java_int__(self.legendprecision))
+
+            for child in self.childs:
+                child.apply()
+
+        def run(self):
+            """
+            Run the plot group to generate the plot.
+            """
+            logger.info(f"Running 2D Plot Group {self.tag}.")
+            self._api.run()
+            logger.info(f"2D Plot Group {self.tag} run completed.")
+        
+        def duplicate(self):
+            """
+            Duplicate the plot group. 
+            Returns:
+                A PlotGroup2D object.
+            """
+            tags = self.model.result().tags()
+            last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
+            logger.info(f"Duplicating Plot Group {self.tag} to pg{last_tag+1}...")
+            self.model.result().duplicate(f'pg{last_tag+1}', self.tag)
+            plot_group = self.postprocessor.plot_group_2D(tag=f'pg{last_tag+1}')
+            return plot_group
+    
+        def export(self,
+                   export_path: str | None = None):
+            """
+            Export the PlotGroup2D to a PNG file.
+            Parameters:
+                export_path (str or None): The path to save the PNG file. If None, the file is saved in the current directory with the name of the plot group tag. Defaults to None.
+            Warning:
+                If the ComsolPostprocessor.export_properties() is not used, the export properties will be the default ones.
+            """
+            self._api.run()
+            file_parent = Path(self.postprocessor.file_path).parent
+            if export_path is None: export_path = f"{file_parent}/{self.tag}.png"
+            self.postprocessor._export(self.tag, export_path)
+        
+        def surface(self,
+                    tag: str | None = None,
+                    expression: str | None = None,
+                    unit: str | None = None,
+                    dataset: str | None = None,
+                    dataset_time: float | str | None = None,
+                    color_table: str | None = None,
+                    color_table_discrete: int | bool | None = None,
+                    color_table_reverse: bool | None = None,
+                    color_table_sym: bool | None = None,
+                    rangelist: list | bool | None = None,
+                    selection: list | str | None = None,
+                    ):
+            """
+            A class to handle the properties of a COMSOL Surface plot.
+            Parameters:
+                tag (str or None): The tag of the surface plot to edit. If None, a new surface plot is created. Defaults to None.
+                expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
+                unit (str or None): The unit of the expression. If None, the unit is not set. Defaults to None.
+                dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
+                dataset_time (float or 'first' or 'last' or None): The time to use for the dataset, needed if dataset is not "parent". If None, time is not set. Defaults to None.
+                color_table (str or None): The name of the color table to use for the plot. If None, color table is not set. Defaults to None.
+                color_table_discrete (int or False or None): The number of discrete colors to use for the plot. If False, the color table is set as continuous. If None, the color table discretization is not set. Defaults to None.
+                color_table_reverse (bool or None): If True, the color table is reversed. If None, the color table reverse setting is not set. Defaults to None.
+                color_table_sym (bool or None): If True, the color table is symmetric. If None, the color table symmetry setting is not set. Defaults to None.
+                rangelist (list or bool or None): The range of the plot. If False, automatic range is used. If None, color table range is not set. Defaults to None.
+                selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
+            """
+            surface = self.postprocessor._Surface(self, tag, expression, unit, dataset, dataset_time, color_table, color_table_discrete, color_table_reverse, color_table_sym, rangelist, selection)
+            return surface
+
+
+    def plot_group_2D(self,
+                     tag: str | None = None,
+                     dataset: str | None = None,
+                     label: str | None = None,
+                     time: float | str | None = None,
+                     selection: str | list | None = None,
+                     view: str | None = None,
+                     showlegends: bool | None = None,
+                     legendcolor: str | None = None,
+                     legendpos: str | None = None,
+                     showlegendsmaxmin: bool | None = None,
+                     showlegendsunit: bool | None = None,
+                     legendformattingactive: bool | None = None,
+                     legendnotation: str | None = None,
+                     legendprecision: int | None = None,
+                     ):
+            """
+            A class to handle the properties of a COMSOL 2D Plot Group.
+            Parameters:
+                tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
+                dataset (str or None): The name of the dataset to use for the plot group. If None, the dataset is not set. Defaults to None.
+                label (str or None): The label of the plot group. If None, the label is not set. Defaults to None.
+                time (float or None): The time step to use for the plot group. If None, the time is not set. Defaults to None.
+                selection (str or list or None): The selection to use for the plot group. If "all", all domains are selected. If a Explicit Selection tag is given, it is used. If a list of integers is given, those domains are selected. If None, the selection is not set. Defaults to None.
+                view (str or None): The tag of the view to use for the plot group or 'auto'. If None, the view is not set. Defaults to None.
+                showlegends (bool or None): If True, the color legend is shown. If None, the legend setting is not set. Defaults to None.
+                legendcolor (str or None): The color of the values of the legend. Valid values are black | blue | cyan | gray | green | magenta | red | white | yellow. If None, legendcolor is not set. Defaults to None.
+                legendpos (str or None): The position of the color legend. Valid values are alternating | bottom | left | leftdouble | right | rightdouble. If None, legendpos is not set. Defaults to None.
+                showlegendsmaxmin (bool or None): If True, the maximum and minimum values are shown on the legend. If None, showlegendsmaxmin setting is not set. Defaults to None.
+                showlegendsunit (bool or None): If True, the unit is shown on the legend. If None, showlegendsunit setting is not set. Defaults to None.
+                legendformattingactive (bool or None): If True, the formatting of the legend is active. If None, legendformattingactive setting is not set. Defaults to None.
+                legendnotation (str or None): The notation of the legend. Valid values are automatic | scientific | engineering. legendformattingactive must be True for the legendnotation to be set. If None, legendnotation is not set. Defaults to None.
+                legendprecision (int or None): The number of decimal places to use for the legend. legendformattingactive must be True for the legendprecision to be set. If None, legendprecision is not set. Defaults to None.
+            Returns:
+                A PlotGroup2D object.
+            """
+            plotgroup = self._PlotGroup2D(self, tag, dataset, label, time, selection, view, showlegends, legendcolor, legendpos, showlegendsmaxmin, showlegendsunit, legendformattingactive, legendnotation, legendprecision)
+            return plotgroup
+    
+    class _Surface:
+        def __init__(self,
+                    plotgroup: 'ComsolPostprocessor._PlotGroup2D', # | 'ComsolPostprocessor._PlotGroup3D',
+                    tag: str | None = None,
+                    expression: str | None = None,
+                    unit: str | None = None,
+                    dataset: str | None = None,
+                    dataset_time: float | str | None = None,
+                    color_table: str | None = None,
+                    color_table_discrete: int | bool | None = None,
+                    color_table_reverse: bool | None = None,
+                    color_table_sym: bool | None = None,
+                    rangelist: list | bool | None = None,
+                    selection: list | str | None = None,
+                    ):
+            """
+            A class to handle the properties of a COMSOL Surface plot.
+            Parameters:
+                plotgroup: The COMSOL PlotGroup2D or PlotGroup3D object from ComsolPostprocessor.
+                tag (str or None): The tag of the surface plot to edit. If None, a new surface plot is created. Defaults to None.
+                expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
+                unit (str or None): The unit of the expression. If None, the unit is not set. Defaults to None.
+                dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
+                dataset_time (float or 'parent' or None): The time to use for the dataset, needed if dataset is not "parent". If None, time is not set. Defaults to None.
+                color_table (str or None): The name of the color table to use for the plot. If None, color table is not set. Defaults to None.
+                color_table_discrete (int or False or None): The number of discrete colors to use for the plot. If False, the color table is set as continuous. If None, the color table discretization is not set. Defaults to None.
+                color_table_reverse (bool or None): If True, the color table is reversed. If None, the color table reverse setting is not set. Defaults to None.
+                color_table_sym (bool or None): If True, the color table is symmetric. If None, the color table symmetry setting is not set. Defaults to None.
+                rangelist (list or bool or None): The range of the plot. If False, automatic range is used. If None, color table range is not set. Defaults to None.
+                selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
+            """
+            self.plotgroup = plotgroup
+            self.postprocessor = self.plotgroup.postprocessor
+            self.model = self.postprocessor.model
+            self.expression = expression
+            self.unit = unit
+            self.dataset = dataset
+            self.dataset_time = dataset_time
+            self.color_table = color_table
+            self.color_table_discrete = color_table_discrete
+            self.color_table_reverse = color_table_reverse
+            self.color_table_sym = color_table_sym
+            self.rangelist = rangelist
+            self.selection = selection
+
+            if tag is None:
+                    tags = self.plotgroup._api.feature().tags()
+                    try :last_tag = max([int(re.findall(r'\d+', str(temptag))[0]) for temptag in tags if re.findall(r'surf\d+', str(temptag))])
+                    except: last_tag = 0
+                    tag = f'surf{last_tag+1}'
+                    self.tag = tag
+                    self._api = self.model.result(self.plotgroup.tag).create(self.tag, 'Surface')
+                    self.plotgroup.childs.append(self)
+                    logger.info(f"Surface {self.tag} created.")
+            else:
+                self.tag = tag
+                self._api = self.model.result(self.plotgroup.tag).feature(self.tag)
+                self.plotgroup.childs.append(self)
+                logger.info(f"Surface {self.tag} loaded.")
+                # NOTE: Load childs
+            
+            self.apply()
+
+        def apply(self):
+            """
+            Apply the changes of the Surface to the COMSOL API model.
+            """
+            if self.expression is not None: self._api.set('expr', self.expression)
+            if self.unit is not None: self._api.set('unit', self.unit)
+            if self.dataset is not None: self._api.set('data', self.dataset)
+            if self.dataset_time is not None: 
+                if self.dataset_time == 'parent':
+                    self._api.set('solutionparams', 'parent')
+                else:
+                    self._api.set('t', float(self.dataset_time))
+            if self.color_table is not None: self._api.set('colortable', self.color_table)
+            if self.color_table_discrete is not None:
+                if self.color_table_discrete == False:
+                    self._api.set('colortabletype', 'continuous')
+                else:
+                    self._api.set('colortabletype', 'discrete')
+                    self._api.set('bandcount', float(self.color_table_discrete))
+            if self.color_table_reverse is not None:
+                if self.color_table_reverse: self._api.set('colortablerev', 'on')
+                else: self._api.set('colortablerev', 'off')
+            if self.color_table_sym is not None:
+                if self.color_table_sym: self._api.set('colortablesym', 'on')
+                else: self._api.set('colortablesym', 'off')
+            if self.rangelist is not None:
+                if self.rangelist == False:
+                    self._api.set('rangecoloractive', 'off')
+                else:
+                    self._api.set('rangecoloractive', 'on')
+                    self._api.set('rangecolormin', float(self.rangelist[0]))
+                    self._api.set('rangecolormax', float(self.rangelist[1]))
+
+            if self.selection is not None:
+                sel_tags = self._api.feature().tags()
+                try :sel_tag = max([int(re.findall(r'\d+', str(temptag))[0]) for temptag in sel_tags if re.findall(r'sel\d+', str(temptag))])
+                except: sel_tag = 0
+
+                if sel_tag == 0:
+                    self._api.create('sel1','Selection')
+                    sel_tag = 1
+
+                if self.selection == 'all':
+                    self._api.feature(f"sel{sel_tag}").selection().all()
+                elif isinstance(self.selection, str):
+                    self._api.feature(f"sel{sel_tag}").selection().named(self.selection)
+                elif isinstance(self.selection, list):                        
+                    self._api.feature(f"sel{sel_tag}").selection().set(self.selection)
+                else:
+                    raise ValueError("Selection must be 'all', a selection tag (str) or a list of integers.")
 
     class _ExportProperties:
         def __init__(self,
@@ -875,6 +1236,28 @@ class ComsolPostprocessor:
                     image_export.set('logo3d', 'off')
         image_export.run()
 
+    def apply(self):
+        """
+        Apply the changes of the ComsolPostprocessor to the COMSOL API model.
+        """
+        for child in self.childs:
+            child.apply()
+        
+    def run_all_plots(self):
+        """
+        Run all plot groups in the COMSOL model.
+        """
+        for child in self.childs:
+            child.run()
+
+    def export_all_plots(self):
+        """
+        Export all plot groups in the COMSOL model to PNG files.
+        Warning:
+            If the ComsolPostprocessor.export_properties() is not used, the export properties will be the default ones.
+        """
+        for child in self.childs:
+            child.export()
 
     def get_variable_evolution_at_point(self, 
                                         dataset: str, 
