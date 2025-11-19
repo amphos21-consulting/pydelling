@@ -96,6 +96,11 @@ class TestComsolPostprocessor(unittest.TestCase):
         plotgroup4 = comsol.plot_group_1D(tag='pg6', legendactive=True, legendlayout='outside', legendpos='top', legendcolumncount=2)
         pointgraph = plotgroup4.point_graph(tag='ptgr1',legend=True, legendmethod='manual', legendmanuallist=['P1', 'P2', 'P3', 'P4', 'P5', 'P6'])
 
+    def test_plot_group_2D(self):
+        comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
+        plotgroup = comsol.plot_group_2D(dataset='dset2', label='New 2D Plot', time=4, selection='all', view='view1', showlegends=True, legendcolor='magenta', legendpos='bottom', showlegendsmaxmin=True, showlegendsunit=True, legendformattingactive=True, legendnotation='engineering', legendprecision=3)
+        surface = plotgroup.surface(expression='p', unit='kPa', dataset='dset2', dataset_time='parent', color_table='Dipole', color_table_discrete=7, color_table_reverse=True, color_table_sym=False, rangelist=[0.1,2.8], selection='all')
+
     def test_export(self):
         comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
         plotgroup = comsol.plot_group_1D(tag='pg7', legendactive=True, legendpos='upperright')
