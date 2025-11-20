@@ -5,9 +5,9 @@ comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
 
 # This function edits an existing or creates a new 1D plot group in the COMSOL file.
 
-# The plot group properites can be modified with the parameters of the function. See pydelling documentation to find all possible parameters.
+# The plot group properites can be modified with the parameters of the function. See pydelling documentation to find all possible parameters. For direct acces to API, use ._api attribute of the PlotGroup1D, LineGraph or PointGraph objects.
 
-# If the plot group has child elements like line graphs or point graphs, their properties can be modified by accessing the childs attribute of the ComsolPlotGroup1D object.
+# If the plot group has child elements like line graphs or point graphs, their properties can be modified by accessing the childs attribute of the PlotGroup1D object.
 
 # After any change, the apply() method must be called to apply the changes to the COMSOL file.
 
@@ -50,3 +50,8 @@ plotgroup4.export()
 
 # Finally, the COMSOL file can be saved with the changes. If no path is given, it will overwrite the original file.
 comsol.save("test_plot_group_1D.mph")
+
+# This functions apply the changes, run and export the plots that have been initialized in the ComsolPostprocessor instance.
+comsol.apply()
+comsol.run_all_plots()
+comsol.export_all_plots()
