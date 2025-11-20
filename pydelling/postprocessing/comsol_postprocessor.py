@@ -7,8 +7,10 @@ from tqdm import tqdm
 import logging
 from pathlib import Path
 
-from .comsol_plotgroups.comsol_plotgroup1D import _PlotGroup1D
-from .comsol_plotgroups.comsol_plotgroup2D import _PlotGroup2D
+from .comsol_results.comsol_plotgroup1D import _PlotGroup1D
+from .comsol_results.comsol_plotgroup2D import _PlotGroup2D
+from .comsol_results.comsol_table import _Table
+from .comsol_results.comsol_derived_values import _DerivedValue
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +158,21 @@ class ComsolPostprocessor:
             plotgroup = _PlotGroup2D(self, tag, dataset, label, time, selection, view, showlegends, legendcolor, legendpos, showlegendsmaxmin, showlegendsunit, legendformattingactive, legendnotation, legendprecision)
             return plotgroup
     
+    def table(self,
+                tag: list | None = None,
+                columnheaders: str | None = None,
+                derived_value: None = None
+              ):
+        """
+        A class to handle the properties of a COMSOL Table.
+        Parameters:
+            tag (str or None): The tag of the table. If None, a new table is created. Defaults to None.
+            columnheaders (list of str or None): A list with the headers of the columns. List lenght must be the same as the number of columns. If None, the column headers are not set. Defaults to None.
+            derived_value (_DerivedValue or None): The derived value that writes the table. If None, the derived_value is not set. Defaults to None.
+        """
+        table = _Table(self, tag, columnheaders, derived_value)
+        return table
+
     class _ExportProperties:
         def __init__(self,
                      width: int | None = None,
@@ -475,6 +492,9 @@ class ComsolPostprocessor:
     def __java_int__(self, obj):
         return jpype.JInt(obj)
     
+    def __java_matrix__(self, obj):
+        pass
+    
     class ComsolExportPlot:
         def __init__(self,
                      width: int,
@@ -533,32 +553,3 @@ class ComsolPostprocessor:
             export.set('ifexists', ifexists)
             export.set('filename', export_path)
             export.run()
-
-    def export_image(self,
-                     plotgroup_tag: str,
-                     export_path: str,
-                     export_properties: _ExportProperties | None = None,):
-        """
-        Export a plot group to an image file.
-        Parameters:
-            plotgroup_tag (str): The tag of the plot group to export.
-            export_path (str): The path to the folder to save the exported plot.
-            export_properties (_ExportProperties | None): A _ExportProperties object with the properties of the export. If None, the default properties are used.
-        """
-        # Check if 'img1' already exists, if so, remove it before creating
-        export_tags = self.model.result().export().tags()
-        if 'img1' in export_tags:
-            image_export = self.model.result().export().remove('img1')
-        image_export = self.model.result().export().create('img1', 'Image')
-
-        image_export.set('plotgroup', plotgroup_tag)        
-        logger.info(f"Exporting image {export_path}")
-        
-        if export_properties is not None:
-            image_export.set('resolution', float(export_properties.resolution))
-            image_export.set('unit', 'px')
-            image_export.set('size','manualweb')
-            image_export.set('width', float(export_properties.width))
-            image_export.set('height', float(export_properties.height))
-            image_export.set('fontsize', float(export_properties.font_size))
-        image_export.run()
