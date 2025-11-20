@@ -51,7 +51,8 @@ plotgroup4.export()
 # Finally, the COMSOL file can be saved with the changes. If no path is given, it will overwrite the original file.
 comsol.save("test_plot_group_1D.mph")
 
-# This functions apply the changes, run and export the plots that have been initialized in the ComsolPostprocessor instance.
+# This function apply the changes to all the objects that have been initialized in the ComsolPostprocessor instance.
 comsol.apply()
+# These functions run and export the plots that have been initialized in the ComsolPostprocessor instance.
 comsol.run_all_plots()
 comsol.export_all_plots()
