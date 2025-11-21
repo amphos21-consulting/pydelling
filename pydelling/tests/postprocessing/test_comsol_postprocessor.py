@@ -79,6 +79,14 @@ class TestComsolPostprocessor(unittest.TestCase):
         comsol.export_properties(width=900, height=600, resolution=96, font_size=22, title=False, legend=True, axes=True, grid=True, logo=False)
         plotgroup.export()
             
+    def test_tables(self):
+        comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
+        table = comsol.table(tag='tbl1', columnheaders=["Temps (d)","P1", "P2", "P3", "P4", "P5", "P6"])
+        row = [1]*len(table.get_columnheaders())
+        table.add_rows(row)
+        table.remove_row(4)
+        df = table.get_table()
+        self.assertEqual(df['P3'][34],3.4035563429902708e-12)
         
 if __name__ == '__main__':
     unittest.main()

@@ -12,9 +12,9 @@ comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
 table = comsol.table(tag='tbl1', columnheaders=["Temps (d)","P1", "P2", "P3", "P4", "P5", "P6"])
 
 row = [1]*len(table.get_columnheaders())
-table.addRows(row)
+table.add_rows(row)
 
-table.removeRow(4)
+table.remove_row(4)
 
 df = table.get_table()
 

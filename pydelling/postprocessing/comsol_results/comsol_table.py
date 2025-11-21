@@ -69,7 +69,7 @@ class _Table:
         """
         return self._api.getNRows()
     
-    def addColumns(self,
+    def add_columns(self,
                    headers: list | str,
                    data: list):
         """
@@ -98,7 +98,7 @@ class _Table:
         logger.warning("addColumns() is not implemented")
         pass
 
-    def addRows(self,
+    def add_rows(self,
                 data: list):
         """
         Adds one or more rows to the Table.
@@ -109,7 +109,7 @@ class _Table:
             self._api.addRows(data)
         else: self._api.addRow(data)
 
-    def removeRow(self,
+    def remove_row(self,
                    index: int):
         """
         Removes a row of the Table.
@@ -185,7 +185,7 @@ class _Table:
             import_path (str): The path of the table to import
             delim (str or None): The delimiter used in the file. If None, delimiter will not be specified. Defaults to None.
         """
-        # self.clear()
+        self.clear()
         if delim is None: self._api.loadFile(import_path)
         else: self._api.loadFile(import_path, delim)
         logger.info(f"{import_path} imported into {self.tag}")
