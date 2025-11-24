@@ -172,6 +172,19 @@ class ComsolPostprocessor:
         """
         table = _Table(self, tag, columnheaders, derived_value)
         return table
+    
+    def derived_value(self,
+                    tag: str,
+                    table_tag: str | None = None,
+                    ):
+        """
+        A class to handle the properties of a COMSOL Derived Value.
+        Parameters:
+            tag (str): The tag of the derived value.
+            table_tag (str | None): The tag of the table to export the results to. If 'new', a new table is created. If None, the table assosciated with this derived value will be used. If its not associated to any table a new one will be created. Defaults to None.
+        """
+        derived_value = _DerivedValue(self, tag, table_tag)
+        return derived_value
 
     class _ExportProperties:
         def __init__(self,
@@ -310,7 +323,16 @@ class ComsolPostprocessor:
         """
         for child in self.childs:
             child.apply()
-        
+
+    def get_childs(self):
+        """
+        Get the tags of the loaded childs of the ComsolPostprocessor
+        """
+        tags = []
+        for child in self.childs:
+            tags.append(child.tag)
+        return tags
+
     def run_all_plots(self):
         """
         Run all plot groups in the COMSOL model.

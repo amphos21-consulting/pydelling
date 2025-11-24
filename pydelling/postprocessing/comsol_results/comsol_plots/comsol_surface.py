@@ -65,7 +65,8 @@ class _Surface:
         else:
             self.tag = tag
             self._api = self.model.result(self.plotgroup.tag).feature(self.tag)
-            self.plotgroup.childs.append(self)
+            if self.tag not in self.plotgroup.get_childs():
+                self.plotgroup.childs.append(self)
             logger.info(f"Surface {self.tag} loaded.")
             # NOTE: Load childs
         
