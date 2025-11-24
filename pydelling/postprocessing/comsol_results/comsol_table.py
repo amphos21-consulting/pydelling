@@ -42,7 +42,8 @@ class _Table:
         else:
             self.tag = tag
             self._api = self.model.result().table(self.tag)
-            self.postprocessor.childs.append(self)
+            if self.tag not in self.postprocessor.get_childs():
+                self.postprocessor.childs.append(self)
             logger.info(f"Table {self.tag} loaded.")
 
         self.apply()
@@ -145,7 +146,7 @@ class _Table:
         """
         tags = self.model.result().table().tags()
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if str(tag).startswith('tbl') and re.findall(r'\d+', str(tag))])
-        logger.info(f"Duplicating Plot Group {self.tag} to tbl{last_tag+1}...")
+        logger.info(f"Duplicating Table {self.tag} to tbl{last_tag+1}...")
         self.model.result().table().duplicate(f'tbl{last_tag+1}', self.tag)
         table = self.postprocessor.table(tag=f'tbl{last_tag+1}')
         return table

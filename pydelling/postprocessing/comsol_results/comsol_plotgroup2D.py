@@ -75,7 +75,8 @@ class _PlotGroup2D:
         else:
             self.tag = tag
             self._api = self.model.result(self.tag)
-            self.postprocessor.childs.append(self)
+            if self.tag not in self.postprocessor.get_childs():
+                self.postprocessor.childs.append(self)
             logger.info(f"2D Plot Group {self.tag} loaded.")
             for child_tag in self._api.feature().tags():
                 child_type = self._api.feature(child_tag).getType()
@@ -187,3 +188,12 @@ class _PlotGroup2D:
         """
         surface = _Surface(self, tag, expression, unit, dataset, dataset_time, color_table, color_table_discrete, color_table_reverse, color_table_sym, rangelist, selection)
         return surface
+
+    def get_childs(self):
+        """
+        Get the tags of the loaded childs of the PlotGroup2D
+        """
+        tags = []
+        for child in self.childs:
+            tags.append(child.tag)
+        return tags
