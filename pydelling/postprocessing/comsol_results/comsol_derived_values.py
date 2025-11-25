@@ -116,6 +116,7 @@ class _DerivedValue:
                 self.table_tag = self.childs[0].tag
             else:
                 self.childs.append(self.postprocessor.table(self.table_tag, derived_value=self))
+            self._api.set('table',self.table_tag)
         self.table = self.childs[0]
 
         if self.expression is not None: self._api.set('expr', self.expression)
