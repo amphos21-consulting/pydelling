@@ -84,7 +84,8 @@ class _PlotGroup1D:
 
         if tag is None:
             tags = self.model.result().tags()
-            last_tag = max([int(re.findall(r'\d+', str(temptag))[0]) for temptag in tags if re.findall(r'\d+', str(temptag))])
+            try: last_tag = max([int(re.findall(r'\d+', str(temptag))[0]) for temptag in tags if re.findall(r'\d+', str(temptag))])
+            except: last_tag = 0
             tag = f'pg{last_tag+1}'
             self.tag = tag
             self._api = self.model.result().create(self.tag, 'PlotGroup1D')

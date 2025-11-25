@@ -33,7 +33,8 @@ class _Table:
 
         if tag is None:
             tags = self.model.result().table().tags()
-            last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if str(tag).startswith('tbl') and re.findall(r'\d+', str(tag))])
+            try: last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if str(tag).startswith('tbl') and re.findall(r'\d+', str(tag))])
+            except: last_tag = 0
             tag = f'tbl{last_tag+1}'
             self.tag = tag
             self._api = self.model.result().table().create(self.tag, 'Table')
