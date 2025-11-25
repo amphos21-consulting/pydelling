@@ -153,11 +153,13 @@ class _Table:
 
     def export(self,
                 export_path: str | None = None,
+                header: bool | None = None,
                 ifexists: str = "overwrite"):
         """
         Export the Table to a TXT/CSV/DAT file.
         Parameters:
             export_path (str or None): The path to save the TXT/CSV/DAT file. If None, the file is saved in the current directory with the name of the table tag as CSV. Defaults to None.
+            header (bool or None): Include header in the file. If None, the header is not set. Defaults to None.
             ifexists (str): What to do if the export file already exists. Options are 'overwrite' and 'append'. Defaults to 'overwrite'.
         """
         if export_path is None:
@@ -170,7 +172,7 @@ class _Table:
         else:
             export_tbl = self.model.result().export().create('tbl1', 'Table')
 
-        export_tbl.set('header', False)
+        if header is not None: export_tbl.set('header', header)
         export_tbl.set('table', self.tag)
         export_tbl.set('ifexists', ifexists)
         export_tbl.set('filename', export_path)
