@@ -174,16 +174,46 @@ class ComsolPostprocessor:
         return table
     
     def derived_value(self,
-                    tag: str,
+                    tag: str | None = None,
+                    dev_type: str | None = None,
                     table_tag: str | None = None,
+                    expression: list | None = None,
+                    unit: list | None = None,
+                    description: list | None = None,
+                    dataset: str | None = None,
+                    label: str | None = None,
+                    time: str | list | None = None,
+                    selection: str | list | None = None,
+                    method: str | None = None,
+                    integration_order: str | int | None = None,
+                    consider2Daxi: bool | None = None,
+                    normalization: str | None = None,
+                    transformation: str | None = None,
+                    transform_method: str | None = None,
+                    transform_cumulative: bool | None = None,
                     ):
         """
         A class to handle the properties of a COMSOL Derived Value.
         Parameters:
-            tag (str): The tag of the derived value.
-            table_tag (str | None): The tag of the table to export the results to. If 'new', a new table is created. If None, the table assosciated with this derived value will be used. If its not associated to any table a new one will be created. Defaults to None.
+            tag (str or None): The tag of the derived value. If None, dev_type must be provided.
+            dev_type (str or None): The type of Derived Value. Valid values are "EvalPoint", "EvalGlobal", "AvLine", "AvSurface", "AvVolume", "IntLine", "IntSurface", "IntVolume", "MinLine", "MinSurface", "MinVolume, "MaxLine", "MaxSurface" and "MaxVolume". If tag is not None, dev_type would be overwriten. If tag is None, dev_type must be provided. Defaults to None.
+            table_tag (str or None): The tag of the table to export the results to. If 'new', a new table is created. If None, the table assosciated with this derived value will be used. If its not associated to any table a new one will be created. Defaults to None.
+            expression (list or None): A list with the expression to evaluate. If None, the expression is not set. Defaults to None.
+            unit (list or None): A list with the unit of the expressions. If None, the unit is not set. Defaults to None.
+            description (list or None): A list with the description of the expressions. If None, the description is not set. Defaults to None.
+            dataset (str or None): The name of the dataset to use for the Derived Value. If None, the dataset is not set. Defaults to None.
+            label (str or None): The label of the Derived Value. If None, the label is not set. Defaults to None.
+            time (str or list or None): The time step to use for the Derived Value. Valid values are "all", "first", "last" or a list with floats. If None, the time is not set. Defaults to None.
+            selection (str or list or None): The list of elements to evaluate. If "all", all entities are selected. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
+            method (str or None): The integration method for Averages and Integrals. Valids values are "auto", "integration" and "summation". If None, the method is not set. Defaults to None.
+            integration_order (str or int or None): The integration order if method is "auto" or "integration". If "auto" the integration order is set automatically. If None, the integration order is not set. Defaults to None.
+            consider2Daxi (bool or None): Consider or not the revolution dimension when using Average or Integral. If None, the parameter is not set. Defaults to None (in COMSOL the default parameter is True).
+            normalization (str or None): Normalize the results. Valid values are "first", "last", "max", "none". If None, the parameter is not set. Defaults to None. Warning: do not confuse None with "none". Use None to leave the parameter unset in COMSOL, and the string "none" to specify that the results should not be normalized.
+            transformation (str or None): Transform the time data series. Valid values are "average", "integral", "minimum", "maximum", "rms", "stddev", "variance" and "none. If None, the parameter is not set. Defaults to None. Warning: do not confuse None with "none". Use None to leave the parameter unset in COMSOL, and the string "none" to specify that the results should not be transformed.
+            transform_method: The method to use for data series transformation. Valid values are "auto", "integration" and "summation". If None, the method of the transformation is not set. Defaults to None.
+            tranform_cumulative (bool or None): Make the table values as a cumulative integration, when transformation is set to "integral". If None, the properity is not set. Defaults to None.
         """
-        derived_value = _DerivedValue(self, tag, table_tag)
+        derived_value = _DerivedValue(self, tag, dev_type, table_tag, expression, unit, description, dataset, label, time, selection, method, integration_order, consider2Daxi, normalization, transformation, transform_method, transform_cumulative)
         return derived_value
 
     class _ExportProperties:
