@@ -34,7 +34,7 @@ test:
   after_script:
     - docker compose down --remove-orphans || true
   
-# This is broken for now, error 400 in gitlab
+  coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
     when: always
     paths:
