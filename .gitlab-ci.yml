@@ -35,19 +35,19 @@ test:
     - docker compose down --remove-orphans || true
   
 # This is broken for now, error 400 in gitlab
-#  artifacts:
-#    when: always
-#    paths:
-#      - coverage.xml
-#      - report.xml
-#      - htmlcov/
-#    reports:
-#      junit: report.xml
-#      coverage_report:
-#        coverage_format: cobertura
-#        path: coverage.xml
-#    expire_in: 1 week
-#
+  artifacts:
+    when: always
+    paths:
+      - coverage.xml
+      - report.xml
+      - htmlcov/
+    reports:
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: 1 week
+
 ## Documentation build stage
 #build-docs:
 #  stage: build-docs
