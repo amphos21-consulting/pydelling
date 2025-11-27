@@ -368,7 +368,8 @@ class ComsolPostprocessor:
         Run all plot groups in the COMSOL model.
         """
         for child in self.childs:
-            child.run()
+            try: child.run()
+            except: pass
 
     def export_all_plots(self):
         """
@@ -377,7 +378,8 @@ class ComsolPostprocessor:
             If the ComsolPostprocessor.export_properties() is not used, the export properties will be the default ones.
         """
         for child in self.childs:
-            child.export()
+            try: child.export()
+            except: pass
 
     def get_variable_evolution_at_point(self, 
                                         dataset: str, 
@@ -567,41 +569,3 @@ class ComsolPostprocessor:
             self.resolution = resolution
             self.font_size = font_size
  
-    def run_derived_value(self,
-                          derived_value_tag: str,
-                          table_tag: str | None = None,
-                          export_path: str | None = None,
-                          ifexists: str = 'overwrite',
-                          ):
-        """
-        Run a derived value and optionally export the results to a file.
-        Arguments:
-            derived_value_tag (str): The tag of the derived value to run.
-            table_tag (str | None): The tag of the table to export the results to. If None, a new table is created.
-            export_path (str | None): The path to export the results to. If None, the results are not exported.
-            ifexists (str): What to do if the export file already exists. Options are 'overwrite' and 'append'. Defaults to 'overwrite'.
-        """
-        if table_tag is None:
-            tables = self.model.result().table().tags()
-            last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tables if tag.startswith('tbl') and re.findall(r'\d+', str(tag))])
-            table_tag = f'tbl{last_tag+1}'
-            self.model.result().table().create(table_tag, 'Table')
-        else:
-            self.model.result().table(table_tag).clearTableData()
-        
-        logger.info(f"Running derived value {derived_value_tag}")
-        self.model.result().numerical(derived_value_tag).set('table', table_tag)
-        self.model.result().numerical(derived_value_tag).setResult()
-
-        if export_path is not None:
-            logger.info(f"Exporting derived value {derived_value_tag} to {export_path}")
-            export_list = self.model.result().export().tags()
-            if 'tbl1' in export_list:
-                export = self.model.result().export('tbl1')
-            else:
-                export = self.model.result().export().create('tbl1', 'Table')
-            export.set('header', False)
-            export.set('table', table_tag)
-            export.set('ifexists', ifexists)
-            export.set('filename', export_path)
-            export.run()

@@ -121,8 +121,7 @@ class _PlotGroup2D:
         if self.legendnotation is not None: self._api.set('legendnotation', self.legendnotation)
         if self.legendprecision is not None: self._api.set('legendprecision', self.postprocessor.__java_int__(self.legendprecision))
 
-        for child in self.childs:
-            child.apply()
+
 
     def run(self):
         """
