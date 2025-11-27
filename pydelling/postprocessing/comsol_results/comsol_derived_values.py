@@ -170,6 +170,8 @@ class _DerivedValue:
         if self.transform_method is not None: self._api.set("dataseriesmethod", self.transform_method)
         if self.transform_cumulative is not None: self._api.set("dataseriescumulative", self.transform_cumulative)
 
+        for child in self.childs:
+            child.apply()
             
     def run(self):
         """

@@ -87,6 +87,17 @@ class TestComsolPostprocessor(unittest.TestCase):
         table.remove_row(4)
         df = table.get_table()
         self.assertEqual(df['P3'][34],3.4035563429902708e-12)
-        
+
+    def test_derived_values(self):
+        comsol = ComsolPostprocessor(file_path=test_data_path() / "test.mph")
+        dev = comsol.derived_value('pev1')
+        dev.table.clear()
+        df = dev.get_result()
+        self.assertTrue(df.empty)
+        dev.run()
+        dev.table.columnheaders = ["Temps (d)","P1", "P2", "P3", "P4", "P5", "P6"]
+        dev.table.apply()
+        df = dev.get_result()
+        self.assertEqual(df['P3'][35],3.4035563429902708e-12)
 if __name__ == '__main__':
     unittest.main()
