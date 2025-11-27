@@ -141,7 +141,7 @@ class ComsolPostprocessor:
                 tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
                 dataset (str or None): The name of the dataset to use for the plot group. If None, the dataset is not set. Defaults to None.
                 label (str or None): The label of the plot group. If None, the label is not set. Defaults to None.
-                time (float or None): The time step to use for the plot group. If None, the time is not set. Defaults to None.
+                time (float or str or None): The time step to use for the plot group or "first" or "last". If None, the time is not set. Defaults to None.
                 selection (str or list or None): The selection to use for the plot group. If "all", all domains are selected. If a Explicit Selection tag is given, it is used. If a list of integers is given, those domains are selected. If None, the selection is not set. Defaults to None.
                 view (str or None): The tag of the view to use for the plot group or 'auto'. If None, the view is not set. Defaults to None.
                 showlegends (bool or None): If True, the color legend is shown. If None, the legend setting is not set. Defaults to None.
