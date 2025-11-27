@@ -31,7 +31,7 @@ class _Surface:
             expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
             unit (str or None): The unit of the expression. If None, the unit is not set. Defaults to None.
             dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
-            dataset_time (float or 'parent' or None): The time to use for the dataset, needed if dataset is not "parent". If None, time is not set. Defaults to None.
+            dataset_time (float or 'parent' or None): The time to use for the dataset or "first" or "last" or "parent", needed if dataset is not "parent". If None, time is not set. Defaults to None.
             color_table (str or None): The name of the color table to use for the plot. If None, color table is not set. Defaults to None.
             color_table_discrete (int or False or None): The number of discrete colors to use for the plot. If False, the color table is set as continuous. If None, the color table discretization is not set. Defaults to None.
             color_table_reverse (bool or None): If True, the color table is reversed. If None, the color table reverse setting is not set. Defaults to None.
@@ -82,6 +82,13 @@ class _Surface:
         if self.dataset_time is not None: 
             if self.dataset_time == 'parent':
                 self._api.set('solutionparams', 'parent')
+            elif self.dataset_time == 'first':
+                self._api.set('looplevel', 1)
+            elif self.dataset_time == 'last':
+                dset_tag = self._api.getString('data')
+                sol_tag = self.model.result().dataset(dset_tag).getString('solution')
+                timesteps = list(self.model.sol(sol_tag).getSize())[1]
+                self._api.set('looplevel',timesteps)
             else:
                 self._api.set('t', float(self.dataset_time))
         if self.color_table is not None: self._api.set('colortable', self.color_table)

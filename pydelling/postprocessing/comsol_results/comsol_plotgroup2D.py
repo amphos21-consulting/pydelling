@@ -35,7 +35,7 @@ class _PlotGroup2D:
             tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
             dataset (str or None): The name of the dataset to use for the plot group. If None, the dataset is not set. Defaults to None.
             label (str or None): The label of the plot group. If None, the label is not set. Defaults to None.
-            time (float or None): The time step to use for the plot group. If None, the time is not set. Defaults to None.
+            time (float or str or None): The time step to use for the plot group or "first" or "last". If None, the time is not set. Defaults to None.
             selection (str or list or None): The selection to use for the plot group. If "all", all domains are selected. If a Explicit Selection tag is given, it is used. If a list of integers is given, those domains are selected. If None, the selection is not set. Defaults to None.
             view (str or None): The tag of the view to use for the plot group or 'auto'. If None, the view is not set. Defaults to None.
             showlegends (bool or None): If True, the color legend is shown. If None, the legend setting is not set. Defaults to None.
@@ -96,8 +96,13 @@ class _PlotGroup2D:
         if self.dataset is not None: self._api.set('data', self.dataset)
         if self.label is not None: self._api.label(self.label)
         if self.time is not None:
-                if self.time == 'all':
-                    self._api.set('innerinput', 'all')
+                if self.time == 'first':
+                    self._api.set('looplevel', self.postprocessor.__java_int__(1))
+                elif self.time == 'last':
+                    dset_tag = self._api.getString('data')
+                    sol_tag = self.model.result().dataset(dset_tag).getString('solution')
+                    timesteps = list(self.model.sol(sol_tag).getSize())[1]
+                    self._api.set('looplevel',timesteps)
                 else:
                     self._api.set('t', float(self.time))
         if self.selection is not None:
@@ -178,7 +183,7 @@ class _PlotGroup2D:
             expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
             unit (str or None): The unit of the expression. If None, the unit is not set. Defaults to None.
             dataset (str or None): The name of the dataset to use for the plot. If None, dataset is not set. Defaults to None.
-            dataset_time (float or 'first' or 'last' or None): The time to use for the dataset, needed if dataset is not "parent". If None, time is not set. Defaults to None.
+            dataset_time (float or 'parent' or None): The time to use for the dataset or "first" or "last" or "parent", needed if dataset is not "parent". If None, time is not set. Defaults to None.
             color_table (str or None): The name of the color table to use for the plot. If None, color table is not set. Defaults to None.
             color_table_discrete (int or False or None): The number of discrete colors to use for the plot. If False, the color table is set as continuous. If None, the color table discretization is not set. Defaults to None.
             color_table_reverse (bool or None): If True, the color table is reversed. If None, the color table reverse setting is not set. Defaults to None.
