@@ -1,7 +1,8 @@
-from pydelling.postprocessing.comsol_postprocessor import ComsolPostprocessor
+from pydelling.managers.comsol_manager import ComsolManager
 
-# First, initialize the ComsolPostprocessor with the desired COMSOL version and open the file
-comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
+# First, initialize the ComsolManager with the desired COMSOL version and open the file
+comsol_manager = ComsolManager(version='6.2')
+comsol = comsol_manager.comsol_model(file_path=r"../test.mph")
 
 # This function edits an existing or creates a new 1D plot group in the COMSOL file.
 
@@ -11,7 +12,7 @@ comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
 
 # After any change, the apply() method must be called to apply the changes to the COMSOL file.
 
-plotgroup = comsol.plot_group_2D(tag='pg1', label="Pressure 2D", legendpos='bottom')
+plotgroup = comsol.results.plot_group_2D(tag='pg1', label="Pressure 2D", legendpos='bottom')
 plotgroup.childs[0].expression = 'p'
 plotgroup.childs[0].unit = 'MPa'
 plotgroup.apply()
@@ -26,7 +27,7 @@ surface.apply()
 
 # Finally, the export properties can be set. The ones not given will keep their previous value.
 # The export() method will save the plot as a PNG file with the given properties. If no path is given, an automatic name will be generated.
-comsol.export_properties(width=900, height=600, resolution=96, font_size=22, title=False, legend=True, axes=True, grid=True, logo=False)
+comsol.results.export_properties(width=900, height=600, resolution=96, font_size=22, title=False, legend=True, axes=True, grid=True, logo=False)
 plotgroup.export()
 
 # Plot groups can also be duplicated. And then modified independently.
@@ -38,7 +39,7 @@ plotgroup2.apply()
 plotgroup2.export()
 
 # They can also be created from scratch, if 'tag' is not given, as well as their childs.
-plotgroup3 = comsol.plot_group_2D(dataset='dset2', label='New 2D Plot', time=2, selection='all', view='view1', showlegends=True, legendcolor='magenta', legendpos='left', showlegendsmaxmin=True, showlegendsunit=True, legendformattingactive=True, legendnotation='engineering', legendprecision=3)
+plotgroup3 = comsol.results.plot_group_2D(dataset='dset2', label='New 2D Plot', time=2, selection='all', view='view1', showlegends=True, legendcolor='magenta', legendpos='left', showlegendsmaxmin=True, showlegendsunit=True, legendformattingactive=True, legendnotation='engineering', legendprecision=3)
 surface3 = plotgroup3.surface(expression='p', unit='kPa', dataset='dset2', dataset_time='parent', color_table='Dipole', color_table_discrete=7, color_table_reverse=True, color_table_sym=False, rangelist=[0.1,2.8], selection='all')
 plotgroup3.export()
 
@@ -48,5 +49,5 @@ comsol.save("test_plot_group_2D.mph")
 # This function apply the changes to all the objects that have been initialized in the ComsolPostprocessor instance.
 comsol.apply()
 # These functions run and export the plots that have been initialized in the ComsolPostprocessor instance.
-comsol.run_all_plots()
-comsol.export_all_plots()
+comsol.results.run_all_plots()
+comsol.results.export_all_plots()

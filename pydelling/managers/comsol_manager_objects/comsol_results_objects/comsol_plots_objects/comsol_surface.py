@@ -26,7 +26,7 @@ class _Surface:
         """
         A class to handle the properties of a COMSOL Surface plot.
         Parameters:
-            plotgroup: The COMSOL PlotGroup2D or PlotGroup3D object from ComsolPostprocessor.
+            plotgroup: The COMSOL PlotGroup2D or PlotGroup3D object from ComsolManager.
             tag (str or None): The tag of the surface plot to edit. If None, a new surface plot is created. Defaults to None.
             expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
             unit (str or None): The unit of the expression. If None, the unit is not set. Defaults to None.
@@ -40,8 +40,10 @@ class _Surface:
             selection (str or list or None): The list of lines to plot. If "all", all lines are plotted. If a Explicit Selection tag is given, it is used. If None, the selection is not set. Defaults to None.
         """
         self.plotgroup = plotgroup
-        self.postprocessor = self.plotgroup.postprocessor
-        self.model = self.postprocessor.model
+        self.results = self.plotgroup.results
+        self.comsol = self.results.comsol
+        self.manager = self.comsol.manager
+        self.model = self.results.model
         self.expression = expression
         self.unit = unit
         self.dataset = dataset

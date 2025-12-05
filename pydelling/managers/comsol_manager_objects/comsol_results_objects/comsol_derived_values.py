@@ -2,16 +2,17 @@ import re
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
+import os
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from ..comsol_postprocessor import ComsolPostprocessor
+    from ..comsol_results import ComsolResults
     from .comsol_table import _Table
 
 class _DerivedValue:
     def __init__(self,
-                    postprocessor: 'ComsolPostprocessor',
+                    results: 'ComsolResults',
                     tag: str | None = None,
                     dev_type: str | None = None,
                     table_tag: str | None = None,
@@ -33,7 +34,7 @@ class _DerivedValue:
         """
         A class to handle the properties of a COMSOL Derived Value.
         Parameters:
-            postprocessor: The COMSOL Postprocessor object from ComsolPostprocessor.
+            results: The COMSOL results object from ComsolManager.
             tag (str or None): The tag of the derived value. If None, dev_type must be provided.
             dev_type (str or None): The type of Derived Value. Valid values are "EvalPoint", "EvalGlobal", "AvLine", "AvSurface", "AvVolume", "IntLine", "IntSurface", "IntVolume", "MinLine", "MinSurface", "MinVolume, "MaxLine", "MaxSurface" and "MaxVolume". If tag is not None, dev_type would be overwriten. If tag is None, dev_type must be provided. Defaults to None.
             table_tag (str or None): The tag of the table to export the results to. If 'new', a new table is created. If None, the table assosciated with this derived value will be used. If its not associated to any table a new one will be created. Defaults to None.
@@ -52,8 +53,10 @@ class _DerivedValue:
             transform_method: The method to use for data series transformation. Valid values are "auto", "integration" and "summation". If None, the method of the transformation is not set. Defaults to None.
             tranform_cumulative (bool or None): Make the table values as a cumulative integration, when transformation is set to "integral". If None, the properity is not set. Defaults to None.
         """
-        self.postprocessor = postprocessor
-        self.model = self.postprocessor.model
+        self.results = results
+        self.comsol = self.results.comsol
+        self.manager = self.comsol.manager
+        self.model = self.results.model
         self.tag = tag
         self.dev_tpye = dev_type
         if self.tag is None and self.dev_tpye is None:
@@ -89,13 +92,13 @@ class _DerivedValue:
             tag = f'{self.type_tag}{last_tag+1}'
             self.tag = tag
             self._api = self.model.result().numerical().create(self.tag, self.dev_tpye)
-            self.postprocessor.childs.append(self)
+            self.results.childs.append(self)
             logger.info(f"Derived Value {self.tag} created.")
         else:
             self.tag = tag
             self._api = self.model.result().numerical(self.tag)
-            if self.tag not in self.postprocessor.get_childs():
-                self.postprocessor.childs.append(self)
+            if self.tag not in self.results.get_childs():
+                self.results.childs.append(self)
             logger.info(f"Derived value {self.tag} loaded.")
             self.dev_tpye = self._api.getType()
             m = re.match(r'^(.*?)(\d+)$', str(self.tag))
@@ -112,10 +115,10 @@ class _DerivedValue:
             self.table_tag = self.model.result().numerical(self.tag).getString('table')
         if self.table_tag is not None:
             if self.table_tag == "new" or self.table_tag == "New":
-                self.childs.append(self.postprocessor.table(derived_value=self))
+                self.childs.append(self.results.table(derived_value=self))
                 self.table_tag = self.childs[0].tag
             else:
-                self.childs.append(self.postprocessor.table(self.table_tag, derived_value=self))
+                self.childs.append(self.results.table(self.table_tag, derived_value=self))
             self._api.set('table',self.table_tag)
         self.table = self.childs[0]
 
@@ -208,7 +211,7 @@ class _DerivedValue:
         last_tag = last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if str(tag).startswith(self.type_tag) and re.findall(r'\d+', str(tag))])
         logger.info(f"Duplicating Derived Value {self.tag} to {self.type_tag}{last_tag+1}...")
         self.model.result().numerical().duplicate(f'{self.type_tag}{last_tag+1}', self.tag)
-        derived_value = self.postprocessor.derived_value(tag=f'{self.type_tag}{last_tag+1}', table_tag='new')
+        derived_value = self.results.derived_value(tag=f'{self.type_tag}{last_tag+1}', table_tag='new')
         return derived_value
 
     def export(self,
@@ -223,7 +226,7 @@ class _DerivedValue:
             ifexists (str): What to do if the export file already exists. Options are 'overwrite' and 'append'. Defaults to 'overwrite'.
         """
         if export_path is None:
-            file_parent = Path(self.postprocessor.file_path).parent
-            export_path = f"{file_parent}/{self.tag}.csv"
+            parent = os.getcwd()
+            export_path = f"{parent}/{self.tag}.csv"
         self.table.export(export_path,header,ifexists)
     

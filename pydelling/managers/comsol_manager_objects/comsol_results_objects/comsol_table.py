@@ -3,17 +3,18 @@ import re
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
+import os
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from ..comsol_postprocessor import ComsolPostprocessor
+    from ..comsol_results import ComsolResults
 from jpype import JArray, JDouble, JString
 
 
 class _Table:
     def __init__(self,
-                    postprocessor: 'ComsolPostprocessor',
+                    results: 'ComsolResults',
                     tag: list | None = None,
                     columnheaders: list | None = None,
                     derived_value: None = None
@@ -21,13 +22,15 @@ class _Table:
         """
         A class to handle the properties of a COMSOL Table.
         Parameters:
-            postprocessor: The COMSOL Postprocessor object from ComsolPostprocessor.
+            results: The COMSOL results object from ComsolManager.
             tag (str or None): The tag of the table. If None, a new table is created. Defaults to None.
             columnheaders (list of str or None): A list with the headers of the columns. List lenght must be the same as the number of columns. If None, the column headers are not set. Defaults to None.
             derived_value (_DerivedValue or None): The derived value that writes the table. If None, the derived_value is not set. Defaults to None.
         """
-        self.postprocessor = postprocessor
-        self.model = self.postprocessor.model
+        self.results = results
+        self.comsol = self.results.comsol
+        self.manager = self.comsol.manager
+        self.model = self.results.model
         self.columnheaders = columnheaders
         self.derived_value = derived_value
 
@@ -38,13 +41,13 @@ class _Table:
             tag = f'tbl{last_tag+1}'
             self.tag = tag
             self._api = self.model.result().table().create(self.tag, 'Table')
-            self.postprocessor.childs.append(self)
+            self.results.childs.append(self)
             logger.info(f"Table {self.tag} created.")
         else:
             self.tag = tag
             self._api = self.model.result().table(self.tag)
-            if self.tag not in self.postprocessor.get_childs():
-                self.postprocessor.childs.append(self)
+            if self.tag not in self.results.get_childs():
+                self.results.childs.append(self)
             logger.info(f"Table {self.tag} loaded.")
 
         self.apply()
@@ -94,7 +97,7 @@ class _Table:
         # for i, row in enumerate(data):
         #     data_java[i] = DoubleArray(row)
         
-        # header_java = JArray(JString)([self.postprocessor.__java_str__(x) for x in headers])
+        # header_java = JArray(JString)([self.manager.__java_str__(x) for x in headers])
 
         # self._api.addColumns(header_java, data_java)
         logger.warning("addColumns() is not implemented")
@@ -149,7 +152,7 @@ class _Table:
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if str(tag).startswith('tbl') and re.findall(r'\d+', str(tag))])
         logger.info(f"Duplicating Table {self.tag} to tbl{last_tag+1}...")
         self.model.result().table().duplicate(f'tbl{last_tag+1}', self.tag)
-        table = self.postprocessor.table(tag=f'tbl{last_tag+1}')
+        table = self.results.table(tag=f'tbl{last_tag+1}')
         return table
 
     def export(self,
@@ -164,8 +167,8 @@ class _Table:
             ifexists (str): What to do if the export file already exists. Options are 'overwrite' and 'append'. Defaults to 'overwrite'.
         """
         if export_path is None:
-            file_parent = Path(self.postprocessor.file_path).parent
-            export_path = f"{file_parent}/{self.tag}.csv"
+            parent = os.getcwd()
+            export_path = f"{parent}/{self.tag}.csv"
         logger.info(f"Exporting Table {self.tag} to {export_path}")
         export_list = self.model.result().export().tags()
         if 'tbl1' in export_list:
