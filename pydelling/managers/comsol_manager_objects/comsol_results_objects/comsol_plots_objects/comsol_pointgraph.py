@@ -40,7 +40,7 @@ class _PointGraph:
         """
         A class to handle the properties of a COMSOL Point Graph.
         Parameters:
-            plotgroup: The COMSOL PlotGroup1D object from ComsolPostprocessor._PlotGroup1D.
+            plotgroup: The COMSOL PlotGroup1D object from ComsolManager.
             tag (str or None): The tag of the point graph to edit. If None, a new point graph is created. Defaults to None.
             expression (str or None): The expression to plot. If None, the expression is not set. Defaults to None.
             unit (str or None): The unit of the expression. If None default unit is used.
@@ -66,8 +66,10 @@ class _PointGraph:
             legendexprprecision (int or None): The number of decimal places to use for evaluated expressions in the legend when legendmethod is "evaluated". If None, legendexprprecision is not set. Defaults to None.
         """
         self.plotgroup = plotgroup
-        self.postprocessor = self.plotgroup.postprocessor
-        self.model = self.postprocessor.model
+        self.results = self.plotgroup.results
+        self.comsol = self.results.comsol
+        self.manager = self.comsol.manager
+        self.model = self.results.model
         self.expression = expression
         self.unit = unit
         self.dataset = dataset
@@ -143,7 +145,7 @@ class _PointGraph:
         if self.linecolor is not None: self._api.set('linecolor', self.linecolor)
         if self.colorcycle is not None: self._api.set('colorcycle', self.colorcycle)
         if self.linestyle is not None: self._api.set('linestyle', self.linestyle)
-        if self.linewidth is not None: self._api.set('linewidth', self.postprocessor.__java_double__(self.linewidth))
+        if self.linewidth is not None: self._api.set('linewidth', self.manager.__java_double__(self.linewidth))
         if self.marker is not None:
             self._api.set('linemarker', self.marker)
             self._api.set('markerpos', 'datapoints')
@@ -156,4 +158,4 @@ class _PointGraph:
         if self.legendprefix is not None: self._api.set('legendprefix', self.legendprefix)
         if self.legendsuffix is not None: self._api.set('legendsuffix', self.legendsuffix)
         if self.legendpattern is not None: self._api.set('legendpattern', self.legendpattern)
-        if self.legendexprprecision is not None: self._api.set('legendexprprecision', self.postprocessor.__java_int__(self.legendexprprecision))
+        if self.legendexprprecision is not None: self._api.set('legendexprprecision', self.manager.__java_int__(self.legendexprprecision))

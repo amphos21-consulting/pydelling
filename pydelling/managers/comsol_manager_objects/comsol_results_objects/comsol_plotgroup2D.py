@@ -2,17 +2,18 @@ import re
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
+import os
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from ..comsol_postprocessor import ComsolPostprocessor
+    from ..comsol_results import ComsolResults
 
-from .comsol_plots.comsol_surface import _Surface    
+from .comsol_plots_objects.comsol_surface import _Surface    
 
 class _PlotGroup2D:
     def __init__(self,
-                    postprocessor: 'ComsolPostprocessor',
+                    results: 'ComsolResults',
                     tag: str | None = None,
                     dataset: str | None = None,
                     label: str | None = None,
@@ -31,7 +32,7 @@ class _PlotGroup2D:
         """
         A class to handle the properties of a COMSOL 2D Plot Group.
         Parameters:
-            postprocessor: The COMSOL Postprocessor object from ComsolPostprocessor.
+            results: The COMSOL results object from ComsolManager.
             tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
             dataset (str or None): The name of the dataset to use for the plot group. If None, the dataset is not set. Defaults to None.
             label (str or None): The label of the plot group. If None, the label is not set. Defaults to None.
@@ -47,8 +48,10 @@ class _PlotGroup2D:
             legendnotation (str or None): The notation of the legend. Valid values are automatic | scientific | engineering. legendformattingactive must be True for the legendnotation to be set. If None, legendnotation is not set. Defaults to None.
             legendprecision (int or None): The number of decimal places to use for the legend. legendformattingactive must be True for the legendprecision to be set. If None, legendprecision is not set. Defaults to None.
         """
-        self.postprocessor = postprocessor
-        self.model = self.postprocessor.model
+        self.results = results
+        self.comsol = self.results.comsol
+        self.manager = self.comsol.manager
+        self.model = self.results.model
         self.dataset = dataset
         self.label = label
         self.time = time
@@ -71,13 +74,13 @@ class _PlotGroup2D:
             tag = f'pg{last_tag+1}'
             self.tag = tag
             self._api = self.model.result().create(self.tag, 'PlotGroup2D')
-            self.postprocessor.childs.append(self)
+            self.results.childs.append(self)
             logger.info(f"2D Plot Group {self.tag} created.")
         else:
             self.tag = tag
             self._api = self.model.result(self.tag)
-            if self.tag not in self.postprocessor.get_childs():
-                self.postprocessor.childs.append(self)
+            if self.tag not in self.results.get_childs():
+                self.results.childs.append(self)
             logger.info(f"2D Plot Group {self.tag} loaded.")
             for child_tag in self._api.feature().tags():
                 child_type = self._api.feature(child_tag).getType()
@@ -97,7 +100,7 @@ class _PlotGroup2D:
         if self.label is not None: self._api.label(self.label)
         if self.time is not None:
                 if self.time == 'first':
-                    self._api.set('looplevel', self.postprocessor.__java_int__(1))
+                    self._api.set('looplevel', self.manager.__java_int__(1))
                 elif self.time == 'last':
                     dset_tag = self._api.getString('data')
                     sol_tag = self.model.result().dataset(dset_tag).getString('solution')
@@ -124,7 +127,7 @@ class _PlotGroup2D:
         if self.showlegendsunit is not None: self._api.set('showlegendsunit', self.showlegendsunit)
         if self.legendformattingactive is not None: self._api.set('legendactive', self.legendformattingactive)
         if self.legendnotation is not None: self._api.set('legendnotation', self.legendnotation)
-        if self.legendprecision is not None: self._api.set('legendprecision', self.postprocessor.__java_int__(self.legendprecision))
+        if self.legendprecision is not None: self._api.set('legendprecision', self.manager.__java_int__(self.legendprecision))
 
 
 
@@ -146,7 +149,7 @@ class _PlotGroup2D:
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
         logger.info(f"Duplicating Plot Group {self.tag} to pg{last_tag+1}...")
         self.model.result().duplicate(f'pg{last_tag+1}', self.tag)
-        plot_group = self.postprocessor.plot_group_2D(tag=f'pg{last_tag+1}')
+        plot_group = self.results.plot_group_2D(tag=f'pg{last_tag+1}')
         return plot_group
 
     def export(self,
@@ -159,9 +162,10 @@ class _PlotGroup2D:
             If the ComsolPostprocessor.export_properties() is not used, the export properties will be the default ones.
         """
         self._api.run()
-        file_parent = Path(self.postprocessor.file_path).parent
-        if export_path is None: export_path = f"{file_parent}/{self.tag}.png"
-        self.postprocessor._export(self.tag, export_path)
+        if export_path is None:
+            parent = os.getcwd()
+            export_path = f"{parent}/{self.tag}.png"
+        self.results._export(self.tag, export_path)
     
     def surface(self,
                 tag: str | None = None,

@@ -1,51 +1,37 @@
 import numpy as np
 import pandas as pd
-import mph
-import re
 import jpype
-from tqdm import tqdm
 import logging
+from tqdm import tqdm
 from pathlib import Path
-
-from .comsol_results.comsol_plotgroup1D import _PlotGroup1D
-from .comsol_results.comsol_plotgroup2D import _PlotGroup2D
-from .comsol_results.comsol_table import _Table
-from .comsol_results.comsol_derived_values import _DerivedValue
+from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from ..comsol_manager import ComsolManager
 
-class ComsolPostprocessor:
-    """
-    A class to handle postprocessing of COMSOL simulation results.
+from .comsol_results_objects.comsol_plotgroup1D import _PlotGroup1D
+from .comsol_results_objects.comsol_plotgroup2D import _PlotGroup2D
+from .comsol_results_objects.comsol_table import _Table
+from .comsol_results_objects.comsol_derived_values import _DerivedValue
 
-    Warning: A valid COMSOL installation is required to use this class as well as java 11 or higher. Moreover, the oficial version of python is recommended, since the Microsoft Store version could cause issues with the COMSOL API.
-
-    """
-
+class ComsolResults:
     def __init__(self,
-                file_path: str,
-                version: str | None = None,
-                comp_tag: str = 'comp1',
-                geom_tag: str = 'geom1',
-                ):
+                 comsol: 'ComsolManager.ComsolModel'):
         """
-        Initialize the ComsolPostprocessor with the path to the COMSOL file.
-
+        A class to handle COMSOL results.
         Parameters:
-            file_path (str): Path to the COMSOL file.
-            version (str or bool): The version of COMSOL to use. If False, the default version is used.
-            comp_tag (str): The tag of the component in the COMSOL model. Defaults to 'comp1'.
-            geom_tag (str): The tag of the geometry in the specified component. Defaults to 'geom1'.
+            comsol (ComsolModel): The ComsolModel object from ComsolManager
         """
-        self.file_path = file_path
-        self.client = mph.start(version=version)
-        self.model_standalone = self.client.load(file_path)
-        self.model = self.model_standalone.java
-        self.comp = self.model.modelNode(comp_tag)
-        self.geom = self.comp.geom(geom_tag)
+        self.comsol = comsol
+        self.manager = self.comsol.manager
+        self.model = self.comsol.model
+        self.tag = None
+        self._api = self.model.result()
         self.childs = []
         self.export_configuration = None
+        
 
     def plot_group_1D(self,
                     tag: str | None = None,
@@ -349,14 +335,14 @@ class ComsolPostprocessor:
 
     def apply(self):
         """
-        Apply the changes of the ComsolPostprocessor to the COMSOL API model.
+        Apply the changes of the Results object childs to the COMSOL API model.
         """
         for child in self.childs:
             child.apply()
 
     def get_childs(self):
         """
-        Get the tags of the loaded childs of the ComsolPostprocessor
+        Get the tags of the loaded childs of the Results object
         """
         tags = []
         for child in self.childs:
@@ -384,7 +370,9 @@ class ComsolPostprocessor:
     def get_variable_evolution_at_point(self, 
                                         dataset: str, 
                                         var_list: list, 
-                                        point_list: list):
+                                        point_list: list,
+                                        comp_tag: str = 'comp1',
+                                        geom_tag: str = 'geom1',):
         """
         Get the evolution of specified variables at specified points over time.
 
@@ -393,12 +381,16 @@ class ComsolPostprocessor:
             var_list (list of str): A list with the names of the variables to evaluate.
             point_list (list of list): A list of points' geomertry tags where the variable evolution is to be computed.
             coord_labels (list of str): A list with the names of the coordinates to evaluate. Defaults to ['r', 'z'].
+            comp_tag (str): The tag of the component in the COMSOL model. Defaults to 'comp1'.
+            geom_tag (str): The tag of the geometry in the specified component. Defaults to 'geom1'.
         Returns:
             tuple: **t** (numpy.ndarray) and **var_list** (list of list of lists). (i) A 1D array of unique time steps (in days) from the dataset.
             (ii) A list with a list of lists for each variable where each inner list contains the variable values
             at the corresponding point in `point_list` over time.
         """
-        points = [self.geom.feature(name) for name in point_list]
+        comp = self.model.modelNode(comp_tag)
+        geom = comp.geom(geom_tag)
+        points = [geom.feature(name) for name in point_list]
 
         # Get coordinates of points
         coords_list = []
@@ -409,24 +401,24 @@ class ComsolPostprocessor:
         datasetname = self.model.result().dataset(dataset).name()
         datasetname = str(datasetname.replace('/', '//'))
         
-        coord_java = list(self.comp.spatialCoord())
+        coord_java = list(comp.spatialCoord())
         coord_labels = [str(coord_java[i]) for i in range(len(coord_java))]
 
-        if self.geom.getSDim() == 2:
-            if self.geom.isAxisymmetric():
+        if geom.getSDim() == 2:
+            if geom.isAxisymmetric():
                 coord_labels = [coord_labels[0], coord_labels[2]]
             else:
                 coord_labels = [coord_labels[0], coord_labels[1]]
-        elif self.geom.getSDim() == 1:
+        elif geom.getSDim() == 1:
             coord_labels = coord_labels[0]
 
-        x, y = self.model_standalone.evaluate(coord_labels, dataset=datasetname)
-        t = self.model_standalone.evaluate('t', unit='d', dataset=datasetname)
+        x, y = self.comsol.model_standalone.evaluate(coord_labels, dataset=datasetname)
+        t = self.comsol.model_standalone.evaluate('t', unit='d', dataset=datasetname)
         t = np.unique(t)
         var_results = []
         var_eval = []
         for i in range(len(var_list)):
-            var = self.model_standalone.evaluate(var_list[i], dataset=datasetname)
+            var = self.comsol.model_standalone.evaluate(var_list[i], dataset=datasetname)
             var_eval.append(var)
             var_results.append([[] for _ in range(len(coords_list))])
         
@@ -527,28 +519,6 @@ class ComsolPostprocessor:
         self.variables = var_list
         return var_list
 
-    def save(self, save_path: str = None):
-        """
-        Save the COMSOL model to a file.
-        Parameters:
-            save_path (str): The path to save the COMSOL model. If None, the original file path is overwritten.
-        """
-        if save_path is None: save_path = self.file_path
-        logger.info(f"Saving COMSOL model to {save_path}")
-        self.model.save(save_path, True)
-
-    def __java_str__(self, obj):
-        return jpype.JString(obj)
-    
-    def __java_double__(self, obj):
-        return jpype.JDouble(obj)
-    
-    def __java_int__(self, obj):
-        return jpype.JInt(obj)
-    
-    def __java_matrix__(self, obj):
-        pass
-    
     class ComsolExportPlot:
         def __init__(self,
                      width: int,

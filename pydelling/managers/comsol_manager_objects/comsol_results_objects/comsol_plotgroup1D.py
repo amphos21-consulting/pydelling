@@ -2,18 +2,19 @@ import re
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
+import os
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from ..comsol_postprocessor import ComsolPostprocessor
+    from ..comsol_results import ComsolResults
 
-from .comsol_plots.comsol_linegraph import _LineGraph
-from .comsol_plots.comsol_pointgraph import _PointGraph
+from .comsol_plots_objects.comsol_linegraph import _LineGraph
+from .comsol_plots_objects.comsol_pointgraph import _PointGraph
      
 class _PlotGroup1D:
     def __init__(self,
-                    postprocessor: 'ComsolPostprocessor',
+                    results: 'ComsolResults',
                     tag: str | None = None,
                     dataset: str | None = None,
                     label: str | None = None,
@@ -37,7 +38,7 @@ class _PlotGroup1D:
         """
         A class to handle the properties of a COMSOL 1D Plot Group.
         Parameters:
-            postprocessor: The COMSOL postprocessor object from ComsolPostprocessor.
+            results: The COMSOL results object from ComsolManager.
             tag (str or None): The tag of the plot group to edit. If None, a new plot group is created. Defaults to None.
             dataset (str or None): The name of the dataset to use for the plot group. If None, dataset is not set. Defaults to None.
             label (str or None): The label of the plot group. If None, the label is not set. Defaults to None.
@@ -60,8 +61,10 @@ class _PlotGroup1D:
         Returns:
             A Comsol API PlotGroup1D object.
         """
-        self.postprocessor = postprocessor
-        self.model = postprocessor.model
+        self.results = results
+        self.comsol = self.results.comsol
+        self.manager = self.comsol.manager
+        self.model = results.model
         self.dataset = dataset
         self.label = label
         self.time = time
@@ -89,14 +92,14 @@ class _PlotGroup1D:
             tag = f'pg{last_tag+1}'
             self.tag = tag
             self._api = self.model.result().create(self.tag, 'PlotGroup1D')
-            self.postprocessor.childs.append(self)
+            self.results.childs.append(self)
             logger.info(f"1D Plot Group {self.tag} created.")
         else:
             
             self.tag = tag
             self._api = self.model.result(self.tag)
-            if self.tag not in self.postprocessor.get_childs():
-                self.postprocessor.childs.append(self)
+            if self.tag not in self.results.get_childs():
+                self.results.childs.append(self)
             logger.info(f"1D Plot Group {self.tag} loaded.")
             for child_tag in self._api.feature().tags():
                 child_type = self._api.feature(child_tag).getType()
@@ -134,25 +137,25 @@ class _PlotGroup1D:
                 self._api.set('axislimits', 'off')
             else:
                 self._api.set('axislimits', 'on')
-                self._api.set('xmin', self.postprocessor.__java_double__(self.xrange[0]))
-                self._api.set('xmax', self.postprocessor.__java_double__(self.xrange[1]))
+                self._api.set('xmin', self.manager.__java_double__(self.xrange[0]))
+                self._api.set('xmax', self.manager.__java_double__(self.xrange[1]))
         if self.yrange is not None:
             if self.yrange == False:
                 self._api.set('axislimits', 'off')
             else:
                 self._api.set('axislimits', 'on')
-                self._api.set('ymin', self.postprocessor.__java_double__(self.yrange[0]))
-                self._api.set('ymax', self.postprocessor.__java_double__(self.yrange[1]))
+                self._api.set('ymin', self.manager.__java_double__(self.yrange[0]))
+                self._api.set('ymax', self.manager.__java_double__(self.yrange[1]))
         if self.xlog: self._api.set('xlog', 'on')
         else: self._api.set('xlog', 'off')
         if self.ylog: self._api.set('ylog', 'on')
         else: self._api.set('ylog', 'off')
-        if self.axisprecision is not None: self._api.set('axisprecision', self.postprocessor.__java_int__(self.axisprecision))
+        if self.axisprecision is not None: self._api.set('axisprecision', self.manager.__java_int__(self.axisprecision))
         if self.twoyaxes is not None: self._api.set('twoyaxes', self.twoyaxes)
         if self.yseclabel is not None: self._api.set('yseclabel', self.yseclabel)
         if self.ysecrange is not None:
-            self._api.set('yminsec', self.postprocessor.__java_double__(self.ysecrange[0]))
-            self._api.set('ymaxsec', self.postprocessor.__java_double__(self.ysecrange[1]))
+            self._api.set('yminsec', self.manager.__java_double__(self.ysecrange[0]))
+            self._api.set('ymaxsec', self.manager.__java_double__(self.ysecrange[1]))
         if self.yseclog: self._api.set('ylogsec', 'on')
         else: self._api.set('ylogsec', 'off')
         if self.legendactive is not None:
@@ -169,11 +172,11 @@ class _PlotGroup1D:
                 self._api.set('legendposoutside', self.legendpos)
         if self.legendcolumncount is not None:
             if self.legendpos in ['top', 'bottom']:
-                self._api.set('legendrowcount', self.postprocessor.__java_int__(self.legendcolumncount))
+                self._api.set('legendrowcount', self.manager.__java_int__(self.legendcolumncount))
             elif self.legendpos is None:
                 if self._api.getString('legendposoutside') in ['top', 'bottom']:
-                    self._api.set('legendrowcount', self.postprocessor.__java_int__(self.legendcolumncount))
-            self._api.set('legendcolumncount', self.postprocessor.__java_int__(self.legendcolumncount))
+                    self._api.set('legendrowcount', self.manager.__java_int__(self.legendcolumncount))
+            self._api.set('legendcolumncount', self.manager.__java_int__(self.legendcolumncount))
 
         for child in self.childs:
             child.apply()
@@ -196,7 +199,7 @@ class _PlotGroup1D:
         last_tag = max([int(re.findall(r'\d+', str(tag))[0]) for tag in tags if re.findall(r'\d+', str(tag))])
         logger.info(f"Duplicating Plot Group {self.tag} to pg{last_tag+1}...")
         self.model.result().duplicate(f'pg{last_tag+1}', self.tag)
-        plot_group = self.postprocessor.plot_group_1D(tag=f'pg{last_tag+1}')
+        plot_group = self.results.plot_group_1D(tag=f'pg{last_tag+1}')
         return plot_group
 
     def export(self,
@@ -209,9 +212,10 @@ class _PlotGroup1D:
             If the ComsolPostprocessor.export_properties() is not used, the export properties will be the default ones.
         """
         self._api.run()
-        file_parent = Path(self.postprocessor.file_path).parent
-        if export_path is None: export_path = f"{file_parent}/{self.tag}.png"
-        self.postprocessor._export(self.tag, export_path)
+        if export_path is None:
+            parent = os.getcwd()
+            export_path = f"{parent}/{self.tag}.png"
+        self.results._export(self.tag, export_path)
 
     def get_childs(self):
         """

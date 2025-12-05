@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pydelling.postprocessing.comsol_postprocessor import ComsolPostprocessor
+from pydelling.managers.comsol_manager import ComsolManager
 
+# First, initialize the ComsolManager with the desired COMSOL version and open the file
+comsol_manager = ComsolManager(version='6.2')
+comsol = comsol_manager.comsol_model(file_path=r"../test.mph")
 # Load a custom style that emulates COMSOL plots (optional)
 plt.style.use(r"COMSOLstyle.mplstyle")
 
-
-# First, initialize the ComsolPostprocessor with the desired COMSOL version and open the file
-comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
 
 # get_variable_evolution_at_point() function returns the time and the variable values at the specified points.
 # So we need to create a list with the tags (defined in Geometry) of the points we want to evaluate
@@ -16,7 +16,7 @@ point_list = ['pt1', 'pt2', 'pt3', 'pt4', 'pt5', 'pt6']
 
 # Then we call the function with the dataset tag of the solution we want to use, the list of variables we want to evaluate and the list of points
 # It returns the time and a list of lists with the variable values at each point
-t, var = comsol.get_variable_evolution_at_point('dset2', ["p", "dl.U"], point_list)
+t, var = comsol.results.get_variable_evolution_at_point('dset2', ["p", "dl.U"], point_list)
 
 
 # Now we can plot the results

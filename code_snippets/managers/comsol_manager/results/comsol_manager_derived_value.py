@@ -1,8 +1,8 @@
-from pydelling.postprocessing.comsol_postprocessor import ComsolPostprocessor
+from pydelling.managers.comsol_manager import ComsolManager
 
-# First, initialize the ComsolPostprocessor with the desired COMSOL version and open the file
-comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
-
+# First, initialize the ComsolManager with the desired COMSOL version and open the file
+comsol_manager = ComsolManager(version='6.2')
+comsol = comsol_manager.comsol_model(file_path=r"../test.mph")
 # This function edits and manages a derived value evaluation defined in the COMSOL file.
 
 # The derived value properites can be modified with the parameters of the function. See pydelling documentation to find all possible parameters. For direct acces to API, use ._api attribute of the DerivedValue or Table objects.
@@ -10,7 +10,7 @@ comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
 # The DerivedValue objects only have one child, which is its table. Its properties can be modified by accessing the childs attribute of the DerivedValue object or directly by DirectValue.table.
 
 # After any change, the apply() method must be called to apply the changes to the COMSOL file.
-derived_value = comsol.derived_value('pev1')
+derived_value = comsol.results.derived_value('pev1')
 derived_value.expression = ['dl.H']
 derived_value.description = ['Head']
 derived_value.apply()
@@ -43,7 +43,7 @@ dev2.run()
 df2 = dev2.get_result()
 
 # Or created from scratch. Then, the derived value type must be defined: "EvalPoint", "EvalGlobal", "AvLine", "AvSurface", "AvVolume", "IntLine", "IntSurface", "IntVolume", "MinLine", "MinSurface", "MinVolume, "MaxLine", "MaxSurface" or "MaxVolume".
-dev2 = comsol.derived_value(dev_type="AvSurface", 
+dev2 = comsol.results.derived_value(dev_type="AvSurface", 
                             table_tag="new",
                             expression=['p','dl.U'],
                             description=['Pressure', 'Velocity'],
@@ -59,4 +59,4 @@ dev2.export()
 comsol.save("test_derived_values.mph")
 
 # This function apply the changes to all the objects that have been initialized in the ComsolPostprocessor instance.
-comsol.apply()
+comsol.results.apply()

@@ -1,7 +1,8 @@
-from pydelling.postprocessing.comsol_postprocessor import ComsolPostprocessor
+from pydelling.managers.comsol_manager import ComsolManager
 
-# First, initialize the ComsolPostprocessor with the desired COMSOL version and open the file
-comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
+# First, initialize the ComsolManager with the desired COMSOL version and open the file
+comsol_manager = ComsolManager(version='6.2')
+comsol = comsol_manager.comsol_model(file_path=r"../test.mph")
 
 # This function edits an existing or creates a new 1D plot group in the COMSOL file.
 
@@ -11,7 +12,7 @@ comsol = ComsolPostprocessor(file_path=r"test.mph", version='6.2')
 
 # After any change, the apply() method must be called to apply the changes to the COMSOL file.
 
-plotgroup = comsol.plot_group_1D(tag='pg7', legendactive=True, legendpos='upperright')
+plotgroup = comsol.results.plot_group_1D(tag='pg7', legendactive=True, legendpos='upperright')
 plotgroup.childs[0].expression = 'p'
 plotgroup.childs[0].unit = 'MPa'
 plotgroup.apply()
@@ -25,7 +26,7 @@ line_graph.apply()
 
 # Finally, the export properties can be set. The ones not given will keep their previous value.
 # The export() method will save the plot as a PNG file with the given properties. If no path is given, an automatic name will be generated.
-comsol.export_properties(width=900, height=600, resolution=96, font_size=22, title=False, legend=True, axes=True, grid=True, logo=False)
+comsol.results.export_properties(width=900, height=600, resolution=96, font_size=22, title=False, legend=True, axes=True, grid=True, logo=False)
 plotgroup.export()
 
 # Plot groups can also be duplicated. And then modified independently.
@@ -38,13 +39,13 @@ plotgroup2.apply()
 plotgroup2.export()
 
 # They can also be created from scratch, if 'tag' is not given, as well as their childs.
-plotgroup3 = comsol.plot_group_1D(dataset='cln1', label='Mixed Line Graph', legendactive=True, legendpos='upperright', time=[1,3,5], twoyaxes=True)
+plotgroup3 = comsol.results.plot_group_1D(dataset='cln1', label='Mixed Line Graph', legendactive=True, legendpos='upperright', time=[1,3,5], twoyaxes=True)
 line1 = plotgroup3.line_graph(expression='p', unit='kPa', xdata='expr', xdataexpr='z', xdataunit='mm')
 line2 = plotgroup3.line_graph(expression='dl.U', unit='m/s', xdata='expr', xdataexpr='z', xdataunit='mm', linecolor="cyclereset", linestyle='dashed', plotonsecyaxis=True)
 plotgroup3.export()
 
 # The same logic applies to point graphs.
-plotgroup4 = comsol.plot_group_1D(tag='pg6', legendactive=True, legendlayout='outside', legendpos='top', legendcolumncount=2)
+plotgroup4 = comsol.results.plot_group_1D(tag='pg6', legendactive=True, legendlayout='outside', legendpos='top', legendcolumncount=2)
 pointgraph = plotgroup4.point_graph(tag='ptgr1',legend=True, legendmethod='manual', legendmanuallist=['P1', 'P2', 'P3', 'P4', 'P5', 'P6'])
 plotgroup4.export()
 
@@ -54,5 +55,5 @@ comsol.save("test_plot_group_1D.mph")
 # This function apply the changes to all the objects that have been initialized in the ComsolPostprocessor instance.
 comsol.apply()
 # These functions run and export the plots that have been initialized in the ComsolPostprocessor instance.
-comsol.run_all_plots()
-comsol.export_all_plots()
+comsol.results.run_all_plots()
+comsol.results.export_all_plots()
