@@ -28,6 +28,9 @@ Additionally, pydelling features the **PflotranManager** module, which facilitat
 <span style="background-color: yellow; color: black; padding: 2px 6px; border-radius: 3px;">Under construction</span>
 
 ## Release notes
+### v2.0.0
+- ComsolManager refactor: ComsolManager and ComsolPostprocessor have been merged into one and more general object that allows for more flexibility, replicating the structure of COMSOL nodes. Their code snippets have been also updated.
+- ComsolManger new features: derived values, tables, convergence plots.
 ### v1.0.7
 - Feat: A class was added to summarize the mass balance errors from Pflotran results.
 
