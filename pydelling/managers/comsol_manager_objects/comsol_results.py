@@ -438,6 +438,7 @@ class ComsolResults:
                                   var_list: list,
                                   point_list: list,
                                   order: int = 0,
+                                  export = True,
                                   file_name: str = 'point_evaluation.xlsx',
                                   ):
         """
@@ -448,6 +449,7 @@ class ComsolResults:
             var_list (list): A list of variables to evaluate. Or a list of lists of variables, one list for each dataset.
             point_list (list): A list of points to evaluate.
             order (int): The order of the evaluation. Defaults to 0. 0 stands for every point for each variable, and 1 for every variable for each point.
+            export (bool): If True, the results are saved to an Excel file. Defaults to True.
             file_name (str): The name of the Excel file to save the results. Defaults to 'point_evaluation.xlsx'.
         """
         if isinstance(dataset, str):
@@ -486,9 +488,10 @@ class ComsolResults:
             df_temp.columns = headlist
             df = pd.concat([df, df_temp], ignore_index=True)
 
-        # Save to Excel
-        logger.info(f"Saving results to {file_name}")
-        df.to_excel(file_name, index=False)
+        if export:
+            # Save to Excel
+            logger.info(f"Saving results to {file_name}")
+            df.to_excel(file_name, index=False)
 
         return df
 
