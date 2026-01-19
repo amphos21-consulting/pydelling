@@ -4,6 +4,7 @@ import threading
 from pathlib import Path
 import time, re
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +37,12 @@ class ComsolStudy:
     def apply(self):
         pass
         
-    def run(self):
+    def run(self, save = True, convergence_plot: bool = True):
         """
         Runs the COMSOL study.
+        Parameters:
+            save (bool): If True, saves the COMSOL model after running the study. Default is True.
+            convergence_plot (bool): If True, shows a convergence plot during the run. Default is True.
         """
             
         logfile = Path(f"./logs/temp_{Path(self.comsol.file_path).name}_{int(time.time())}.log")
@@ -57,27 +61,67 @@ class ComsolStudy:
         self.thread.start()
 
         pat = re.compile(r"Current Progress:\s+(\d+)\s*%")
+        # Capture: integer index, scientific/decimal float, decimal/float
+        float_re = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+        delta_pat = re.compile(rf"^\s*(\d+)\s+({float_re})\s+({float_re})")
 
         label = self.tag
 
+        # Prepare interactive plotting (best-effort; disabled if backend unavailable)
+        if convergence_plot:
+            do_plot = True
+            try:
+                plt.ion()
+                fig, ax = plt.subplots()
+                line_plot, = ax.plot([], [], '-')
+                ax.set_xlabel('Time step')
+                ax.set_ylabel('Reciprocal of step size')
+                ax.set_title(f'Convergence - {label}')
+                ax.set_yscale('log')
+            except Exception:
+                do_plot = False
+        else:
+            do_plot = False
+            
         with tqdm(total=100, desc=f"     Running {Path(self.comsol.file_path).name}/{label}", unit="%") as pbar:
             last = 0
+            step = []
+            convergence = []
+
             while self.thread.is_alive() or logfile.exists() or last < 100:
                 if logfile.exists():
                     with logfile.open(encoding="utf-8") as f:
                         for line in f:
                             m = pat.search(line)
-
+                            delta_m = delta_pat.search(line)
+                            if delta_m:
+                                if step[-1] < int(delta_m.group(1)) if len(step) > 1 else True:
+                                    step.append(int(delta_m.group(1)))
+                                    convergence.append(1/float(delta_m.group(3)))
+                                    if do_plot and len(step) > 1:
+                                        try:
+                                            line_plot.set_data(step, convergence)
+                                            ax.relim()
+                                            ax.autoscale_view()
+                                            fig.canvas.draw()
+                                            plt.pause(0.01)
+                                        except Exception:
+                                            # disable plotting if any runtime error occurs
+                                            do_plot = False
+                                
                             if m:
                                 pct = int(m.group(1))
                                 if pct > last:
                                     pbar.update(pct - last)
                                     last = pct              
+                                if pct == last:
+                                    pbar.refresh()
                 if not self.thread.is_alive(): break
                 if not self.thread.is_alive() and last >= 100:
                     break
                 time.sleep(0.1)
-        self.comsol.save()
+        
+        if save: self.comsol.save()
 
         self.manager._clean_logs()
         
