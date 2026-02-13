@@ -16,34 +16,20 @@ def read_config(config_file: Path="./local_config.yaml"):
     :param config_file:
     :return:
     """
-    with open(config_file) as file:
-        context = yaml.load(file, Loader=yaml.FullLoader)
-    return Box(context, default_box=True)
+    try:
+        with open(config_file) as file:
+            context = yaml.load(file, Loader=yaml.FullLoader)
 
+        context_as_box = Box(context, default_box=True)
 
-_config_file = list(Path.cwd().glob("*config*"))
-if not _config_file:
-    _config_file = [get_config_path() / 'local_config.yaml']
-    logging.warning('Using default configuration file (not the user defined one)')
-assert len(_config_file) >= 1, "Please provide a configuration file that has a '*config.yaml' name structure"
-config = read_config(config_file=_config_file[0])
+    except:
+        # Maybe a generic exception like this one is not recommended, but there are 
+        # multiple ways the reading could fail: file not existing, not valid YAML,
+        # it is a directory...
+        return None
 
-# Add global configuration
-if not config.globals.is_globals_loaded:
-    with open(get_config_path() / "global_config.yaml", "r") as yml_file:
-        local_yaml_file = yaml.safe_load(yml_file)
-        config.globals = local_yaml_file
-        config.globals.is_globals_loaded = True
+    return context_as_box
 
-# Allow to override the global configuration with a local file
-for key in config:
-    if key in config.globals:
-        if isinstance(config[key], dict):
-            config.globals[key].update(config[key])
-        else:
-            config.globals[key] = config[key]
-
-os.makedirs(config.path.logs if config.path.logs else Path().cwd() / "logs", exist_ok=True)
 with open(Path(__file__).parent / "logger_config.yaml", "r") as ymlfile:
     log_config = yaml.safe_load(ymlfile)
 logging.config.dictConfig(log_config)
@@ -73,4 +59,33 @@ logging.info(f"[blue bold]Welcome to Pydelling {version}", extra={"markup": True
 logging.info(f"-----------------------------------")
 
 
+_config_file = list(Path.cwd().glob("*config*"))
+if not _config_file:
+    _config_file = [get_config_path() / 'local_config.yaml']
+    logging.warning('Using default configuration file (not the user defined one)')
+
+assert len(_config_file) >= 1, "Please provide a configuration file that has a '*config.yaml' name structure"
+config = read_config(config_file=_config_file[0])
+
+if config is None:
+    _config_file = [get_config_path() / 'local_config.yaml']
+    logging.warning('Using default configuration file (not the user defined one)')
+
+else:
+    # Add global configuration
+    if not config.globals.is_globals_loaded:
+        with open(get_config_path() / "global_config.yaml", "r") as yml_file:
+            local_yaml_file = yaml.safe_load(yml_file)
+            config.globals = local_yaml_file
+            config.globals.is_globals_loaded = True
+
+    # Allow to override the global configuration with a local file
+    for key in config:
+        if key in config.globals:
+            if isinstance(config[key], dict):
+                config.globals[key].update(config[key])
+            else:
+                config.globals[key] = config[key]
+
+    os.makedirs(config.path.logs if config.path.logs else Path().cwd() / "logs", exist_ok=True)
 
