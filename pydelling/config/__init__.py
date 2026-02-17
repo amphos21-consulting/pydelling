@@ -16,34 +16,60 @@ def read_config(config_file: Path="./local_config.yaml"):
     :param config_file:
     :return:
     """
-    with open(config_file) as file:
-        context = yaml.load(file, Loader=yaml.FullLoader)
-    return Box(context, default_box=True)
+    try:
+        with open(config_file) as file:
+            context = yaml.load(file, Loader=yaml.FullLoader)
 
+        context_as_box = Box(context, default_box=True)
 
+    except:
+        # Maybe a generic exception like this one is not recommended, but there are 
+        # multiple ways the reading could fail: file not existing, not valid YAML,
+        # it is a directory...
+        return None
+
+    return context_as_box
+
+used_default_config = False
 _config_file = list(Path.cwd().glob("*config*"))
 if not _config_file:
+    used_default_config = True
     _config_file = [get_config_path() / 'local_config.yaml']
-    logging.warning('Using default configuration file (not the user defined one)')
+
 assert len(_config_file) >= 1, "Please provide a configuration file that has a '*config.yaml' name structure"
 config = read_config(config_file=_config_file[0])
 
-# Add global configuration
-if not config.globals.is_globals_loaded:
-    with open(get_config_path() / "global_config.yaml", "r") as yml_file:
-        local_yaml_file = yaml.safe_load(yml_file)
-        config.globals = local_yaml_file
-        config.globals.is_globals_loaded = True
+if config is None:
+    _config_file = get_config_path() / 'local_config.yaml'
+    config = read_config(config_file=_config_file)
+    used_default_config = True
 
-# Allow to override the global configuration with a local file
-for key in config:
-    if key in config.globals:
-        if isinstance(config[key], dict):
-            config.globals[key].update(config[key])
-        else:
-            config.globals[key] = config[key]
+else:
+    # Add global configuration
+    if not config.globals.is_globals_loaded:
+        with open(get_config_path() / "global_config.yaml", "r") as yml_file:
+            local_yaml_file = yaml.safe_load(yml_file)
+            config.globals = local_yaml_file
+            config.globals.is_globals_loaded = True
+
+    # Allow to override the global configuration with a local file
+    for key in config:
+        if key in config.globals:
+            if isinstance(config[key], dict):
+                config.globals[key].update(config[key])
+            else:
+                config.globals[key] = config[key]
 
 os.makedirs(config.path.logs if config.path.logs else Path().cwd() / "logs", exist_ok=True)
+
+# Get the version from the setup.py file
+try:
+    with open(Path(__file__).parent.parent.parent / "pyproject.toml", "r") as setup_file:
+        setup_file = setup_file.read()
+        version = setup_file.split("version = \"")[1].split("\"")[0]
+except:
+    version = pkg_resources.get_distribution("pydelling").version
+
 with open(Path(__file__).parent / "logger_config.yaml", "r") as ymlfile:
     log_config = yaml.safe_load(ymlfile)
 logging.config.dictConfig(log_config)
@@ -61,16 +87,10 @@ logging.basicConfig(level=logging.INFO, format="%(message)s", datefmt="[%X]", ha
 logging.captureWarnings(True)
 logging.getLogger("py.warnings").setLevel(logging.ERROR)
 
-# Add welcome message, get the version from the setup.py file
-try:
-    with open(Path(__file__).parent.parent.parent / "pyproject.toml", "r") as setup_file:
-        setup_file = setup_file.read()
-        version = setup_file.split("version = \"")[1].split("\"")[0]
-except:
-    version = pkg_resources.get_distribution("pydelling").version
+# Add welcome message
 logging.info(f"-----------------------------------")
 logging.info(f"[blue bold]Welcome to Pydelling {version}", extra={"markup": True})
 logging.info(f"-----------------------------------")
 
-
-
+if used_default_config:
+    logging.warning('Using default configuration file (not the user defined one)')
