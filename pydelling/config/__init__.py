@@ -40,7 +40,8 @@ assert len(_config_file) >= 1, "Please provide a configuration file that has a '
 config = read_config(config_file=_config_file[0])
 
 if config is None:
-    _config_file = [get_config_path() / 'local_config.yaml']
+    _config_file = get_config_path() / 'local_config.yaml'
+    config = read_config(config_file=_config_file)
     used_default_config = True
 
 else:
