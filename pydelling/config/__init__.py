@@ -30,46 +30,18 @@ def read_config(config_file: Path="./local_config.yaml"):
 
     return context_as_box
 
-with open(Path(__file__).parent / "logger_config.yaml", "r") as ymlfile:
-    log_config = yaml.safe_load(ymlfile)
-logging.config.dictConfig(log_config)
-
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
-logging.basicConfig(level=logging.INFO, format="%(message)s", datefmt="[%X]", handlers=[RichHandler(rich_tracebacks=True, show_path=False)])
-
-# # Fix logging issue caused by streamlit
-# loggers = [handler for handler in logging.root.handlers if isinstance(handler, logging.StreamHandler)]
-# strange_logger = loggers[-1]
-# strange_logger.setLevel(logging.ERROR)
-
-# Capture warnings
-logging.captureWarnings(True)
-logging.getLogger("py.warnings").setLevel(logging.ERROR)
-
-# Add welcome message, get the version from the setup.py file
-try:
-    with open(Path(__file__).parent.parent.parent / "pyproject.toml", "r") as setup_file:
-        setup_file = setup_file.read()
-        version = setup_file.split("version = \"")[1].split("\"")[0]
-except:
-    version = pkg_resources.get_distribution("pydelling").version
-logging.info(f"-----------------------------------")
-logging.info(f"[blue bold]Welcome to Pydelling {version}", extra={"markup": True})
-logging.info(f"-----------------------------------")
-
-
+used_default_config = False
 _config_file = list(Path.cwd().glob("*config*"))
 if not _config_file:
+    used_default_config = True
     _config_file = [get_config_path() / 'local_config.yaml']
-    logging.warning('Using default configuration file (not the user defined one)')
 
 assert len(_config_file) >= 1, "Please provide a configuration file that has a '*config.yaml' name structure"
 config = read_config(config_file=_config_file[0])
 
 if config is None:
     _config_file = [get_config_path() / 'local_config.yaml']
-    logging.warning('Using default configuration file (not the user defined one)')
+    used_default_config = True
 
 else:
     # Add global configuration
@@ -87,5 +59,37 @@ else:
             else:
                 config.globals[key] = config[key]
 
-    os.makedirs(config.path.logs if config.path.logs else Path().cwd() / "logs", exist_ok=True)
+os.makedirs(config.path.logs if config.path.logs else Path().cwd() / "logs", exist_ok=True)
 
+# Get the version from the setup.py file
+try:
+    with open(Path(__file__).parent.parent.parent / "pyproject.toml", "r") as setup_file:
+        setup_file = setup_file.read()
+        version = setup_file.split("version = \"")[1].split("\"")[0]
+except:
+    version = pkg_resources.get_distribution("pydelling").version
+
+with open(Path(__file__).parent / "logger_config.yaml", "r") as ymlfile:
+    log_config = yaml.safe_load(ymlfile)
+logging.config.dictConfig(log_config)
+
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+logging.basicConfig(level=logging.INFO, format="%(message)s", datefmt="[%X]", handlers=[RichHandler(rich_tracebacks=True, show_path=False)])
+
+# # Fix logging issue caused by streamlit
+# loggers = [handler for handler in logging.root.handlers if isinstance(handler, logging.StreamHandler)]
+# strange_logger = loggers[-1]
+# strange_logger.setLevel(logging.ERROR)
+
+# Capture warnings
+logging.captureWarnings(True)
+logging.getLogger("py.warnings").setLevel(logging.ERROR)
+
+# Add welcome message
+logging.info(f"-----------------------------------")
+logging.info(f"[blue bold]Welcome to Pydelling {version}", extra={"markup": True})
+logging.info(f"-----------------------------------")
+
+if used_default_config:
+    logging.warning('Using default configuration file (not the user defined one)')
