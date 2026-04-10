@@ -1,3 +1,14 @@
+"""
+Tools for checking PFLOTRAN mass-balance files.
+
+This module provides utilities to read PFLOTRAN mass-balance outputs, identify
+species-specific global and cumulative flux columns, compute residuals, and
+summarize balance errors.
+
+It also includes methods to process multiple files, save summary tables, and
+generate heatmaps of percent error across files and species.
+"""
+
 import glob
 import os
 from typing import Dict, List, Tuple, Optional, Sequence
@@ -15,13 +26,35 @@ logger = logging.getLogger(__name__)
 
 class MassBalanceCheckPflotran:
     """
-    Instantiate with a path or list of glob patterns pointing to PFLOTRAN mass-balance files.
-    Use methods to process single files, summarize all files, plot heatmaps and save CSVs/figures.
+    Analyse PFLOTRAN mass-balance files and evaluate mass-balance residuals.
 
-    Example:
-        checker = MassBalanceCheckPflotran("results/**/*.mass_balance", outdir="out")
-        checker.summarize_all_files()    # prints & saves combined summary + heatmap
-        checker.process_file("results/run1.mass_balance", save_csv=True)
+    This class reads one or more PFLOTRAN mass-balance files, identifies the
+    relevant species columns, computes residuals between changes in global
+    amount and cumulative fluxes, and summarizes the associated percent errors.
+
+    It can be used to process individual files or entire groups of files
+    matched through glob patterns. It also supports exporting summary tables
+    and generating heatmaps for visual comparison across files and species.
+
+    Parameters
+    ----------
+    input_patterns : Sequence[str]
+        One or more file paths or glob patterns pointing to PFLOTRAN
+        mass-balance files.
+    outdir : str, optional
+        Output directory where summary tables and figures will be saved.
+        Defaults to the current working directory.
+    base_folder : str, optional
+        Base folder used to build relative file labels in combined summaries.
+        If not provided, it is inferred from the input patterns.
+
+    Examples
+    --------
+        checker = MassBalanceCheckPflotran(
+        input_patterns="results/**/*.mass_balance",
+        outdir="out"
+        )
+        checker.summarize_all_files()
     """
 
     def __init__(
