@@ -15,9 +15,11 @@ nav:
   
   - API Reference:
     - Overview: api-reference.md
+    - Configuration: config.md
     - Readers: readers/api.md
     - Writers: writers/api.md
     - Preprocessing: preprocessing/api.md
+    - Postprocessing: postprocessing/api.md
     - Managers: managers/api.md
     - Interpolation: interpolation/api.md
     - Utilities: utilities/api.md
@@ -195,4 +197,4 @@ extra:
   generator: false
 
 # Copyright
-copyright: Copyright &copy; 2024 Amphos 21 - Digital Solutions Team
+copyright: Copyright &copy; 2024 Amphos 21

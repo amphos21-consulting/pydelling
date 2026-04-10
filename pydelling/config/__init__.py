@@ -1,3 +1,24 @@
+"""
+Configuration and logging bootstrap for pydelling.
+
+This module loads the project configuration, merges global and local settings,
+initializes the logging system, creates the log directory if needed, and
+displays a startup message with the current package version.
+
+On import, the module looks for a user-defined configuration file in the
+current working directory. If none is found, it falls back to the default
+local configuration distributed with the package. Global settings are then
+loaded and selectively overridden by local values.
+
+Main responsibilities
+---------------------
+- load YAML configuration files
+- expose the merged configuration through ``config``
+- initialize the logging system
+- capture Python warnings
+- report the current package version at startup
+"""
+
 import logging.config
 import os
 from pathlib import Path
@@ -12,10 +33,24 @@ from pydelling.utils.configuration_utils import get_config_path
 
 def read_config(config_file: Path="./local_config.yaml"):
     """
-    Reads the configuration file
-    :param config_file:
-    :return:
+    Read a YAML configuration file and return it as a Box object.
+
+    Parameters
+    ----------
+    config_file : Path, optional
+        Path to the YAML configuration file. By default, ``"./local_config.yaml"``.
+
+    Returns
+    -------
+    Box
+        Configuration content wrapped in a ``Box`` object to allow dot-based
+        access to keys.
+
+    Notes
+    -----
+    The configuration file is parsed using ``yaml.FullLoader``.
     """
+
     with open(config_file) as file:
         context = yaml.load(file, Loader=yaml.FullLoader)
     return Box(context, default_box=True)
