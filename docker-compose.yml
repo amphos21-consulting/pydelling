@@ -6,7 +6,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    init: true
     command: sleep infinity
     environment:
         - PORT=5000
