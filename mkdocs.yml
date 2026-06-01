@@ -1,6 +1,6 @@
 site_name: pydelling - Numerical Modeling Toolkit
 site_description: Comprehensive Python library for mesh preprocessing and numerical modeling workflows
-site_url: https://gitlab.amphos21.com/aitirga/pydelling
+site_url: !ENV [CI_PAGES_URL, "https://gitlab.amphos21.com/aitirga/pydelling"]
 repo_url: https://gitlab.amphos21.com/aitirga/pydelling
 repo_name: GitLab Repository
 edit_uri: edit/main/docs/
@@ -15,9 +15,11 @@ nav:
   
   - API Reference:
     - Overview: api-reference.md
+    - Configuration: config.md
     - Readers: readers/api.md
     - Writers: writers/api.md
     - Preprocessing: preprocessing/api.md
+    - Postprocessing: postprocessing/api.md
     - Managers: managers/api.md
     - Interpolation: interpolation/api.md
     - Utilities: utilities/api.md
@@ -195,4 +197,4 @@ extra:
   generator: false
 
 # Copyright
-copyright: Copyright &copy; 2024 Amphos 21 - Digital Solutions Team
+copyright: Copyright &copy; 2024 Amphos 21
