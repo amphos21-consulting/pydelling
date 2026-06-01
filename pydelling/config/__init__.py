@@ -22,8 +22,8 @@ Main responsibilities
 import logging.config
 import os
 from pathlib import Path
+from importlib.metadata import PackageNotFoundError, version as package_version
 from rich.logging import RichHandler
-import pkg_resources
 
 import yaml
 from box import Box
@@ -101,8 +101,11 @@ try:
     with open(Path(__file__).parent.parent.parent / "pyproject.toml", "r") as setup_file:
         setup_file = setup_file.read()
         version = setup_file.split("version = \"")[1].split("\"")[0]
-except:
-    version = pkg_resources.get_distribution("pydelling").version
+except Exception:
+    try:
+        version = package_version("pydelling")
+    except PackageNotFoundError:
+        version = "unknown"
 logging.info(f"-----------------------------------")
 logging.info(f"[blue bold]Welcome to Pydelling {version}", extra={"markup": True})
 logging.info(f"-----------------------------------")

@@ -22,6 +22,7 @@ test:
     - python -m pip install --upgrade pip
     - pip install --cache-dir "$PIP_CACHE_DIR" .
     - mkdir -p htmlcov
+    - printf '<coverage version="1"></coverage>' > coverage.xml
     - pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short
   
   coverage: '/TOTAL.*\s+(\d+%)$/'
