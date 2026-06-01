@@ -27,6 +27,9 @@ test:
   script:
     - apk update
     - apk add just
+    - mkdir -p htmlcov
+    - printf '<testsuites></testsuites>' > report.xml
+    - printf '<coverage version="1"></coverage>' > coverage.xml
     # Run tests with coverage and copy reports to host (all in one command)
     - just ci-test-reports
   

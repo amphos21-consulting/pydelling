@@ -31,10 +31,7 @@ test-ci: up
 
 #Run tests with coverage for CI and copy reports to host
 ci-test-reports: up
-	docker compose exec pydelling python -m pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short
-	docker compose cp pydelling:/app/coverage.xml ./coverage.xml
-	docker compose cp pydelling:/app/report.xml ./report.xml
-	docker compose cp pydelling:/app/htmlcov ./htmlcov || echo "HTML coverage report not found"
+	sh -c 'docker compose exec -T pydelling python -m pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short; status=$$?; docker compose cp pydelling:/app/coverage.xml ./coverage.xml || true; docker compose cp pydelling:/app/report.xml ./report.xml || true; docker compose cp pydelling:/app/htmlcov ./htmlcov || echo "HTML coverage report not found"; exit $$status'
 
 #Build production image
 compile: up
