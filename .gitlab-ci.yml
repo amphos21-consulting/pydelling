@@ -16,25 +16,13 @@ stages:
 # Test stage with coverage reporting
 test:
   stage: test
-  image: docker:latest
-  services:
-   - name: docker:dind
-     
-  variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
+  image: python:3.12
 
   script:
-    - apk update
-    - apk add just
+    - python -m pip install --upgrade pip
+    - pip install --cache-dir "$PIP_CACHE_DIR" .
     - mkdir -p htmlcov
-    - printf '<testsuites></testsuites>' > report.xml
-    - printf '<coverage version="1"></coverage>' > coverage.xml
-    # Run tests with coverage and copy reports to host (all in one command)
-    - just ci-test-reports
-  
-  after_script:
-    - docker compose down --remove-orphans || true
+    - pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short
   
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
