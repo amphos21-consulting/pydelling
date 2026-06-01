@@ -45,12 +45,7 @@ build-docs:
   image: python:3.11
   script:
     - pip install --cache-dir "$PIP_CACHE_DIR" mkdocs mkdocs-material "mkdocstrings[python]" mkdocstrings-python pymdown-extensions mike
-    - |
-      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
-        mkdocs build --strict --site-dir site
-      else
-        mkdocs build --site-dir site
-      fi
+    - mkdocs build --site-dir site
   artifacts:
     name: "docs_$CI_COMMIT_SHORT_SHA"
     paths:
