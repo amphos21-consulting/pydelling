@@ -4,13 +4,13 @@ This section provides comprehensive API documentation for all modules in the pyd
 
 ## Available Modules
 
-- [**Readers**](readers/api.md) - Data readers for various numerical modeling formats
-- [**Writers**](writers/api.md) - Data writers for exporting results and meshes  
-- [**Preprocessing**](preprocessing/api.md) - Mesh and data preprocessing utilities
-- [**Managers**](managers/api.md) - Simulation management and orchestration
-- [**Interpolation**](interpolation/api.md) - Data interpolation and estimation methods
-- [**Utilities**](utilities/api.md) - General utility functions and geometry operations
-- [**ParaView Processor**](paraview_processor/api.md) - ParaView integration and visualization filters
+- [**Readers**](reference/readers/index.md) - Data readers for various numerical modeling formats
+- [**Writers**](reference/writers/index.md) - Data writers for exporting results and meshes  
+- [**Preprocessing**](reference/preprocessing/index.md) - Mesh and data preprocessing utilities
+- [**Managers**](reference/managers/index.md) - Simulation management and orchestration
+- [**Interpolation**](reference/interpolation/index.md) - Data interpolation and estimation methods
+- [**Utilities**](reference/utils/index.md) - General utility functions and geometry operations
+- [**ParaView Processor**](reference/paraview_processor/index.md) - ParaView integration and visualization filters
 
 ## Quick Start
 

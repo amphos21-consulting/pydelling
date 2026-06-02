@@ -156,7 +156,7 @@ If you encounter issues:
 Now that pydelling is installed:
 
 - Explore the [Usage Guide](docs-usage.md) for comprehensive examples
-- Check out the [API Reference](readers/api.md) for detailed documentation
+- Check out the [API Reference](reference/index.md) for detailed documentation
 - Browse the `code_snippets/` directory for practical examples
 
 Ready to start modeling? Let's dive into the [Usage Guide](docs-usage.md)!
