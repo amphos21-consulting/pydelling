@@ -1,5 +1,7 @@
 /* Additional CSS Styles for pydelling Documentation */
 
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0");
+
 /* Custom color scheme and branding */
 :root {
   --md-primary-fg-color: #d1621c;        /* Red primary color */
@@ -278,6 +280,45 @@
   background-color: var(--md-default-bg-color);
   border: 1px solid var(--md-default-fg-color--lightest);
   border-radius: 8px;
+}
+
+/* Sidebar collapse/expand controls */
+.sidebar-nav-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin: 0.4rem 0.8rem 0.6rem 0.8rem;
+}
+
+.sidebar-nav-controls .sidebar-icon-button {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.25rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.sidebar-nav-controls .sidebar-icon-button:hover {
+  background: var(--md-default-fg-color--lightest);
+  border-color: var(--md-accent-fg-color);
+}
+
+.sidebar-nav-controls .sidebar-icon-button svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.sidebar-nav-controls .sidebar-icon-button .material-symbols-outlined {
+  font-size: 1rem;
+  line-height: 1;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
 .metric-value {
