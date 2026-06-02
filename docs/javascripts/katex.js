@@ -29,22 +29,6 @@ document$.subscribe(() => {
 
 // Additional JavaScript for enhanced functionality
 document.addEventListener('DOMContentLoaded', function() {
-  // Add copy button functionality to code blocks
-  const codeBlocks = document.querySelectorAll('pre code');
-  codeBlocks.forEach((block) => {
-    const button = document.createElement('button');
-    button.className = 'copy-button';
-    button.textContent = 'Copy';
-    button.addEventListener('click', () => {
-      navigator.clipboard.writeText(block.textContent);
-      button.textContent = 'Copied!';
-      setTimeout(() => {
-        button.textContent = 'Copy';
-      }, 2000);
-    });
-    block.parentNode.appendChild(button);
-  });
-
   // Smooth scrolling for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
