@@ -1,3 +1,5 @@
+"""Contains the logic to preprocess and work with a generic unstructured mesh"""
+
 from __future__ import annotations
 
 import logging
@@ -20,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class MeshPreprocessor(iGPLogic):
-    """Contains the logic to preprocess and work with a generic unstructured mesh"""
     elements: List[geometry.base_element]
     external_boundaries: Dict[str, List[geometry.base_face]]
     boundaries: Dict[str, List[geometry.base_face]]
@@ -668,4 +669,3 @@ class MeshPreprocessor(iGPLogic):
         self.boundaries['south']  = self.get_boundary_elements_given_unit_vector([0, -1, 0])
         self.boundaries['east']   = self.get_boundary_elements_given_unit_vector([1, 0, 0])
         self.boundaries['west']   = self.get_boundary_elements_given_unit_vector([-1, 0, 0])
-

@@ -1,3 +1,5 @@
+"""This class reads borehole information from csv files and processes it to automatically assign to the mesh"""
+
 import logging
 from pathlib import Path
 from typing import Dict, TYPE_CHECKING
@@ -17,7 +19,6 @@ import matplotlib.pyplot as plt
 
 
 class BoreholeReader(BaseReader):
-    """This class reads borehole information from csv files and processes it to automatically assign to the mesh"""
     def __init__(self, igp_reader=None, filename=None):
         self.filename = filename if filename else config.data_files.borehole_data if config.data_files.borehole_data else None
         self.igp_reader = igp_reader

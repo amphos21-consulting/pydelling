@@ -1,3 +1,5 @@
+"""Callback to restart Pflotran simulations."""
+
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -9,7 +11,6 @@ from pydelling.managers.ssh.steps import CopyStep
 
 
 class PflotranRestartCallback(BaseCallback):
-    """Callback to restart Pflotran simulations."""
     study: PflotranStudy
     def __init__(self, manager: PflotranManager,
                  study: PflotranStudy,
@@ -56,5 +57,3 @@ class PflotranRestartCallback(BaseCallback):
     def run_dummy(self):
         """This method is called when the callback is run in dummy mode"""
         pass
-
-

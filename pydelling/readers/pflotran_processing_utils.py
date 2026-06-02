@@ -1,9 +1,10 @@
+"""This class contains utility functions to use on the PflotranReader class"""
+
 import numpy as np
 import pandas as pd
 import h5py
 
 class PflotranProcessingUtils:
-    """This class contains utility functions to use on the PflotranReader class"""
     variables: list
     coordinates: np.ndarray
     data: h5py.File
@@ -130,6 +131,3 @@ class PflotranProcessingUtils:
     @property
     def z_spacing(self):
         return np.diff(self.coordinates['z[m]'])
-
-
-

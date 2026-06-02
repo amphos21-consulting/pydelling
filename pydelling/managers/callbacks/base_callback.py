@@ -1,3 +1,5 @@
+"""Base class for callbacks."""
+
 from pydelling.managers import BaseManager, BaseStudy
 from abc import ABC, abstractmethod
 import logging
@@ -6,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCallback(ABC):
-    """Base class for callbacks."""
     def __init__(self, manager: BaseManager, study: BaseStudy, kind: str = None, **kwargs):
         self.manager = manager
         self.study = study
@@ -29,6 +30,3 @@ class BaseCallback(ABC):
     def process_kwargs(self):
         for kwarg_name, kwarg in self.kwargs.items():
             setattr(self, kwarg_name, kwarg)
-
-
-

@@ -1,3 +1,7 @@
+"""
+This class implements the Table to Points filter
+"""
+
 from pydelling.paraview_processor.filters import base_filter
 try:
     from paraview.simple import *
@@ -6,9 +10,6 @@ except:
 
 
 class TableToPointsFilter(base_filter):
-    """
-    This class implements the Table to Points filter
-    """
     filter_type: str = "Table_to_points"
     counter: int = 0
 

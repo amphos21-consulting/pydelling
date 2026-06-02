@@ -1,3 +1,7 @@
+"""
+ Class that contains functions to read a rasterized file in .asc format
+ """
+
 import logging
 
 import h5py
@@ -11,9 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class AscReader(BaseReader):
-    """
-     Class that contains functions to read a rasterized file in .asc format
-     """
 
     def __init__(self, filename):
         self.filename = filename

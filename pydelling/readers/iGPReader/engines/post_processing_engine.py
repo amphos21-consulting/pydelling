@@ -1,3 +1,5 @@
+"""This class manages the structure of the output files"""
+
 import os
 import shutil
 from pathlib import Path
@@ -8,7 +10,6 @@ import numpy as np
 
 
 class PostProcessingEngine:
-    """This class manages the structure of the output files"""
     def __init__(self, dt=0.2, unit="y"):
         self.dt = dt
         self.unit = unit

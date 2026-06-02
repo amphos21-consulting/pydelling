@@ -1,3 +1,5 @@
+"""This class reads a pflotran status file and extracts some key information."""
+
 from .BaseStatus import BaseStatus
 import logging
 import re
@@ -5,7 +7,6 @@ import re
 logger = logging.getLogger(__name__)
 
 class PflotranStatus(BaseStatus):
-    """This class reads a pflotran status file and extracts some key information."""
     def __init__(self,
                  status_file,
                  total_time=None):
@@ -57,6 +58,3 @@ class PflotranStatus(BaseStatus):
         self.status_file = status_file if status_file is not None else self.status_file
         self.read_status_file()
         self.extract_key_information()
-
-
-

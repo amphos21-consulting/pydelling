@@ -1,3 +1,5 @@
+"""This class generates a closed STL from two regular raster files"""
+
 import numpy as np
 
 from pydelling.readers import RasterFileReader
@@ -8,7 +10,6 @@ from pydelling.utils import create_results_folder
 logger = logging.getLogger(__name__)
 
 class ClosedStlGenerator(object):
-    """This class generates a closed STL from two regular raster files"""
     def __init__(self, bottom_surface: RasterFileReader,
                  top_surface: RasterFileReader = None,
                  aperture: RasterFileReader = None,
@@ -205,4 +206,3 @@ class ClosedStlGenerator(object):
     def plot_aperture(self):
         """This method plots the aperture"""
         self.aperture.plot(colorbar_label='Aperture')
-

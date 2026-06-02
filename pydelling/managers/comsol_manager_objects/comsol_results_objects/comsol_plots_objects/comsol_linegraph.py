@@ -1,3 +1,7 @@
+"""
+A class to handle the properties of a COMSOL Line Graph.
+"""
+
 import re
 import logging
 from typing import TYPE_CHECKING
@@ -8,9 +12,6 @@ if TYPE_CHECKING:
     from ..comsol_plotgroup1D import _PlotGroup1D
     
 class _LineGraph:
-    """
-    A class to handle the properties of a COMSOL Line Graph.
-    """
     def __init__(self,
                     plotgroup: '_PlotGroup1D',
                     tag: str | None = None,

@@ -1,3 +1,8 @@
+"""
+This class reads the mesh and region information of an iGP project folder. It also builds an internal representation
+of the mesh, and controls all the pre-processing functions related to the mesh.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -29,10 +34,6 @@ logger = logging.getLogger(__name__)
 
 
 class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter, PflotranImplicitWriter):
-    """
-    This class reads the mesh and region information of an iGP project folder. It also builds an internal representation
-    of the mesh, and controls all the pre-processing functions related to the mesh.
-    """
     element_dict = {"4": "T", "5": "P", "6": "W", "8": "H"}
     face_dict = {'T': 3, 'Q': 4}
 
@@ -1175,13 +1176,3 @@ def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_si
             amount = id_local / int(len(elements))
             logger.info(f"Process {chunk_index} completed amount: {amount * 100:3.0f} %")
             amount_read += 0.1
-
-
-
-
-
-
-
-
-
-

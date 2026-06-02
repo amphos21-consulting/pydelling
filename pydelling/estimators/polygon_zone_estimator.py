@@ -1,3 +1,5 @@
+"""This class reads some polygon zone data and allows to classify a give point into one of the zones."""
+
 from pathlib import Path
 
 import pandas as pd
@@ -14,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class PolygonZoneEstimator(BaseEstimator):
-    """This class reads some polygon zone data and allows to classify a give point into one of the zones."""
     def __init__(self, zones_dict: dict[str, Union[str, Path]]):
         """
         Initializes the PolygonZoneEstimator class.

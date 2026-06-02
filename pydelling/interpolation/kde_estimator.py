@@ -1,3 +1,8 @@
+"""
+This class performs a KDE estimation on a given dataset and provides useful methods
+to plot and manipulate the estimated distributions.
+"""
+
 import logging
 
 import matplotlib.pyplot as plt
@@ -11,10 +16,6 @@ logger = logging.getLogger(__name__)
 import seaborn as sns
 
 class KdeEstimator:
-    """
-    This class performs a KDE estimation on a given dataset and provides useful methods
-    to plot and manipulate the estimated distributions.
-    """
     is_run: bool
     kde_estimator: KernelDensity
     def __init__(self, data:pd.DataFrame=None, kernel='gaussian', bandwidth=1000, package='scikit'):
