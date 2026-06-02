@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import numpy as np
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
 import logging
@@ -17,6 +23,14 @@ class SmeshReader(MeshPreprocessor):
     has_kd_tree = False
 
     def __init__(self, filename, kd_tree=True, st_file=False):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            kd_tree (Any): Description.
+            st_file (Any): Description.
+        """
         super().__init__()
         self.is_streamlit = st_file
 
@@ -29,6 +43,12 @@ class SmeshReader(MeshPreprocessor):
             self.load(filename)
 
     def read_file(self, filename):
+        """
+        read_file method.
+        
+        Args:
+            filename (Any): Description.
+        """
         with open(filename, 'r') as f:
             first_line = f.readline()
             number_of_nodes = int(first_line.split()[0])

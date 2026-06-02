@@ -1,4 +1,8 @@
-"""Creates a streamlit block in which the user can drag and drop a file and the resulting object is returned"""
+"""
+Creates a streamlit block in which the user can drag and drop a file and the resulting object is returned
+
+
+"""
 
 from pathlib import Path
 
@@ -14,6 +18,17 @@ from pydelling.webapps.components import BaseComponent
 
 class InputComponent(BaseComponent):
     def __init__(self, input_type: str, key: str, webapp: WebAppRunner=None, lang=None, *args, **kwargs):
+        """
+        __init__ method.
+        
+        Args:
+            input_type (str): Description.
+            key (str): Description.
+            webapp (WebAppRunner): Description.
+            lang (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         self.key = key
         if not f'{self.key}_done' in st.session_state:
             st.session_state[f'{self.key}_done'] = False

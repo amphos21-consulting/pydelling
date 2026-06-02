@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import logging
 import numpy as np
 import functools
@@ -9,7 +15,14 @@ logger = logging.getLogger(__name__)
 class UnitConverter:
     """A class for converting between units of measurement."""
     def convert_time(self, value, initial_unit, final_unit):
-        """Converts between time units."""
+        """
+        Converts between time units.
+        
+        Args:
+            value (Any): Description.
+            initial_unit (Any): Description.
+            final_unit (Any): Description.
+        """
         value = float(value)
         if initial_unit == 's' and final_unit == 'd':
             return value / 86400
@@ -102,7 +115,14 @@ class SemistructuredFinder:
         self.is_run = True
 
     def generate_clusters_dbscan(self, eps, min_samples, **kwargs):
-        """Generates clusters of points using the DBSCAN algorithm."""
+        """
+        Generates clusters of points using the DBSCAN algorithm.
+        
+        Args:
+            eps (Any): Description.
+            min_samples (Any): Description.
+            **kwargs (Any): Description.
+        """
         import numpy as np
         from sklearn.cluster import DBSCAN
         from sklearn.preprocessing import StandardScaler
@@ -131,7 +151,13 @@ class SemistructuredFinder:
         return clusters
 
     def generate_clusters_kmeans(self, n_clusters, **kwargs):
-        """Generates clusters of points using the KMeans algorithm."""
+        """
+        Generates clusters of points using the KMeans algorithm.
+        
+        Args:
+            n_clusters (Any): Description.
+            **kwargs (Any): Description.
+        """
         from sklearn.cluster import KMeans
         self.engine: KMeans = KMeans(n_clusters=self._n_clusters, random_state=0, **kwargs)
         self.engine.fit(self.projected_points)
@@ -160,11 +186,21 @@ class SemistructuredFinder:
         return point_idx
 
     def get_point_idx_in_cluster(self, cluster_idx):
-        """Returns the indices of the points in the specified cluster."""
+        """
+        Returns the indices of the points in the specified cluster.
+        
+        Args:
+            cluster_idx (Any): Description.
+        """
         return self.point_idx[cluster_idx]
 
     def get_closest_cluster_from_point(self, point: np.array):
-        """Returns the cluster closest to a point."""
+        """
+        Returns the cluster closest to a point.
+        
+        Args:
+            point (np.array): Description.
+        """
         dist = []
         # Compute the projected point
         projected_point = []
@@ -177,11 +213,22 @@ class SemistructuredFinder:
         return self.clusters[np.argmin(dist)]
 
     def get_closest_cluster_from_xy(self, x: float, y: float):
-        """Returns the cluster closest to a point."""
+        """
+        Returns the cluster closest to a point.
+        
+        Args:
+            x (float): Description.
+            y (float): Description.
+        """
         return self.get_closest_cluster_from_point(np.array([x, y, 0]))
 
     def get_closest_point_ids_from_point(self, point: np.array):
-        """Returns the cluster closest to a point using KDTree."""
+        """
+        Returns the cluster closest to a point using KDTree.
+        
+        Args:
+            point (np.array): Description.
+        """
         import numpy as np
         from scipy.spatial import KDTree
         projected_point = []
@@ -193,7 +240,13 @@ class SemistructuredFinder:
         return self.point_idx[idx]
 
     def get_closest_point_ids_from_xy(self, x: float, y: float):
-        """Returns the cluster closest to a point."""
+        """
+        Returns the cluster closest to a point.
+        
+        Args:
+            x (float): Description.
+            y (float): Description.
+        """
         return self.get_closest_point_ids_from_point(np.array([x, y, 0]))
 
     @functools.cached_property

@@ -1,5 +1,6 @@
-"""
-This class implements a basic interface for Interpolation classes
+"""Base class and utilities for interpolation implementations.
+
+
 """
 import logging
 import os
@@ -16,7 +17,6 @@ from pydelling.writers.base_writer import BaseWriter
 logger = logging.getLogger(__name__)
 
 
-
 class BaseInterpolator:
     is_run: bool = False
     has_regular_mesh: bool = False
@@ -24,6 +24,13 @@ class BaseInterpolator:
     def __init__(self,
                  interpolation_data=None,
                  mesh_data=None):
+        """
+        Initialize interpolation and mesh containers.
+        
+        Args:
+            interpolation_data (Any): Description.
+            mesh_data (Any): Description.
+        """
         self.data: np.ndarray = []
         self.mesh: np.ndarray = []
         self.info = {"interpolation": {}}
@@ -37,7 +44,9 @@ class BaseInterpolator:
     def add_data(self, data):
         """
         Add a dataset that will be used to interpolate
-        :return:
+        
+        Args:
+            data (Any): Description.
         """
         if len(self.data) == 0:
             self.data = np.array(data)
@@ -47,7 +56,10 @@ class BaseInterpolator:
     def add_mesh(self, data, id_index=3):
         """
         Add the set of points on which interpolation will be performed
-        :return:
+        
+        Args:
+            data (Any): Description.
+            id_index (Any): Description.
         """
         if data.shape[1] > 3:
             temp_id_data = data[:, id_index]
@@ -84,7 +96,11 @@ class BaseInterpolator:
     def dump_to_hdf5(self, filename=None, var_name=None, data=None):
         """
         Dumps the data into HDF5 format
-        :return:
+        
+        Args:
+            filename (Any): Description.
+            var_name (Any): Description.
+            data (Any): Description.
         """
         if data is None:
             data = self.interpolated_data
@@ -97,6 +113,13 @@ class BaseInterpolator:
             tempfile.create_dataset(var_name, data=data)
 
     def dump_to_csv(self, filename=None, **kwargs):
+        """
+        Write interpolated values and mesh coordinates to a CSV-like text file.
+        
+        Args:
+            filename (Any): Description.
+            **kwargs (Any): Description.
+        """
         temp_array = np.reshape(self.interpolated_data, (self.interpolated_data.shape[0], 1))
         temp_array = np.concatenate((self.mesh, temp_array), axis=1)
         np.savetxt(filename, temp_array, **kwargs)
@@ -113,14 +136,33 @@ class BaseInterpolator:
         self.interpolated_data = []
 
     def write_data(self, writer_class=BaseWriter, filename=None, **kwargs):
+        """
+        Persist interpolated data using the provided writer class.
+        
+        Args:
+            writer_class (Any): Description.
+            filename (Any): Description.
+            **kwargs (Any): Description.
+        """
         base_writer = writer_class(filename=filename, data=self.get_data(), info=self.info, **kwargs)
         base_writer.run(filename=filename)
 
     def remove_output_file(self, writer_class=BaseWriter, filename=None, **kwargs):
+        """
+        Remove an output artifact via the provided writer class.
+        
+        Args:
+            writer_class (Any): Description.
+            filename (Any): Description.
+            **kwargs (Any): Description.
+        """
         base_writer = writer_class(filename=filename, **kwargs)
         base_writer.remove_output_file(filename)
 
     def get_minmax_coords(self):
+        """Compute and store min/max coordinates from source data.
+
+        """
         self.data_xmin = np.min(self.data[:, 0])
         self.data_xmax = np.max(self.data[:, 0])
         self.data_ymin = np.min(self.data[:, 1])
@@ -131,7 +173,14 @@ class BaseInterpolator:
         self.info["interpolation"]["y_max"] = self.data_ymax
 
     def create_regular_mesh(self, n_x, n_y, dilatation_factor=1.0):
-        """Create an inner regular mesh"""
+        """
+        Create an inner regular mesh
+        
+        Args:
+            n_x (Any): Description.
+            n_y (Any): Description.
+            dilatation_factor (Any): Description.
+        """
         self.has_regular_mesh = True
         self.mesh = []
         self.get_minmax_coords()
@@ -157,6 +206,13 @@ class BaseInterpolator:
         self.mesh = np.hstack((grid_x.reshape((grid_x.size, 1)), grid_y.reshape((grid_y.size, 1))))
 
     def describe(self, write_to_file=None, plots=True):
+        """
+        Print and optionally export basic statistics of interpolated values.
+        
+        Args:
+            write_to_file (Any): Description.
+            plots (Any): Description.
+        """
         assert self.is_run, "The interpolator has not been run"
         temp_df = pd.DataFrame(self.interpolated_data)
         logger.info("Describing the interpolated data")
@@ -172,7 +228,5 @@ class BaseInterpolator:
             import matplotlib.pyplot as plt
             histogram_plot = sns.kdeplot(x=self.interpolated_data)
             plt.show()
-
-
 
 

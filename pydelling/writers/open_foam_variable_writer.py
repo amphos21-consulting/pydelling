@@ -1,4 +1,8 @@
-"""This class creates an OpenFOAM variable data file"""
+"""
+This class creates an OpenFOAM variable data file
+
+
+"""
 
 import logging
 
@@ -11,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class OpenFoamVariableWriter(BaseWriter):
-    def __init__(self, filename: str = None, header=None, outer=None, data=None, configuration_dict=None, *args, **kwargs):
+    def __init__(self, filename: str = None, header: dict | None = None, outer: dict | None = None, data: np.ndarray | list | None = None, configuration_dict=None, *args, **kwargs):
         """
         A correct set of header/outer needs to be provided to the class.
 
@@ -37,6 +41,10 @@ class OpenFoamVariableWriter(BaseWriter):
     def run(self, *args, **kwargs):
         """
         Writes the data into an OpenFOAM variable format
+        
+        Args:
+            *args (Any): Description.
+            **kwargs (Any): Description.
         """
         logger.info(f"Writing data to {self.filename}")
         with open(self.filename, "w") as self.output_file:
@@ -50,11 +58,11 @@ class OpenFoamVariableWriter(BaseWriter):
         """
         self.output_file.write(f"""/*--------------------------------*- C++ -*----------------------------------*\\
   =========                 |
-  \\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\\    /   O peration     | Website:  https://openfoam.org
-    \\\  /    A nd           | Version:  7
-     \\\/     M anipulation  |
-\*---------------------------------------------------------------------------*/
+    \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+     \\\\    /   O peration     | Website:  https://openfoam.org
+        \\\\  /    A nd           | Version:  7
+         \\\\/     M anipulation  |
+\\*---------------------------------------------------------------------------*/
 FoamFile
 {{
     version     2.0;

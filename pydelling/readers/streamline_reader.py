@@ -1,5 +1,7 @@
 """
 Centroid file reader
+
+
 """
 import logging
 import pickle
@@ -22,6 +24,13 @@ class StreamlineReader(BaseReader):
     is_aperture_zero: bool = False
 
     def __init__(self, filename, header=False):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            header (Any): Description.
+        """
         self.header = None
         super().__init__(filename,
                          header=header)
@@ -44,9 +53,9 @@ class StreamlineReader(BaseReader):
         self.stream_data: DataFrameGroupBy = self.data.groupby("SeedIds")
 
     def compute_arrival_times(self,
-                              reason_of_termination=None,
-                              min_x=None,
-                              min_y=None,
+                              reason_of_termination: int | None = None,
+                              min_x: float | None = None,
+                              min_y: float | None = None,
                               ) -> pd.Series:
         """
         This method computes the arrival times of the streamlines
@@ -67,8 +76,9 @@ class StreamlineReader(BaseReader):
     def compute_arrival_times_per_material(self, reason_of_termination=None) -> pd.Series:
         """
         This method computes the arrival times of the streamlines for a particular material
-        Returns:
-             A pd.Series object containing the arrival times of the streamlines
+        
+        Args:
+            reason_of_termination (Any): Description.
         """
         logger.info("Computing arrival times of the streamlines per material")
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.reason_of_termination
@@ -87,8 +97,9 @@ class StreamlineReader(BaseReader):
     def compute_arrival_times_per_material_paula(self, reason_of_termination=None) -> pd.Series:
         """
         This method computes the arrival times of the streamlines for a particular material
-        Returns:
-             A pd.Series object containing the arrival times of the streamlines
+        
+        Args:
+            reason_of_termination (Any): Description.
         """
         logger.info("Computing arrival times of the streamlines per material")
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.reason_of_termination
@@ -127,15 +138,15 @@ class StreamlineReader(BaseReader):
         return temp_series, dic_group
 
     def compute_initial_velocities(self,
-                                   reason_of_termination = None,
-                                   normalize=True,
+                                   reason_of_termination: int | None = None,
+                                   normalize: bool = True,
                                    index_df: pd.Series=None,
                                    ):
         """
         This method computes the initial velocities each streamlines 'sees' at the beginning, it can be used to normalize them later on
 
         Args:
-            normalized: Parameter controlling weather the output vector should be normalized by dividing by the maximum velocity valuefdh
+            normalize: Parameter controlling whether the output vector should be normalized by dividing by the maximum velocity value.
 
         Returns: a vector containing the initial velocities of the streamlines
         """
@@ -154,8 +165,9 @@ class StreamlineReader(BaseReader):
     def compute_length_streamlines(self, reason_of_termination=None) -> pd.Series:
         """
         This method computes the length of the streamlines
-        Returns:
-             A pd.Series object containing the length of the streamlines
+        
+        Args:
+            reason_of_termination (Any): Description.
         """
         logger.info("Computing length of the streamlines")
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.reason_of_termination
@@ -168,8 +180,9 @@ class StreamlineReader(BaseReader):
     def compute_length_streamlines_per_material(self, reason_of_termination=None) -> pd.Series:
         """
         This method computes the length of the streamlines for a particular material
-        Returns:
-             A pd.Series object containing the length of the streamlines
+        
+        Args:
+            reason_of_termination (Any): Description.
         """
         logger.info("Computing length of the streamlines per material")
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.reason_of_termination
@@ -201,8 +214,9 @@ class StreamlineReader(BaseReader):
     def compute_beta(self, aperture_field: str = None) -> pd.Series:
         """
         This method computes beta values for each streamline
-        Returns:
-            A pd.Series object containing the streamline info with the beta column added
+        
+        Args:
+            aperture_field (str): Description.
         """
         self.number_of_zero_apertures = 0
         aperture_field_file = aperture_field if aperture_field else config.beta_integrator.aperture_field_file if config.beta_integrator.aperture_field_file else None
@@ -289,8 +303,10 @@ class StreamlineReader(BaseReader):
     def dump_to_csv(self, output_file, delimiter=","):
         """
         Writes the data into a csv file
-        :param output_file:
-        :return:
+        
+        Args:
+            output_file (Any): Description.
+            delimiter (Any): Description.
         """
         print(f"Starting dump into {output_file}")
         # self.data.to_csv(output_file, delimiter=delimiter)
@@ -300,8 +316,10 @@ class StreamlineReader(BaseReader):
     def to_csv(self, output_file, delimiter=","):
         """
         Writes the data into a csv file
-        :param output_file:
-        :return:
+        
+        Args:
+            output_file (Any): Description.
+            delimiter (Any): Description.
         """
         print(f"Starting dump into {output_file}")
         # self.data.to_csv(output_file, delimiter=delimiter)
@@ -315,6 +333,14 @@ class StreamlineReader(BaseReader):
                            ) -> DataFrameGroupBy:
 
 
+        """
+        filter_streamlines method.
+        
+        Args:
+            reason_of_termination (Any): Description.
+            min_x (Any): Description.
+            min_y (Any): Description.
+        """
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.filter.reason_of_termination if config.streamline_reader.filter.reason_of_termination else None
         min_x = min_x if min_x else config.streamline_reader.filter.min_x if config.streamline_reader.filter.min_x else None
         logger.info("Filtering streamlines")
@@ -338,6 +364,12 @@ class StreamlineReader(BaseReader):
 
     @staticmethod
     def fix_aperture_field(aperture_matrix):
+        """
+        fix_aperture_field method.
+        
+        Args:
+            aperture_matrix (Any): Description.
+        """
         aperture_matrix[0, :] = aperture_matrix[1, :]
         aperture_matrix[:, 0] = aperture_matrix[:, 1]
         aperture_matrix[aperture_matrix.shape[0] - 1, :] = aperture_matrix[aperture_matrix.shape[0] - 2, :]
@@ -351,6 +383,17 @@ class StreamlineReader(BaseReader):
                                             *args,
                                             **kwargs
                                             ):
+        """
+        integrate_variable_within_materials method.
+        
+        Args:
+            variable (Any): Description.
+            material_names (Any): Description.
+            add_variable_name_to_output (Any): Description.
+            output_variable_name (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         logger.info(f'Integrating variable {variable} within the materials for all the streamlines')
         output_list = []
         for streamline in self.stream_data:

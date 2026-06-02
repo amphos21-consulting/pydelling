@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import logging
 
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
@@ -17,6 +23,15 @@ class VTKMeshReader(MeshPreprocessor):
                  st_file=False,
                  generate_internal_mesh=True,
                  ):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            kd_tree (Any): Description.
+            st_file (Any): Description.
+            generate_internal_mesh (Any): Description.
+        """
         super().__init__()
         self.is_streamlit = st_file
 
@@ -93,7 +108,12 @@ class VTKMeshReader(MeshPreprocessor):
 
 
     def save(self, filename):
-        """Save the mesh to a file."""
+        """
+        Save the mesh to a file.
+        
+        Args:
+            filename (Any): Description.
+        """
         import pickle
         logger.info(f'Saving mesh to {filename}')
         with open(filename, 'wb') as f:
@@ -106,7 +126,12 @@ class VTKMeshReader(MeshPreprocessor):
             pickle.dump(save_dictionary, f)
 
     def load(self, filename):
-        """Load the mesh from a file."""
+        """
+        Load the mesh from a file.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Loading mesh from {filename}')
         import pickle
         with open(filename, 'rb') as f:

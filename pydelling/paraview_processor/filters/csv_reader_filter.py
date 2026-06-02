@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from pydelling.paraview_processor.filters import base_filter
 try:
     from paraview.simple import *
@@ -25,6 +31,14 @@ class CsvReaderFilter(base_filter):
     z_max: float
 
     def __init__(self, filename, name, coordinate_labels=("x", "y", "z")):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            name (Any): Description.
+            coordinate_labels (Any): Description.
+        """
         super().__init__(name=name)
         self.filter = CSVReader(FileName=str(filename))
         CsvReaderFilter.counter += 1

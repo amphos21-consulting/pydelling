@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import unittest
 from pydelling.preprocessing.gid_preprocessor import *
 
@@ -9,6 +15,13 @@ class GidPreprocessorTest(unittest.TestCase):
         line = Line(point_1, point_2)
         class TestGidobject(GidObject):
             def construct(self, *args, **kwargs):
+                """
+                construct method.
+                
+                Args:
+                    *args (Any): Description.
+                    **kwargs (Any): Description.
+                """
                 self.add([point_1, point_2])
                 self.add(line)
 
@@ -34,6 +47,13 @@ class GidPreprocessorTest(unittest.TestCase):
 
         class TestSurface(GidObject):
             def construct(self, *args, **kwargs):
+                """
+                construct method.
+                
+                Args:
+                    *args (Any): Description.
+                    **kwargs (Any): Description.
+                """
                 self.add(polyline)
                 self.add(surface)
 
@@ -50,6 +70,13 @@ class GidPreprocessorTest(unittest.TestCase):
 
         class TestPoints(GidObject):
             def construct(self, *args, **kwargs):
+                """
+                construct method.
+                
+                Args:
+                    *args (Any): Description.
+                    **kwargs (Any): Description.
+                """
                 self.add(point_1)
                 self.add(point_2)
                 self.add(point_3)
@@ -77,6 +104,13 @@ class GidPreprocessorTest(unittest.TestCase):
         surface_2 = Surface(polyline_2.lines)
         class TestSurface(GidObject):
             def construct(self, *args, **kwargs):
+                """
+                construct method.
+                
+                Args:
+                    *args (Any): Description.
+                    **kwargs (Any): Description.
+                """
                 self.add(polyline)
                 self.add(polyline_2)
 

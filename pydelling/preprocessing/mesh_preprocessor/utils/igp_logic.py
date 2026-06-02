@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from typing import List, Dict, TYPE_CHECKING
 from ..geometry import *
 import logging
@@ -30,7 +36,14 @@ class iGPLogic:
                              ):
         """
         Function that transforms an implicit mesh into an explicit mesh
-        :param dump_mesh_info: set it True in order to write the primal mesh into the same unstructured explicit mesh
+        
+        Args:
+            dump_mesh_info (Any): Description.
+            write_cells (Any): Description.
+            write_regions (Any): Description.
+            output_folder (Any): Description.
+            project_name (Any): Description.
+            weight_by_volume (Any): Description.
         """
         self.output_folder = output_folder if output_folder is not None else 'output'
         self.project_name = project_name
@@ -114,6 +127,12 @@ class iGPLogic:
 
     def write_cells(self,
                    export_file):
+        """
+        write_cells method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         export_file.write(f"CELLS {len(self.elements)}\n")
         for element in self.elements:
             export_file.write(
@@ -124,6 +143,13 @@ class iGPLogic:
                           weight_by_volume=True,
                           ):
         # compute number of connection elements
+        """
+        write_connections method.
+        
+        Args:
+            export_file (Any): Description.
+            weight_by_volume (Any): Description.
+        """
         n_conn = 0
         for element in self.connections:
             n_conn += len(element[1])
@@ -199,6 +225,12 @@ class iGPLogic:
                                      export_file):
 
         # Create domain group
+        """
+        write_domain_postprocess_hdf5 method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         domain_group = export_file.create_group("Domain")
         # Create Cells dataset
         _cells = []
@@ -225,6 +257,12 @@ class iGPLogic:
 
     def write_elements(self,
                       export_file):
+        """
+        write_elements method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         export_file.write(f"ELEMENTS {self.n_elements}\n")
         for element in self.elements:
             export_file.write(
@@ -232,6 +270,12 @@ class iGPLogic:
 
     def write_nodes(self,
                    export_file):
+        """
+        write_nodes method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         export_file.write(f"VERTICES {self.n_nodes}\n")
         for id, node in enumerate(self.nodes):
             export_file.write(f"{node[0]} {node[1]} {self.nodes[id][2]:5.5f}\n")
@@ -240,7 +284,9 @@ class iGPLogic:
                          export_file):
         """
         Writes the domain info (i.e. grid info) into an hdf5 file
-        :param export_file: HDF5 File object
+        
+        Args:
+            export_file (Any): Description.
         """
         #  Pre-process cell data
         cell_data = np.zeros(shape=(self.n_elements, 9), dtype=np.int32)
@@ -256,6 +302,12 @@ class iGPLogic:
 
     def write_regions_hdf5(self,
                           export_file):
+        """
+        write_regions_hdf5 method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         def add_dataset(hdf5_file, group_name, dataset_type, data):
             temp_group = hdf5_file.create_group(group_name)
             temp_dataset = temp_group.create_dataset(dataset_type, data=data)

@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -7,6 +13,13 @@ class Point(np.ndarray):
     def __new__(cls, input_array):
         # Input array is an already formed ndarray instance
         # We first cast to be our class type
+        """
+        __new__ method.
+        
+        Args:
+            cls (Any): Description.
+            input_array (Any): Description.
+        """
         if len(input_array) == 1:
             raise ValueError("Point must have 2 or 3 coordinates")
         elif len(input_array) == 2:
@@ -18,7 +31,12 @@ class Point(np.ndarray):
         return obj
 
     def distance(self, p: Point):
-        """Computes euclidean distance between two points"""
+        """
+        Computes euclidean distance between two points
+        
+        Args:
+            p (Point): Description.
+        """
         diff = self - p
         return float(np.sqrt((diff ** 2).sum()))
 

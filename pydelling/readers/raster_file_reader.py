@@ -1,5 +1,7 @@
 """
 Class that contains functions to read a rasterized file in .asc format
+
+
 """
 
 import logging
@@ -21,9 +23,25 @@ class RasterFileReader(BaseReader):
                  header=False,
                  read_data=True,
                  **kwargs,):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            header (Any): Description.
+            read_data (Any): Description.
+            **kwargs (Any): Description.
+        """
         super().__init__(filename=filename, header=header, read_data=read_data, **kwargs)
 
     def open_file(self, filename, n_header=6):
+        """
+        open_file method.
+        
+        Args:
+            filename (Any): Description.
+            n_header (Any): Description.
+        """
         with open(filename, 'r') as opened_file:
             if self.header:
                 opened_file.readline()  # For now, skips the header if it has
@@ -31,12 +49,26 @@ class RasterFileReader(BaseReader):
         self.build_info()
 
     def read_file(self, opened_file, n_header=6):
+        """
+        read_file method.
+        
+        Args:
+            opened_file (Any): Description.
+            n_header (Any): Description.
+        """
         self.read_header(opened_file, n_header=n_header)
         self.build_structure()
         self.read_data(opened_file)
         logger.info(f"Reading ASC raster file from {opened_file}")
 
     def read_header(self, opened_file, n_header=6):
+        """
+        read_header method.
+        
+        Args:
+            opened_file (Any): Description.
+            n_header (Any): Description.
+        """
         flag_stop = False
         while not flag_stop:
             current_position = opened_file.tell()
@@ -52,6 +84,12 @@ class RasterFileReader(BaseReader):
 
 
     def read_data(self, opened_file):
+        """
+        read_data method.
+        
+        Args:
+            opened_file (Any): Description.
+        """
         for id, line in enumerate(opened_file.readlines()):
             self.data[id] = np.array(line.split(), dtype=np.float32)
 
@@ -80,6 +118,12 @@ class RasterFileReader(BaseReader):
         self.info["reader"]["filename"] = self.filename
 
     def add_z_info(self, z_coord):
+        """
+        add_z_info method.
+        
+        Args:
+            z_coord (Any): Description.
+        """
         self.z_coord = z_coord
 
     def get_data(self) -> np.ndarray:
@@ -132,8 +176,10 @@ class RasterFileReader(BaseReader):
     def to_csv(self, output_file, z_coord=None):
         """
         Function that writes the ratser data into a csv file
-        :param output_file:
-        :return:
+        
+        Args:
+            output_file (Any): Description.
+            z_coord (Any): Description.
         """
 
         xydata = self.get_xy_data()
@@ -151,6 +197,12 @@ class RasterFileReader(BaseReader):
         logger.info(f"The raster file points have been exported to the CSV file {output_file}")
 
     def to_wsv(self, output_file):
+        """
+        to_wsv method.
+        
+        Args:
+            output_file (Any): Description.
+        """
         print(f"Starting dump into {output_file}")
         if not self.xydata_computed:
             xydata = self.dump_to_xydata()
@@ -163,6 +215,12 @@ class RasterFileReader(BaseReader):
         print(f"The data has been properly exported to the {output_file} file")
 
     def to_asc(self, output_file):
+        """
+        to_asc method.
+        
+        Args:
+            output_file (Any): Description.
+        """
         logger.info(f"Starting dump into {output_file}")
         with open(output_file, 'w') as file:
             self.write_asc_header(file)
@@ -171,6 +229,12 @@ class RasterFileReader(BaseReader):
     def write_asc_header(self, file):
         # assert isinstance(file, type(open)), "is not a correct file"
         # Write info in ASC format
+        """
+        write_asc_header method.
+        
+        Args:
+            file (Any): Description.
+        """
         file.write(f"ncols {self.info['reader']['ncols']}\n")
         file.write(f"nrows {self.info['reader']['nrows']}\n")
         if 'cellsize' in self.info:
@@ -184,15 +248,21 @@ class RasterFileReader(BaseReader):
 
 
     def write_asc_data(self, file):
+        """
+        write_asc_data method.
+        
+        Args:
+            file (Any): Description.
+        """
         np.savetxt(file, self.data)
 
     def downsample_data(self, slice_factor=2):
-        '''
+        """
         This module downsamples the data based on a constant stride in each direction
-        :param slice_factor: factor to stride the matrix in each dimension
-
-        :return: downsampled dataset
-        '''
+        
+        Args:
+            slice_factor (Any): Description.
+        """
         self.data = self.data[0::slice_factor, 0::slice_factor]
         self.info['reader']["nrows"] = self.data.shape[0]
         self.info['reader']["ncols"] = self.data.shape[1]
@@ -204,7 +274,7 @@ class RasterFileReader(BaseReader):
         self.rebuild_x_y()
         logger.info(f"Data has been downsampled by a factor of {slice_factor}")
 
-    def get_value_from_coord(self, x: float, y: float):
+    def get_value_from_coord(self, x: float, y: float) -> float:
         """
         This method returns the raster value finding the nearest neighbour of a given x, y coordinate
         Args:
@@ -233,7 +303,15 @@ class RasterFileReader(BaseReader):
                                export_polygons=True,
                                export_coordinates=True,
                                ):
-        """Finds the polygons that enclose a given value"""
+        """
+        Finds the polygons that enclose a given value
+        
+        Args:
+            val (Any): Description.
+            plot_polygons (Any): Description.
+            export_polygons (Any): Description.
+            export_coordinates (Any): Description.
+        """
         import matplotlib.pyplot as plt
         self.data = self.data.astype(np.float32)
         binary_img = self.data.copy()
@@ -279,6 +357,17 @@ class RasterFileReader(BaseReader):
                                        timestamp: str = None,
                                        show_polygons=True,
                                        ):
+        """
+        _plot_comparison_real_polygons method.
+        
+        Args:
+            polygons (Any): Description.
+            background_data (Any): Description.
+            palette (Any): Description.
+            preprocess_func (callable): Description.
+            timestamp (str): Description.
+            show_polygons (Any): Description.
+        """
         fig, ax = plt.subplots()
         plt_data = None
         if background_data is None:
@@ -301,19 +390,37 @@ class RasterFileReader(BaseReader):
         return fig, ax
 
     def p2c(self, ix, iy):
-        """Converts pixel to coordinate"""
+        """
+        Converts pixel to coordinate
+        
+        Args:
+            ix (Any): Description.
+            iy (Any): Description.
+        """
         x = self.reader_info["xllcorner"] + ix * self.reader_info["cellsize"]
         y = self.reader_info["yllcorner"] + iy * self.reader_info["cellsize"]
         return x, y
 
     def get_coordinate_from_pixel(self, ix, iy):
-        """Converts pixel to coordinate"""
+        """
+        Converts pixel to coordinate
+        
+        Args:
+            ix (Any): Description.
+            iy (Any): Description.
+        """
         x = self.reader_info["xllcorner"] + ix * self.reader_info["cellsize"]
         y = self.reader_info["yllcorner"] + iy * self.reader_info["cellsize"]
         return x, y
 
     def c2p(self, x, y):
-        """Converts coordinate to pixel"""
+        """
+        Converts coordinate to pixel
+        
+        Args:
+            x (Any): Description.
+            y (Any): Description.
+        """
         return self.get_value_from_coord(x, y)
 
     def flip_y(self):
@@ -329,6 +436,16 @@ class RasterFileReader(BaseReader):
                        colorbar=True,
                        colorbar_label=None,
                        **kwargs):
+        """
+        get_plot_image method.
+        
+        Args:
+            ax (Any): Description.
+            fig (Any): Description.
+            colorbar (Any): Description.
+            colorbar_label (Any): Description.
+            **kwargs (Any): Description.
+        """
         import matplotlib.pyplot as plt
         if ax is None:
             fig, ax = plt.subplots()
@@ -340,6 +457,14 @@ class RasterFileReader(BaseReader):
         return ax
 
     def plot(self, colorbar=True, colorbar_label=None, **kwargs):
+        """
+        plot method.
+        
+        Args:
+            colorbar (Any): Description.
+            colorbar_label (Any): Description.
+            **kwargs (Any): Description.
+        """
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
         self.get_plot_image(ax=ax,
@@ -350,6 +475,15 @@ class RasterFileReader(BaseReader):
         plt.show()
 
     def save_plot(self, output_file, colorbar=None, colorbar_label=None,**kwargs):
+        """
+        save_plot method.
+        
+        Args:
+            output_file (Any): Description.
+            colorbar (Any): Description.
+            colorbar_label (Any): Description.
+            **kwargs (Any): Description.
+        """
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
         self.get_plot_image(ax=ax,
@@ -393,6 +527,13 @@ class RasterFileReader(BaseReader):
     # Read raster file from a .csv file
     @classmethod
     def from_xyz_csv(self, file_name, dims=None,):
+        """
+        from_xyz_csv method.
+        
+        Args:
+            file_name (Any): Description.
+            dims (Any): Description.
+        """
         data = np.loadtxt(file_name, delimiter=",", skiprows=1)
         if dims is None:
             dims = self._guess_raster_dimensions_from_data(data)
@@ -443,7 +584,7 @@ class RasterFileReader(BaseReader):
             assert steps_with_same_x * steps_with_same_y == data.shape[0], f"Cant guess dimensions from data. Computed dimensions are {steps_with_same_x}x{steps_with_same_y}={steps_with_same_x * steps_with_same_y} and data has {data.shape[0]} elements"
             return steps_with_same_x, steps_with_same_y
 
-    def get_data_from_coordinates(self, x, y):
+    def get_data_from_coordinates(self, x, y) -> float:
         """
         This method returns the data from the raster at the given coordinates
         Args:
@@ -467,6 +608,12 @@ class RasterFileReader(BaseReader):
 
     # Add difference of two raster files
     def __sub__(self, other):
+        """
+        __sub__ method.
+        
+        Args:
+            other (Any): Description.
+        """
         if isinstance(other, RasterFileReader):
             new_raster = RasterFileReader(filename=self.filename, read_data=False, info=self.info, data=self.data - other.data)
             for key in self.__dict__.keys():
@@ -485,6 +632,12 @@ class RasterFileReader(BaseReader):
 
     # Add sum of two raster files
     def __add__(self, other):
+        """
+        __add__ method.
+        
+        Args:
+            other (Any): Description.
+        """
         if isinstance(other, RasterFileReader):
             new_raster = RasterFileReader(filename=self.filename, read_data=False, info=self.info, data=self.data + other.data)
             for key in self.__dict__.keys():
@@ -503,6 +656,12 @@ class RasterFileReader(BaseReader):
             raise ValueError("The other object is not a RasterFileReader or a number")
 
     def __mul__(self, other):
+        """
+        __mul__ method.
+        
+        Args:
+            other (Any): Description.
+        """
         if isinstance(other, (int, float)):
             new_raster = RasterFileReader(filename=self.filename, read_data=False, info=self.info, data=self.data * other)
             for key in self.__dict__.keys():
@@ -522,6 +681,12 @@ class RasterFileReader(BaseReader):
             raise ValueError("The other object is not a RasterFileReader or a number")
 
     def __truediv__(self, other):
+        """
+        __truediv__ method.
+        
+        Args:
+            other (Any): Description.
+        """
         if isinstance(other, (int, float)):
             new_raster = RasterFileReader(filename=self.filename, read_data=False, info=self.info, data=self.data / other)
             for key in self.__dict__.keys():
@@ -541,6 +706,12 @@ class RasterFileReader(BaseReader):
             raise ValueError("The other object is not a RasterFileReader or a number")
 
     def __pow__(self, other):
+        """
+        __pow__ method.
+        
+        Args:
+            other (Any): Description.
+        """
         if isinstance(other, (int, float)):
             new_raster = RasterFileReader(filename=self.filename, read_data=False, info=self.info, data=self.data ** other)
             for key in self.__dict__.keys():

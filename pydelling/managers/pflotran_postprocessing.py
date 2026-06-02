@@ -2,6 +2,8 @@
 Author: Aitor Iraola
 Date: 030920
 Description: This script postprocesses a given PFLOTRAN simulation carried out using an unstructured explicit mesh and the methodology developed by Amphos 21
+
+
 """
 from pathlib import Path
 import h5py
@@ -16,6 +18,13 @@ logger = logging.getLogger(__name__)
 class PflotranPostprocessing:
     """This class manages the structure of the output files"""
     def __init__(self, dt=0.2, unit="y"):
+        """
+        __init__ method.
+        
+        Args:
+            dt (Any): Description.
+            unit (Any): Description.
+        """
         self.dt = dt
         self.unit = unit
         self.output_times = []
@@ -192,6 +201,13 @@ class PflotranPostprocessing:
                 self.output_file.write('</Xdmf>\n')
 
     def export_attribute(self, var, i):
+        """
+        export_attribute method.
+        
+        Args:
+            var (Any): Description.
+            i (Any): Description.
+        """
         self.output_file.write('\t\t<Attribute Name="%s" AttributeType="Scalar"  Center="Cell">\n' % var)
         self.output_file.write('\t\t\t<DataItem Dimensions="%s 1" Format="HDF">\n' % self.n_cells)
         self.output_file.write('\t\t\t\t{}-{:03d}.h5:/{:4d} Time  {:1.5E} {}/{}\n'.format(self.project_name, i, i, self.output_times[i], self.output_units[i], var))
@@ -200,7 +216,12 @@ class PflotranPostprocessing:
 
     @staticmethod
     def read_vtk_file(filename) -> Dict:
-        """This method reads an VTK file and returns the data"""
+        """
+        This method reads an VTK file and returns the data
+        
+        Args:
+            filename (Any): Description.
+        """
         # Process vtk file
         print("Processing {} VTK file".format(filename))
         data_dict = {}

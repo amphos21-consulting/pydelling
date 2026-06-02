@@ -1,11 +1,21 @@
-"""The base class for all status classes. This class should read a given status file and extract some key information."""
+"""
+The base class for all status classes. This class should read a given status file and extract some key information.
+
+
+"""
 
 import os
 
 class BaseStatus:
 
     def __init__(self, status_file, ssh_manager=None):
-        """Initialize the BaseStatus class with the given status file."""
+        """
+        Initialize the BaseStatus class with the given status file.
+        
+        Args:
+            status_file (Any): Description.
+            ssh_manager (Any): Description.
+        """
         if not os.path.exists(status_file):
             raise FileNotFoundError(f"Status file {status_file} not found.")
         self.status_file = status_file

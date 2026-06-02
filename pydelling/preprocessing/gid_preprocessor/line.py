@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from __future__ import annotations
 
 import logging
@@ -16,6 +22,13 @@ class Line(_AbstractGidObject):
     lines: List = []
     has_copy = False
     def __init__(self, point_1: Point, point_2: Point):
+        """
+        __init__ method.
+        
+        Args:
+            point_1 (Point): Description.
+            point_2 (Point): Description.
+        """
         self.local_id = Line.local_id
         self.id = None
         if np.array_equal(point_1.coords, point_2.coords):
@@ -45,6 +58,13 @@ class Line(_AbstractGidObject):
 
     @staticmethod
     def check_lines_equal(line_1: Line, line_2: Line):
+        """
+        check_lines_equal method.
+        
+        Args:
+            line_1 (Line): Description.
+            line_2 (Line): Description.
+        """
         point_1_coords = [line_1.point_1.coords.tolist(), line_1.point_2.coords.tolist()]
         if line_2.point_1.coords.tolist() in point_1_coords and line_2.point_2.coords.tolist() in point_1_coords:
             return True

@@ -1,6 +1,8 @@
 """
- Class that contains functions to read a rasterized file in .asc format
- """
+Class that contains functions to read a rasterized file in .asc format
+
+
+"""
 
 import logging
 
@@ -17,6 +19,12 @@ logger = logging.getLogger(__name__)
 class AscReader(BaseReader):
 
     def __init__(self, filename):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+        """
         self.filename = filename
         self.info_dict = {}
         self.opened_file = open(self.filename, "r")
@@ -28,6 +36,12 @@ class AscReader(BaseReader):
         logger.debug(f"{self.info_dict}")
 
     def read_header(self, n_header=6):
+        """
+        read_header method.
+        
+        Args:
+            n_header (Any): Description.
+        """
         for i in range(0, n_header):
             line = self.opened_file.readline().split()
             self.info_dict[line[0]] = float(line[1])
@@ -69,8 +83,9 @@ class AscReader(BaseReader):
     def dump_to_csv(self, output_file):
         """
         Function that writes the ratser data into a csv file
-        :param output_file:
-        :return:
+        
+        Args:
+            output_file (Any): Description.
         """
         logger.info(f"Writing into {output_file}")
         if not self.xydata_computed:
@@ -85,6 +100,12 @@ class AscReader(BaseReader):
         f.close()
 
     def dump_to_wsv(self, output_file):
+        """
+        dump_to_wsv method.
+        
+        Args:
+            output_file (Any): Description.
+        """
         logger.info(f"Writing into {output_file}")
         if not self.xydata_computed:
             xydata = self.dump_to_xydata()
@@ -96,6 +117,12 @@ class AscReader(BaseReader):
         f.close()
 
     def dump_to_asc(self, output_file):
+        """
+        dump_to_asc method.
+        
+        Args:
+            output_file (Any): Description.
+        """
         logger.info(f"Writing into {output_file}")
         file = open(output_file, "w")
         self.write_asc_header(file)
@@ -104,14 +131,32 @@ class AscReader(BaseReader):
 
     def write_asc_header(self, file):
         # assert isinstance(file, type(open)), "is not a correct file"
+        """
+        write_asc_header method.
+        
+        Args:
+            file (Any): Description.
+        """
         for head in self.info_dict:
             file.write(f"{head} {self.info_dict[head]}\n")
 
     def write_asc_data(self, file):
+        """
+        write_asc_data method.
+        
+        Args:
+            file (Any): Description.
+        """
         np.savetxt(file, self.data, fmt="%3.2f")
 
     def export_to_gridded_dataset(self, filename=None, attrs=None):
-        """This method exports the asc data to the PFLOTRAN gridded dataset hdf5 file format"""
+        """
+        This method exports the asc data to the PFLOTRAN gridded dataset hdf5 file format
+        
+        Args:
+            filename (Any): Description.
+            attrs (Any): Description.
+        """
         filename = get_output_path() / filename if filename else get_output_path() / "gridded_dataset.h5"
         growth_factor = config.general.raster_growth_factor if config.general.raster_growth_factor else 1.0
         if config.general.raster_growth_factor:
@@ -128,15 +173,21 @@ class AscReader(BaseReader):
         logger.info(f"Gridded dataset has been exported at {filename}")
 
     def change_data(self, data: np.array):
+        """
+        change_data method.
+        
+        Args:
+            data (np.array): Description.
+        """
         self.data = data
 
     def downsample_data(self, slice_factor=2):
-        '''
+        """
         This module downsamples the data based on a constant stride in each direction
-        :param slice_factor: factor to stride the matrix in each dimension
-
-        :return: downsampled dataset
-        '''
+        
+        Args:
+            slice_factor (Any): Description.
+        """
         self.data = self.data[0::slice_factor, 0::slice_factor]
         self.info_dict["nrows"] = self.data.shape[0]
         self.info_dict["ncols"] = self.data.shape[1]

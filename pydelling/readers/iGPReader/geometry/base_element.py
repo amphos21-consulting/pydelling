@@ -1,8 +1,24 @@
+"""
+Module documentation.
+
+
+"""
+
 from pydelling.config import config
 
 
 class BaseElement:
     def __init__(self, node_ids, node_coords, element_type_n, local_id, centroid_coords=None):
+        """
+        __init__ method.
+        
+        Args:
+            node_ids (Any): Description.
+            node_coords (Any): Description.
+            element_type_n (Any): Description.
+            local_id (Any): Description.
+            centroid_coords (Any): Description.
+        """
         self.nodes = node_ids  # Node id set
         self.coords = node_coords  # Coordinates of each node
         self.centroid_coords = centroid_coords

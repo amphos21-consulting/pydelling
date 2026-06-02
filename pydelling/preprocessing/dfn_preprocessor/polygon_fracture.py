@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from typing import List
 
 import numpy as np
@@ -11,6 +17,18 @@ class PolygonFracture:
     eps = 1e-8
     def __init__(self, dip, dip_dir, x, y, z, size, aperture=0.01):
         # super().__init__(dip, dip_dir, x, y, z, size, aperture)
+        """
+        __init__ method.
+        
+        Args:
+            dip (Any): Description.
+            dip_dir (Any): Description.
+            x (Any): Description.
+            y (Any): Description.
+            z (Any): Description.
+            size (Any): Description.
+            aperture (Any): Description.
+        """
         self.side_points = None
         self.dip = dip
         self.dip_dir = dip_dir
@@ -125,6 +143,12 @@ class PolygonFracture:
 
 
     def get_side_points(self, method='v1'):
+        """
+        get_side_points method.
+        
+        Args:
+            method (Any): Description.
+        """
         if method == 'v1':
             return self.get_side_points_v1()
         elif method == 'v2':
@@ -134,7 +158,13 @@ class PolygonFracture:
 
 
     def to_obj(self, global_id=0, method='v1'):
-        """Converts the fracture to an obj file"""
+        """
+        Converts the fracture to an obj file
+        
+        Args:
+            global_id (Any): Description.
+            method (Any): Description.
+        """
         side_points = self.get_side_points(method=method)
         obj_string = ''
         for i in range(len(side_points)):
@@ -155,7 +185,12 @@ class PolygonFracture:
         return cross / np.linalg.norm(cross)
 
     def distance_to_point(self, point: np.ndarray):
-        """Returns the distance to a point"""
+        """
+        Returns the distance to a point
+        
+        Args:
+            point (np.ndarray): Description.
+        """
         distance_vector = self.centroid - point
         return np.dot(distance_vector, self.unit_normal_vector)
 
@@ -171,7 +206,12 @@ class PolygonFracture:
         return np.array([x_min, x_max, y_min, y_max, z_min, z_max])
 
     def point_inside_bounding_box(self, point: np.ndarray):
-        """Returns if a point is inside the bounding box of the fracture"""
+        """
+        Returns if a point is inside the bounding box of the fracture
+        
+        Args:
+            point (np.ndarray): Description.
+        """
         bounding_box = self.get_bounding_box()
         if point[0] < bounding_box[0] or point[0] > bounding_box[1]:
             return False
@@ -225,7 +265,12 @@ class PolygonFracture:
         return corner_segments
 
     def contains(self, point: Point):
-        """Returns if a point is inside the fracture"""
+        """
+        Returns if a point is inside the fracture
+        
+        Args:
+            point (Point): Description.
+        """
         q1, q2, q3, q4 = self.corners
         q1: Point
 

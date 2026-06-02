@@ -1,5 +1,7 @@
 """
 This class takes a list of points and creates a collection of lines
+
+
 """
 
 from typing import List
@@ -13,6 +15,13 @@ class Polyline(GidObject):
     local_id: int = 1
 
     def __init__(self, points: List[Point], connect=False):
+        """
+        __init__ method.
+        
+        Args:
+            points (List[Point]): Description.
+            connect (Any): Description.
+        """
         super().__init__()
         self.lines = []
         self.points = points
@@ -30,6 +39,13 @@ class Polyline(GidObject):
             self.lines.append(aux_line)
 
     def construct(self, *args, **kwargs):
+        """
+        construct method.
+        
+        Args:
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         for point in self.points:
             self.add(point)
         for line in self.lines:

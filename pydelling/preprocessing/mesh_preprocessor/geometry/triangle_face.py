@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import numpy as np
 
 from pydelling.preprocessing.mesh_preprocessor.geometry import BaseFace
@@ -5,6 +11,15 @@ from pydelling.preprocessing.mesh_preprocessor.geometry import BaseFace
 
 class TriangleFace(BaseFace):
     def __init__(self, node_ids, node_coords, *args, **kwargs):
+        """
+        __init__ method.
+        
+        Args:
+            node_ids (Any): Description.
+            node_coords (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         super().__init__(node_ids, node_coords, *args, **kwargs)
         self.type = "triangle"
 

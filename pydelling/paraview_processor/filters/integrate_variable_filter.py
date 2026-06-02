@@ -1,5 +1,7 @@
 """
 This class implements the Paraview Integrate Variables filter
+
+
 """
 
 from pydelling.paraview_processor.filters import base_filter
@@ -16,10 +18,24 @@ class IntegrateVariablesFilter(base_filter):
     counter: int = 0
 
     def __init__(self, input_filter, name, divide_cell_data_by_volume=False):
+        """
+        __init__ method.
+        
+        Args:
+            input_filter (Any): Description.
+            name (Any): Description.
+            divide_cell_data_by_volume (Any): Description.
+        """
         super().__init__(name=name)
         IntegrateVariablesFilter.counter += 1
         self.filter = IntegrateVariables(Input=input_filter)
         self.set_divide_cell_data_by_volume(divide_cell_data_by_volume)
 
     def set_divide_cell_data_by_volume(self, value):
+        """
+        set_divide_cell_data_by_volume method.
+        
+        Args:
+            value (Any): Description.
+        """
         self.filter.DivideCellDataByVolume = value

@@ -1,3 +1,6 @@
+"""Base estimator interfaces and shared utility behavior.
+    """
+
 import pandas as pd
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -10,7 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 class BaseEstimator(ABC):
-    def __init__(self, file_path: str or Path, *args, **kwargs):
+    """Base interface for estimator implementations.
+    """
+
+    def __init__(self, file_path: str | Path, *args, **kwargs):
+        """
+        Initialize the estimator and run the common preprocessing pipeline.
+        
+        Args:
+            file_path (str | Path): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         self.file_path = Path(file_path) if file_path is not None else None
         self.data: pd.DataFrame = self.read_data(self.file_path, *args, **kwargs)
         self.original_data: pd.DataFrame = self.data.copy()
@@ -22,6 +36,9 @@ class BaseEstimator(ABC):
     def read_data(self, filename: Path) -> pd.DataFrame:
         """
         Reads data from an excel file.
+        
+        Args:
+            filename (Path): Description.
         """
         pass
 
@@ -36,12 +53,22 @@ class BaseEstimator(ABC):
     def smooth_data(self, window_size=3, sigma=1):
         """
         Smooths the self.data variable.
+        
+        Args:
+            window_size (Any): Description.
+            sigma (Any): Description.
         """
         pass
 
     def _smooth_data(self, column_name, method="rolling", window_size=3, sigma=1):
         """
         Smooths the self.data variable.
+        
+        Args:
+            column_name (Any): Description.
+            method (Any): Description.
+            window_size (Any): Description.
+            sigma (Any): Description.
         """
         assert self.data is not None, "Data is None"
         if method == "rolling":
@@ -60,6 +87,11 @@ class BaseEstimator(ABC):
     def plot_data(self, filename=None, *args, **kwargs):
         """
         Makes some basic plots of the data.
+        
+        Args:
+            filename (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
         """
         pass
 
@@ -71,6 +103,12 @@ class BaseEstimator(ABC):
                    ):
         """
         Plots the data.
+        
+        Args:
+            column_name (Any): Description.
+            title (Any): Description.
+            filename (Any): Description.
+            prediction_data (Any): Description.
         """
         assert self.data is not None, "Data is None"
         fig, ax = plt.subplots()
@@ -90,12 +128,20 @@ class BaseEstimator(ABC):
     def predict(self, method=None, days=365, return_whole_data=False):
         """
         Makes a prediction.
+        
+        Args:
+            method (Any): Description.
+            days (Any): Description.
+            return_whole_data (Any): Description.
         """
         pass
 
     def save(self, file_name: str):
         """
         Save the current object instance to a file.
+        
+        Args:
+            file_name (str): Description.
         """
         with open(file_name, 'wb') as f:
             dill.dump(self, f)
@@ -105,6 +151,10 @@ class BaseEstimator(ABC):
     def load(cls, file_name: str):
         """
         Load an object instance from a file.
+        
+        Args:
+            cls (Any): Description.
+            file_name (str): Description.
         """
         with open(file_name, 'rb') as f:
             logger.info(f"Loaded estimator instance from {file_name}")

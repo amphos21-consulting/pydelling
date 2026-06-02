@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import logging
 import os
 from pathlib import Path
@@ -11,6 +17,14 @@ logger = logging.getLogger(__name__)
 
 class HDF5CentroidWriter(BaseWriter):
     def run(self, filename=None, remove_if_exists=True, include_cell_id=True):
+        """
+        run method.
+        
+        Args:
+            filename (Any): Description.
+            remove_if_exists (Any): Description.
+            include_cell_id (Any): Description.
+        """
         if filename is not None:
             self.filename = filename
         if remove_if_exists:
