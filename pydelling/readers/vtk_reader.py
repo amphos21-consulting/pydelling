@@ -1,5 +1,7 @@
 """
 This class provides the framework to read data from a VTK file and do different postprocessing steps
+
+
 """
 
 from .base_reader import BaseReader
@@ -16,6 +18,12 @@ class VtkReader(BaseReader):
     calculator: None
 
     def read_file(self, opened_file):
+        """
+        read_file method.
+        
+        Args:
+            opened_file (Any): Description.
+        """
         self.vtk_file = LegacyVTKReader(FileNames=self.filename)
         self.current_array = self.vtk_file
 
@@ -43,8 +51,10 @@ class VtkReader(BaseReader):
     def add_calculator(self, input=None, function=''):
         """
         Adds a calculator filter to a dataset
-        Returns:
-            The Calculator object
+        
+        Args:
+            input (Any): Description.
+            function (Any): Description.
         """
         input = input if input else self.current_array
         self.calculator = Calculator(Input=input)

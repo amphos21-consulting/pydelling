@@ -1,3 +1,8 @@
+"""COMSOL table helpers for reading, writing, and exporting tabular results.
+
+
+"""
+
 import pandas as pd
 import re
 import logging
@@ -118,6 +123,9 @@ class _Table:
                    index: int):
         """
         Removes a row of the Table.
+
+        Args:
+            index (int): Zero-based row index to remove.
         """
         self._api.removeRow(index)
 

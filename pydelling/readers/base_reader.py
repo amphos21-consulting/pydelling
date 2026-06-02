@@ -1,5 +1,6 @@
-"""
-Base interface for a reader class
+"""Base interfaces and helpers for file-based readers.
+
+
 """
 import logging
 from pathlib import Path
@@ -12,6 +13,10 @@ import pydelling.utils.sub_fish_module as subfish
 
 
 class BaseReader:
+    """Base interface shared by data reader implementations.
+
+    """
+
     data: np.ndarray  # Hint of self.data array
     info: dict
     raw_data: None
@@ -23,6 +28,17 @@ class BaseReader:
                  data=None,
                  **kwargs,
                  ):
+        """
+        Set up reader metadata and optionally load data from disk.
+        
+        Args:
+            filename (Any): Description.
+            header (Any): Description.
+            read_data (Any): Description.
+            info (Any): Description.
+            data (Any): Description.
+            **kwargs (Any): Description.
+        """
         self.filename = Path(filename)
         self.info = {"reader": {}}
         self.data = None
@@ -39,11 +55,20 @@ class BaseReader:
     def read_file(self, opened_file):
         """
         Reads the data and stores it inside the class
-        :return:
+        
+        Args:
+            opened_file (Any): Description.
         """
         pass
 
     def open_file(self, filename, **kwargs):
+        """
+        Open a file handle, parse data, and refresh metadata.
+        
+        Args:
+            filename (Any): Description.
+            **kwargs (Any): Description.
+        """
         with open(filename) as opened_file:
             if self.header:
                 opened_file.readline()  # For now, skips the header if it has
@@ -53,7 +78,9 @@ class BaseReader:
     def read_header(self, opened_file):
         """
         Reads the header of the file
-        :return:
+        
+        Args:
+            opened_file (Any): Description.
         """
         pass
 
@@ -72,13 +99,25 @@ class BaseReader:
         self.info = {}
 
     def global_coords_to_local(self, x_local_to_global, y_local_to_global):
-        """Converts global data coordinates into local"""
+        """
+        Converts global data coordinates into local
+        
+        Args:
+            x_local_to_global (Any): Description.
+            y_local_to_global (Any): Description.
+        """
         assert len(self.data.shape) >= 2 and self.data.shape[1] >= 2, "Error in data shape"
         self.data[:, 0] -= x_local_to_global
         self.data[:, 1] -= y_local_to_global
 
     def local_coords_to_global(self, x_local_to_global, y_local_to_global):
-        """Converts local data coordinates into global"""
+        """
+        Converts local data coordinates into global
+        
+        Args:
+            x_local_to_global (Any): Description.
+            y_local_to_global (Any): Description.
+        """
         assert len(self.data.shape) >= 2 and self.data.shape[1] >= 2, "Error in data shape"
         self.data[:, 0] += x_local_to_global
         self.data[:, 1] += y_local_to_global
@@ -86,14 +125,19 @@ class BaseReader:
     def dump_to_csv(self, output_file, delimiter=","):
         """
         Writes the data into a csv file
-        :param output_file:
-        :return:
+        
+        Args:
+            output_file (Any): Description.
+            delimiter (Any): Description.
         """
         print(f"Starting dump into {output_file}")
         np.savetxt(output_file, self.get_data(), delimiter=delimiter)
         print(f"The data has been properly exported to the {output_file} file")
 
     def create_postprocess_dict(self):
+        """Create a local folder used to store postprocessing artifacts.
+
+        """
         self.postprocessing_dict = Path().cwd() / "postprocess"
         self.postprocessing_dict.mkdir(exist_ok=True)
 
@@ -118,4 +162,7 @@ class BaseReader:
 
     @property
     def values(self):
+        """Alias property returning reader values.
+
+        """
         return self.get_data() 

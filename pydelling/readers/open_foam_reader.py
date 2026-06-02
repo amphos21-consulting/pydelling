@@ -1,5 +1,7 @@
 """
 Base interface for a reader class
+
+
 """
 import logging
 
@@ -18,12 +20,24 @@ logger = logging.getLogger(__name__)
 
 class OpenFoamReader(BaseReader):
     def __init__(self, filename=None):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+        """
         self.filename = Path(filename) if filename else Path(config.open_foam_reader.filename)
         logger.info(f"Reading OpenFOAM mesh file from {self.filename}")
         super().__init__(filename=self.filename)
 
 
     def open_file(self, filename):
+        """
+        open_file method.
+        
+        Args:
+            filename (Any): Description.
+        """
         self.mesh = Ofpp.FoamMesh(self.filename)
 
     @property

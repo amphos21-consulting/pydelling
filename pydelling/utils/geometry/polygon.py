@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from typing import List
 
 import numpy as np
@@ -10,6 +16,12 @@ from .base_primitive import BasePrimitive
 class Polygon(BasePrimitive):
     def __init__(self, points: List[Point] or np.ndarray):
         # The set of points should be ordered in a clockwise fashion
+        """
+        __init__ method.
+        
+        Args:
+            points (List[Point] or np.ndarray): Description.
+        """
         self.points = order_points_clockwise(points)
         self.segments = self.generate_segments()
 
@@ -20,6 +32,12 @@ class Polygon(BasePrimitive):
         return segments
 
     def to_csv(self, filename='polygon.csv'):
+        """
+        to_csv method.
+        
+        Args:
+            filename (Any): Description.
+        """
         import csv
         with open(filename, 'w') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')

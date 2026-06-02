@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import pandas as pd
 
 from pydelling.utils.decorators import set_run
@@ -5,6 +11,13 @@ from pydelling.utils.decorators import set_run
 
 class BasePreprocessing:
     def __init__(self, data: pd.DataFrame = None, filename=None):
+        """
+        __init__ method.
+        
+        Args:
+            data (pd.DataFrame): Description.
+            filename (Any): Description.
+        """
         if data is not None:
             self.data = data
         elif filename:

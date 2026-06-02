@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import rasterio
 
 from pydelling.readers import BaseReader
@@ -9,6 +15,12 @@ import matplotlib.pyplot as plt
 
 class TiffReader(BaseReader, ImageOperations):
     def __init__(self, filename):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+        """
         self.read_file(filename)
 
         super().__init__(filename,
@@ -23,6 +35,12 @@ class TiffReader(BaseReader, ImageOperations):
         # Find bounds
 
     def read_file(self, filename):
+        """
+        read_file method.
+        
+        Args:
+            filename (Any): Description.
+        """
         self.raw_data = rasterio.open(filename)
         self.bounds = self.raw_data.bounds
         self.data = self.raw_data.read(1)

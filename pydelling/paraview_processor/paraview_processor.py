@@ -1,5 +1,7 @@
 """
 This class provides the framework to read data from a VTK file and do different postprocessing steps
+
+
 """
 
 import logging
@@ -77,8 +79,14 @@ class ParaviewProcessor:
     def add_calculator(self, input_filter, function='', name=None, output_array_name='Results', *args, **kwargs) -> calculator_filter:
         """
         Adds a calculator filter to a dataset
-        Returns:
-            The Calculator object
+        
+        Args:
+            input_filter (Any): Description.
+            function (Any): Description.
+            name (Any): Description.
+            output_array_name (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
         """
         pipeline_name = name if name else f"calculator_{calculator_filter.counter}"
         calculator_filter = calculator_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -92,8 +100,10 @@ class ParaviewProcessor:
     def add_cell_data_to_point_data(self, input_filter, name=None) -> cell_data_to_point_data_filter:
         """
         Adds a cell data to point data filter to a dataset
-        Returns:
-            The CellDataToPointDataFilter object
+        
+        Args:
+            input_filter (Any): Description.
+            name (Any): Description.
         """
         pipeline_name = name if name else f"cell_data_to_point_data{cell_data_to_point_data_filter.counter}"
         pv_filter = cell_data_to_point_data_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -106,8 +116,12 @@ class ParaviewProcessor:
     def add_clip(self, input_filter, name=None, *args, **kwargs) -> clip_filter:
         """
         Adds a clip filter to a dataset
-        Returns:
-            The ClipFilter object
+        
+        Args:
+            input_filter (Any): Description.
+            name (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
         """
         pipeline_name = name if name else f"clip_{clip_filter.counter}"
         pv_filter = clip_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -120,8 +134,10 @@ class ParaviewProcessor:
     def add_table_to_points(self, path, name=None) -> table_to_points_filter:
         """
         Adds a table to points filter to a dataset
-        Returns:
-            The TableToPointsFilter object
+        
+        Args:
+            path (Any): Description.
+            name (Any): Description.
         """
         pipeline_name = name if name else f"table_to_points_{table_to_points_filter.counter}"
         pv_filter = table_to_points_filter(filename=str(path), name=pipeline_name)
@@ -133,8 +149,11 @@ class ParaviewProcessor:
     def add_stream_tracer_with_custom_source(self, input_filter, seed_source, name=None) -> stream_tracer_with_custom_source_filter:
         """
         Adds a stream tracer filter to a custom source
-        Returns:
-            The StreamTracerWithCustomSourceFilter object
+        
+        Args:
+            input_filter (Any): Description.
+            seed_source (Any): Description.
+            name (Any): Description.
         """
         pipeline_name = name if name else f"stream_tracer_with_custom_source_{stream_tracer_with_custom_source_filter.counter}"
         pv_filter = stream_tracer_with_custom_source_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -148,8 +167,10 @@ class ParaviewProcessor:
     def add_append_arc_length(self, input_filter, name=None) -> append_arc_length_filter:
         """
         Adds an append arc-length filter to a dataset
-        Returns:
-            The AppendArcLengthFilter object
+        
+        Args:
+            input_filter (Any): Description.
+            name (Any): Description.
         """
         pipeline_name = name if name else f"append_arc_length_{append_arc_length_filter.counter}"
         pv_filter = append_arc_length_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -180,8 +201,11 @@ class ParaviewProcessor:
     def add_integrate_variables(self, input_filter, name=None, divide_cell_data_by_volume=False) -> integrate_variable_filter:
         """
         Adds the integrate_variables filter to a dataset
-        Returns:
-            An IntegrateVariablesFilter object
+        
+        Args:
+            input_filter (Any): Description.
+            name (Any): Description.
+            divide_cell_data_by_volume (Any): Description.
         """
         pipeline_name = name if name else f"integrate_variables_{integrate_variable_filter.counter}"
         integrate_variables_filter = integrate_variable_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -196,8 +220,13 @@ class ParaviewProcessor:
     def add_plot_over_line(self, input_filter, name=None, point_1=None, point_2=None, line_resolution=None) -> plot_over_line_filter:
         """
         Adds the plot_over_line filter to a dataset
-        Returns:
-            A [PlotOverLineFilter][pydelling/paraview_processor/filters/PlotOverLineFilter.py] object
+        
+        Args:
+            input_filter (Any): Description.
+            name (Any): Description.
+            point_1 (Any): Description.
+            point_2 (Any): Description.
+            line_resolution (Any): Description.
         """
         pipeline_name = name if name else f"plot_over_line_{plot_over_line_filter.counter}"
         plot_over_line_filter = plot_over_line_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -296,7 +325,15 @@ class ParaviewProcessor:
         print(print_string)
         return print_string
 
-    def print_pipeline_block(self, pipeline_dict: Dict, output_string:str,  starting_identation_level: int = 0):
+    def print_pipeline_block(self, pipeline_dict: Dict, output_string:str,  starting_identation_level: int = 0) -> str:
+        """
+        print_pipeline_block method.
+        
+        Args:
+            pipeline_dict (Dict): Description.
+            output_string (str): Description.
+            starting_identation_level (int): Description.
+        """
         for pipeline_element in pipeline_dict:
             if type(pipeline_dict[pipeline_element]) == dict:
                 output_string = self.print_pipeline_block(pipeline_dict=pipeline_dict[pipeline_element],
@@ -307,7 +344,7 @@ class ParaviewProcessor:
             output_string += f"{identation}- {pipeline_element}\n"
         return output_string
 
-    def get_object(self, name):
+    def get_object(self, name) -> object:
         """
         Get a given object from the pipeline
         Args:

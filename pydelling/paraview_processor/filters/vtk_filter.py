@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from pydelling.paraview_processor.filters import base_filter
 try:
     from paraview.simple import *
@@ -16,6 +22,13 @@ class VtkFilter(base_filter):
     z_max: float
 
     def __init__(self, filename, name):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            name (Any): Description.
+        """
         super().__init__(name=name)
         self.filter = LegacyVTKReader(FileNames=str(filename))
         VtkFilter.counter += 1

@@ -1,4 +1,6 @@
-"""This class reads some polygon zone data and allows to classify a give point into one of the zones."""
+"""Polygon-based zone classification estimator utilities.
+
+"""
 
 from pathlib import Path
 
@@ -30,7 +32,13 @@ class PolygonZoneEstimator(BaseEstimator):
         logger.info(f"Initialized PolygonZoneEstimator with {len(self.data)} zones.")
 
     def read_data(self, file_path, zones_dict: dict[str, Union[str, Path]] = None):
-        """Reads the data from the polygon files."""
+        """
+        Reads the data from the polygon files.
+        
+        Args:
+            file_path (Any): Description.
+            zones_dict (dict[str, Union[str, Path]]): Description.
+        """
         if zones_dict is None:
             logger.error("No valid {zone: polygon_file} dictionary was provided.")
             raise ValueError("No valid {zone: polygon_file} dictionary was provided.")
@@ -58,10 +66,24 @@ class PolygonZoneEstimator(BaseEstimator):
             self.data[zone] = Polygon(data.values)
 
     def smooth_data(self, window_size=3, sigma=1):
+        """
+        No-op smoothing hook for polygon zones.
+        
+        Args:
+            window_size (Any): Description.
+            sigma (Any): Description.
+        """
         pass
 
     def plot_data(self, filename=None, *args, **kwargs):
-        """PLots all the polygons"""
+        """
+        PLots all the polygons
+        
+        Args:
+            filename (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         import matplotlib.pyplot as plt
         for zone, data in self.data.items():
             data: Polygon
@@ -76,7 +98,12 @@ class PolygonZoneEstimator(BaseEstimator):
             plt.show()
 
     def plot_data_plotly(self, filename=None) -> go.Figure:
-        """Plots all the polygons using Plotly"""
+        """
+        Plots all the polygons using Plotly
+        
+        Args:
+            filename (Any): Description.
+        """
         fig = go.Figure()
         from plotly.colors import qualitative
         idx = 0
@@ -102,7 +129,13 @@ class PolygonZoneEstimator(BaseEstimator):
         return fig
 
     def point_in_zone(self, x, y):
-        """Returns the zone in which the point (x, y) is located."""
+        """
+        Returns the zone in which the point (x, y) is located.
+        
+        Args:
+            x (Any): Description.
+            y (Any): Description.
+        """
         point = Point(x, y)
         for zone, polygon in self.data.items():
             polygon: Polygon
@@ -111,7 +144,13 @@ class PolygonZoneEstimator(BaseEstimator):
         return None
 
     def point_in_zone_id(self, x, y):
-        """Returns the zone id in which the point (x, y) is located."""
+        """
+        Returns the zone id in which the point (x, y) is located.
+        
+        Args:
+            x (Any): Description.
+            y (Any): Description.
+        """
         zone = self.point_in_zone(x, y)
         if zone is None:
             biggest_zone_id = max(self.zone_to_ids.values())
@@ -119,8 +158,17 @@ class PolygonZoneEstimator(BaseEstimator):
         return self.zone_to_ids[zone]
 
     def predict(self, **kwargs):
+        """
+        Placeholder prediction method for API compatibility.
+        
+        Args:
+            **kwargs (Any): Description.
+        """
         pass
 
     @property
     def zone_names(self):
+        """Return configured zone names in deterministic order.
+
+        """
         return list(self.original_data.keys())

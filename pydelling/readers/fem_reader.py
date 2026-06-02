@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import numpy as np
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
 import logging
@@ -15,6 +21,14 @@ class FemReader(MeshPreprocessor):
     upscaled_porosity = {} # dict of upscaled porosity values
 
     def __init__(self, filename, kd_tree=True, st_file=False):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            kd_tree (Any): Description.
+            st_file (Any): Description.
+        """
         super().__init__(st_file=False)
         self.aux_nodes = []
         self.open_file(filename)
@@ -23,6 +37,12 @@ class FemReader(MeshPreprocessor):
             self.create_kd_tree()
 
     def open_file(self, filename):
+        """
+        open_file method.
+        
+        Args:
+            filename (Any): Description.
+        """
         if self.is_streamlit:
             import streamlit as st
         with open(filename, "r") as f:

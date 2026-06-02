@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import numpy as np
 # import cv2
 from matplotlib import pyplot as plt
@@ -8,6 +14,12 @@ class ImageOperations:
     def get_polygons_from_image(self, min_vertices=4):
         # Finds closed polygons from the image
         # Convert numpy array to grayscale image
+        """
+        get_polygons_from_image method.
+        
+        Args:
+            min_vertices (Any): Description.
+        """
         cache_img = self.data.copy()
         print(cache_img.min())
         # transform to 0 255

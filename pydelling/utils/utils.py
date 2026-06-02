@@ -1,5 +1,7 @@
 """
 Contains general purpose utility functions
+
+
 """
 import os
 from pathlib import Path
@@ -196,7 +198,7 @@ def read_local_config():
     return config
 
 
-def sample_values_from_dict(input_dict: dict, n: int, write_to_file=True, return_generator=False) -> list:
+def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True, return_generator: bool = False) -> list:
     """
     This method reads a dictionary and generates n samples from them based on the
     following criteria.
@@ -215,9 +217,10 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file=True, return
         specified in natural scale.
 
     Args:
+        input_dict: dictionary to extract the samples from.
+        n: integer specifying the number of generated samples.
         write_to_file: optional argument that writes a csv file with the generated cases. Defaults to True.
-        d: dictionary to extract the samples from
-        n: integer specifying the number of generated samples
+        return_generator: if True, returns the sampled data as a generator.
     Returns:
         A dictionary containing the sampled results
     """
@@ -232,6 +235,12 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file=True, return
 
     class ConstantDistribution(BaseDistribution):
         def __init__(self, value):
+            """
+            __init__ method.
+            
+            Args:
+                value (Any): Description.
+            """
             super().__init__()
             self.value = value
 
@@ -240,6 +249,14 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file=True, return
 
     class NormalDistribution(BaseDistribution):
         def __init__(self, mean, std, log=False):
+            """
+            __init__ method.
+            
+            Args:
+                mean (Any): Description.
+                std (Any): Description.
+                log (Any): Description.
+            """
             super().__init__()
             self.mean = float(mean)
             self.std = float(std)

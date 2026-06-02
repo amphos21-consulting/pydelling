@@ -1,4 +1,8 @@
-"""This class generates a closed STL from two regular raster files"""
+"""
+This class generates a closed STL from two regular raster files
+
+
+"""
 
 import numpy as np
 
@@ -15,6 +19,14 @@ class ClosedStlGenerator(object):
                  aperture: RasterFileReader = None,
     ):
         # Generate needed data
+        """
+        __init__ method.
+        
+        Args:
+            bottom_surface (RasterFileReader): Description.
+            top_surface (RasterFileReader): Description.
+            aperture (RasterFileReader): Description.
+        """
         self.bottom_surface = bottom_surface
         if top_surface is not None:
             self.top_surface = top_surface
@@ -28,7 +40,13 @@ class ClosedStlGenerator(object):
     def run(self, output_filename: str = 'closed_stl.stl',
             export_faces=True,
             ):
-        """This method runs the closed STL generator"""
+        """
+        This method runs the closed STL generator
+        
+        Args:
+            output_filename (str): Description.
+            export_faces (Any): Description.
+        """
         logger.info(f'Generating closed STL based on bottom raster file: {self.bottom_surface.filename} and top raster file: {self.top_surface.filename}')
         # First, we need to generate the vertices
         vertices = []
@@ -187,6 +205,10 @@ class ClosedStlGenerator(object):
     def export_stl(self, output_filename, faces=False):
         """
         Exports the generated closed STL
+        
+        Args:
+            output_filename (Any): Description.
+            faces (Any): Description.
         """
         from pathlib import Path
         results_folder = create_results_folder()

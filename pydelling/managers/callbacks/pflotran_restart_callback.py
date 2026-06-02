@@ -1,4 +1,8 @@
-"""Callback to restart Pflotran simulations."""
+"""
+Callback to restart Pflotran simulations.
+
+
+"""
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
@@ -16,10 +20,25 @@ class PflotranRestartCallback(BaseCallback):
                  study: PflotranStudy,
                  kind: str = 'post',
                  on_remote: bool = False, **kwargs):
+        """
+        __init__ method.
+        
+        Args:
+            manager (PflotranManager): Description.
+            study (PflotranStudy): Description.
+            kind (str): Description.
+            on_remote (bool): Description.
+            **kwargs (Any): Description.
+        """
         super().__init__(manager, study, 'pre', on_remote=on_remote, **kwargs)
 
     def run(self, on_remote):
-        """This method should detect the hdf5 file in the previous study and copy it to the current study"""
+        """
+        This method should detect the hdf5 file in the previous study and copy it to the current study
+        
+        Args:
+            on_remote (Any): Description.
+        """
         if not on_remote:
             if self.study.idx > 0:
                 prev_study: PflotranStudy = list(self.manager.studies.values())[self.study.idx - 1]

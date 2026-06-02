@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from pydelling.webapps.components import BaseComponent
 import streamlit as st
 import time
@@ -21,6 +27,18 @@ class RemoteLoginComponent(BaseComponent):
                 *args,
                 **kwargs
                 ):
+        """
+        __int__ method.
+        
+        Args:
+            host (str): Description.
+            host_name (str): Description.
+            username (str): Description.
+            password (str): Description.
+            login_node (bool): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         self.initialize_in_session_state('host')
         self.initialize_in_session_state('host_name')
         self.initialize_in_session_state('username')
@@ -43,6 +61,14 @@ class RemoteLoginComponent(BaseComponent):
                          )
 
     def run(self, login_node=True, *args, **kwargs):
+        """
+        run method.
+        
+        Args:
+            login_node (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         if not self.get_from_session_state(f'{self.name}-init') and login_node:
             with st.form(key='login_form'):
                 st.markdown(f'Login form for {self.host_name} ({self.host})')
@@ -65,6 +91,14 @@ class RemoteLoginComponent(BaseComponent):
     def login_submit_func(self, username, cwd, password):
         # Log in to system and be sure it works
         # self = _self
+        """
+        login_submit_func method.
+        
+        Args:
+            username (Any): Description.
+            cwd (Any): Description.
+            password (Any): Description.
+        """
         with st.spinner('Logging in...'):
             self.cookie_manager: stx.CookieManager = self.get_manager()
             self.save_in_session_state(f'host', self.host)

@@ -1,4 +1,8 @@
-"""Defines the base step class. The step class is supposed to save a ssh operation and execute it later on"""
+"""
+Defines the base step class. The step class is supposed to save a ssh operation and execute it later on
+
+
+"""
 
 from pydelling.managers import BaseManager
 from abc import ABC, abstractmethod
@@ -21,16 +25,34 @@ class BaseStep(ABC):
                  kind='pre',
                  **kwargs,
                  ):
+        """
+        __init__ method.
+        
+        Args:
+            manager (BaseManager): Description.
+            kind (Any): Description.
+            **kwargs (Any): Description.
+        """
         self.manager = None
         self.kind = kind
 
     @manager_decorator
     def run(self, manager: BaseManager = None):
-        """Runs the step"""
+        """
+        Runs the step
+        
+        Args:
+            manager (BaseManager): Description.
+        """
         self._run(manager)
         logger.info(f'Running ssh step {self.__class__.__name__}')
 
     @abstractmethod
     def _run(self, manager: BaseManager = None):
-        """Runs the step, should be implemented by the subclasses"""
+        """
+        Runs the step, should be implemented by the subclasses
+        
+        Args:
+            manager (BaseManager): Description.
+        """
         pass

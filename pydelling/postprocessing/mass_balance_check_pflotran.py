@@ -7,6 +7,8 @@ summarize balance errors.
 
 It also includes methods to process multiple files, save summary tables, and
 generate heatmaps of percent error across files and species.
+
+
 """
 
 import glob
@@ -63,6 +65,14 @@ class MassBalanceCheckPflotran:
         outdir: Optional[str] = None,
         base_folder: Optional[str] = None,
     ) -> None:
+        """
+        __init__ method.
+        
+        Args:
+            input_patterns (Sequence[str]): Description.
+            outdir (Optional[str]): Description.
+            base_folder (Optional[str]): Description.
+        """
         if isinstance(input_patterns, str):
             input_patterns = [input_patterns]
         self.input_patterns: List[str] = list(input_patterns)
@@ -95,6 +105,9 @@ class MassBalanceCheckPflotran:
     def read_pflotran_balance(path: str) -> pd.DataFrame:
         """
         Reads a file with CSV header (in quotes) and numeric data separated by spaces.
+        
+        Args:
+            path (str): Description.
         """
         with open(path, "r", encoding="utf-8") as f:
             header_line = f.readline().strip()
@@ -108,6 +121,9 @@ class MassBalanceCheckPflotran:
     def get_time_column(df: pd.DataFrame) -> str:
         """
         Returns the name of the time column, e.g. 'Time [h]', 'Time [y]', or 'Time [d]'.
+        
+        Args:
+            df (pd.DataFrame): Description.
         """
         for col in df.columns:
             if col.lower().startswith("time"):
@@ -118,7 +134,9 @@ class MassBalanceCheckPflotran:
     def find_species_columns(df: pd.DataFrame) -> Dict[str, Tuple[str, List[str]]]:
         """
         For each species X, find the 'Global X [mol]' column and all columns 'X [mol]' (not containing 'Region').
-        Returns a dict: species -> (global_col, list of [mol] columns)
+        
+        Args:
+            df (pd.DataFrame): Description.
         """
         species_map: Dict[str, Tuple[str, List[str]]] = {}
         # Find all global columns
@@ -138,7 +156,10 @@ class MassBalanceCheckPflotran:
     def compute_mass_balance(df: pd.DataFrame, species_map: Dict[str, Tuple[str, List[str]]]) -> Dict[str, pd.DataFrame]:
         """
         For each species, compares the change in global amount to the sum of cumulative flux columns ([mol]).
-        Returns a dict species -> timeseries DataFrame with residuals.
+        
+        Args:
+            df (pd.DataFrame): Description.
+            species_map (Dict[str, Tuple[str, List[str]]]): Description.
         """
         time_col = MassBalanceCheckPflotran.get_time_column(df)
 
@@ -206,7 +227,9 @@ class MassBalanceCheckPflotran:
     def process_file(self, path: str) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
         """
         Process a single file: compute per-species timeseries and a summary DataFrame.
-        Optionally saves CSVs and returns (per_species, summary).
+        
+        Args:
+            path (str): Description.
         """
         print(f"\n==> File: {path}")
         df = self.read_pflotran_balance(path)
@@ -224,10 +247,9 @@ class MassBalanceCheckPflotran:
     def summarize_residuals(self, per_species: Dict[str, pd.DataFrame]) -> pd.DataFrame:
         """
         Summarizes for each species:
-        - ΔGlobal: change in global amount between last and first timestep
-        - Final Flux: total flux at last timestep
-        - Residual: ΔGlobal - Final Flux
-        - Percent error: residual divided by throughput amount (initial global amount + |flux|)
+        
+        Args:
+            per_species (Dict[str, pd.DataFrame]): Description.
         """
         rows = []
         eps = 1e-30
@@ -290,7 +312,9 @@ class MassBalanceCheckPflotran:
     def summarize_errors_matrix(self, all_summaries: List[pd.DataFrame]) -> None:
         """
         Creates a matrix summary: rows = files, columns = species, values = percent error,
-        then plots and saves heatmap.
+        
+        Args:
+            all_summaries (List[pd.DataFrame]): Description.
         """
         if not all_summaries:
             print("No summaries to create error matrix.")
@@ -353,6 +377,9 @@ class MassBalanceCheckPflotran:
     def plot_percent_error_matrix(self, matrix: pd.DataFrame) -> None:
         """
         Plots a heatmap of the percent error matrix and saves the figure in outdir.
+        
+        Args:
+            matrix (pd.DataFrame): Description.
         """
         if matrix.empty:
             print("Empty matrix, nothing to plot.")

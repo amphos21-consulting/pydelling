@@ -1,9 +1,7 @@
-"""Callback to save the results of a Pflotran simulation.
+"""
+Callback to save the results of a Pflotran simulation.
 
-Arguments:
-    move: bool = False -> If True, the results are moved instead of copied
-    postprocess: bool = False -> If True, the results are postprocessed
-    postprocess_regular: bool = False -> If True, the results are postprocessed assuming they are part of a regular grid
+
 """
 
 from __future__ import annotations
@@ -31,6 +29,18 @@ class PflotranSaveResultsCallback(BaseCallback):
                  postprocess: bool = False,
                  postprocess_regular: bool = False,
                  **kwargs):
+        """
+        __init__ method.
+        
+        Args:
+            manager (PflotranManager): Description.
+            study (PflotranStudy): Description.
+            kind (str): Description.
+            move (bool): Description.
+            postprocess (bool): Description.
+            postprocess_regular (bool): Description.
+            **kwargs (Any): Description.
+        """
         super().__init__(manager, study,
                          'post',
                          move=move,

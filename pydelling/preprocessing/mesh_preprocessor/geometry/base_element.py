@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from __future__ import annotations
 from itertools import combinations
 from typing import *
@@ -31,6 +37,16 @@ class BaseElement(BaseAbstractMeshObject):
                  local_id=None,
                  centroid_method="mean",
                  ):
+        """
+        __init__ method.
+        
+        Args:
+            node_ids (Any): Description.
+            node_coords (Any): Description.
+            centroid_coords (Any): Description.
+            local_id (Any): Description.
+            centroid_method (Any): Description.
+        """
         self.centroid_method = centroid_method
         self.nodes: np.ndarray = np.array(node_ids)  # Node id set
         self.coords: np.ndarray = np.array(node_coords)  # Coordinates of each node
@@ -78,7 +94,6 @@ class BaseElement(BaseAbstractMeshObject):
         """Returns the intersection of a face with a plane
 
         Args:
-            face: Face to intersect
             plane: Plane to intersect with
 
         Returns: Intersection points
@@ -107,7 +122,13 @@ class BaseElement(BaseAbstractMeshObject):
 
 
     def intersect_with_fracture(self, fracture: 'Fracture', export_all_points=False):
-        """Intersects an element with a fracture"""
+        """
+        Intersects an element with a fracture
+        
+        Args:
+            fracture ('Fracture'): Description.
+            export_all_points (Any): Description.
+        """
         intersected_lines = []
         intersected_points = []
         final_points = []
@@ -189,7 +210,12 @@ class BaseElement(BaseAbstractMeshObject):
         return final_points
 
     def _full_line_intersections(self, intersected_lines: List[Line]) -> List:
-        """Intersects a list of lines with each other"""
+        """
+        Intersects a list of lines with each other
+        
+        Args:
+            intersected_lines (List[Line]): Description.
+        """
         intersected_points = []
         line_combination = list(combinations(intersected_lines, 2))
         for line_pair in line_combination:
@@ -201,7 +227,13 @@ class BaseElement(BaseAbstractMeshObject):
         return intersected_points
 
     def contains(self, point: np.ndarray or Point, sign=1.0) -> bool:
-        """Checks if a point is inside the element"""
+        """
+        Checks if a point is inside the element
+        
+        Args:
+            point (np.ndarray or Point): Description.
+            sign (Any): Description.
+        """
         # self.plot_normal_vectors()
         # contains = Delaunay(self.coords).find_simplex(point) >= 0
         # return contains
@@ -229,7 +261,12 @@ class BaseElement(BaseAbstractMeshObject):
         return True
 
     def on_face(self, point):
-        """Checks if a point is on a face of the element"""
+        """
+        Checks if a point is on a face of the element
+        
+        Args:
+            point (Any): Description.
+        """
         for face in self.faces:
             face_centroid = self.faces[face].centroid
             vec = point - face_centroid
@@ -303,6 +340,13 @@ class BaseElement(BaseAbstractMeshObject):
 
     @staticmethod
     def arr_in_seq(arr, seq):
+        """
+        arr_in_seq method.
+        
+        Args:
+            arr (Any): Description.
+            seq (Any): Description.
+        """
         tp = type(arr)
         return any(isinstance(e, tp) and np.array_equiv(e, arr) for e in seq)
 
@@ -312,7 +356,12 @@ class BaseElement(BaseAbstractMeshObject):
         return {}
 
     def to_obj(self, filename: str):
-        """Exports the element to an obj file"""
+        """
+        Exports the element to an obj file
+        
+        Args:
+            filename (str): Description.
+        """
         with open(filename, 'w') as f:
             f.write('# OBJ file\n')
             f.write('# Created by pydelling\n')
@@ -330,7 +379,9 @@ class BaseElement(BaseAbstractMeshObject):
     def compute_centroid(self, centroid_method='mean'):
         """
         Computes the centroid of a general polyhedra
-        :return: centroid of the polyhedron
+        
+        Args:
+            centroid_method (Any): Description.
         """
         if centroid_method == 'curl':
             centroid = np.zeros(3)
@@ -381,7 +432,12 @@ class BaseElement(BaseAbstractMeshObject):
 
 
     def detect_face(self, face_ids: List):
-        """Find the face given the local ids of the nodes"""
+        """
+        Find the face given the local ids of the nodes
+        
+        Args:
+            face_ids (List): Description.
+        """
         for face in self.faces:
             sorted_ids = sorted(self.faces[face].nodes)
             sorted_face_ids = sorted(face_ids)
@@ -409,7 +465,14 @@ class BaseElement(BaseAbstractMeshObject):
         return internal_faces
 
     def plot_normal_vectors(self, point: Point=None, value=None, error_face=None):
-        """Plots the normal vectors of the faces"""
+        """
+        Plots the normal vectors of the faces
+        
+        Args:
+            point (Point): Description.
+            value (Any): Description.
+            error_face (Any): Description.
+        """
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d.art3d import Poly3DCollection
         fig = plt.figure()

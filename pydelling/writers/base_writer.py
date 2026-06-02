@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import os
 
 import numpy as np
@@ -6,6 +12,16 @@ import numpy as np
 class BaseWriter:
     info: dict
     def __init__(self, filename=None, var_name=None, data=None, region_name=None, **kwargs):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            var_name (Any): Description.
+            data (Any): Description.
+            region_name (Any): Description.
+            **kwargs (Any): Description.
+        """
         self.data_loaded = False
         self.a_min = None
         self.a_max = None
@@ -20,6 +36,13 @@ class BaseWriter:
             self.data_loaded = True
 
     def set_data_limits(self, a_min=None, a_max=None):
+        """
+        set_data_limits method.
+        
+        Args:
+            a_min (Any): Description.
+            a_max (Any): Description.
+        """
         if a_min == 'None':
             a_min = None
         if a_min is not None:
@@ -42,7 +65,11 @@ class BaseWriter:
     def load_data(self, var_name=None, data=None, apply_data_limits=True):
         """
         Load data to export
-        :return:
+        
+        Args:
+            var_name (Any): Description.
+            data (Any): Description.
+            apply_data_limits (Any): Description.
         """
         self.wipe_data()
         if var_name is not None and data is not None:
@@ -62,6 +89,12 @@ class BaseWriter:
         return self.data_loaded
 
     def run(self, filename=None):
+        """
+        run method.
+        
+        Args:
+            filename (Any): Description.
+        """
         if filename is not None:
             self.filename = filename
         if self.check_data():
@@ -76,6 +109,12 @@ class BaseWriter:
             print("Couldn't find data to dump!")
 
     def remove_output_file(self, filename=None):
+        """
+        remove_output_file method.
+        
+        Args:
+            filename (Any): Description.
+        """
         if filename is None:
             filename = self.filename
         else:

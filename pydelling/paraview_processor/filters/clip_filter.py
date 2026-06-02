@@ -1,5 +1,7 @@
 """
 This class implements the Paraview Integrate Variables filter
+
+
 """
 
 from pydelling.paraview_processor.filters import base_filter
@@ -14,6 +16,15 @@ class ClipFilter(base_filter):
     counter: int = 0
 
     def __init__(self, input_filter, name, *args, **kwargs):
+        """
+        __init__ method.
+        
+        Args:
+            input_filter (Any): Description.
+            name (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         super().__init__(name=name)
         ClipFilter.counter += 1
         self.filter = Clip(Input=input_filter)

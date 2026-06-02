@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from __future__ import annotations
 import logging
 from pathlib import Path
@@ -22,6 +28,12 @@ class DfnPreprocessor(object):
     faults: List[Fault] = []
 
     def __getitem__(self, item):
+        """
+        __getitem__ method.
+        
+        Args:
+            item (Any): Description.
+        """
         return self.dfn[item]
 
     def __init__(self):
@@ -118,7 +130,23 @@ class DfnPreprocessor(object):
                      storativity_constant=None,
                      polygon=None,
                      ):
-        """Add individual fracture to the dfn object.
+        """
+        Add individual fracture to the dfn object.
+        
+        Args:
+            x (Any): Description.
+            y (Any): Description.
+            z (Any): Description.
+            dip (Any): Description.
+            dip_dir (Any): Description.
+            size (Any): Description.
+            aperture (Any): Description.
+            hydraulic_aperture (Any): Description.
+            aperture_constant (Any): Description.
+            rock_type (Any): Description.
+            transmissivity_constant (Any): Description.
+            storativity_constant (Any): Description.
+            polygon (Any): Description.
         """
         from pydelling.preprocessing.dfn_preprocessor import Fracture
         self.dfn.append(Fracture(
@@ -145,7 +173,18 @@ class DfnPreprocessor(object):
                   porosity=None,
                   storativity=None,
                   ):
-        """Adds a fault to the dfn object."""
+        """
+        Adds a fault to the dfn object.
+        
+        Args:
+            filename (Any): Description.
+            mesh (Any): Description.
+            aperture (Any): Description.
+            transmissivity (Any): Description.
+            effective_aperture (Any): Description.
+            porosity (Any): Description.
+            storativity (Any): Description.
+        """
         from pydelling.preprocessing.dfn_preprocessor import Fault
         if aperture is None:
             logger.warning(f'No aperture specified for fault {filename}')
@@ -182,17 +221,40 @@ class DfnPreprocessor(object):
         return len(self.dfn)
 
     def visualize_dfn(self, add_centroid=True, fracture_color='blue', size_color=False):
-        """Visualizes the dfn object."""
+        """
+        Visualizes the dfn object.
+        
+        Args:
+            add_centroid (Any): Description.
+            fracture_color (Any): Description.
+            size_color (Any): Description.
+        """
         self.fig = self.generate_dfn_plotly(add_centroid=add_centroid, fracture_color=fracture_color, size_color=size_color)
         self.fig.show()
 
     def export_dfn_image(self, filename='dfn.png', add_centroid=True, fracture_color='blue', *args, **kwargs, ):
+        """
+        export_dfn_image method.
+        
+        Args:
+            filename (Any): Description.
+            add_centroid (Any): Description.
+            fracture_color (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         logger.info(f'Exporting dfn image to {filename}')
         self.fig = self.generate_dfn_plotly(add_centroid=add_centroid, fracture_color=fracture_color)
         self.fig.write_image(filename, *args, **kwargs)
 
     def to_obj(self, filename='dfn.obj', method='v1'):
-        '''Exports the dfn object to stl format.'''
+        """
+        Exports the dfn object to stl format.
+        
+        Args:
+            filename (Any): Description.
+            method (Any): Description.
+        """
         logger.info(f'Exporting dfn + faults object to {filename}')
         obj_file = open(filename, 'w')
         obj_file.write('# Created by pydelling\n')
@@ -207,6 +269,13 @@ class DfnPreprocessor(object):
             global_id += fault.num_points
 
     def to_vtk(self, filename='dfn.vtk', method='v1'):
+        """
+        to_vtk method.
+        
+        Args:
+            filename (Any): Description.
+            method (Any): Description.
+        """
         from pathlib import Path
         logger.info(f'Exporting dfn + faults object to {filename}')
         self.to_obj('buffer.obj', method=method)
@@ -219,7 +288,13 @@ class DfnPreprocessor(object):
 
 
     def to_dfnworks(self, filename='dfn.dat', method='v1'):
-        '''Exports the dfn object to dfnworks format.'''
+        """
+        Exports the dfn object to dfnworks format.
+        
+        Args:
+            filename (Any): Description.
+            method (Any): Description.
+        """
         logger.info(f'Exporting dfn object to {filename}')
         dfn_file = open(filename, 'w')
         n_total_fractures = len(self.dfn)
@@ -232,18 +307,28 @@ class DfnPreprocessor(object):
             dfn_file.write('\n')
 
     def shift(self, x_shift=0, y_shift=0, z_shift=0):
-        """Shifts the dfn object."""
+        """
+        Shifts the dfn object.
+        
+        Args:
+            x_shift (Any): Description.
+            y_shift (Any): Description.
+            z_shift (Any): Description.
+        """
         logger.info(f'Shifting dfn object by {x_shift}, {y_shift}, {z_shift}')
         for fracture in self.dfn:
             fracture.shift(x_shift, y_shift, z_shift)
 
 
     def generate_dfn_plotly(self, add_centroid=False, size_color=False, fracture_color='blue'):
-        ''' Generates a plotly figure of the dfn object.
-
-        Returns: A plotly figure
-
-        '''
+        """
+        Generates a plotly figure of the dfn object.
+        
+        Args:
+            add_centroid (Any): Description.
+            size_color (Any): Description.
+            fracture_color (Any): Description.
+        """
         logger.info('Generating plotly figure')
         fig = go.Figure()
         for fracture in tqdm(self.dfn):
@@ -290,7 +375,12 @@ class DfnPreprocessor(object):
         return min([fracture.size for fracture in self.dfn])
 
     def plot_radii_histogram(self, filename='radii_histogram.png'):
-        """Plots the radii histogram."""
+        """
+        Plots the radii histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting radii histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -298,7 +388,12 @@ class DfnPreprocessor(object):
         return fig, ax
 
     def plot_aperture_histogram(self, filename='aperture_histogram.png'):
-        """Plots the aperture histogram."""
+        """
+        Plots the aperture histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting aperture histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -306,7 +401,12 @@ class DfnPreprocessor(object):
         return fig, ax
 
     def plot_hydraulic_aperture_histogram(self, filename='aperture_histogram.png'):
-        """Plots the hydraulic aperture histogram."""
+        """
+        Plots the hydraulic aperture histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting hydraulic aperture histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -314,7 +414,12 @@ class DfnPreprocessor(object):
         return fig, ax
 
     def plot_transmissivity_histogram(self, filename='transmissivity_histogram.png'):
-        """Plots the transmissivity histogram."""
+        """
+        Plots the transmissivity histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting aperture histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -322,7 +427,12 @@ class DfnPreprocessor(object):
         return fig, ax
 
     def plot_hkx_histogram(self, filename='hkx_histogram.png'):
-        """Plots the x-hydraulic conductivity histogram."""
+        """
+        Plots the x-hydraulic conductivity histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting hk_x histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -331,7 +441,12 @@ class DfnPreprocessor(object):
 
 
     def plot_storativity_histogram(self, filename='storativity_histogram.png'):
-        """Plots the storativity histogram."""
+        """
+        Plots the storativity histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting aperture histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -351,7 +466,12 @@ class DfnPreprocessor(object):
         return np.array(fracture_apertures + fault_apertures)
 
     def __add__(self, other):
-        """Adds two dfn objects."""
+        """
+        Adds two dfn objects.
+        
+        Args:
+            other (Any): Description.
+        """
         if not isinstance(other, DfnPreprocessor):
             raise TypeError(f'{other} is not a DfnPreprocessor object')
 
@@ -393,14 +513,25 @@ class DfnPreprocessor(object):
         return export_dict
 
     def to_json(self, filename):
-        """Writes the dfn object to a json file."""
+        """
+        Writes the dfn object to a json file.
+        
+        Args:
+            filename (Any): Description.
+        """
         import json
         with open(filename, 'w') as f:
             json.dump(self.get_json(), f)
 
     @classmethod
     def from_json(cls, filename='dfn.json'):
-        """Loads a dfn object from a json file."""
+        """
+        Loads a dfn object from a json file.
+        
+        Args:
+            cls (Any): Description.
+            filename (Any): Description.
+        """
         import json
         from pydelling.preprocessing.dfn_preprocessor import Fracture, Fault
         with open(filename, 'r') as f:
@@ -414,7 +545,13 @@ class DfnPreprocessor(object):
 
     @classmethod
     def from_dict(cls, dict: dict):
-        """Loads a dfn object from a dict."""
+        """
+        Loads a dfn object from a dict.
+        
+        Args:
+            cls (Any): Description.
+            dict (dict): Description.
+        """
         from pydelling.preprocessing.dfn_preprocessor import Fracture, Fault
         Fracture.local_id = 0
         Fault.local_id = 0

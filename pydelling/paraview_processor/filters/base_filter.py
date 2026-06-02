@@ -1,5 +1,7 @@
 """
 Class used as a basecase class for the different Paraview filters
+
+
 """
 
 import numpy as np
@@ -32,6 +34,12 @@ class BaseFilter:
     z_max: float
 
     def __init__(self, name):
+        """
+        __init__ method.
+        
+        Args:
+            name (Any): Description.
+        """
         self.name = name
 
 
@@ -121,6 +129,9 @@ class BaseFilter:
     def to_csv(self, filename=None):
         """
         This method exports the current filter's data into a csv file
+        
+        Args:
+            filename (Any): Description.
         """
         filename = filename if filename else f"{self.name}_filter_data.csv"
         SaveData(filename=filename, proxy=self.filter)

@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import numpy as np
 from scipy.spatial.qhull import ConvexHull
 
@@ -6,6 +12,15 @@ from pydelling.preprocessing.mesh_preprocessor.geometry import QuadrilateralFace
 
 class HexahedraElement(BaseElement):
     def __init__(self, node_ids, node_coords, centroid_coords=None, local_id=None):
+        """
+        __init__ method.
+        
+        Args:
+            node_ids (Any): Description.
+            node_coords (Any): Description.
+            centroid_coords (Any): Description.
+            local_id (Any): Description.
+        """
         super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords, local_id=local_id)
         self.type = "hexahedra"
         self.meshio_type = "hexahedron"

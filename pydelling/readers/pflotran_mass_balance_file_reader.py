@@ -1,5 +1,7 @@
 """
 Base interface for a reader class
+
+
 """
 import logging
 
@@ -24,6 +26,12 @@ class PflotranMassBalanceFileReader(PflotranObservationPointReader):
     variables: dict
 
     def __init__(self, filename=None):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+        """
         self.filename = Path(filename) if filename else Path(config.pflotran_reader.filename)
         logger.info(f"Reading PFLOTRAN mass balance file from {self.filename}")
         super().__init__(filename=self.filename)

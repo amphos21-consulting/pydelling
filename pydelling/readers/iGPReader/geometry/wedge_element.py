@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from scipy.spatial.qhull import ConvexHull
 
 from pydelling.readers.iGPReader.geometry import QuadrilateralFace, TriangleFace, BaseElement
@@ -6,6 +12,16 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 class WedgeElement(BaseElement):
     def __init__(self, node_ids, node_coords, element_type_n, local_id, centroid_coords=None):
+        """
+        __init__ method.
+        
+        Args:
+            node_ids (Any): Description.
+            node_coords (Any): Description.
+            element_type_n (Any): Description.
+            local_id (Any): Description.
+            centroid_coords (Any): Description.
+        """
         super().__init__(node_ids, node_coords, element_type_n, local_id, centroid_coords)
         self.define_faces()  # Define faces of the element
         # self.centroid = self.compute_centroid()

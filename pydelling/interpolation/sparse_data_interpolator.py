@@ -1,5 +1,6 @@
-"""
-Interpolates a given set of points into a PFLOTRAN mesh
+"""Sparse data interpolation onto PFLOTRAN-compatible meshes.
+
+
 """
 import logging
 
@@ -13,9 +14,14 @@ logger = logging.getLogger(__name__)
 
 
 class SparseDataInterpolator(BaseInterpolator):
+    """Interpolate sparse observations onto a target mesh.
+
+    
+    """
+
     divide_over_direction = None
     @set_run
-    def run(self, method='nearest', divide_over_direction=None, **kwargs):
+    def run(self, method: str = 'nearest', divide_over_direction=None, **kwargs) -> np.ndarray:
         """
         Interpolates the data using the given method.
         Args:
@@ -46,13 +52,21 @@ class SparseDataInterpolator(BaseInterpolator):
             return self.get_data()
 
 
+    def get_data(self) -> np.ndarray:
+        """Return mesh coordinates concatenated with interpolated values.
 
-
-    def get_data(self):
+        
+        """
         temp_array = np.reshape(self.interpolated_data, (self.interpolated_data.shape[0], 1))
         return np.concatenate((self.mesh, temp_array), axis=1)
 
-    def change_min_value(self, min_value=None):
+    def change_min_value(self, min_value=None) -> np.ndarray:
+        """
+        Clamp interpolated values below a minimum threshold.
+        
+        Args:
+            min_value (Any): Description.
+        """
         logger.info(f"Equaling values <{min_value} to {min_value}")
         self.interpolated_data[self.interpolated_data < min_value] = min_value
         return self.interpolated_data
@@ -67,7 +81,7 @@ class SparseDataInterpolator(BaseInterpolator):
         plot_data = self.get_data()
 
 
-    def generate_pointwise_data(self):
+    def generate_pointwise_data(self) -> np.ndarray:
         """Generates a pointwise data file"""
         assert self.is_run, "The interpolator has not been run"
         assert self.has_regular_mesh, "The interpolator has not been run with a regular mesh"
@@ -76,7 +90,12 @@ class SparseDataInterpolator(BaseInterpolator):
         return mesh_data
 
     def export_pointwise_data(self, output_file='pointwise_data.csv'):
-        """Exports the interpolated data to a csv data file"""
+        """
+        Exports the interpolated data to a csv data file
+        
+        Args:
+            output_file (Any): Description.
+        """
         assert self.is_run, "The interpolator has not been run"
         assert self.has_regular_mesh, "The interpolator has not been run with a regular mesh"
         mesh_data = self.generate_pointwise_data()

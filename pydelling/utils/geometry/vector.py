@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from __future__ import annotations
 
 from typing import List
@@ -11,6 +17,17 @@ from .point import Point
 class Vector(np.ndarray, BasePrimitive):
     coords: np.ndarray
     def __new__(cls, v: np.ndarray or List=None, p1: Point or List or np.ndarray=None, p2: Point or List or np.ndarray=None, *args, **kwargs):
+        """
+        __new__ method.
+        
+        Args:
+            cls (Any): Description.
+            v (np.ndarray or List): Description.
+            p1 (Point or List or np.ndarray): Description.
+            p2 (Point or List or np.ndarray): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         if v is not None:
             assert len(v) >= 2, "Vector must have 2 or 3 coordinates"
             if isinstance(v, Vector):

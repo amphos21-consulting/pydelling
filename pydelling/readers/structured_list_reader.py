@@ -1,5 +1,7 @@
 """
 Centroid file reader
+
+
 """
 import logging
 from pathlib import Path
@@ -16,6 +18,17 @@ logger = logging.getLogger(__name__)
 class StructuredListReader(BaseReader):
     data: pd.DataFrame
     def __init__(self, filename=None, var_pos=3, var_name="var", var_type=np.float32, centroid_pos=(0, 3), header=False):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            var_pos (Any): Description.
+            var_name (Any): Description.
+            var_type (Any): Description.
+            centroid_pos (Any): Description.
+            header (Any): Description.
+        """
         self.var_pos = None
         self.var = None
         self.var_name = None
@@ -31,6 +44,12 @@ class StructuredListReader(BaseReader):
                          header=header)
 
     def open_file(self, filename):
+        """
+        open_file method.
+        
+        Args:
+            filename (Any): Description.
+        """
         self.read_file()
 
     def read_file(self):
@@ -91,8 +110,10 @@ class StructuredListReader(BaseReader):
     def dump_to_csv(self, output_file, delimiter=","):
         """
         Writes the data into a csv file
-        :param output_file:
-        :return:
+        
+        Args:
+            output_file (Any): Description.
+            delimiter (Any): Description.
         """
         print(f"Starting dump into {output_file}")
         np.savetxt(output_file, self.get_data(), delimiter=delimiter)

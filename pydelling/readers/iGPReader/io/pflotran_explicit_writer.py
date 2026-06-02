@@ -1,5 +1,7 @@
 """
 This class contains the functions to write a mesh file in PFLOTRAN unstructured explicit format
+
+
 """
 
 import os
@@ -14,6 +16,12 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 class PflotranExplicitWriter:
     def write_cells(self, export_file):
+        """
+        write_cells method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         export_file.write(f"CELLS {len(self.elements)}\n")
         for element in self.elements:
             export_file.write(
@@ -21,6 +29,12 @@ class PflotranExplicitWriter:
 
     def write_connections(self, export_file):
         # compute number of connection elements
+        """
+        write_connections method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         n_conn = 0
         for element in self.connections:
             n_conn += len(element[1])
@@ -72,6 +86,12 @@ class PflotranExplicitWriter:
     def write_domain_postprocess_hdf5(self, export_file):
 
         # Create domain group
+        """
+        write_domain_postprocess_hdf5 method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         domain_group = export_file.create_group("Domain")
         # Create Cells dataset
         _cells = []

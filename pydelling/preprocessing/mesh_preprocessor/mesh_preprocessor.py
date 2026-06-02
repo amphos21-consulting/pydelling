@@ -1,4 +1,8 @@
-"""Contains the logic to preprocess and work with a generic unstructured mesh"""
+"""
+Contains the logic to preprocess and work with a generic unstructured mesh
+
+
+"""
 
 from __future__ import annotations
 
@@ -41,6 +45,13 @@ class MeshPreprocessor(iGPLogic):
     is_connections_found: bool = False
 
     def __init__(self, *args, **kwargs):
+        """
+        __init__ method.
+        
+        Args:
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         self.unordered_nodes = {}
         self.elements = []
         self.material_dict = {}
@@ -59,34 +70,70 @@ class MeshPreprocessor(iGPLogic):
         }
 
     def add_element(self, element: geometry.base_element):
+        """
+        add_element method.
+        
+        Args:
+            element (geometry.base_element): Description.
+        """
         self.elements.append(element)
 
     def add_tetrahedra(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """Adds a tetrahedron to the mesh"""
+        """
+        Adds a tetrahedron to the mesh
+        
+        Args:
+            node_ids (List[int] or np.ndarray): Description.
+            node_coords (List[np.ndarray]): Description.
+        """
         self.elements.append(geometry.TetrahedraElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_hexahedra(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """Adds a hexahedron to the mesh"""
+        """
+        Adds a hexahedron to the mesh
+        
+        Args:
+            node_ids (List[int] or np.ndarray): Description.
+            node_coords (List[np.ndarray]): Description.
+        """
         self.elements.append(geometry.HexahedraElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_wedge(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """Adds a wedge to the mesh"""
+        """
+        Adds a wedge to the mesh
+        
+        Args:
+            node_ids (List[int] or np.ndarray): Description.
+            node_coords (List[np.ndarray]): Description.
+        """
         self.elements.append(geometry.WedgeElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_pyramid(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """Adds a pyramid to the mesh"""
+        """
+        Adds a pyramid to the mesh
+        
+        Args:
+            node_ids (List[int] or np.ndarray): Description.
+            node_coords (List[np.ndarray]): Description.
+        """
         self.elements.append(geometry.PyramidElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_triangular_prism(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """Adds a triangular prism to the mesh"""
+        """
+        Adds a triangular prism to the mesh
+        
+        Args:
+            node_ids (List[int] or np.ndarray): Description.
+            node_coords (List[np.ndarray]): Description.
+        """
         self.elements.append(geometry.WedgeElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
@@ -106,17 +153,36 @@ class MeshPreprocessor(iGPLogic):
         return self.coords
 
     def add_quadrilateral(self, node_ids: List[int], node_coords: List[np.ndarray]):
+        """
+        add_quadrilateral method.
+        
+        Args:
+            node_ids (List[int]): Description.
+            node_coords (List[np.ndarray]): Description.
+        """
         self.elements.append(geometry.quadrilateral_face(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_triangle(self, node_ids: List[int], node_coords: List[np.ndarray]):
+        """
+        add_triangle method.
+        
+        Args:
+            node_ids (List[int]): Description.
+            node_coords (List[np.ndarray]): Description.
+        """
         self.elements.append(geometry.triangle_face(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_node(self, node: np.ndarray):
-        '''Explicitly adds a node (deprecated)'''
+        """
+        Explicitly adds a node (deprecated)
+        
+        Args:
+            node (np.ndarray): Description.
+        """
         self.coords.append(node)
 
     @property
@@ -176,6 +242,12 @@ class MeshPreprocessor(iGPLogic):
         )
 
     def _create_meshio_dict(self, elements: List[geometry.base_abstract_mesh_object]) -> Dict[str, List[List[int]]]:
+        """
+        _create_meshio_dict method.
+        
+        Args:
+            elements (List[geometry.base_abstract_mesh_object]): Description.
+        """
         elements_in_meshio = {}
         for element in elements:
             if element.type == 'tetrahedra':
@@ -206,7 +278,12 @@ class MeshPreprocessor(iGPLogic):
         return elements_in_meshio
 
     def nodes_to_csv(self, filename='node_ids.csv'):
-        """Exports the node_ids to CSV"""
+        """
+        Exports the node_ids to CSV
+        
+        Args:
+            filename (Any): Description.
+        """
         node_array = np.array(self.coords)
         np.savetxt(filename, node_array, delimiter=',')
 
@@ -326,7 +403,12 @@ class MeshPreprocessor(iGPLogic):
 
 
     def find_the_intersection_between_fracture_and_mesh(self, fracture: 'Fracture'):
-        """Finds the intersection between a fracture and the mesh"""
+        """
+        Finds the intersection between a fracture and the mesh
+        
+        Args:
+            fracture ('Fracture'): Description.
+        """
         intersections = []
         for element in self.elements:
             if self._is_fracture_intersected(fracture, element):
@@ -334,7 +416,13 @@ class MeshPreprocessor(iGPLogic):
         self.subset_to_vtk(intersections, filename='intersections.vtk')
 
     def find_intersection_points_between_fracture_and_mesh(self, fracture: 'Fracture', export_stats=False):
-        """Finds the intersection points between a fracture and the mesh"""
+        """
+        Finds the intersection points between a fracture and the mesh
+        
+        Args:
+            fracture ('Fracture'): Description.
+            export_stats (Any): Description.
+        """
 
         intersection_points = []
         kd_tree_filtered_elements = self.get_closest_mesh_elements(fracture.centroid, distance=fracture.size)
@@ -365,6 +453,12 @@ class MeshPreprocessor(iGPLogic):
 
     def export_intersection_stats(self, filename='intersection_stats.txt'):
         # Export the run_stats dictionary to file
+        """
+        export_intersection_stats method.
+        
+        Args:
+            filename (Any): Description.
+        """
         assert self.is_intersected, 'The mesh has not been intersected yet.'
         import json
         with open('run_stats.json', 'w') as fp:
@@ -421,7 +515,12 @@ class MeshPreprocessor(iGPLogic):
 
 
     def save(self, filename):
-        """Save the mesh to a file."""
+        """
+        Save the mesh to a file.
+        
+        Args:
+            filename (Any): Description.
+        """
         import pickle
         logger.info(f'Saving mesh to {filename}')
         with open(filename, 'wb') as f:
@@ -434,7 +533,12 @@ class MeshPreprocessor(iGPLogic):
             pickle.dump(save_dictionary, f)
 
     def load(self, filename):
-        """Load the mesh from a file."""
+        """
+        Load the mesh from a file.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Loading mesh from {filename}')
         import pickle
         with open(filename, 'rb') as f:
@@ -455,14 +559,24 @@ class MeshPreprocessor(iGPLogic):
         return save_dictionary
 
     def to_json(self, filename='mesh.json'):
-        """Export the mesh to a json file."""
+        """
+        Export the mesh to a json file.
+        
+        Args:
+            filename (Any): Description.
+        """
         import json
         with open(filename, 'w') as f:
             json.dump(self.get_json(), f)
 
     @classmethod
     def from_json(self, filename='mesh.json'):
-        """Load the mesh from a json file."""
+        """
+        Load the mesh from a json file.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Loading mesh from {filename}')
         BaseElement.local_id = 0
         import json
@@ -478,7 +592,13 @@ class MeshPreprocessor(iGPLogic):
 
     @classmethod
     def from_dict(cls, dict: dict):
-        """Load the mesh from a json file."""
+        """
+        Load the mesh from a json file.
+        
+        Args:
+            cls (Any): Description.
+            dict (dict): Description.
+        """
         BaseElement.local_id = 0
         mesh = MeshPreprocessor()
         mesh._coords = np.array(dict['coords'])
@@ -490,7 +610,13 @@ class MeshPreprocessor(iGPLogic):
 
     @staticmethod
     def load_elements(mesh: MeshPreprocessor, element_dict):
-        """Load the elements from a dictionary."""
+        """
+        Load the elements from a dictionary.
+        
+        Args:
+            mesh (MeshPreprocessor): Description.
+            element_dict (Any): Description.
+        """
         elements = []
         for local_id, element in tqdm(enumerate(element_dict), desc='Loading elements'):
             if element['type'] == 'tetrahedra':
@@ -515,7 +641,12 @@ class MeshPreprocessor(iGPLogic):
             mesh.elements[local_id].associated_fractures = temp_associated_fractures
 
     def refactor_array_by_element_type(self, array: np.ndarray or list) -> list:
-        """Refactors a given array based on the element type"""
+        """
+        Refactors a given array based on the element type
+        
+        Args:
+            array (np.ndarray or list): Description.
+        """
         if isinstance(array, np.ndarray):
             array = array.tolist()
         final_array = []
@@ -536,9 +667,23 @@ class MeshPreprocessor(iGPLogic):
         return f'Mesh with {len(self.elements)} elements and {len(self.coords)} nodes.'
 
     def add_cell_data(self, name, data):
+        """
+        add_cell_data method.
+        
+        Args:
+            name (Any): Description.
+            data (Any): Description.
+        """
         self.cell_data[name] = self.refactor_array_by_element_type(data)
 
     def add_point_data(self, name, data):
+        """
+        add_point_data method.
+        
+        Args:
+            name (Any): Description.
+            data (Any): Description.
+        """
         self.point_data[name] = data
 
     def find_mesh_connections(self):
@@ -574,7 +719,7 @@ class MeshPreprocessor(iGPLogic):
             if not len(element.connections) == len(element.faces):
                 self.external_boundaries[element.local_id] = element.external_faces
 
-    def get_topography_faces(self):
+    def get_topography_faces(self) -> dict:
         """Returns the topography elements.
 
         Examples:
@@ -596,7 +741,7 @@ class MeshPreprocessor(iGPLogic):
 
         return elem_vector
 
-    def set_topography_boundaries(self, z_coord=0.0, keys=["land", "sea"]):
+    def set_topography_boundaries(self, z_coord: float = 0.0, keys: list[str] = ["land", "sea"]):
         """
         Set the topography boundaries for the Obayashi project.
 
@@ -635,7 +780,13 @@ class MeshPreprocessor(iGPLogic):
                                                 unit_vector: np.array or list,
                                                 tolerance: float = 0.1
                                                 ) -> List[geometry.base_face]:
-        """ Returns the elements and the face with a given normal unit vector. """
+        """
+        Returns the elements and the face with a given normal unit vector.
+        
+        Args:
+            unit_vector (np.array or list): Description.
+            tolerance (float): Description.
+        """
         if not self.external_boundaries:
             raise ValueError("self.boundaries is None.")
         elem_vector = {}

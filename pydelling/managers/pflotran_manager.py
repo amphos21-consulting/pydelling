@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from .base_manager import BaseManager
 from . import PflotranStudy
 import subprocess
@@ -19,7 +25,11 @@ logger = logging.getLogger(__name__)
 
 class PflotranManager(BaseManager):
     def _get_study_status(self, study_id: int):
-        """This method returns the status of a study.
+        """
+        This method returns the status of a study.
+        
+        Args:
+            study_id (int): Description.
         """
         pass
 
@@ -31,7 +41,16 @@ class PflotranManager(BaseManager):
                    pflotran_dir: str = 'pflotran',
                    **kwargs,
                    ):
-        """This method runs a study.
+        """
+        This method runs a study.
+        
+        Args:
+            study (PflotranStudy): Description.
+            n_cores (int): Description.
+            petsc_dir (str): Description.
+            petsc_arch (str): Description.
+            pflotran_dir (str): Description.
+            **kwargs (Any): Description.
         """
         if n_cores == 1:
             # Run the study in serial
@@ -51,7 +70,14 @@ class PflotranManager(BaseManager):
                           n_cores: int = 1,
                           **kwargs,
                           ):
-        """This method runs a study using docker.
+        """
+        This method runs a study using docker.
+        
+        Args:
+            study (PflotranStudy): Description.
+            docker_image (str): Description.
+            n_cores (int): Description.
+            **kwargs (Any): Description.
         """
         docker_client = docker.from_env()
             # Run the study in serial
@@ -115,7 +141,21 @@ class PflotranManager(BaseManager):
                             download_results: bool = True,
                             **kwargs,
                             ):
-        """This method runs a study on JURECA"""
+        """
+        This method runs a study on JURECA
+        
+        Args:
+            study (PflotranStudy): Description.
+            user (Any): Description.
+            project_name (Any): Description.
+            pkey_path (Any): Description.
+            n_cores (int): Description.
+            wallclock_limit (str): Description.
+            shell_script_path (str): Description.
+            download_file_extensions (list): Description.
+            download_results (bool): Description.
+            **kwargs (Any): Description.
+        """
         if self.password is None:
             self.password = getpass.getpass(prompt='Password: ', stream=None)
 
@@ -181,7 +221,21 @@ class PflotranManager(BaseManager):
                             download_results: bool = True,
                             **kwargs,
                             ):
-        """This method runs a study on JURECA"""
+        """
+        This method runs a study on JURECA
+        
+        Args:
+            study (PflotranStudy): Description.
+            user (Any): Description.
+            project_name (Any): Description.
+            pkey_path (Any): Description.
+            n_cores (int): Description.
+            wallclock_limit (str): Description.
+            shell_script_path (str): Description.
+            download_file_extensions (Any): Description.
+            download_results (bool): Description.
+            **kwargs (Any): Description.
+        """
         if self.password is None:
             self.password = getpass.getpass(prompt='Password: ', stream=None)
 
@@ -245,7 +299,12 @@ class PflotranManager(BaseManager):
                             ssh_manager: BaseSsh,
                             study: PflotranStudy,
                             ):
-        """This method copies the data to the remote server. Takes care of the shared files.
+        """
+        This method copies the data to the remote server. Takes care of the shared files.
+        
+        Args:
+            ssh_manager (BaseSsh): Description.
+            study (PflotranStudy): Description.
         """
         # Check if the shared files are already in the remote server
         if self.has_shared_files:
@@ -285,7 +344,14 @@ class PflotranManager(BaseManager):
                       file_ext=None,
                       job_id=None,
                       ):
-        """This method downloads the results from the remote server."""
+        """
+        This method downloads the results from the remote server.
+        
+        Args:
+            study (PflotranStudy): Description.
+            file_ext (Any): Description.
+            job_id (Any): Description.
+        """
         print(file_ext)
         if file_ext is None:
             file_ext = ['.h5']
@@ -305,7 +371,12 @@ class PflotranManager(BaseManager):
 
 
     def merge_results(self, move=False, postprocess=True):
-        """This method merges the results of all the studies.
+        """
+        This method merges the results of all the studies.
+        
+        Args:
+            move (Any): Description.
+            postprocess (Any): Description.
         """
         self.run(dummy=True)
         import shutil

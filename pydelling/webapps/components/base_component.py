@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from abc import ABC, abstractmethod
 
 from pydelling.webapps import WebAppRunner
@@ -16,6 +22,17 @@ class BaseComponent(ABC, BaseStreamlitUtilityClass):
                  *args,
                  **kwargs
                  ):
+        """
+        __init__ method.
+        
+        Args:
+            webapp (WebAppRunner): Description.
+            lang (Any): Description.
+            translate (Any): Description.
+            key (Any): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         self.type = self.__class__.__name__
         self.finished = False
         self.translate = translate
@@ -34,7 +51,13 @@ class BaseComponent(ABC, BaseStreamlitUtilityClass):
 
     @abstractmethod
     def run(self, *args, **kwargs):
-        """Runs the component"""
+        """
+        Runs the component
+        
+        Args:
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
 
     @property
     def value(self):
