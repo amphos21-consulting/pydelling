@@ -1,3 +1,5 @@
+"""This class creates an OpenFOAM variable data file"""
+
 import logging
 
 import numpy as np
@@ -9,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class OpenFoamVariableWriter(BaseWriter):
-    """This class creates an OpenFOAM variable data file"""
     def __init__(self, filename: str = None, header=None, outer=None, data=None, configuration_dict=None, *args, **kwargs):
         """
         A correct set of header/outer needs to be provided to the class.

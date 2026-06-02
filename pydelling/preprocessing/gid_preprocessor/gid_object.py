@@ -1,3 +1,8 @@
+"""
+This class can be inherited to create new GiD objects
+It stores different GiD objects and generates batch files to generate the geometry automatically on GiD
+"""
+
 from __future__ import annotations
 
 import functools
@@ -12,10 +17,6 @@ logger = logging.getLogger(__name__)
 from typing import Union, List
 
 class GidObject(object):
-    """
-    This class can be inherited to create new GiD objects
-    It stores different GiD objects and generates batch files to generate the geometry automatically on GiD
-    """
     def __init__(self, *args, **kwargs):
         self.batch_commands = ''
         self.points = []

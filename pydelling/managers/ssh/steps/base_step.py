@@ -1,3 +1,5 @@
+"""Defines the base step class. The step class is supposed to save a ssh operation and execute it later on"""
+
 from pydelling.managers import BaseManager
 from abc import ABC, abstractmethod
 import logging
@@ -14,7 +16,6 @@ def manager_decorator(func):
     return wrapper
 
 class BaseStep(ABC):
-    """Defines the base step class. The step class is supposed to save a ssh operation and execute it later on"""
     def __init__(self,
                  manager: BaseManager = None,
                  kind='pre',
@@ -33,6 +34,3 @@ class BaseStep(ABC):
     def _run(self, manager: BaseManager = None):
         """Runs the step, should be implemented by the subclasses"""
         pass
-
-
-

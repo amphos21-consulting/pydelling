@@ -1,3 +1,7 @@
+"""
+This class implements the Stream Tracer with custom source filter
+"""
+
 from pydelling.paraview_processor.filters import base_filter
 try:
     from paraview.simple import *
@@ -6,9 +10,6 @@ except:
 
 
 class StreamTracerWithCustomSourceFilter(base_filter):
-    """
-    This class implements the Stream Tracer with custom source filter
-    """
     filter_type: str = "Stream_tracer_with_custom_source"
     counter: int = 0
 

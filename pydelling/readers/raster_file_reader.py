@@ -1,3 +1,7 @@
+"""
+Class that contains functions to read a rasterized file in .asc format
+"""
+
 import logging
 
 import numpy as np
@@ -12,9 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class RasterFileReader(BaseReader):
-    """
-    Class that contains functions to read a rasterized file in .asc format
-    """
     def __init__(self,
                  filename=None,
                  header=False,
@@ -563,13 +564,3 @@ class RasterFileReader(BaseReader):
     @property
     def reader_info(self):
         return self.info['reader']
-
-
-
-
-
-
-
-
-
-

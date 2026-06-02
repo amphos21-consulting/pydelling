@@ -1,3 +1,18 @@
+"""This class contains the core methods for all the other child Manager classes.
+A manager is supposed to control the simulations run on a given software automatically.
+
+The manager should be able to:
+- Create the input files for the software
+- Modify the input files for the software
+- Run the software
+- Read the output status of the simnulation
+
+The idea to process the input files is the following:
+- Read the raw input file
+- The user can add variables to change, or can specify directly on the input file using {{var}} notation (jinja2)
+- The input file is rendered using jinja2 for each specific case
+"""
+
 from __future__ import annotations
 from pathlib import Path
 from jinja2 import Template
@@ -16,20 +31,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseStudy(UnitConverter):
-    """This class contains the core methods for all the other child Manager classes.
-    A manager is supposed to control the simulations run on a given software automatically.
-
-    The manager should be able to:
-    - Create the input files for the software
-    - Modify the input files for the software
-    - Run the software
-    - Read the output status of the simnulation
-
-    The idea to process the input files is the following:
-    - Read the raw input file
-    - The user can add variables to change, or can specify directly on the input file using {{var}} notation (jinja2)
-    - The input file is rendered using jinja2 for each specific case
-    """
     count = 0
     shared_folder_default_name = 'shared_folder'
     results_folder_name = None
@@ -350,15 +351,3 @@ class BaseStudy(UnitConverter):
 
     def __str__(self):
         return self.__repr__()
-
-
-
-
-
-
-
-
-
-
-
-

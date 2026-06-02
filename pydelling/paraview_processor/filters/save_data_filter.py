@@ -1,3 +1,7 @@
+"""
+This class implements the Save Data filter
+"""
+
 from pydelling.paraview_processor.filters import base_filter
 try:
     from paraview.simple import *
@@ -6,9 +10,6 @@ except:
 
 
 class SaveDataFilter(base_filter):
-    """
-    This class implements the Save Data filter
-    """
     filter_type: str = "Save_data"
     counter: int = 0
 

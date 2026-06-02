@@ -1,7 +1,8 @@
+"""The base class for all status classes. This class should read a given status file and extract some key information."""
+
 import os
 
 class BaseStatus:
-    """The base class for all status classes. This class should read a given status file and extract some key information."""
 
     def __init__(self, status_file, ssh_manager=None):
         """Initialize the BaseStatus class with the given status file."""

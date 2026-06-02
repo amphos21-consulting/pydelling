@@ -1,3 +1,7 @@
+"""
+This class provides the framework to read data from a VTK file and do different postprocessing steps
+"""
+
 from .base_reader import BaseReader
 try:
     from paraview.simple import *
@@ -8,9 +12,6 @@ except:
 
 
 class VtkReader(BaseReader):
-    """
-    This class provides the framework to read data from a VTK file and do different postprocessing steps
-    """
     current_array: None
     calculator: None
 

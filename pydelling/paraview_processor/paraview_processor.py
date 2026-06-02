@@ -1,3 +1,7 @@
+"""
+This class provides the framework to read data from a VTK file and do different postprocessing steps
+"""
+
 import logging
 from typing import Dict
 
@@ -14,9 +18,6 @@ except:
     logger.warning("Paraview python implementation is not properly set-up")
 
 class ParaviewProcessor:
-    """
-    This class provides the framework to read data from a VTK file and do different postprocessing steps
-    """
     current_array: None
    # calculator: Calculator
     pipeline: Dict[str, base_filter] = {}

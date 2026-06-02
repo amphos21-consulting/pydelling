@@ -1,3 +1,5 @@
+"""This is the base class used to build other webapps."""
+
 import inspect
 import subprocess
 from abc import ABC
@@ -6,7 +8,6 @@ from .base_streamlit_utility_class import BaseStreamlitUtilityClass
 
 
 class WebAppRunner(ABC, BaseStreamlitUtilityClass):
-    """This is the base class used to build other webapps."""
 
     def __init__(self):
         self.source_script_name = None

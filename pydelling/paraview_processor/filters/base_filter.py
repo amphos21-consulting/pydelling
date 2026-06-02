@@ -1,3 +1,7 @@
+"""
+Class used as a basecase class for the different Paraview filters
+"""
+
 import numpy as np
 import pandas as pd
 
@@ -16,9 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseFilter:
-    """
-    Class used as a basecase class for the different Paraview filters
-    """
     filter_type: str = "VTK_reader"
     counter: int = 0
     filter: object

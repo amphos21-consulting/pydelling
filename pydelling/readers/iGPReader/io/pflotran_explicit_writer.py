@@ -1,3 +1,7 @@
+"""
+This class contains the functions to write a mesh file in PFLOTRAN unstructured explicit format
+"""
+
 import os
 from typing import TYPE_CHECKING
 
@@ -9,9 +13,6 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 
 class PflotranExplicitWriter:
-    """
-    This class contains the functions to write a mesh file in PFLOTRAN unstructured explicit format
-    """
     def write_cells(self, export_file):
         export_file.write(f"CELLS {len(self.elements)}\n")
         for element in self.elements:

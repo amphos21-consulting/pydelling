@@ -1,3 +1,7 @@
+"""
+This class contains the function to write a mesh file in PFLOTRAN unstructured implicit format
+"""
+
 import numpy as np
 from typing import TYPE_CHECKING
 
@@ -8,9 +12,6 @@ if TYPE_CHECKING:
 
 
 class PflotranImplicitWriter(BaseWriter):
-    """
-    This class contains the function to write a mesh file in PFLOTRAN unstructured implicit format
-    """
 
     def write_elements(self, export_file):
         export_file.write(f"ELEMENTS {self.mesh_info['n_elements']}\n")
