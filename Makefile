@@ -17,7 +17,7 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 docs-install: ## Install documentation dependencies
-	pip install mkdocs mkdocs-material mkdocstrings[python] mkdocstrings-python
+	pip install mkdocs mkdocs-gen-files mkdocs-literate-nav mkdocs-material mkdocstrings[python] mkdocstrings-python pymdown-extensions mike
 
 docs-serve: ## Serve documentation locally for development
 	mkdocs serve --dev-addr=0.0.0.0:8000

@@ -44,7 +44,7 @@ build-docs:
   stage: build-docs
   image: python:3.11
   script:
-    - pip install --cache-dir "$PIP_CACHE_DIR" mkdocs mkdocs-material "mkdocstrings[python]" mkdocstrings-python pymdown-extensions mike
+    - pip install --cache-dir "$PIP_CACHE_DIR" mkdocs mkdocs-gen-files mkdocs-literate-nav mkdocs-material "mkdocstrings[python]" mkdocstrings-python pymdown-extensions mike
     - |
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
         mkdocs build --strict --site-dir site
