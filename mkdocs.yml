@@ -5,6 +5,16 @@ repo_url: https://gitlab.amphos21.com/aitirga/pydelling
 repo_name: GitLab Repository
 edit_uri: edit/main/docs/
 
+exclude_docs: |
+  readers/api.md
+  writers/api.md
+  preprocessing/api.md
+  postprocessing/api.md
+  managers/api.md
+  interpolation/api.md
+  utilities/api.md
+  paraview_processor/api.md
+
 # Navigation
 nav:
   - Home: index.md
@@ -16,14 +26,7 @@ nav:
   - API Reference:
     - Overview: api-reference.md
     - Configuration: config.md
-    - Readers: readers/api.md
-    - Writers: writers/api.md
-    - Preprocessing: preprocessing/api.md
-    - Postprocessing: postprocessing/api.md
-    - Managers: managers/api.md
-    - Interpolation: interpolation/api.md
-    - Utilities: utilities/api.md
-    - ParaView Processor: paraview_processor/api.md
+    - Modules: reference/
   
   - Examples:
     - Code Snippets: examples/code-snippets.md
@@ -143,6 +146,11 @@ markdown_extensions:
 # Plugins
 plugins:
   - search
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
   
   - mkdocstrings:
       default_handler: python
@@ -197,4 +205,4 @@ extra:
   generator: false
 
 # Copyright
-copyright: Copyright &copy; 2024 Amphos 21
+copyright: Copyright &copy; 2026 Amphos 21
