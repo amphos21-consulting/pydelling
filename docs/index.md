@@ -64,6 +64,21 @@ This documentation is organized into several sections:
 - **API Reference**: Detailed documentation for all modules and classes
 - **Examples**: Real-world use cases and code snippets
 
+The API documentation is automatically generated from the docstrings using the Google style.
+```python
+    """Example function with PEP 484 type annotations.
+
+    Args:
+        param1: The first parameter.
+        param2: The second parameter.
+
+    Returns:
+        The return value. True for success, False otherwise.
+
+    """
+```
+For more information visit [Napoleon's documentation](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+
 ## Community & Support
 
 pydelling is an active, collaborative project with regular updates and new features. We welcome contributions and feedback from the community.
