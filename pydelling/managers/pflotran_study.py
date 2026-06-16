@@ -113,11 +113,24 @@ class PflotranStudy(BaseStudy):
 
     def get_line_after_finding(self, given_lines: list, file_lines: list) -> int:
         """
-        given_lines and file_lines must be lists of strings.
-        
-        Args:
-            given_lines (list): Description.
-            file_lines (list): Description.
+        This method first looks at the first string of the ``given_lines`` list and finds the first line of ``file_lines``
+        that starts with that string. Then, continuing from that position in the file, it looks at the second string
+        of ``given_lines`` and finds a line that starts with that string. It keeps doing this until the
+        ``given_lines`` list is exhausted. Afterwards, it returns the line index where it ended (i.e., the line
+        from ``file_lines`` that starts like the last element in ``given_lines``).
+
+        If the sequence of lines is not found (e.g., because the order is wrong or some line does not exist) it
+        raises a ``LineNotFound`` exception.
+
+        Note:
+            Leading spaces are ignored. That is, ``"    This is a test"`` is considered to start with ``"This is"``.
+
+        Parameters:
+            given_lines: List of strings. Lines that should be found in the file.
+            file_lines: List of strings. Lines of the file that is being scanned.
+
+        Returns:
+            Line index where the search ended. That is, line that starts like the last element in ``given lines``.
         """
         given_line_i = 0
         for line_i, line in enumerate(file_lines):
@@ -137,12 +150,18 @@ class PflotranStudy(BaseStudy):
 
     def replace_after_finding(self, prev_lines: list, new_line: str, offset: int=0):
         """
-        prev_lines must be a list of strings.
-        
-        Args:
-            prev_lines (list): Description.
-            new_line (str): Description.
-            offset (int): Description.
+        This method first scans the file until it has found all the lines in the ``prev_lines`` list, in the specified
+        order but not necessarily consecutive. See ``get_line_after_finding`` for a more detailed explanation
+        of this step. Afterwards, it replaces the line in the ``[current position+offset]`` index by the ``new_line`` string.
+
+        Parameters:
+            prev_lines: List of strings. Lines that should first be found in the file before moving down ``offset`` and replacing.
+            new_line: String. The corresponding line will be replaced with this string.
+            offset: After finding the last line from ``prev_lines`` in the file, move down this amount of lines and perform the replacement.
+
+        E.g. ``replace_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2)`` looks for
+        a line starting with ``"REGION fracture"``, then keeps going until the first line that starts with
+        ``"COORDINATES"``, and finally replaces the line 2 positions below by ``"    1. 1. 1."``.
         """
         file_lines = self.raw_text.splitlines()
 
@@ -152,13 +171,18 @@ class PflotranStudy(BaseStudy):
         self.raw_text = '\n'.join(file_lines)
 
     def add_after_finding(self, prev_lines: list, new_line: str, offset: int=0):
-        """
-        prev_lines must be a list of strings.
-        
-        Args:
-            prev_lines (list): Description.
-            new_line (str): Description.
-            offset (int): Description.
+        """This method first scans the file until it has found all the lines in the ``prev_lines`` list, in the specified
+        order but not necessarily consecutive. See ``get_line_after_finding`` for a more detailed explanation
+        of this step. Afterwards, it inserts the line ``new_line`` in the ``[current position+offset+1]`` index.
+
+        Parameters:
+            prev_lines: List of strings. Lines that should first be found in the file before moving down ``offset`` and adding the new line.
+            new_line: String. This will be the added new line.
+            offset: After finding the last line from ``prev_lines`` in the file, move down this amount of lines and add the new line.
+
+        E.g. ``add_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2)`` looks for
+        a line starting with ``"REGION fracture"``, then keeps going until the first line that starts with
+        ``"COORDINATES"``, and finally adds a line 2 positions below that says ``"    1. 1. 1."``.
         """
         file_lines = self.raw_text.splitlines()
 
@@ -169,11 +193,17 @@ class PflotranStudy(BaseStudy):
 
     def remove_after_finding(self, prev_lines: list, offset: int=0):
         """
-        prev_lines must be a list of strings.
-        
-        Args:
-            prev_lines (list): Description.
-            offset (int): Description.
+        This method first scans the file until it has found all the lines in the ``prev_lines`` list, in the specified
+        order but not necessarily consecutive. See ``get_line_after_finding`` for a more detailed explanation
+        of this step. Afterwards, it removes the line in the ``[current position+offset]`` index.
+
+        Parameters:
+            prev_lines: List of strings. Lines that should first be found in the file before moving down ``offset`` and removing.
+            offset: After finding the last line from ``prev_lines`` in the file, move down this amount of lines and remove the line.
+
+        E.g. ``remove_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2)`` looks for
+        a line starting with ``"REGION fracture"``, then keeps going until the first line that starts with
+        ``"COORDINATES"``, and finally removes the line 2 positions below.
         """
         file_lines = self.raw_text.splitlines()
 
