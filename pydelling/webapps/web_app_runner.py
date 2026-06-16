@@ -1,10 +1,11 @@
+"""This is the base class used to build other webapps."""
+
 import inspect
 import subprocess
 from abc import ABC
 import streamlit as st
 from .base_streamlit_utility_class import BaseStreamlitUtilityClass
 class WebAppRunner(ABC, BaseStreamlitUtilityClass):
-    """This is the base class used to build other webapps."""
     def __init__(self):
         self.source_script_name = None
         if 'threading' not in inspect.stack()[-1][1]:
@@ -26,5 +27,3 @@ class WebAppRunner(ABC, BaseStreamlitUtilityClass):
     def initialize(self):
         """This method initializes the webapp."""
         pass
-
-

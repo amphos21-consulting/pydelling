@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import os
 
 import h5py
@@ -27,6 +33,25 @@ class HDF5RasterWriter(BaseWriter):
                  dilatation_factor=1.0,
                  **kwargs,
                  ):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            dataset_name (Any): Description.
+            data (Any): Description.
+            times (Any): Description.
+            attributes (Any): Description.
+            interpolation_info (Any): Description.
+            n_x (Any): Description.
+            n_y (Any): Description.
+            x_min (Any): Description.
+            x_max (Any): Description.
+            y_min (Any): Description.
+            y_max (Any): Description.
+            dilatation_factor (Any): Description.
+            **kwargs (Any): Description.
+        """
         assert data is not None, "You must provide the data"
         if interpolation_info is not None:
             self.info = interpolation_info
@@ -100,6 +125,12 @@ class HDF5RasterWriter(BaseWriter):
 
 
     def transform_flatten_to_regular_mesh(self, data):
+        """
+        transform_flatten_to_regular_mesh method.
+        
+        Args:
+            data (Any): Description.
+        """
         aux_array = []
         if len(data.shape) == 2:
             for case in data:
@@ -116,12 +147,24 @@ class HDF5RasterWriter(BaseWriter):
         return _data
 
     def _centroid_transform_to_mesh(self, data):
+        """
+        _centroid_transform_to_mesh method.
+        
+        Args:
+            data (Any): Description.
+        """
         assert len(data.shape) >= 1 and data.shape[1] == 3
         _data = data[:, 2]
         _data = np.reshape(_data, (self.info["interpolation"]["n_x"], self.info["interpolation"]["n_y"]))
         return _data
 
     def add_default_attributes(self, hdf5_group: h5py.Dataset):
+        """
+        add_default_attributes method.
+        
+        Args:
+            hdf5_group (h5py.Dataset): Description.
+        """
         dilatation_factor = self.info['interpolation']['dilatation_factor']
         l_x = np.abs(self.info["interpolation"]["x_max"] - self.info["interpolation"]["x_min"])
         l_x_dilatated = np.abs(self.info["interpolation"]["x_max"] - self.info["interpolation"]["x_min"]) * dilatation_factor
@@ -138,6 +181,12 @@ class HDF5RasterWriter(BaseWriter):
         hdf5_group.attrs["Interpolation_Method"] = "STEP"
 
     def run(self, filename=None):
+        """
+        run method.
+        
+        Args:
+            filename (Any): Description.
+        """
         if filename is not None:
             self.filename = filename
 
@@ -175,4 +224,10 @@ class HDF5RasterWriter(BaseWriter):
 
 
     def add_dimension_attribute(self, dimension):
+        """
+        add_dimension_attribute method.
+        
+        Args:
+            dimension (Any): Description.
+        """
         self.attributes["Dimension"] = dimension

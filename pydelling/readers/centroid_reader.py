@@ -1,5 +1,7 @@
 """
 Centroid file reader
+
+
 """
 import logging
 
@@ -14,6 +16,18 @@ logger = logging.getLogger(__name__)
 class CentroidReader(BaseReader):
     """This class reads a data file described by a set of centroids"""
     def __init__(self, filename, var_pos=3, var_name="var", var_type=np.float32, centroid_pos=(0, 3), header=False, separator=None):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            var_pos (Any): Description.
+            var_name (Any): Description.
+            var_type (Any): Description.
+            centroid_pos (Any): Description.
+            header (Any): Description.
+            separator (Any): Description.
+        """
         self.var_pos = var_pos
         self.var = None
         self.var_name = var_name
@@ -35,6 +49,9 @@ class CentroidReader(BaseReader):
     def read_file(self, opened_file):
         """
         Reads the data and stores it inside the class
+        
+        Args:
+            opened_file (Any): Description.
         """
         logger.info(f"Reading centroid file from {self.filename}")
         temp_centroid = []
@@ -63,7 +80,9 @@ class CentroidReader(BaseReader):
     def get_data(self, as_dataframe=False) -> pd.DataFrame:
         """
         Outputs the data
-        :return: np.ndarray object containing centroid information and variable output
+        
+        Args:
+            as_dataframe (Any): Description.
         """
         if as_dataframe:
             if self.var_pos:
@@ -87,8 +106,10 @@ class CentroidReader(BaseReader):
     def to_csv(self, output_file, delimiter=","):
         """
         Writes the data into a csv file
-        :param output_file:
-        :return:
+        
+        Args:
+            output_file (Any): Description.
+            delimiter (Any): Description.
         """
         logger.info(f"Starting dump into {output_file}")
         np.savetxt(output_file, self.get_data(), delimiter=delimiter)

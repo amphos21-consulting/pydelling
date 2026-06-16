@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from pydelling.paraview_processor.filters import base_filter
 try:
     from paraview.simple import *
@@ -10,6 +16,13 @@ class TecplotFilter(base_filter):
     counter: int = 0
 
     def __init__(self, filename, name):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            name (Any): Description.
+        """
         super().__init__(name=name)
         self.filter = TecplotReader(FileNames=str(filename))
         TecplotFilter.counter += 1

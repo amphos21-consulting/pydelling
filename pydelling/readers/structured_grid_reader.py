@@ -1,5 +1,7 @@
 """
 Centroid file reader
+
+
 """
 import logging
 
@@ -12,6 +14,17 @@ logger = logging.getLogger(__name__)
 
 class StructuredGridReader(BaseReader):
     def __init__(self, filename, var_pos=3, var_name="var", var_type=np.float32, centroid_pos=(0, 3), header=False):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            var_pos (Any): Description.
+            var_name (Any): Description.
+            var_type (Any): Description.
+            centroid_pos (Any): Description.
+            header (Any): Description.
+        """
         self.var_pos = None
         self.var = None
         self.var_name = None
@@ -25,6 +38,12 @@ class StructuredGridReader(BaseReader):
                          header=header)
 
     def read_file(self, opened_file: BaseReader):
+        """
+        read_file method.
+        
+        Args:
+            opened_file (BaseReader): Description.
+        """
         temp_centroid = []
         temp_id = []
         for line in opened_file.readlines():
@@ -63,8 +82,10 @@ class StructuredGridReader(BaseReader):
     def dump_to_csv(self, output_file, delimiter=","):
         """
         Writes the data into a csv file
-        :param output_file:
-        :return:
+        
+        Args:
+            output_file (Any): Description.
+            delimiter (Any): Description.
         """
         print(f"Starting dump into {output_file}")
         np.savetxt(output_file, self.get_data(), delimiter=delimiter)

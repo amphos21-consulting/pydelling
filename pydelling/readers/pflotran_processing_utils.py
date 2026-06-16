@@ -1,9 +1,14 @@
+"""
+This class contains utility functions to use on the PflotranReader class
+
+
+"""
+
 import numpy as np
 import pandas as pd
 import h5py
 
 class PflotranProcessingUtils:
-    """This class contains utility functions to use on the PflotranReader class"""
     variables: list
     coordinates: np.ndarray
     data: h5py.File
@@ -15,7 +20,14 @@ class PflotranProcessingUtils:
     }
 
     def get_slice(self, data: np.ndarray, axis: str, index: int) -> np.ndarray:
-        """This function returns a slice of the data array along the axis and index provided"""
+        """
+        This function returns a slice of the data array along the axis and index provided
+        
+        Args:
+            data (np.ndarray): Description.
+            axis (str): Description.
+            index (int): Description.
+        """
         assert len(data.shape) == 3, "The full data array must be provided"
         assert axis in ['x', 'y', 'z'], "The axis must be x, y, or z"
 
@@ -27,7 +39,14 @@ class PflotranProcessingUtils:
             return data[:, :, index]
 
     def get_slice_from_coordinates(self, data: np.ndarray, axis: str, coordinate: float) -> np.ndarray:
-        """This function returns a slice of the data array along the axis and index provided"""
+        """
+        This function returns a slice of the data array along the axis and index provided
+        
+        Args:
+            data (np.ndarray): Description.
+            axis (str): Description.
+            coordinate (float): Description.
+        """
         assert len(data.shape) == 3, "The full data array must be provided"
         assert axis in ['x', 'y', 'z'], "The axis must be x, y, or z"
 
@@ -55,7 +74,12 @@ class PflotranProcessingUtils:
 
 
     def get_shape_dimensions(self, data: np.ndarray) -> tuple:
-        """This function returns the cartesians dimensions present on a data array"""
+        """
+        This function returns the cartesians dimensions present on a data array
+        
+        Args:
+            data (np.ndarray): Description.
+        """
         dims = ''
         if data.shape[0] > 1:
             dims += 'x'
@@ -67,7 +91,12 @@ class PflotranProcessingUtils:
 
 
     def axis_centroids(self, axis):
-        """This function returns the centroids of the axis provided"""
+        """
+        This function returns the centroids of the axis provided
+        
+        Args:
+            axis (Any): Description.
+        """
         assert axis in ['x', 'y', 'z'], "The axis must be x, y, or z"
         axis = self.axis_translator[axis]
         return np.diff(self.coordinates[axis]) + self.coordinates[axis][0:-1]
@@ -130,6 +159,3 @@ class PflotranProcessingUtils:
     @property
     def z_spacing(self):
         return np.diff(self.coordinates['z[m]'])
-
-
-

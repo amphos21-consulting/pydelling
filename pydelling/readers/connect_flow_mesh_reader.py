@@ -1,4 +1,5 @@
-"""Reader for the CONNECTFLOW mesh
+"""
+Reader for the CONNECTFLOW mesh
 ==================================
 
 This module allows the user to read ConnectFlow mesh.
@@ -6,6 +7,8 @@ This module allows the user to read ConnectFlow mesh.
 The module contains the following functions:
 
 - `read_file(filename)` - Reads the ConnectFlow mesh.
+
+
 """
 import logging
 import numpy as np
@@ -27,6 +30,14 @@ class ConnectFlowMeshReader(MeshPreprocessor):
                  kd_tree=True,
                  st_file=False,
                  ):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            kd_tree (Any): Description.
+            st_file (Any): Description.
+        """
         super().__init__()
         # temporary variables...
         self.nodes_tmp = []
@@ -40,6 +51,9 @@ class ConnectFlowMeshReader(MeshPreprocessor):
     def _map_file(self, filename):
         """
         Gets the id line where starts and ends coordinates and connectivities.
+        
+        Args:
+            filename (Any): Description.
         """
         # Open file.
         with open(filename, mode="r") as f:
@@ -59,8 +73,8 @@ class ConnectFlowMeshReader(MeshPreprocessor):
     def read_file(self, filename):
         """Reads coordinates and elements of the CONNECTFLOW mesh.
 
-        Parameters:
-            filename : Path of the ConnectFlow mesh.
+        Args:
+            filename (str | Path): Path of the ConnectFlow mesh.
 
         """
         self._map_file(filename)
@@ -100,6 +114,12 @@ class ConnectFlowMeshReader(MeshPreprocessor):
 
 
     def _read_file(self, filename):
+        """
+        _read_file method.
+        
+        Args:
+            filename (Any): Description.
+        """
         with open(filename, 'r') as f:
             first_line = f.readline()
             number_of_nodes = int(first_line.split()[0])

@@ -1,8 +1,9 @@
+"""This webapp allows to run PFLOTRAN simulations on JURECA and visualize the evolution"""
+
 from pydelling.webapps import WebAppRunner
 import streamlit as st
 
 class PflotranRunnerWebapp(WebAppRunner):
-    """This webapp allows to run PFLOTRAN simulations on JURECA and visualize the evolution"""
     def construct(self):
         txt = st.text_area('Text to analyze', '''
              It was the best of times, it was the worst of times, it was

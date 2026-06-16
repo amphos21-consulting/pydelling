@@ -1,3 +1,9 @@
+"""
+This class implements the PlotOverLine paraview filter
+
+
+"""
+
 from pydelling.paraview_processor.filters import base_filter
 try:
     from paraview.simple import *
@@ -13,13 +19,20 @@ import numpy as np
 
 
 class PlotOverLineFilter(base_filter):
-    """
-    This class implements the PlotOverLine paraview filter
-    """
     filter_type: str = "PlotOverLineFilter"
     counter: int = 0
 
     def __init__(self, input_filter, name, point_1=None, point_2=None, n_line=None):
+        """
+        __init__ method.
+        
+        Args:
+            input_filter (Any): Description.
+            name (Any): Description.
+            point_1 (Any): Description.
+            point_2 (Any): Description.
+            n_line (Any): Description.
+        """
         super().__init__(name=name)
         PlotOverLineFilter.counter += 1
         self.filter = PlotOverLine(Input=input_filter)
@@ -66,5 +79,3 @@ class PlotOverLineFilter(base_filter):
             else:
                 pd_df[key] = temp_dataset
         return pd_df.dropna()
-
-

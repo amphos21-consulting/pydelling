@@ -1,3 +1,9 @@
+"""
+Class used as a basecase class for the different Paraview filters
+
+
+"""
+
 import numpy as np
 import pandas as pd
 
@@ -16,9 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseFilter:
-    """
-    Class used as a basecase class for the different Paraview filters
-    """
     filter_type: str = "VTK_reader"
     counter: int = 0
     filter: object
@@ -31,6 +34,12 @@ class BaseFilter:
     z_max: float
 
     def __init__(self, name):
+        """
+        __init__ method.
+        
+        Args:
+            name (Any): Description.
+        """
         self.name = name
 
 
@@ -120,6 +129,9 @@ class BaseFilter:
     def to_csv(self, filename=None):
         """
         This method exports the current filter's data into a csv file
+        
+        Args:
+            filename (Any): Description.
         """
         filename = filename if filename else f"{self.name}_filter_data.csv"
         SaveData(filename=filename, proxy=self.filter)

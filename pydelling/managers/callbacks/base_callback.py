@@ -1,3 +1,8 @@
+"""Base callback interfaces used by study managers.
+
+
+"""
+
 from pydelling.managers import BaseManager, BaseStudy
 from abc import ABC, abstractmethod
 import logging
@@ -6,8 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCallback(ABC):
-    """Base class for callbacks."""
     def __init__(self, manager: BaseManager, study: BaseStudy, kind: str = None, **kwargs):
+        """
+        Initialize callback context and user-provided options.
+        
+        Args:
+            manager (BaseManager): Description.
+            study (BaseStudy): Description.
+            kind (str): Description.
+            **kwargs (Any): Description.
+        """
         self.manager = manager
         self.study = study
         assert kind in ['pre', 'post'], f"Kind must be 'pre' or 'post', not {kind}"
@@ -27,8 +40,9 @@ class BaseCallback(ABC):
         pass
 
     def process_kwargs(self):
+        """Expose callback kwargs as instance attributes.
+
+        
+        """
         for kwarg_name, kwarg in self.kwargs.items():
             setattr(self, kwarg_name, kwarg)
-
-
-

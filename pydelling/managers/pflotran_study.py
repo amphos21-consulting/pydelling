@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from .base_study import BaseStudy
 import logging
 from typing import Union, List, Dict
@@ -11,7 +17,13 @@ class PflotranStudy(BaseStudy):
     """This class extends the BaseStudy class to manage PFLOTRAN related simulations.
     """
     def __init__(self, input_file: str, *args, **kwargs):
-        """This method initializes the class.
+        """
+        This method initializes the class.
+        
+        Args:
+            input_file (str): Description.
+            *args (Any): Description.
+            **kwargs (Any): Description.
         """
         super().__init__(input_file, *args, **kwargs)
         self.regions_to_idx = {}
@@ -30,7 +42,12 @@ class PflotranStudy(BaseStudy):
         return regions
 
     def get_simulation_time(self, time_unit: str = 'y'):
-        """This method returns the output time series of the simulation"""
+        """
+        This method returns the output time series of the simulation
+        
+        Args:
+            time_unit (str): Description.
+        """
         time_lines = self._get_line(self._find_tags('FINAL_TIME')[0])
         value = time_lines.split()[1]
         value_unit = time_lines.split()[2]
@@ -50,14 +67,26 @@ class PflotranStudy(BaseStudy):
         return None
 
     def replace_simulation_time(self, new_time: float, time_unit: str = 'y'):
-        """This method replaces the simulation time of the simulation.
+        """
+        This method replaces the simulation time of the simulation.
+        
+        Args:
+            new_time (float): Description.
+            time_unit (str): Description.
         """
         time_lines = self._find_tags('FINAL_TIME')
         new_time = self.convert_time(value=new_time, initial_unit=time_unit, final_unit=time_unit)
         self._replace_line(line_index=time_lines[0], new_line=['FINAL_TIME', str(new_time), time_unit])
 
     def replace_parameter(self, label: str, new_value: float, inside: float, time_unit: str = 'y'):
-        """This method replaces the value of a parameter.
+        """
+        This method replaces the value of a parameter.
+        
+        Args:
+            label (str): Description.
+            new_value (float): Description.
+            inside (float): Description.
+            time_unit (str): Description.
         """
         if inside != 0:
             inside = inside
@@ -68,7 +97,14 @@ class PflotranStudy(BaseStudy):
         self._replace_line(line_index=parameter_lines[0] + inside, new_line=[label[1], str(new_value)])
 
     def replace_material_properties(self, new_perm: float, new_porosity: float, new_vertical_anisotropy: float, material_name: str = ''):
-        """This method replaces the simulation time of the simulation.
+        """
+        This method replaces the simulation time of the simulation.
+        
+        Args:
+            new_perm (float): Description.
+            new_porosity (float): Description.
+            new_vertical_anisotropy (float): Description.
+            material_name (str): Description.
         """
         material_lines = self._find_tags('MATERIAL_PROPERTY ' + material_name)
         self._replace_line(line_index=material_lines[0] + 2, new_line=['POROSITY', str(new_porosity)])
@@ -78,17 +114,10 @@ class PflotranStudy(BaseStudy):
     def get_line_after_finding(self, given_lines: list, file_lines: list) -> int:
         """
         given_lines and file_lines must be lists of strings.
-
-        This method first looks at the first string of the given_lines list and finds the first line of the file
-        that starts with that string. Then, continuing from that position in the file, it looks at the second string
-        of given_lines and finds a line that starts with that string. It keeps doing this until the prev_lines list
-        is exhausted. Afterwards, it returns the line index where it ended (i.e., a line that starts like the last
-        element in given_lines).
-
-        If the sequence of lines is not found (e.g., because the order is wrong or some line does not exist) it
-        returns a LineNotFound exception.
-
-        Leading spaces are ignored. That is, "    This is a test" is considered to start with "This is".
+        
+        Args:
+            given_lines (list): Description.
+            file_lines (list): Description.
         """
         given_line_i = 0
         for line_i, line in enumerate(file_lines):
@@ -109,14 +138,11 @@ class PflotranStudy(BaseStudy):
     def replace_after_finding(self, prev_lines: list, new_line: str, offset: int=0):
         """
         prev_lines must be a list of strings.
-
-        This method scans the file until it has found all the lines in the prev_lines list, in the specified
-        order but not necessarily consecutive. See get_line_after_finding for a more detailed explanation
-        of this step. Afterwards, it replaces the line in the [current position+offset] index by the new_line string.
-
-        e.g. replace_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2) looks for
-        a line starting with "REGION fracture", then keeps going until the first line that starts with
-        "COORDINATES", and finally replaces the line 2 positions below by "    1. 1. 1.".
+        
+        Args:
+            prev_lines (list): Description.
+            new_line (str): Description.
+            offset (int): Description.
         """
         file_lines = self.raw_text.splitlines()
 
@@ -128,14 +154,11 @@ class PflotranStudy(BaseStudy):
     def add_after_finding(self, prev_lines: list, new_line: str, offset: int=0):
         """
         prev_lines must be a list of strings.
-
-        This method scans the file until it has found all the lines in the prev_lines list, in the specified
-        order but not necessarily consecutive. See get_line_after_finding for a more detailed explanation
-        of this step. Afterwards, it inserts the line new_line in the [current position+offset+1] index.
-
-        e.g. add_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2) looks for
-        a line starting with "REGION fracture", then keeps going until the first line that starts with
-        "COORDINATES", and finally adds a line 2 positions below that says "    1. 1. 1.".
+        
+        Args:
+            prev_lines (list): Description.
+            new_line (str): Description.
+            offset (int): Description.
         """
         file_lines = self.raw_text.splitlines()
 
@@ -147,14 +170,10 @@ class PflotranStudy(BaseStudy):
     def remove_after_finding(self, prev_lines: list, offset: int=0):
         """
         prev_lines must be a list of strings.
-
-        This method scans the file until it has found all the lines in the prev_lines list, in the specified
-        order but not necessarily consecutive. See get_line_after_finding for a more detailed explanation
-        of this step. Afterwards, it removes the line in the [current position+offset] index.
-
-        e.g. remove_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2) looks for
-        a line starting with "REGION fracture", then keeps going until the first line that starts with
-        "COORDINATES", and finally removes the line 2 positions below.
+        
+        Args:
+            prev_lines (list): Description.
+            offset (int): Description.
         """
         file_lines = self.raw_text.splitlines()
 
@@ -164,7 +183,11 @@ class PflotranStudy(BaseStudy):
         self.raw_text = '\n'.join(file_lines)
 
     def get_region_file(self, region: str) -> Union[str, None]:
-        """This method returns the file of the region.
+        """
+        This method returns the file of the region.
+        
+        Args:
+            region (str): Description.
         """
         self.get_regions()
         region_line = self.regions_to_idx[region]
@@ -188,7 +211,12 @@ class PflotranStudy(BaseStudy):
         return datasets
 
     def replace_region_file(self, region: str, new_file: str):
-        """This method replaces the file of the region.
+        """
+        This method replaces the file of the region.
+        
+        Args:
+            region (str): Description.
+            new_file (str): Description.
         """
         self.get_regions()
         old_file = self.get_region_file(region)
@@ -201,7 +229,12 @@ class PflotranStudy(BaseStudy):
                 self._replace_line(line_index=line_idx, new_line=['FILE', new_file])
 
     def add_checkpoint(self, times: Union[float, List[float]], time_unit: str = 'y'):
-        """This method adds a checkpoint to the simulation.
+        """
+        This method adds a checkpoint to the simulation.
+        
+        Args:
+            times (Union[float, List[float]]): Description.
+            time_unit (str): Description.
         """
         logger.info(f"Adding checkpoint at {times} {time_unit}")
         if isinstance(times, float) or isinstance(times, int):
@@ -229,6 +262,12 @@ class PflotranStudy(BaseStudy):
 
     def add_restart(self, filename: str):
         # Find simulation block
+        """
+        add_restart method.
+        
+        Args:
+            filename (str): Description.
+        """
         simulation_block_idx = self._get_block_line_idx(self._find_tags('SIMULATION')[0])
         # Find the last line of the simulation block
         last_line_idx = simulation_block_idx[-1]
@@ -238,7 +277,13 @@ class PflotranStudy(BaseStudy):
         self._add_line(line_index=last_line_idx + 2, new_line=['/'])
 
     def add_dataset(self, name: str, filename: str, hdf5_dataset_name: str):
-        """This method adds a dataset to the simulation.
+        """
+        This method adds a dataset to the simulation.
+        
+        Args:
+            name (str): Description.
+            filename (str): Description.
+            hdf5_dataset_name (str): Description.
         """
         logger.info(f"Adding dataset {name} to the simulation")
         # Find simulation block
@@ -272,12 +317,20 @@ class PflotranStudy(BaseStudy):
                 return idx
 
     def has_tag(self, tag: str):
-        """This method returns True if the tag is in the input file.
+        """
+        This method returns True if the tag is in the input file.
+        
+        Args:
+            tag (str): Description.
         """
         return len(self._find_tags(tag)) > 0
 
     def _get_parent_tag_name(self, line_index: int):
-        """This method returns the parent tag of the line.
+        """
+        This method returns the parent tag of the line.
+        
+        Args:
+            line_index (int): Description.
         """
         # Find the previous END tag
         has_end_tag = False
@@ -299,7 +352,11 @@ class PflotranStudy(BaseStudy):
         return temp_list[-2].split()[0]
 
     def _get_block_lines(self, line_index: int):
-        """This method returns the lines of the block.
+        """
+        This method returns the lines of the block.
+        
+        Args:
+            line_index (int): Description.
         """
         # Find the previous END tag
         has_end_tag = False
@@ -318,7 +375,11 @@ class PflotranStudy(BaseStudy):
         return temp_list
 
     def _get_block_line_idx(self, line_index: int):
-        """This method returns the lines of the block.
+        """
+        This method returns the lines of the block.
+        
+        Args:
+            line_index (int): Description.
         """
         # Find the previous END tag
         has_end_tag = False

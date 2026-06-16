@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import unittest
 import numpy.testing as nptest
 import numpy as np
@@ -16,6 +22,13 @@ from pydelling.utils.sub_fish_module import SubfishException
 class RenameUnpickler(pickle.Unpickler):
     def find_class(self, module, name):
         # Map old module names to new ones
+        """
+        find_class method.
+        
+        Args:
+            module (Any): Description.
+            name (Any): Description.
+        """
         renamed_modules = {
             'pydelling.preprocessing.dfn_preprocessor.Fracture': 'pydelling.preprocessing.dfn_preprocessor.fracture',
             'pydelling.preprocessing.BasePreprocessing': 'pydelling.preprocessing.base_preprocessing',

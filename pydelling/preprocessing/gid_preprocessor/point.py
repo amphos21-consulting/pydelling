@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import logging
 from typing import List
 
@@ -13,6 +19,12 @@ class Point(_AbstractGidObject):
     global_id: int = 1
     points: List = []
     def __init__(self, coords):
+        """
+        __init__ method.
+        
+        Args:
+            coords (Any): Description.
+        """
         self.local_id = Point.local_id
         self.id = None
         Point.local_id += 1

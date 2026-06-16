@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from pathlib import Path
 
 import meshio
@@ -18,6 +24,19 @@ class Fault:
                  effective_aperture=None,
                  ):
 
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+            mesh (Any): Description.
+            polygon (Any): Description.
+            aperture (Any): Description.
+            transmissivity (Any): Description.
+            porosity (Any): Description.
+            storativity (Any): Description.
+            effective_aperture (Any): Description.
+        """
         if filename is not None:
             self.meshio_mesh = meshio.read(filename)
         if mesh is not None:
@@ -36,6 +55,13 @@ class Fault:
     def distance(self, points: np.ndarray, n_max: int = 2500):
         # if len(points) == 0:
             # return np.array([])
+        """
+        distance method.
+        
+        Args:
+            points (np.ndarray): Description.
+            n_max (int): Description.
+        """
         if points.shape[0] == 3:
             points = points.reshape(-1, 3)
         # Divide the points into chunks of n_max
@@ -48,7 +74,12 @@ class Fault:
         return np.concatenate(distances)
 
     def _to_obj(self, global_id=0):
-        """Converts the fault to an obj file"""
+        """
+        Converts the fault to an obj file
+        
+        Args:
+            global_id (Any): Description.
+        """
         str_obj = ""
         for i, f in enumerate(self.meshio_mesh.points):
             str_obj += f"v {f[0]} {f[1]} {f[2]}\n"
@@ -61,6 +92,13 @@ class Fault:
         return str_obj
 
     def to_obj(self, filename=None, global_id=1):
+        """
+        to_obj method.
+        
+        Args:
+            filename (Any): Description.
+            global_id (Any): Description.
+        """
         str_obj = self._to_obj(global_id=global_id)
         if filename is not None:
             with open(filename, 'w') as f:

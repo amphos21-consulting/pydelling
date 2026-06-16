@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from typing import List
 
 import numpy as np
@@ -31,6 +37,25 @@ class Fracture(object):
         normal_vector=None,
         polygon: List[np.ndarray] = None,
     ):
+        """
+        __init__ method.
+        
+        Args:
+            x (Any): Description.
+            y (Any): Description.
+            z (Any): Description.
+            dip (Any): Description.
+            dip_dir (Any): Description.
+            size (Any): Description.
+            aperture (Any): Description.
+            hydraulic_aperture (Any): Description.
+            rock_type (Any): Description.
+            aperture_constant (Any): Description.
+            transmissivity_constant (Any): Description.
+            storativity_constant (Any): Description.
+            normal_vector (Any): Description.
+            polygon (List[np.ndarray]): Description.
+        """
         if normal_vector is not None:
             self._unit_normal_vector: np.ndarray = normal_vector
         self.side_points = None
@@ -217,6 +242,12 @@ class Fracture(object):
         return np.array([A, B, C, D])
 
     def get_side_points(self, method="v1"):
+        """
+        get_side_points method.
+        
+        Args:
+            method (Any): Description.
+        """
         if self._side_points is not None:
             return self._side_points
         if method == "v1":
@@ -227,7 +258,13 @@ class Fracture(object):
             return self.get_side_points_v3()
 
     def to_obj(self, global_id=0, method="v1"):
-        """Converts the fracture to an obj file"""
+        """
+        Converts the fracture to an obj file
+        
+        Args:
+            global_id (Any): Description.
+            method (Any): Description.
+        """
         side_points = self.get_side_points(method=method)
         if isinstance(side_points[0], np.ndarray):
             side_points = [side_point.tolist() for side_point in side_points]
@@ -260,7 +297,12 @@ class Fracture(object):
         return self._unit_normal_vector
 
     def distance_to_point(self, point: np.ndarray):
-        """Returns the minimum distance to a point from the fracture plane"""
+        """
+        Returns the minimum distance to a point from the fracture plane
+        
+        Args:
+            point (np.ndarray): Description.
+        """
         a = self.unit_normal_vector[0]
         b = self.unit_normal_vector[1]
         c = self.unit_normal_vector[2]
@@ -281,7 +323,13 @@ class Fracture(object):
         return np.array([x_min, x_max, y_min, y_max, z_min, z_max])
 
     def point_inside_bounding_box(self, point: np.ndarray, scale_factor=0.0):
-        """Returns if a point is inside the bounding box of the fracture"""
+        """
+        Returns if a point is inside the bounding box of the fracture
+        
+        Args:
+            point (np.ndarray): Description.
+            scale_factor (Any): Description.
+        """
         bounding_box = self.get_bounding_box()
         lx = bounding_box[1] - bounding_box[0]
         ly = bounding_box[3] - bounding_box[2]
@@ -447,7 +495,14 @@ class Fracture(object):
         return False
 
     def shift(self, x, y, z):
-        """Shifts the fracture"""
+        """
+        Shifts the fracture
+        
+        Args:
+            x (Any): Description.
+            y (Any): Description.
+            z (Any): Description.
+        """
         self.x_centroid += x
         self.y_centroid += y
         self.z_centroid += z
@@ -462,7 +517,12 @@ class Fracture(object):
         return np.argmax(self.unit_normal_vector)
 
     def compute_aperture(self, const=3.020e-3):
-        """Computes the aperture of the fracture"""
+        """
+        Computes the aperture of the fracture
+        
+        Args:
+            const (Any): Description.
+        """
         if self._aperture is not None:
             return self._aperture
         else:

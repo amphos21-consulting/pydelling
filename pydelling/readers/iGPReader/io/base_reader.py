@@ -1,3 +1,5 @@
+"""Base class for the different reader subclasses"""
+
 from typing import Dict
 
 import pandas as pd
@@ -5,7 +7,6 @@ from copy import deepcopy
 
 
 class BaseReader:
-    """Base class for the different reader subclasses"""
     filename: str
     data: Dict[str, pd.DataFrame]
 

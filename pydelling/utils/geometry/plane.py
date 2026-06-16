@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from __future__ import annotations
 
 from typing import List
@@ -11,6 +17,13 @@ from .vector import Vector
 
 class Plane(BasePrimitive):
     def __init__(self, point: Point or List or np.ndarray, normal: List or Vector or np.ndarray):
+        """
+        __init__ method.
+        
+        Args:
+            point (Point or List or np.ndarray): Description.
+            normal (List or Vector or np.ndarray): Description.
+        """
         self.p = Point(point)
         self.n = Vector(normal)
 
@@ -21,7 +34,12 @@ class Plane(BasePrimitive):
         return f"Plane(point:{self.p}, normal:{self.n})"
 
     def intersect(self, primitive: BasePrimitive):
-        """Returns the intersection of this plane with the given primitive"""
+        """
+        Returns the intersection of this plane with the given primitive
+        
+        Args:
+            primitive (BasePrimitive): Description.
+        """
         from .intersections import intersect_plane_plane, intersect_plane_line, intersect_plane_segment
         if primitive.__class__.__name__ == "Plane":
             return intersect_plane_plane(plane_1=self, plane_2=primitive)
@@ -34,7 +52,12 @@ class Plane(BasePrimitive):
             raise NotImplementedError(f"Intersection with {type(primitive)} is not implemented")
 
     def is_parallel(self, plane: Plane):
-        """Returns True if this plane is parallel to the given plane"""
+        """
+        Returns True if this plane is parallel to the given plane
+        
+        Args:
+            plane (Plane): Description.
+        """
         if np.isclose(np.dot(self.n, plane.n), 1):
             return True
         if np.isclose(np.dot(self.n, plane.n), -1):

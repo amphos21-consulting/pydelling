@@ -1,3 +1,9 @@
+"""
+This class reads borehole information from csv files and processes it to automatically assign to the mesh
+
+
+"""
+
 import logging
 from pathlib import Path
 from typing import Dict, TYPE_CHECKING
@@ -17,8 +23,14 @@ import matplotlib.pyplot as plt
 
 
 class BoreholeReader(BaseReader):
-    """This class reads borehole information from csv files and processes it to automatically assign to the mesh"""
     def __init__(self, igp_reader=None, filename=None):
+        """
+        __init__ method.
+        
+        Args:
+            igp_reader (Any): Description.
+            filename (Any): Description.
+        """
         self.filename = filename if filename else config.data_files.borehole_data if config.data_files.borehole_data else None
         self.igp_reader = igp_reader
         self.boreholes_info = {}
@@ -119,7 +131,12 @@ class BoreholeReader(BaseReader):
             self.borehole_plot(variable='Porosity (-)')
 
     def borehole_plot(self, variable) -> [plt.Figure, plt.Axes]:
-        """This method plots the permeability and porosity values taken from the boreholes for each material"""
+        """
+        This method plots the permeability and porosity values taken from the boreholes for each material
+        
+        Args:
+            variable (Any): Description.
+        """
         logger.info(f'Plotting borehole {variable} data vs "Z (mAOD)"')
         fig: plt.Figure
         ax: plt.Axes

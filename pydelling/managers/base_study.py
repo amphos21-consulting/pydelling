@@ -1,3 +1,21 @@
+"""
+This class contains the core methods for all the other child Manager classes.
+A manager is supposed to control the simulations run on a given software automatically.
+
+The manager should be able to:
+- Create the input files for the software
+- Modify the input files for the software
+- Run the software
+- Read the output status of the simnulation
+
+The idea to process the input files is the following:
+- Read the raw input file
+- The user can add variables to change, or can specify directly on the input file using {{var}} notation (jinja2)
+- The input file is rendered using jinja2 for each specific case
+
+
+"""
+
 from __future__ import annotations
 from pathlib import Path
 from jinja2 import Template
@@ -16,20 +34,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseStudy(UnitConverter):
-    """This class contains the core methods for all the other child Manager classes.
-    A manager is supposed to control the simulations run on a given software automatically.
-
-    The manager should be able to:
-    - Create the input files for the software
-    - Modify the input files for the software
-    - Run the software
-    - Read the output status of the simnulation
-
-    The idea to process the input files is the following:
-    - Read the raw input file
-    - The user can add variables to change, or can specify directly on the input file using {{var}} notation (jinja2)
-    - The input file is rendered using jinja2 for each specific case
-    """
     count = 0
     shared_folder_default_name = 'shared_folder'
     results_folder_name = None
@@ -40,7 +44,14 @@ class BaseStudy(UnitConverter):
                  is_independent: bool = False,
                  input_file_name: str = None,
                  ):
-        """This method initializes the manager.
+        """
+        This method initializes the manager.
+        
+        Args:
+            input_file (str): Description.
+            study_name (str): Description.
+            is_independent (bool): Description.
+            input_file_name (str): Description.
         """
         if not is_independent:
             self.idx = self.__class__.count
@@ -76,7 +87,13 @@ class BaseStudy(UnitConverter):
         pass
 
     def _replace_with_jinja_variable(self, var, var_name=None, value=None):
-        """This method replaces a variable in the raw text with a jinja variable.
+        """
+        This method replaces a variable in the raw text with a jinja variable.
+        
+        Args:
+            var (Any): Description.
+            var_name (Any): Description.
+            value (Any): Description.
         """
         logger.debug(f"Replacing {var} with jinja variable")
         if var_name is None:
@@ -86,13 +103,25 @@ class BaseStudy(UnitConverter):
 
 
     def replace_variable(self, var, value=None):
-        """This method replaces a variable in the raw defined between {} with a value."""
+        """
+        This method replaces a variable in the raw defined between {} with a value.
+        
+        Args:
+            var (Any): Description.
+            value (Any): Description.
+        """
         logger.info(f"Replacing {var} with value {value}")
         self._replace_with_jinja_variable(var, value=value)
 
 
     def _find_tags(self, tag: str, ignore_case: bool = True, equal: bool = True):
-        """This method finds the line index of the tag in the raw text.
+        """
+        This method finds the line index of the tag in the raw text.
+        
+        Args:
+            tag (str): Description.
+            ignore_case (bool): Description.
+            equal (bool): Description.
         """
         logger.debug(f"Finding tag '{tag}'")
         lines = self.raw_text.splitlines()
@@ -112,7 +141,13 @@ class BaseStudy(UnitConverter):
         return line_idx
 
     def _find_tags_in_subset(self, tags: list, subset: list, ignore_case: bool = True):
-        """This method finds the line index of the tag in the raw text.
+        """
+        This method finds the line index of the tag in the raw text.
+        
+        Args:
+            tags (list): Description.
+            subset (list): Description.
+            ignore_case (bool): Description.
         """
         logger.debug(f"Finding tags '{tags}' in subset")
         if ignore_case:
@@ -121,12 +156,22 @@ class BaseStudy(UnitConverter):
         return [i for i, line in enumerate(subset) if any(tag in line for tag in tags)]
 
     def _get_line(self, line_index: int):
-        """This method returns the line of the raw text.
+        """
+        This method returns the line of the raw text.
+        
+        Args:
+            line_index (int): Description.
         """
         return self.raw_text.splitlines()[line_index]
 
     def _add_line(self, line_index: int, new_line: list, sep: str = ' '):
-        """This method adds a line in the raw text.
+        """
+        This method adds a line in the raw text.
+        
+        Args:
+            line_index (int): Description.
+            new_line (list): Description.
+            sep (str): Description.
         """
         logger.debug(f"Adding line {line_index} with {new_line}")
         lines = self.raw_text.splitlines()
@@ -136,7 +181,11 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def _delete_line(self, line_index: int):
-        """This method deletes a line in the raw text.
+        """
+        This method deletes a line in the raw text.
+        
+        Args:
+            line_index (int): Description.
         """
         logger.debug(f"Deleting line {line_index}")
         lines = self.raw_text.splitlines()
@@ -144,7 +193,11 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def _delete_lines(self, line_indexes: list):
-        """This method deletes a line in the raw text.
+        """
+        This method deletes a line in the raw text.
+        
+        Args:
+            line_indexes (list): Description.
         """
         logger.debug(f"Deleting lines {line_indexes}")
         lines = self.raw_text.splitlines()
@@ -153,7 +206,13 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def _add_lines(self, line_index: int, new_lines: list, sep: str = ' '):
-        """This method adds a line in the raw text.
+        """
+        This method adds a line in the raw text.
+        
+        Args:
+            line_index (int): Description.
+            new_lines (list): Description.
+            sep (str): Description.
         """
         logger.debug(f"Adding lines {line_index} with {new_lines}")
         lines = self.raw_text.splitlines()
@@ -164,17 +223,33 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def _get_nth_previous_line(self, line_index: int, n: int = 1):
-        """This method returns the nth previous line of the raw text.
+        """
+        This method returns the nth previous line of the raw text.
+        
+        Args:
+            line_index (int): Description.
+            n (int): Description.
         """
         return self.raw_text.splitlines()[line_index - n]
 
     def _get_nth_next_line(self, line_index: int, n: int = 1):
-        """This method returns the nth next line of the raw text.
+        """
+        This method returns the nth next line of the raw text.
+        
+        Args:
+            line_index (int): Description.
+            n (int): Description.
         """
         return self.raw_text.splitlines()[line_index + n]
 
     def _replace_line(self, line_index: int, new_line: list, sep: str = ' '):
-        """This method replaces a line in the raw text.
+        """
+        This method replaces a line in the raw text.
+        
+        Args:
+            line_index (int): Description.
+            new_line (list): Description.
+            sep (str): Description.
         """
         logger.debug(f"Replacing line {line_index} with {new_line}")
         lines = self.raw_text.splitlines()
@@ -182,7 +257,11 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def render(self, **kwargs):
-        """This method renders the input file using jinja2.
+        """
+        This method renders the input file using jinja2.
+        
+        Args:
+            **kwargs (Any): Description.
         """
         logger.info(f"Rendering input file {self.input_file_name}")
         template = Template(self.raw_text)
@@ -190,7 +269,11 @@ class BaseStudy(UnitConverter):
 
 
     def add_auxiliary_file(self, file_path: str):
-        """This method adds an auxiliary file to the manager.
+        """
+        This method adds an auxiliary file to the manager.
+        
+        Args:
+            file_path (str): Description.
         """
         logger.info(f"Adding auxiliary file {file_path}")
         file_path = Path(file_path)
@@ -231,13 +314,23 @@ class BaseStudy(UnitConverter):
         logger.info(f"Adding input folder {folder_path} with {len(self.aux_files)} files" + ("(Shared files)" if shared_file else ""))
 
     def add_callback(self, callback: Callable, kind: str = 'pre', **kwargs):
-        """This method adds a callback to the manager.
+        """
+        This method adds a callback to the manager.
+        
+        Args:
+            callback (Callable): Description.
+            kind (str): Description.
+            **kwargs (Any): Description.
         """
         kwargs['kind'] = kind
         self._callbacks.append(lambda manager: callback(manager, self, **kwargs))
 
     def add_ssh_step(self, step: BaseStep):
-        """This method adds a ssh step to the manager.
+        """
+        This method adds a ssh step to the manager.
+        
+        Args:
+            step (BaseStep): Description.
         """
         from pydelling.managers.ssh.steps import BaseStep
         assert isinstance(step, BaseStep), 'Step must be a subclass of BaseStep'
@@ -250,7 +343,11 @@ class BaseStudy(UnitConverter):
         self.steps = []
 
     def initialize_callbacks(self, manager: BaseManager):
-        """This method initializes the callbacks.
+        """
+        This method initializes the callbacks.
+        
+        Args:
+            manager (BaseManager): Description.
         """
         temp_callbacks = []
         for callback in self._callbacks:
@@ -261,7 +358,12 @@ class BaseStudy(UnitConverter):
                          shared_folder_name='./shared_folder',
                          results_folder_name=None,
                          ):
-        """This method copies the input files to the shared folder.
+        """
+        This method copies the input files to the shared folder.
+        
+        Args:
+            shared_folder_name (Any): Description.
+            results_folder_name (Any): Description.
         """
         BaseStudy.shared_folder_default_name = shared_folder_name
         logger.debug(f"Copying input files to shared folder ({shared_folder_name})")
@@ -279,7 +381,14 @@ class BaseStudy(UnitConverter):
                 output_file: str=None,
                 auxiliary_folder: str=None,
                 **kwargs):
-        """This method renders the input file and saves it to a file.
+        """
+        This method renders the input file and saves it to a file.
+        
+        Args:
+            output_folder (str): Description.
+            output_file (str): Description.
+            auxiliary_folder (str): Description.
+            **kwargs (Any): Description.
         """
 
         self.output_folder = output_folder if output_folder is not None else f'case-{BaseStudy.count}'
@@ -350,15 +459,3 @@ class BaseStudy(UnitConverter):
 
     def __str__(self):
         return self.__repr__()
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,18 +1,41 @@
+"""
+Module documentation.
+
+
+"""
+
 import streamlit as st
 import extra_streamlit_components as stx
 
 class BaseStreamlitUtilityClass:
     def save_in_session_state(self, key, value: object):
-        """This method saves the object to a session state"""
+        """
+        This method saves the object to a session state
+        
+        Args:
+            key (Any): Description.
+            value (object): Description.
+        """
         st.session_state[key] = value
 
     def initialize_in_session_state(self, key: str, value: object=None):
-        """This method initializes the session state"""
+        """
+        This method initializes the session state
+        
+        Args:
+            key (str): Description.
+            value (object): Description.
+        """
         if key not in st.session_state:
             st.session_state[key] = value
 
     def get_from_session_state(self, key: str):
-        """This method gets the session state"""
+        """
+        This method gets the session state
+        
+        Args:
+            key (str): Description.
+        """
         return st.session_state[key]
 
     def initialize(self):
@@ -20,7 +43,13 @@ class BaseStreamlitUtilityClass:
         pass
 
     def set_to_session_state(self, key: str, value: object):
-        """This method equals the previous method"""
+        """
+        This method equals the previous method
+        
+        Args:
+            key (str): Description.
+            value (object): Description.
+        """
         self.save_in_session_state(key, value)
 
     @staticmethod

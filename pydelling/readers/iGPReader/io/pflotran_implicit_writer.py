@@ -1,3 +1,9 @@
+"""
+This class contains the function to write a mesh file in PFLOTRAN unstructured implicit format
+
+
+"""
+
 import numpy as np
 from typing import TYPE_CHECKING
 
@@ -8,17 +14,26 @@ if TYPE_CHECKING:
 
 
 class PflotranImplicitWriter(BaseWriter):
-    """
-    This class contains the function to write a mesh file in PFLOTRAN unstructured implicit format
-    """
 
     def write_elements(self, export_file):
+        """
+        write_elements method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         export_file.write(f"ELEMENTS {self.mesh_info['n_elements']}\n")
         for element in self.elements:
             export_file.write(
                 f"{config.globals.element_dict[len(element.coords)]} {' '.join(map(str, np.array(element.nodes) + 1))}\n")
 
     def write_nodes(self, export_file):
+        """
+        write_nodes method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         export_file.write(f"VERTICES {self.mesh_info['n_nodes']}\n")
         for id, node in enumerate(self.nodes_output):
             export_file.write(f"{node[0]} {node[1]} {self.nodes[id][2]:5.5f}\n")
@@ -26,7 +41,9 @@ class PflotranImplicitWriter(BaseWriter):
     def write_domain_hdf5(self, export_file):
         """
         Writes the domain info (i.e. grid info) into an hdf5 file
-        :param export_file: HDF5 File object
+        
+        Args:
+            export_file (Any): Description.
         """
         if self.is_mesh_built:
             raise RuntimeError("Exporting built mesh into hdf5 still under development")
@@ -44,6 +61,12 @@ class PflotranImplicitWriter(BaseWriter):
             domain_group.create_dataset("Vertices", data=node_data)
 
     def write_regions_hdf5(self, export_file):
+        """
+        write_regions_hdf5 method.
+        
+        Args:
+            export_file (Any): Description.
+        """
         def add_dataset(hdf5_file, group_name, dataset_type, data):
             temp_group = hdf5_file.create_group(group_name)
             temp_dataset = temp_group.create_dataset(dataset_type, data=data)

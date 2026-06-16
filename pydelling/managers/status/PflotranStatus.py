@@ -1,3 +1,9 @@
+"""
+This class reads a pflotran status file and extracts some key information.
+
+
+"""
+
 from .BaseStatus import BaseStatus
 import logging
 import re
@@ -5,10 +11,16 @@ import re
 logger = logging.getLogger(__name__)
 
 class PflotranStatus(BaseStatus):
-    """This class reads a pflotran status file and extracts some key information."""
     def __init__(self,
                  status_file,
                  total_time=None):
+        """
+        __init__ method.
+        
+        Args:
+            status_file (Any): Description.
+            total_time (Any): Description.
+        """
         super().__init__(status_file)
         self.times = []
         self.dts = []
@@ -49,14 +61,21 @@ class PflotranStatus(BaseStatus):
             return True
 
     def add_total_time(self, total_time):
-        """Add the total time of the simulation."""
+        """
+        Add the total time of the simulation.
+        
+        Args:
+            total_time (Any): Description.
+        """
         self.total_time = total_time
 
     def read(self, status_file = None):
-        """Read the status file and extract key information."""
+        """
+        Read the status file and extract key information.
+        
+        Args:
+            status_file (Any): Description.
+        """
         self.status_file = status_file if status_file is not None else self.status_file
         self.read_status_file()
         self.extract_key_information()
-
-
-

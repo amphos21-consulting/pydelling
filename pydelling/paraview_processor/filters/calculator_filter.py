@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from pydelling.paraview_processor.filters import base_filter
 try:
     from paraview.simple import *
@@ -10,6 +16,16 @@ class CalculatorFilter(base_filter):
     counter: int = 0
 
     def __init__(self, input_filter, function, name, output_array_name=None, attribute_type='Cell Data'):
+        """
+        __init__ method.
+        
+        Args:
+            input_filter (Any): Description.
+            function (Any): Description.
+            name (Any): Description.
+            output_array_name (Any): Description.
+            attribute_type (Any): Description.
+        """
         super().__init__(name=name)
         CalculatorFilter.counter += 1
         self.filter = Calculator(Input=input_filter)
@@ -19,9 +35,21 @@ class CalculatorFilter(base_filter):
             self.filter.ResultArrayName = output_array_name
 
     def set_attribute_type(self, attribute_type):
+        """
+        set_attribute_type method.
+        
+        Args:
+            attribute_type (Any): Description.
+        """
         self.filter.AttributeType = attribute_type
 
     def set_function(self, function):
+        """
+        set_function method.
+        
+        Args:
+            function (Any): Description.
+        """
         self.filter.Function = function
 
     @property

@@ -1,3 +1,10 @@
+"""
+This class performs a KDE estimation on a given dataset and provides useful methods
+to plot and manipulate the estimated distributions.
+
+
+"""
+
 import logging
 
 import matplotlib.pyplot as plt
@@ -11,13 +18,18 @@ logger = logging.getLogger(__name__)
 import seaborn as sns
 
 class KdeEstimator:
-    """
-    This class performs a KDE estimation on a given dataset and provides useful methods
-    to plot and manipulate the estimated distributions.
-    """
     is_run: bool
     kde_estimator: KernelDensity
     def __init__(self, data:pd.DataFrame=None, kernel='gaussian', bandwidth=1000, package='scikit'):
+        """
+        __init__ method.
+        
+        Args:
+            data (pd.DataFrame): Description.
+            kernel (Any): Description.
+            bandwidth (Any): Description.
+            package (Any): Description.
+        """
         self.data = data
         self.kernel = kernel
         self.bandwidth = bandwidth
@@ -29,6 +41,9 @@ class KdeEstimator:
     def run(self, data: pd.DataFrame=None):
         """
         Fit the provided dataset to the corresponding kernel distribution
+        
+        Args:
+            data (pd.DataFrame): Description.
         """
         if data:
             self.data = data
@@ -45,6 +60,18 @@ class KdeEstimator:
                                       xlabel=None,
                                       ylabel=None
                                       ):
+        """
+        plot_1d_comparison_histograms method.
+        
+        Args:
+            variable (Any): Description.
+            n (Any): Description.
+            savefig (Any): Description.
+            bins (Any): Description.
+            colors (Any): Description.
+            xlabel (Any): Description.
+            ylabel (Any): Description.
+        """
         plt.clf()
         fig, ax = plt.subplots()
         fig: plt.Figure
@@ -81,6 +108,17 @@ class KdeEstimator:
         return ax
 
     def plot_1d_comparison_histograms_multi(self, variables, n=10000, savefig=None, bins=30, palette=None, dpi=150):
+        """
+        plot_1d_comparison_histograms_multi method.
+        
+        Args:
+            variables (Any): Description.
+            n (Any): Description.
+            savefig (Any): Description.
+            bins (Any): Description.
+            palette (Any): Description.
+            dpi (Any): Description.
+        """
         plt.clf()
         fig, ax = plt.subplots()
         fig: plt.Figure
@@ -112,7 +150,11 @@ class KdeEstimator:
     def plot_1d(self, variable=None, n=100, savefig=None):
         """
         Plots the trained KDE using the original data bounds
-        Returns: Axes object of the generated plot
+        
+        Args:
+            variable (Any): Description.
+            n (Any): Description.
+            savefig (Any): Description.
         """
         plt.clf()
         if not variable:
@@ -156,4 +198,11 @@ class KdeEstimator:
         return self.data.values.reshape(-1, self.data.shape[1])
 
     def sample(self, *args, **kwargs):
+        """
+        sample method.
+        
+        Args:
+            *args (Any): Description.
+            **kwargs (Any): Description.
+        """
         return self.kde_estimator.sample(*args, **kwargs)

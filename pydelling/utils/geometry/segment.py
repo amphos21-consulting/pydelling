@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import numpy as np
 
 from . import Line, Point, BasePrimitive
@@ -5,6 +11,13 @@ from . import Line, Point, BasePrimitive
 
 class Segment(Line):
     def __init__(self, p1, p2):
+        """
+        __init__ method.
+        
+        Args:
+            p1 (Any): Description.
+            p2 (Any): Description.
+        """
         super().__init__(p1, p2)
         self.p1 = Point(p1)
         self.p2 = Point(p2)
@@ -22,6 +35,12 @@ class Segment(Line):
 
 
     def intersect(self, primitive: BasePrimitive):
+        """
+        intersect method.
+        
+        Args:
+            primitive (BasePrimitive): Description.
+        """
         from .intersections import intersect_plane_segment
 
         if primitive.__class__.__name__ == "Plane":
@@ -32,6 +51,12 @@ class Segment(Line):
 
     def contains(self, point):
         # Calculate direction vectors
+        """
+        contains method.
+        
+        Args:
+            point (Any): Description.
+        """
         segment_vector = self.p2 - self.p1
         point_vector = point - self.p1
 

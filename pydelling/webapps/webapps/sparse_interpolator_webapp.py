@@ -1,3 +1,8 @@
+"""Module documentation.
+
+
+"""
+
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -162,6 +167,11 @@ class SparseInterpolatorWebapp(WebAppRunner):
     @staticmethod
     @st.cache
     def convert_df(df):
+        """Convert dataframe output to encoded CSV bytes.
+
+        Args:
+            df (Any): Dataframe-like object to convert.
+        """
         return df.to_csv(index=False).encode('utf-8')
 
 

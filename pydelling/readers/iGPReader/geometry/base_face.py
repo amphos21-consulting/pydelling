@@ -1,8 +1,21 @@
+"""
+Module documentation.
+
+
+"""
+
 from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 
 class BaseFace:
     def __init__(self, nodes, coords):
+        """
+        __init__ method.
+        
+        Args:
+            nodes (Any): Description.
+            coords (Any): Description.
+        """
         self.nodes = nodes
         self.coords = coords
         self.n_coords = len(coords)

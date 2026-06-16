@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from scipy.spatial.qhull import ConvexHull
 
 from pydelling.preprocessing.mesh_preprocessor.geometry import BaseElement, TriangleFace, QuadrilateralFace
@@ -6,6 +12,15 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 class WedgeElement(BaseElement):
     def __init__(self, node_ids, node_coords, centroid_coords=None, local_id=None):
+        """
+        __init__ method.
+        
+        Args:
+            node_ids (Any): Description.
+            node_coords (Any): Description.
+            centroid_coords (Any): Description.
+            local_id (Any): Description.
+        """
         super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords, local_id=local_id)
         self.type = "wedge"
         self.meshio_type = "wedge"  # TODO:Check in meshio documentation

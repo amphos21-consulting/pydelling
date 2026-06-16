@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from abc import ABC, abstractmethod
 import pandas as pd
 import paramiko
@@ -94,7 +100,7 @@ class BaseSsh(ABC):
             self.sftp.mkdir(str(path))
             logger.info(f'Created directory {path}')
 
-    def rm(self, path):
+    def rm(self, path: str):
         """
         Removes a file in the remote server.
         Args:
@@ -108,7 +114,7 @@ class BaseSsh(ABC):
         logger.info(f'Removed (remote) file {path}')
 
     def rmdir(self,
-              path,
+              path: str,
               ):
         """
         Removes a directory in the remote server.
@@ -192,7 +198,9 @@ class BaseSsh(ABC):
     def ls_dir(self, dir):
         """
         Returns the content of a directory in the remote server.
-        Returns: content of the directory
+        
+        Args:
+            dir (Any): Description.
         """
         return self.sftp.listdir(dir)
 
@@ -200,8 +208,9 @@ class BaseSsh(ABC):
     def cd_studies_folder(self, project_name):
         """
         Changes the current working directory to the studies folder.
-        Returns:
-
+        
+        Args:
+            project_name (Any): Description.
         """
         return NotImplementedError('Method not implemented')
 

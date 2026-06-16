@@ -1,3 +1,9 @@
+"""This class is the base class for all simulation managers. A simulation manager should be able to:
+- Manage study [BaseStudy] objects
+- Run simulations on a given software
+- Read the output status of the simulation
+"""
+
 from .base_study import BaseStudy
 from abc import ABC, abstractmethod
 from typing import Dict, List, Union
@@ -15,12 +21,18 @@ logger = logging.getLogger(__name__)
 
 
 class BaseManager(ABC):
-    """This class is the base class for all simulation managers. A simulation manager should be able to:
-    - Manage study [BaseStudy] objects
-    - Run simulations on a given software
-    - Read the output status of the simulation
+    """Abstract manager for orchestrating simulation studies and execution backends.
+
+    
     """
+
     def __init__(self, name: str = None):
+        """
+        Initialize manager state and common runtime attributes.
+        
+        Args:
+            name (str): Description.
+        """
         self.results_folder = None
         self.studies: Dict[str, BaseStudy] = {}
         self.manager_name = name if name is not None else self.__class__.__name__
@@ -30,7 +42,11 @@ class BaseManager(ABC):
 
 
     def add_study(self, study: BaseStudy):
-        """This method adds a study to the manager.
+        """
+        This method adds a study to the manager.
+        
+        Args:
+            study (BaseStudy): Description.
         """
         assert isinstance(study, BaseStudy), f"Study must be a object from a class inherited from BaseStudy, not {type(study)}"
         self.studies[study.name] = study
@@ -56,7 +72,29 @@ class BaseManager(ABC):
             password: str = None,
             **kwargs,
             ):
-        """This method runs all the studies.
+        """
+        This method runs all the studies.
+        
+        Args:
+            studies_folder (str): Description.
+            n_cores (int): Description.
+            docker_image (str): Description.
+            dummy (bool): Description.
+            start_from (int): Description.
+            petsc_dir (str): Description.
+            petsc_arch (str): Description.
+            pflotran_dir (str): Description.
+            pre_commands (List[str]): Description.
+            run_on (str): Description.
+            user (str): Description.
+            project_name (str): Description.
+            pkey_path (str): Description.
+            wallclock_limit (float): Description.
+            shell_script (str): Description.
+            download_file_extensions (List[str]): Description.
+            download_results (bool): Description.
+            password (str): Description.
+            **kwargs (Any): Description.
         """
         # Set ssh
         if run_on in ['jureca', 'lumi']:
@@ -121,7 +159,11 @@ class BaseManager(ABC):
                            **kwargs)
 
     def generate_run_files(self, studies_folder: str = './studies'):
-        """This method generates the run files for all the studies.
+        """
+        This method generates the run files for all the studies.
+        
+        Args:
+            studies_folder (str): Description.
         """
         for study in self.studies.values():
             study: BaseStudy
@@ -129,7 +171,13 @@ class BaseManager(ABC):
 
     @abstractmethod
     def _run_study(self, study: BaseStudy, n_cores: int = 1, **kwargs):
-        """This method runs a study.
+        """
+        This method runs a study.
+        
+        Args:
+            study (BaseStudy): Description.
+            n_cores (int): Description.
+            **kwargs (Any): Description.
         """
         logger.info(f"Running study {study.name}")
         return NotImplementedError("This method must be implemented in the child class")
@@ -141,7 +189,14 @@ class BaseManager(ABC):
                           n_cores: int = 1,
                           **kwargs,
                           ):
-        """This method runs a study using docker.
+        """
+        This method runs a study using docker.
+        
+        Args:
+            study (BaseStudy): Description.
+            docker_image (str): Description.
+            n_cores (int): Description.
+            **kwargs (Any): Description.
         """
         logger.info(f"Running study {study.name} using docker image {docker_image}")
         return NotImplementedError("This method must be implemented in the child class")
@@ -157,7 +212,20 @@ class BaseManager(ABC):
                             download_results: bool = True,
                             **kwargs,
                             ):
-        """This method runs a study in JURECA."""
+        """
+        This method runs a study in JURECA.
+        
+        Args:
+            study (BaseStudy): Description.
+            user (str): Description.
+            project_name (str): Description.
+            pkey_path (str): Description.
+            n_cores (int): Description.
+            wallclock_limit (float): Description.
+            shell_script (str): Description.
+            download_results (bool): Description.
+            **kwargs (Any): Description.
+        """
         logger.info(f"Running study {study.name} in JURECA")
         return NotImplementedError("This method must be implemented in the child class")
 
@@ -172,7 +240,20 @@ class BaseManager(ABC):
                             download_results: bool = True,
                             **kwargs,
                             ):
-        """This method runs a study in LUMI supercomputer."""
+        """
+        This method runs a study in LUMI supercomputer.
+        
+        Args:
+            study (BaseStudy): Description.
+            user (str): Description.
+            project_name (str): Description.
+            pkey_path (str): Description.
+            n_cores (int): Description.
+            wallclock_limit (float): Description.
+            shell_script (str): Description.
+            download_results (bool): Description.
+            **kwargs (Any): Description.
+        """
         logger.info(f"Running study {study.name} in LUMI")
         return NotImplementedError("This method must be implemented in the child class")
 
@@ -191,7 +272,23 @@ class BaseManager(ABC):
                   download_results: bool = True,
                   **kwargs,
                   ):
-        """This method runs a study.
+        """
+        This method runs a study.
+        
+        Args:
+            study (BaseStudy): Description.
+            n_cores (int): Description.
+            docker_image (str): Description.
+            run_on (str): Description.
+            dummy (bool): Description.
+            user (str): Description.
+            project_name (str): Description.
+            pkey_path (str): Description.
+            wallclock_limit (float): Description.
+            shell_script (str): Description.
+            download_file_extensions (List[str]): Description.
+            download_results (bool): Description.
+            **kwargs (Any): Description.
         """
         logger.info(f"Running study {study.name}")
         # Create the study files
@@ -249,7 +346,17 @@ class BaseManager(ABC):
                 password: str = None,
                 **kwargs,
                 ):
-        """This method sets the ssh object to the manager."""
+        """
+        This method sets the ssh object to the manager.
+        
+        Args:
+            platform (str): Description.
+            user (str): Description.
+            pkey_path (str): Description.
+            project_name (str): Description.
+            password (str): Description.
+            **kwargs (Any): Description.
+        """
         platform_to_ssh = {
             'jureca': JurecaSsh,
             'lumi': LumiSsh,
@@ -273,4 +380,3 @@ class BaseManager(ABC):
         """This methods merges the studies generated by the manager.
         """
         pass
-

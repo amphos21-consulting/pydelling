@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 import logging
 import pathlib
 from multiprocessing import Pool, cpu_count
@@ -34,6 +40,19 @@ class DfnUpscaler:
                  nearest=None,
                  check_nodes=True,
                  ):
+        """
+        __init__ method.
+        
+        Args:
+            dfn (Any): Description.
+            mesh (MeshPreprocessor): Description.
+            parallel (Any): Description.
+            save_intersections (Any): Description.
+            load_faults (Union[str, pathlib.Path]): Description.
+            loading (Any): Description.
+            nearest (Any): Description.
+            check_nodes (Any): Description.
+        """
         self.eps = 1E-4
         self.dfn = dfn
         self.mesh: MeshPreprocessor = mesh
@@ -53,7 +72,12 @@ class DfnUpscaler:
 
 
     def _intersect_dfn_with_mesh(self, parallel=False):
-        """Runs the DfnUpscaler with optional parallel processing."""
+        """
+        Runs the DfnUpscaler with optional parallel processing.
+        
+        Args:
+            parallel (Any): Description.
+        """
         logger.info('Upscaling the DFN to the mesh')
         self.mesh.find_intersection_stats = {
             'intersection_points': {},
@@ -122,7 +146,12 @@ class DfnUpscaler:
                     local_id += 1
 
     def find_intersection_points_between_fracture_and_mesh(self, fracture: 'Fracture'):
-        """Finds the intersection points between a fracture and the mesh and returns the results."""
+        """
+        Finds the intersection points between a fracture and the mesh and returns the results.
+        
+        Args:
+            fracture ('Fracture'): Description.
+        """
         
         intersection_data = {
             'fracture_id': fracture.local_id,
@@ -161,7 +190,14 @@ class DfnUpscaler:
                          nearest=None,
                          check_nodes=False,
                          ):
-        """Finds the fault cells in the mesh"""
+        """
+        Finds the fault cells in the mesh
+        
+        Args:
+            save_fault_cells (Any): Description.
+            nearest (Any): Description.
+            check_nodes (Any): Description.
+        """
         logger.info('Finding fault cells')
         fault_cells = {}
         for fault in tqdm(self.dfn.faults, desc='Finding distances to faults'):
@@ -266,6 +302,17 @@ class DfnUpscaler:
                               truncate=True,
                               ):
         # Compute upscaled porosity for each element.
+        """
+        upscale_mesh_porosity method.
+        
+        Args:
+            matrix_porosity (Any): Description.
+            intensity_correction_factor (Any): Description.
+            existing_fractures_fraction (Any): Description.
+            truncate_to_min_percentile (Any): Description.
+            truncate_to_max_percentile (Any): Description.
+            truncate (Any): Description.
+        """
         matrix_porosity = 0.0
         self._compute_fracture_volume_in_elements()
         upscaled_porosity = {}
@@ -323,6 +370,15 @@ class DfnUpscaler:
                                  truncate=True,
                                  ):
 
+        """
+        upscale_mesh_storativity method.
+        
+        Args:
+            matrix_storativity (Any): Description.
+            truncate_to_min_percentile (Any): Description.
+            truncate_to_max_percentile (Any): Description.
+            truncate (Any): Description.
+        """
         upscaled_storativity = {}
 
         for elem in tqdm(self.mesh.elements, desc="Upscaling fractures storativity"):
@@ -395,6 +451,12 @@ class DfnUpscaler:
         self.distance = distance
 
     def export_fracture_property(self, property='area'):
+        """
+        export_fracture_property method.
+        
+        Args:
+            property (Any): Description.
+        """
         property_dict = {}
         for elem in tqdm(self.mesh.elements, desc="Computing fracture properties"):
             property_dict[elem.local_id] = 0
@@ -421,6 +483,19 @@ class DfnUpscaler:
                                   truncate=True,
                                   ):
 
+        """
+        upscale_mesh_permeability method.
+        
+        Args:
+            matrix_permeability (Any): Description.
+            rho (Any): Description.
+            g (Any): Description.
+            mu (Any): Description.
+            mode (Any): Description.
+            truncate_to_min_percentile (Any): Description.
+            truncate_to_max_percentile (Any): Description.
+            truncate (Any): Description.
+        """
         matrix_permeability = {}
 
         for elem in tqdm(self.mesh.elements, desc="Creating permeability tensor for dummy anisotropic case"):
@@ -616,14 +691,20 @@ class DfnUpscaler:
         return upscaled_hk
 
     def to_vtk(self, filename):
-        """Exports the mesh and the upscaled variables to VTK"""
+        """
+        Exports the mesh and the upscaled variables to VTK
+        
+        Args:
+            filename (Any): Description.
+        """
         self.mesh.to_vtk(filename)
 
     def porosity_to_csv(self, filename='./porosity.csv'):
-        """Exports porosity values to csv
-
-        Returns:
-
+        """
+        Exports porosity values to csv
+        
+        Args:
+            filename (Any): Description.
         """
         import csv
         logger.info(f"Exporting porosity to {filename}")
@@ -635,7 +716,12 @@ class DfnUpscaler:
                 writer.writerow([centroid[0], centroid[1], centroid[2], porosity])
 
     def plot_porosity_histogram(self, filename='upscaled_porosity_histogram.png'):
-        """Plots the upscaled porosity histogram."""
+        """
+        Plots the upscaled porosity histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting upscaled porosity histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -643,7 +729,12 @@ class DfnUpscaler:
         return fig, ax
 
     def plot_hkx_histogram(self, filename='upscaled_hkx_histogram.png'):
-        """Plots the upscaled hkx histogram."""
+        """
+        Plots the upscaled hkx histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting upscaled hkx histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -651,7 +742,12 @@ class DfnUpscaler:
         return fig, ax
 
     def plot_storativity_histogram(self, filename='upscaled_storativity_histogram.png'):
-        """Plots the upscaled storativity histogram."""
+        """
+        Plots the upscaled storativity histogram.
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Plotting upscaled storativity histogram to {filename}')
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -660,13 +756,24 @@ class DfnUpscaler:
 
     def export_intersection_stats(self, filename='intersection_stats.txt'):
         # Export the run_stats dictionary to file
+        """
+        export_intersection_stats method.
+        
+        Args:
+            filename (Any): Description.
+        """
         assert self.mesh.is_intersected, 'The mesh has not been intersected yet.'
         import json
         with open('run_stats.json', 'w') as fp:
             json.dump(self.mesh.find_intersection_stats, fp)
 
     def save(self, filename='upscaled_model.json'):
-        """Save a copy of the class on a serialized pickle object"""
+        """
+        Save a copy of the class on a serialized pickle object
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Saving a copy of the class to {filename}')
         # Create saving dictionary
         saving_dict = {}
@@ -677,7 +784,12 @@ class DfnUpscaler:
 
 
     def to_json(self, filename='upscaler.json'):
-        """Save a copy of the class on a serialized json object"""
+        """
+        Save a copy of the class on a serialized json object
+        
+        Args:
+            filename (Any): Description.
+        """
         logger.info(f'Saving a copy of the class to {filename}')
         # Create saving dictionary
         saving_dict = {}
@@ -695,7 +807,13 @@ class DfnUpscaler:
 
     @classmethod
     def from_json(cls, filename):
-        """Load a serialized pickle object"""
+        """
+        Load a serialized pickle object
+        
+        Args:
+            cls (Any): Description.
+            filename (Any): Description.
+        """
         logger.info(f'Loading the upscaling class from {filename}')
         import json
         with open(filename, 'rb') as f:
@@ -707,7 +825,14 @@ class DfnUpscaler:
             return loaded_class
 
     def add_to_class(self, key, value, default=None):
-        """Add an attribute to the class"""
+        """
+        Add an attribute to the class
+        
+        Args:
+            key (Any): Description.
+            value (Any): Description.
+            default (Any): Description.
+        """
         setattr(self, key, value)
         if value != default:
             logger.info(f'Added {key} = {value} to the class')

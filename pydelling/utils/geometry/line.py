@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from __future__ import annotations
 
 from typing import List
@@ -11,6 +17,14 @@ from .point import Point
 class Line(BasePrimitive):
     def __init__(self, p1: np.ndarray or Point or List = None, p2: np.ndarray or Point or List = None,
                  direction_vector: np.ndarray or List = None):
+        """
+        __init__ method.
+        
+        Args:
+            p1 (np.ndarray or Point or List): Description.
+            p2 (np.ndarray or Point or List): Description.
+            direction_vector (np.ndarray or List): Description.
+        """
         if p1 is not None and p2 is not None:
             p1 = Point(p1)
             p2 = Point(p2)
@@ -35,16 +49,34 @@ class Line(BasePrimitive):
                     self.p = Point(p2)
 
     def is_parallel(self, line: Line):
+        """
+        is_parallel method.
+        
+        Args:
+            line (Line): Description.
+        """
         if np.isclose(np.dot(self.direction_vector, line.direction_vector), 1):
             return True
         if np.isclose(np.dot(self.direction_vector, line.direction_vector), -1):
             return True
 
     def angle(self, line: Line):
+        """
+        angle method.
+        
+        Args:
+            line (Line): Description.
+        """
         return np.arccos(np.dot(self.direction_vector, line.direction_vector) /
                          (np.linalg.norm(self.direction_vector) * np.linalg.norm(line.direction_vector)))
 
     def intersect(self, primitive: BasePrimitive):
+        """
+        intersect method.
+        
+        Args:
+            primitive (BasePrimitive): Description.
+        """
         from .intersections import intersect_line_line, intersect_plane_line
 
         if primitive.__class__.__name__ == "Line":

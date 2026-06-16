@@ -1,3 +1,9 @@
+"""
+This class manages the structure of the output files
+
+
+"""
+
 import os
 import shutil
 from pathlib import Path
@@ -8,8 +14,14 @@ import numpy as np
 
 
 class PostProcessingEngine:
-    """This class manages the structure of the output files"""
     def __init__(self, dt=0.2, unit="y"):
+        """
+        __init__ method.
+        
+        Args:
+            dt (Any): Description.
+            unit (Any): Description.
+        """
         self.dt = dt
         self.unit = unit
         self.output_times = []
@@ -160,6 +172,13 @@ class PostProcessingEngine:
                 self.output_file.write('</Xdmf>\n')
 
     def export_attribute(self, var, i):
+        """
+        export_attribute method.
+        
+        Args:
+            var (Any): Description.
+            i (Any): Description.
+        """
         self.output_file.write('\t\t<Attribute Name="%s" AttributeType="Scalar"  Center="Cell">\n' % var)
         self.output_file.write('\t\t\t<DataItem Dimensions="%s 1" Format="HDF">\n' % self.n_cells)
         self.output_file.write(f'\t\t\t\t{self.input_stem}-{i:03d}.h5:/   {i} Time  {self.output_times[i]:1.5E} {self.output_units[i]}/{var}\n')
@@ -168,7 +187,12 @@ class PostProcessingEngine:
 
     @staticmethod
     def read_vtk_file(filename) -> Dict:
-        """This method reads an VTK file and returns the data"""
+        """
+        This method reads an VTK file and returns the data
+        
+        Args:
+            filename (Any): Description.
+        """
         # Process vtk file
         print(f"Processing {filename} VTK file")
         data_dict = {}

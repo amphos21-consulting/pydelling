@@ -1,3 +1,10 @@
+"""
+A class to manage and run several COMSOL simulations using the COMSOL API for Python (mph).
+
+Warning: A valid COMSOL installation is required to use this class as well as java 11 or higher. Moreover, the oficial version of python is recommended, since the Microsoft Store version could cause issues with the COMSOL API.
+
+"""
+
 from pathlib import Path
 from pydelling.utils import create_results_folder
 import logging
@@ -16,12 +23,6 @@ from .comsol_manager_objects.comsol_variables_and_parameters import ComsolVariab
 logger = logging.getLogger(__name__)
 
 class ComsolManager:
-    """
-    A class to manage and run several COMSOL simulations using the COMSOL API for Python (mph).
-
-    Warning: A valid COMSOL installation is required to use this class as well as java 11 or higher. Moreover, the oficial version of python is recommended, since the Microsoft Store version could cause issues with the COMSOL API.
-
-    """
     def __init__(self,
                  version: str | None = None,
                  ):
@@ -319,4 +320,3 @@ class ComsolManager:
     
     def __java_matrix__(self, obj):
         pass
-    

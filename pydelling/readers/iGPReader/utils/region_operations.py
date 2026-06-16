@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -22,10 +28,10 @@ class RegionOperations:
     def divide_topography_by_z(self: iGPReader,
                                z: float,
                                region_name: str,
-                               name_below='below',
-                               name_above='above',
+                               name_below: str = 'below',
+                               name_above: str = 'above',
                                cache_old_results: bool = False,
-                               ):
+                               ) -> None:
         """
         Divide the topography into two regions, one above and one below a given z coordinate.
 
@@ -172,6 +178,11 @@ class RegionOperations:
                                          ) -> list:
         """
         Returns the (x, y, z) coordinates of the closest specified region to the specified x and y coordinates.
+        
+        Args:
+            region_name (str): Description.
+            x (float): Description.
+            y (float): Description.
         """
         # Carry out a
         if not hasattr(self, f"{region_name}_kd_tree"):
@@ -188,6 +199,10 @@ class RegionOperations:
                                          ) -> list:
         """
         Returns the (x, y, z) coordinates of the closest specified region to the specified x and y coordinates.
+        
+        Args:
+            region_name (str): Description.
+            elements (Union[BaseElement, list]): Description.
         """
         # Carry out a
         if not hasattr(self, f"{region_name}_kd_tree"):
@@ -209,6 +224,12 @@ class RegionOperations:
 
 
     def _setup_kd_tree_on_region(self: iGPReader, region_name):
+        """
+        _setup_kd_tree_on_region method.
+        
+        Args:
+            region_name (Any): Description.
+        """
         region_nodes = self.get_region_nodes(region_name)
         # Get only the x and y coordinates
         region_nodes = region_nodes[:, :2]

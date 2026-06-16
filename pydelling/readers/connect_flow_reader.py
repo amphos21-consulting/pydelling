@@ -1,5 +1,7 @@
 """
 Base interface for a reader class
+
+
 """
 import logging
 
@@ -18,11 +20,23 @@ from linecache import getline
 
 class ConnectFlowReader(BaseReader):
     def __init__(self, filename=None):
+        """
+        __init__ method.
+        
+        Args:
+            filename (Any): Description.
+        """
         self.filename = Path(filename) if filename else Path(config.open_foam_reader.filename)
         logger.info(f"Reading ConnectFlow mesh file from {self.filename}")
         super().__init__(filename=self.filename)
 
     def open_file(self, filename):
+        """
+        open_file method.
+        
+        Args:
+            filename (Any): Description.
+        """
         filename_string = str(filename)
         header = getline(filename_string, 1).split()
         self.n_nodes = int(header[1])

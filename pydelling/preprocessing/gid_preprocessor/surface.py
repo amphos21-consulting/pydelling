@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from ._abstract_fit_object import _AbstractGidObject
 from .line import Line
 from .point import Point
@@ -17,6 +23,12 @@ class Surface(_AbstractGidObject):
     surfaces: List = []
 
     def __init__(self, lines: List[Line]):
+        """
+        __init__ method.
+        
+        Args:
+            lines (List[Line]): Description.
+        """
         self.local_id = Surface.local_id
         self.lines = lines
         self.id = None
@@ -34,6 +46,14 @@ class Surface(_AbstractGidObject):
         return export_str
 
     def extrude(self, start_point: Point, end_point: Point, end_object):
+        """
+        extrude method.
+        
+        Args:
+            start_point (Point): Description.
+            end_point (Point): Description.
+            end_object (Any): Description.
+        """
         logger.info(f'Extruding {self} using direction {start_point.coords} -> {end_point.coords}')
         export_str = f'Mescape Utilities Copy Surfaces DoExtrude {end_object} MaintainLayers Translation FNoJoin {start_point.coords_comma} FNoJoin {end_point.coords_comma}\n'
         export_str += f'{self.id}\n'

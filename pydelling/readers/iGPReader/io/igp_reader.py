@@ -1,3 +1,10 @@
+"""
+This class reads the mesh and region information of an iGP project folder. It also builds an internal representation
+of the mesh, and controls all the pre-processing functions related to the mesh.
+
+
+"""
+
 from __future__ import annotations
 
 import logging
@@ -29,10 +36,6 @@ logger = logging.getLogger(__name__)
 
 
 class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter, PflotranImplicitWriter):
-    """
-    This class reads the mesh and region information of an iGP project folder. It also builds an internal representation
-    of the mesh, and controls all the pre-processing functions related to the mesh.
-    """
     element_dict = {"4": "T", "5": "P", "6": "W", "8": "H"}
     face_dict = {'T': 3, 'Q': 4}
 
@@ -42,6 +45,16 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                  output_folder='./results',
                  write_materials=True,
                  ):
+        """
+        __init__ method.
+        
+        Args:
+            path (Any): Description.
+            project_name (Any): Description.
+            build_mesh (Any): Description.
+            output_folder (Any): Description.
+            write_materials (Any): Description.
+        """
         self.elements = None
         self.boundaries = {}
         self.element_nodes = None
@@ -214,7 +227,11 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                              ):
         """
         Function that transforms an implicit mesh into an explicit mesh
-        :param dump_mesh_info: set it True in order to write the primal mesh into the same unstructured explicit mesh
+        
+        Args:
+            dump_mesh_info (Any): Description.
+            write_cells (Any): Description.
+            write_regions (Any): Description.
         """
         if not self.is_mesh_built:
             self.build_mesh_data()
@@ -313,10 +330,18 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                             second_layer_offset = None,
                             max_error: float = None, # Maximum error allowed in the interpolation
                             ):
-        """Performs layer based raster interpolation
-        This function approximates the node_ids that lay on each of the layers with the rasterized data of such layer.
-        The current approach is based on nearest neighbours approximation
-        :return np.array of interpolated node_ids
+        """
+        Performs layer based raster interpolation
+        
+        Args:
+            regions (List): Description.
+            raster_filenames (dict): Description.
+            raster_folder (Any): Description.
+            top_regions (List): Description.
+            top_region_offset (float): Description.
+            second_layer (str): Description.
+            second_layer_offset (Any): Description.
+            max_error (float): Description.
         """
         logger.info("Interpolating raster regions to mesh")
         if max_error is not None:
@@ -368,7 +393,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
     def raster_interpolator_semistructured(self,
                                            regions: List,
                                            raster_filenames: dict,
-                                           raster_folder=None,
+                                           raster_folder: str | None = None,
                                            n_nearest: int = 5,
                                            material_subset: List = None,
                                            min_samples: int = 10,
@@ -459,8 +484,9 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
     def write_ASCII_meshfile(self, filename):
         """
         Writes the mesh in PFLOTRAN ascii file
-        :param filename: name of the output filename
-        :return:
+        
+        Args:
+            filename (Any): Description.
         """
         # TODO: Set-up default filename
         if self.is_mesh_built:  # We need it to dump it correctly into implicit/explicit format
@@ -495,7 +521,9 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
     def write_hdf5_meshfile(self, filename="regions.h5"):
         """
         Export the mesh into implicit hdf5 format.
-        :param filename: name of the hdf5 file. Default: "regions.h5"
+        
+        Args:
+            filename (Any): Description.
         """
         hdf5_filename = filename
         if not filename.endswith(".h5"):
@@ -677,10 +705,30 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
     @staticmethod
     def linear_distribution(x, y_bot, y_top, x_bot, x_top):
+        """
+        linear_distribution method.
+        
+        Args:
+            x (Any): Description.
+            y_bot (Any): Description.
+            y_top (Any): Description.
+            x_bot (Any): Description.
+            x_top (Any): Description.
+        """
         return (y_top - y_bot) / (x_top - x_bot) * x + (y_bot * x_top - y_top * x_bot) / (x_top - x_bot)
 
     @staticmethod
     def linear_log_distribution(x, x_top, x_bot, y_top, y_bot):
+        """
+        linear_log_distribution method.
+        
+        Args:
+            x (Any): Description.
+            x_top (Any): Description.
+            x_bot (Any): Description.
+            y_top (Any): Description.
+            y_bot (Any): Description.
+        """
         y_top = np.log10(y_top)
         y_bot = np.log10(y_bot)
         return np.power(10.0, (y_top - y_bot) / (x_top - x_bot) * x + (y_bot * x_top - y_top * x_bot) / (x_top - x_bot))
@@ -713,6 +761,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
     @staticmethod
     def _export_hdf5_dataset(index_dataset: np.array, dataset: np.array, name):
+        """
+        _export_hdf5_dataset method.
+        
+        Args:
+            index_dataset (np.array): Description.
+            dataset (np.array): Description.
+            name (Any): Description.
+        """
         hdf5_filename = get_output_path() / f"{name}.h5"
         logger.info(f"Writing {name} dataset to hdf5 ({hdf5_filename})")
         with h5py.File(hdf5_filename, "w") as hdf5_file:
@@ -722,8 +778,9 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
     def write_csv(self, filename):
         """
         Writes the mesh centroids in .csv format
-        :param filename:
-        :return:
+        
+        Args:
+            filename (Any): Description.
         """
         # TODO: set-up default filename
         if self.output_folder is None:
@@ -738,6 +795,13 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
     @staticmethod
     def chunks(l, n):
+        """
+        chunks method.
+        
+        Args:
+            l (Any): Description.
+            n (Any): Description.
+        """
         return [l[i:i + n] for i in range(0, len(l), n)]
 
     def build_mesh_data(self, processes=1,
@@ -746,7 +810,11 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                         ):
         """
         Creates an internal representation of the mesh based on a given unstructured implicit grid.
-        :return:
+        
+        Args:
+            processes (Any): Description.
+            generate_cells (Any): Description.
+            generate_boundaries (Any): Description.
         """
         from pydelling.preprocessing.mesh_preprocessor.geometry import TetrahedraElement, WedgeElement, HexahedraElement, TriangleFace, QuadrilateralFace
         if config.general.constant_centroids:
@@ -837,6 +905,13 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             self.material_info[material] = {"min_z": _min_z, "max_z": _max_z}
 
     def write_input_raster_files(self, downsample_factor=None, file_format="asc"):
+        """
+        write_input_raster_files method.
+        
+        Args:
+            downsample_factor (Any): Description.
+            file_format (Any): Description.
+        """
         logger.info(f"Exporting raster files read from {config.data_files.raster_file_folder}")
         for region in config.raster_refinement.regions:
             raster_current_region_filename = os.path.join(config.data_files.raster_file_folder, config.data_files.raster_filenames[region])
@@ -849,6 +924,12 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                 raster_data.dump_to_csv(output_file=get_output_path() / f"{region}.csv")
 
     def export_recharge_file(self, csv_export=False):
+        """
+        export_recharge_file method.
+        
+        Args:
+            csv_export (Any): Description.
+        """
         if config.data_files.recharge_file:
             logger.info(f"Processing recharge file located at {config.data_files.recharge_file}")
             recharge_data = self.RasterReader(config.data_files.recharge_file)
@@ -863,6 +944,12 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             recharge_data.dump_to_csv(output_file="recharge.csv")
 
     def export_region_data(self, regions: List = None):
+        """
+        export_region_data method.
+        
+        Args:
+            regions (List): Description.
+        """
         regions = regions if regions else config.extract_data.regions
         for region in regions:
             id_list = np.unique(self.region_dict[region]["elements"].flatten())
@@ -911,30 +998,64 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                 print(f"{step * '  '}{property} = {self.material_info[material][property]}")
 
     def get_region_centroids(self, region_name):
+        """
+        get_region_centroids method.
+        
+        Args:
+            region_name (Any): Description.
+        """
         return self.centroids[self.region_dict[region_name]['centroid_id'] - 1]
 
     def get_region_nodes(self, region_name):
+        """
+        get_region_nodes method.
+        
+        Args:
+            region_name (Any): Description.
+        """
         cur_array = self.region_dict[region_name]['elements']
         cur_array = cur_array.flatten()
         cur_array = np.unique(cur_array)
         return self.nodes[cur_array]
 
     def get_boundary_faces(self, region_name) -> List[BaseFace]:
+        """
+        get_boundary_faces method.
+        
+        Args:
+            region_name (Any): Description.
+        """
         assert self.is_mesh_built, "Mesh has to be built before calling this method"
         return self.boundaries[region_name]
 
     def get_material_elements(self, material_name) -> List[BaseElement]:
+        """
+        get_material_elements method.
+        
+        Args:
+            material_name (Any): Description.
+        """
         return [self.elements[element_id - 1] for element_id in self.material_dict[material_name]]
 
     def get_material_centroids(self, material_name):
+        """
+        get_material_centroids method.
+        
+        Args:
+            material_name (Any): Description.
+        """
         return self.centroids[self.material_dict[material_name]]
     
     def assign_material_from_stl(self, material_dict, stl_files, mpi_comm=None, rank=None, size=None):
         """
         Finds which cell belong to each material (in parallel)
-        based on .stl files and generates its .mat files for PFLOTRAN
-
-        Give MPI.COMM_WORLD (mpi4py), rank and size to run in parallel. Otherwise, it runs in serial.
+        
+        Args:
+            material_dict (Any): Description.
+            stl_files (Any): Description.
+            mpi_comm (Any): Description.
+            rank (Any): Description.
+            size (Any): Description.
         """
         def dist(p1, p2):
             """
@@ -1175,13 +1296,3 @@ def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_si
             amount = id_local / int(len(elements))
             logger.info(f"Process {chunk_index} completed amount: {amount * 100:3.0f} %")
             amount_read += 0.1
-
-
-
-
-
-
-
-
-
-

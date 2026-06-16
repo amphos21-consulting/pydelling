@@ -1,3 +1,9 @@
+"""
+Callback to save the results of a Pflotran simulation.
+
+
+"""
+
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -14,13 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 class PflotranSaveResultsCallback(BaseCallback):
-    """Callback to save the results of a Pflotran simulation.
-
-    Arguments:
-        move: bool = False -> If True, the results are moved instead of copied
-        postprocess: bool = False -> If True, the results are postprocessed
-        postprocess_regular: bool = False -> If True, the results are postprocessed assuming they are part of a regular grid
-    """
     move: bool = False
     postprocess: bool = False
     def __init__(self, manager: PflotranManager,
@@ -30,6 +29,18 @@ class PflotranSaveResultsCallback(BaseCallback):
                  postprocess: bool = False,
                  postprocess_regular: bool = False,
                  **kwargs):
+        """
+        __init__ method.
+        
+        Args:
+            manager (PflotranManager): Description.
+            study (PflotranStudy): Description.
+            kind (str): Description.
+            move (bool): Description.
+            postprocess (bool): Description.
+            postprocess_regular (bool): Description.
+            **kwargs (Any): Description.
+        """
         super().__init__(manager, study,
                          'post',
                          move=move,
@@ -110,9 +121,3 @@ class PflotranSaveResultsCallback(BaseCallback):
             # Delete the original files
             # for file in h5_files:
             #     file.unlink()
-
-
-
-
-
-

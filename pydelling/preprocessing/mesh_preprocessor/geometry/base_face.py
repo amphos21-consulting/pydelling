@@ -1,3 +1,9 @@
+"""
+Module documentation.
+
+
+"""
+
 from pydelling.readers.iGPReader.utils.geometry_utils import *
 from pydelling.utils.geometry import Plane
 from .base_abstract_mesh_object import BaseAbstractMeshObject
@@ -7,6 +13,14 @@ class BaseFace(BaseAbstractMeshObject):
     _local_id = 0
     __slots__ = ['node_ids', 'node_coords']
     def __init__(self, node_ids, node_coords, face_id=None):
+        """
+        __init__ method.
+        
+        Args:
+            node_ids (Any): Description.
+            node_coords (Any): Description.
+            face_id (Any): Description.
+        """
         self.nodes = np.array(node_ids)
         self.coords = np.array(node_coords)
         self.n_coords = len(node_coords)
@@ -81,7 +95,12 @@ class BaseFace(BaseAbstractMeshObject):
         plt.show()
 
     def intersect_with_plane(self, plane: Plane):
-        '''Returns the intersection of the face with the plane'''
+        """
+        Returns the intersection of the face with the plane
+        
+        Args:
+            plane (Plane): Description.
+        """
         return self.plane.intersect(plane)
 
     @property
@@ -113,6 +132,12 @@ class BaseFace(BaseAbstractMeshObject):
         return f"{self.type}-{self.local_id}"
 
     def __eq__(self, other):
+        """
+        __eq__ method.
+        
+        Args:
+            other (Any): Description.
+        """
         if isinstance(other, BaseFace):
             return np.all(self.nodes == other.nodes)
         else:
