@@ -28,6 +28,14 @@ Additionally, pydelling features the **PflotranManager** module, which facilitat
 <span style="background-color: yellow; color: black; padding: 2px 6px; border-radius: 3px;">Under construction</span>
 
 ## Release notes
+
+### v1.1.3
+- Feat: Montecarlo integration in utils
+
+### v1.1.2
+- Feat: Documentation in CI pipeline. It can be run locally with `uv run mkdocs serve`
+- Feat: Auto-generated docs with docstrings
+
 ### v1.1.1
 - Fix: pydelling now does not crash when there is a file in the working directory that matches the pattern \*config\* but is not a YAML file.
 ### v1.1.0
