@@ -72,11 +72,12 @@ deploy-github-pages:
     - apk add --no-cache git
   script:
     - cd site
+    - touch .nojekyll
     - git init
     - git config user.name "GitLab CI"
     - git config user.email "ci@gitlab.local"
     - git add -A
-    - git commit -m "Deploy docs from ${CI_COMMIT_SHORT_SHA}"
+    - git commit --allow-empty -m "Deploy docs from ${CI_COMMIT_SHORT_SHA}"
     - git branch -M gh-pages
     - git remote add origin https://oauth2:${GITHUB_TOKEN}@github.com/amphos21-consulting/pydelling.git
     - git push --force origin gh-pages

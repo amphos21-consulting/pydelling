@@ -1,6 +1,7 @@
 """Auto-generate API reference pages for mkdocstrings."""
 
 from pathlib import Path
+import tomllib
 
 import mkdocs_gen_files
 
@@ -9,6 +10,14 @@ nav = mkdocs_gen_files.Nav()
 package_modules: dict[str, list[Path]] = {}
 
 src = Path("pydelling")
+pyproject = Path("pyproject.toml")
+
+
+def read_project_version() -> str:
+    """Read project version from pyproject.toml."""
+    with pyproject.open("rb") as fd:
+        data = tomllib.load(fd)
+    return str(data.get("project", {}).get("version", ""))
 
 
 def is_importable_module(relative_path: Path) -> bool:
@@ -75,3 +84,8 @@ for package, docs_paths in sorted(package_modules.items()):
 summary_path = Path("reference", "SUMMARY.md")
 with mkdocs_gen_files.open(summary_path, "w") as nav_file:
     nav_file.writelines(nav.build_literate_nav())
+
+sidebar_version_js = Path("javascripts", "sidebar-version.js")
+with mkdocs_gen_files.open(sidebar_version_js, "w") as fd:
+    version = read_project_version()
+    fd.write(f"window.__PYDELLING_VERSION__ = {version!r};\n")

@@ -6,6 +6,8 @@ Additionally, pydelling features the **PflotranManager** module, which facilitat
 
 **pydelling** is a collaborative and continuously evolving project, with new features regularly integrated to address emerging modelling needs.
 
+Go to [Pydelling Documentation](https://amphos21-consulting.github.io/pydelling/) for more information.
+
 ## Installation notes
 **uv** package manager is required. It can be installed:
 - Linux o macOS: `curl -LsSf https://astral.sh/uv/install.sh | sh`
@@ -28,6 +30,10 @@ Additionally, pydelling features the **PflotranManager** module, which facilitat
 <span style="background-color: yellow; color: black; padding: 2px 6px; border-radius: 3px;">Under construction</span>
 
 ## Release notes
+
+### v1.1.4
+- Feat: Documentation available at https://amphos21-consulting.github.io/pydelling/. The pipeline has been modified to auto-deploy the documentation in a GitHub repository.
+
 
 ### v1.1.3
 - Feat: Montecarlo integration in utils

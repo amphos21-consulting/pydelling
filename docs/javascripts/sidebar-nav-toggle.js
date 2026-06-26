@@ -1,7 +1,33 @@
 // Sidebar controls to collapse/expand all nested sections in the primary nav.
 (function () {
+  function getSidebarProjectLabel() {
+    const version = typeof window.__PYDELLING_VERSION__ === 'string'
+      ? window.__PYDELLING_VERSION__.trim()
+      : '';
+
+    return version ? `pydelling ${version}` : 'pydelling';
+  }
+
   function getPrimarySidebarNav() {
     return document.querySelector('.md-sidebar--primary .md-nav--primary');
+  }
+
+  function setPrimarySidebarTitle() {
+    const root = getPrimarySidebarNav();
+    if (!root) return;
+
+    const title = root.querySelector(':scope > .md-nav__title');
+    if (!title) return;
+
+    const logoButton = title.querySelector('.md-nav__button.md-logo');
+    title.textContent = '';
+
+    if (logoButton) {
+      title.appendChild(logoButton);
+      title.appendChild(document.createTextNode(' '));
+    }
+
+    title.appendChild(document.createTextNode(getSidebarProjectLabel()));
   }
 
   function getNestedToggles(root) {
@@ -127,6 +153,7 @@
   }
 
   function init() {
+    setPrimarySidebarTitle();
     buildControls();
     enforceCollapsedAfterHydration();
   }
