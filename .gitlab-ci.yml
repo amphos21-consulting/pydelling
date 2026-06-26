@@ -12,6 +12,7 @@ stages:
   - test
   - build-docs
   - pages
+  - mirror
 
 # Test stage with coverage reporting
 test:
@@ -73,5 +74,17 @@ pages:
   artifacts:
     paths:
       - public/
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+## Mirror to GitHub on main branch
+mirror-to-github:
+  stage: mirror
+  image: alpine:3.20
+  before_script:
+    - apk add --no-cache git
+  script:
+    - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/amphos21-consulting/pydelling.git
+    - git push github HEAD:${CI_COMMIT_BRANCH} --force
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
