@@ -524,19 +524,25 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
 
 class PflotranResults:
-    """
-    This class stores the PFLOTRAN results
+    """Container for PFLOTRAN variables at one output time.
+
+    Category: PFLOTRAN reader.
+    Tags: pflotran, results, time-step, variables.
+    Use when: an MCP agent needs to inspect available result arrays for a single
+        PFLOTRAN output time.
     """
     def __init__(self, time, data) -> None:
-        """
-        Initialize a PflotranResults container for a single time step.
-        
+        """Initialize a PFLOTRAN result snapshot.
+
+        Category: PFLOTRAN reader.
+        Tags: pflotran, results, time-step, arrays.
+        Use when: wrapping HDF5 datasets from one output time into NumPy arrays.
         Args:
             time (float): Simulation time value for this results snapshot.
             data (dict): Dictionary mapping variable names to their data arrays.
-        
-        Returns:
-            None
+        Side effects:
+            Converts each raw dataset into a NumPy array and stores
+            ``variable_keys``.
         """
         self.time = time
         self.raw_data = data
@@ -548,14 +554,29 @@ class PflotranResults:
 
     @property
     def mineral_names(self) -> list[str]:
+        """Return mineral names inferred from volume-fraction variables.
+
+        Category: PFLOTRAN reader.
+        Tags: pflotran, minerals, volume-fraction, variables.
+        Use when: listing mineral variables present in a result snapshot.
+        Returns:
+            list[str]: Prefixes of variable keys containing ``VF``.
+        """
         temp_keys = [key.split('_')[0] for key in self.variable_keys if 'VF' in key]
         return temp_keys
 
     @property
     def species_names(self) -> list[str]:
+        """Return species names inferred from total concentration variables.
+
+        Category: PFLOTRAN reader.
+        Tags: pflotran, species, total-concentration, variables.
+        Use when: listing primary species variables present in a result snapshot.
+        Returns:
+            list[str]: Species components of variable keys containing ``Total``.
+        """
         temp_keys = [key.split('_')[1] for key in self.variable_keys if 'Total' in key]
         return temp_keys
-
 
 
 

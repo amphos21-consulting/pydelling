@@ -13,14 +13,27 @@ if TYPE_CHECKING:
     from .comsol_component import ComsolComponent
 
 class ComsolStudy:
+    """Wrapper around a COMSOL study API object.
+
+    Category: COMSOL management.
+    Tags: comsol, study, run, parametric-sweep, progress.
+    Use when: an MCP agent needs to run COMSOL studies, watch progress logs, or
+        perform parameter sweeps through pydelling.
+    """
+
     def __init__(self,
                  comsol: 'ComsolManager.ComsolModel',
                  tag: str):
-        """
-        A class to handle a COMSOL study.
+        """Load a COMSOL study by tag.
+
+        Category: COMSOL management.
+        Tags: comsol, study, initialization.
+        Use when: attaching pydelling helpers to an existing COMSOL study.
         Parameters:
             comsol (ComsolModel): The ComsolModel object from ComsolManager
             tag (str): The tag of the study
+        Side effects:
+            Registers the study wrapper under the model when needed.
         """
         self.comsol = comsol
         self.manager = self.comsol.manager
@@ -35,14 +48,27 @@ class ComsolStudy:
         logger.info(f"Study {self.tag} loaded.")
         
     def apply(self):
+        """Placeholder for applying study changes.
+
+        Category: COMSOL management.
+        Tags: comsol, study, apply, extension-point.
+        Use when: extending study wrappers with explicit apply behavior.
+        """
         pass
         
     def run(self, save = True, convergence_plot: bool = True):
-        """
-        Runs the COMSOL study.
+        """Run the COMSOL study and monitor progress.
+
+        Category: COMSOL management.
+        Tags: comsol, study, run, progress, convergence.
+        Use when: executing a COMSOL study from pydelling while optionally
+            saving the model and plotting convergence.
         Parameters:
             save (bool): If True, saves the COMSOL model after running the study. Default is True.
             convergence_plot (bool): If True, shows a convergence plot during the run. Default is True.
+        Side effects:
+            Starts the COMSOL run in a thread, reads a temporary progress log,
+            may show a convergence plot, may save the model, and cleans logs.
         """
             
         logfile = Path(f"./logs/temp_{Path(self.comsol.file_path).name}_{int(time.time())}.log")
@@ -131,13 +157,23 @@ class ComsolStudy:
                              values_list: list,
                              var_tag: str | None = None,
                              ):
-        """
-        Run a parametric sweep of this ComsolStudy. A new file for each value will be created.
+        """Run the study repeatedly while sweeping one parameter or variable.
+
+        Category: COMSOL management.
+        Tags: comsol, study, parametric-sweep, parameters, variables.
+        Use when: an MCP workflow needs a separate COMSOL output file for each
+            value in a sweep.
         Parameters:
             param_type (str): Valid values are "parameter" or "variable".
             name (str): Name of the parameter/variable.
             values_list (list): A list with the values to change.
             var_tag (str): The tag of the variable collection if its a variable. Defaults to None.
+        Raises:
+            ValueError: If ``param_type`` is invalid or a variable sweep omits
+            ``var_tag``.
+        Side effects:
+            Updates a parameter or variable, changes ``save_name`` for each run,
+            runs the study, and restores the previous save name.
         """
         if param_type == "variable":
             if var_tag is None:

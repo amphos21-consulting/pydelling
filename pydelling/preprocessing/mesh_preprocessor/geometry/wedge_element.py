@@ -11,15 +11,27 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 
 class WedgeElement(BaseElement):
+    """Mesh-preprocessor wedge element with meshio metadata.
+
+    Category: mesh geometry.
+    Tags: wedge, element, meshio, faces, centroid.
+    Use when: an MCP agent needs the mesh-preprocessor representation of wedge
+        cells imported from meshio or generated internally.
+    """
+
     def __init__(self, node_ids, node_coords, centroid_coords=None, local_id=None):
-        """
-        __init__ method.
-        
+        """Create a wedge element from node ids and coordinates.
+
+        Category: mesh geometry.
+        Tags: wedge, element, nodes, centroid.
+        Use when: storing wedge topology in the mesh preprocessor.
         Args:
-            node_ids (Any): Description.
-            node_coords (Any): Description.
-            centroid_coords (Any): Description.
-            local_id (Any): Description.
+            node_ids: Six node ids defining the wedge.
+            node_coords: Coordinates for each node.
+            centroid_coords: Optional precomputed centroid coordinates.
+            local_id: Optional local element id.
+        Side effects:
+            Sets element type, meshio type, centroid, and centroid coordinates.
         """
         super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords, local_id=local_id)
         self.type = "wedge"
@@ -34,6 +46,15 @@ class WedgeElement(BaseElement):
 
     def define_faces(self):
         # Add faces that define the wedge
+        """Populate wedge face definitions.
+
+        Category: mesh geometry.
+        Tags: wedge, faces, quadrilateral, triangle.
+        Use when: face topology is needed for connection or boundary
+            operations.
+        Side effects:
+            Adds three quadrilateral and two triangular faces to ``self.faces``.
+        """
         # Face 1
         self.faces["q1"] = QuadrilateralFace(node_ids=np.array([self.nodes[0],
                                                                 self.nodes[1],
@@ -89,9 +110,13 @@ class WedgeElement(BaseElement):
                                         )
     @property
     def local_face_nodes(self):
-        """
-        Returns the nodes of the faces of the polyhedra
-        :return: dictionary of nodes of the faces of the polyhedra
+        """Return local node indices for each wedge face.
+
+        Category: mesh geometry.
+        Tags: wedge, faces, local-nodes.
+        Use when: exporting or comparing wedge face topology.
+        Returns:
+            dict: Face id to local node index list.
         """
         return {
             'q1': [0, 1, 4, 3],
@@ -100,4 +125,3 @@ class WedgeElement(BaseElement):
             't1': [0, 2, 1],
             't2': [3, 4, 5]
         }
-

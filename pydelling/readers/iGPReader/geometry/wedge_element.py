@@ -11,16 +11,29 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 
 class WedgeElement(BaseElement):
+    """Six-node iGP wedge element with quadrilateral and triangular faces.
+
+    Category: iGP geometry.
+    Tags: wedge, element, faces, volume, centroid.
+    Use when: an MCP agent needs to understand wedge element topology and
+        derived geometry used by iGP exports.
+    """
+
     def __init__(self, node_ids, node_coords, element_type_n, local_id, centroid_coords=None):
-        """
-        __init__ method.
-        
+        """Create a wedge element and derive faces and centroid.
+
+        Category: iGP geometry.
+        Tags: wedge, element, nodes, centroid, faces.
+        Use when: constructing a wedge from mesh connectivity and coordinates.
         Args:
-            node_ids (Any): Description.
-            node_coords (Any): Description.
-            element_type_n (Any): Description.
-            local_id (Any): Description.
-            centroid_coords (Any): Description.
+            node_ids: Six node ids defining the wedge.
+            node_coords: Coordinates for each node.
+            element_type_n: Element node-count/type marker.
+            local_id: Local element id.
+            centroid_coords: Optional precomputed centroid coordinates.
+        Side effects:
+            Defines wedge faces and sets ``type``, ``centroid``, and
+            ``centroid_coords``.
         """
         super().__init__(node_ids, node_coords, element_type_n, local_id, centroid_coords)
         self.define_faces()  # Define faces of the element
@@ -37,6 +50,14 @@ class WedgeElement(BaseElement):
 
     def define_faces(self):
         # Add faces that define the wedge
+        """Populate wedge face definitions.
+
+        Category: iGP geometry.
+        Tags: wedge, faces, quadrilateral, triangle.
+        Use when: rebuilding face topology for connection or region operations.
+        Side effects:
+            Adds three quadrilateral and two triangular faces to ``self.faces``.
+        """
         # Face 1
         self.faces["q1"] = QuadrilateralFace(nodes=np.array([self.nodes[0],
                                                              self.nodes[1],

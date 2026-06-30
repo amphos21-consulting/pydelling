@@ -15,7 +15,26 @@ from pydelling.webapps.components import InputComponent
 
 
 class SparseInterpolatorWebapp(WebAppRunner):
+    """Streamlit webapp for sparse-data interpolation onto target meshes.
+
+    Category: Web application.
+    Tags: streamlit, interpolation, sparse-data, mesh, csv, vtk, fem.
+    Use when: an MCP agent needs to understand the user-facing workflow that
+        uploads sparse points, uploads a target mesh, interpolates values, and
+        downloads CSV output.
+    """
+
     def construct(self):
+        """Render the sparse interpolation workflow.
+
+        Category: Web application.
+        Tags: streamlit, interpolation, upload, download, visualization.
+        Use when: running the interactive sparse-data interpolation app.
+        Side effects:
+            Reads and writes Streamlit session state, invokes input components,
+            runs ``SparseDataInterpolator``, writes ``pyvista.html`` when
+            visualization is requested, and renders download/visualization UI.
+        """
         if 'input_selection_done' not in st.session_state:
             st.session_state['input_selection_done'] = False
         if 'mesh_input_done' not in st.session_state:
@@ -169,8 +188,13 @@ class SparseInterpolatorWebapp(WebAppRunner):
     def convert_df(df):
         """Convert dataframe output to encoded CSV bytes.
 
+        Category: Web application.
+        Tags: streamlit, csv, download, dataframe.
+        Use when: preparing interpolated results for ``st.download_button``.
         Args:
             df (Any): Dataframe-like object to convert.
+        Returns:
+            bytes: UTF-8 encoded CSV content.
         """
         return df.to_csv(index=False).encode('utf-8')
 

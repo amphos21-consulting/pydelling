@@ -11,16 +11,30 @@ from pydelling.readers.iGPReader.geometry import TriangleFace, BaseElement
 
 
 class TetrahedraElement(BaseElement):
+    """Four-node iGP tetrahedra element with triangular faces.
+
+    Category: iGP geometry.
+    Tags: tetrahedra, element, faces, volume, centroid.
+    Use when: an MCP agent needs to understand tetrahedral element topology and
+        derived geometry used by iGP exports.
+    """
+
     def __init__(self, node_ids, node_coords, element_type_n, local_id, centroid_coords=None):
-        """
-        __init__ method.
-        
+        """Create a tetrahedra element and derive faces and centroid.
+
+        Category: iGP geometry.
+        Tags: tetrahedra, element, nodes, centroid, faces.
+        Use when: constructing a tetrahedral element from mesh connectivity and
+            coordinates.
         Args:
-            node_ids (Any): Description.
-            node_coords (Any): Description.
-            element_type_n (Any): Description.
-            local_id (Any): Description.
-            centroid_coords (Any): Description.
+            node_ids: Four node ids defining the element.
+            node_coords: Coordinates for each node.
+            element_type_n: Element node-count/type marker.
+            local_id: Local element id.
+            centroid_coords: Optional precomputed centroid coordinates.
+        Side effects:
+            Defines triangular faces and sets ``type``, ``centroid``, and
+            ``centroid_coords``.
         """
         super().__init__(node_ids, node_coords, element_type_n, local_id, centroid_coords)
         self.define_faces()  # Define faces of the element
@@ -37,6 +51,14 @@ class TetrahedraElement(BaseElement):
 
     def define_faces(self):
         # Add faces that define the wedge
+        """Populate tetrahedra face definitions.
+
+        Category: iGP geometry.
+        Tags: tetrahedra, faces, triangle.
+        Use when: rebuilding face topology for connection or region operations.
+        Side effects:
+            Adds four triangular faces to ``self.faces``.
+        """
         # Face 1
         self.faces["t1"] = TriangleFace(nodes=np.array([self.nodes[0],
                                                         self.nodes[1],

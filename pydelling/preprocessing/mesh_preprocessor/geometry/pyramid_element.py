@@ -11,15 +11,27 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 
 class PyramidElement(BaseElement):
+    """Mesh-preprocessor pyramid element with meshio metadata.
+
+    Category: mesh geometry.
+    Tags: pyramid, element, meshio, faces, centroid.
+    Use when: an MCP agent needs the mesh-preprocessor representation of pyramid
+        cells.
+    """
+
     def __init__(self, node_ids, node_coords, centroid_coords=None, local_id=None):
-        """
-        __init__ method.
-        
+        """Create a pyramid element from node ids and coordinates.
+
+        Category: mesh geometry.
+        Tags: pyramid, element, nodes, centroid.
+        Use when: storing pyramid topology in the mesh preprocessor.
         Args:
-            node_ids (Any): Description.
-            node_coords (Any): Description.
-            centroid_coords (Any): Description.
-            local_id (Any): Description.
+            node_ids: Five node ids defining the pyramid.
+            node_coords: Coordinates for each node.
+            centroid_coords: Optional precomputed centroid coordinates.
+            local_id: Optional local element id.
+        Side effects:
+            Sets element type, meshio type, centroid, and centroid coordinates.
         """
         super().__init__(node_ids=node_ids, node_coords=node_coords, centroid_coords=centroid_coords, local_id=local_id)
         self.type = "pyramid"
@@ -34,6 +46,15 @@ class PyramidElement(BaseElement):
 
     def define_faces(self):
         # Add faces that define the wedge
+        """Populate pyramid face definitions.
+
+        Category: mesh geometry.
+        Tags: pyramid, faces, quadrilateral, triangle.
+        Use when: face topology is needed for connection or boundary
+            operations.
+        Side effects:
+            Adds one quadrilateral and three triangular faces to ``self.faces``.
+        """
         # Face 1
         self.faces["q1"] = QuadrilateralFace(node_ids=np.array([self.nodes[0],
                                                                 self.nodes[1],
@@ -77,9 +98,13 @@ class PyramidElement(BaseElement):
 
     @property
     def local_face_nodes(self):
-        """
-        Returns the nodes of the faces of the polyhedra
-        :return: dictionary of nodes of the faces of the polyhedra
+        """Return local node indices for each pyramid face.
+
+        Category: mesh geometry.
+        Tags: pyramid, faces, local-nodes.
+        Use when: exporting or comparing pyramid face topology.
+        Returns:
+            dict: Face id to local node index list.
         """
         return {
             'q1': [0, 1, 2, 3],
@@ -87,5 +112,4 @@ class PyramidElement(BaseElement):
             't2': [4, 2, 1],
             't3': [4, 3, 2]
         }
-
 

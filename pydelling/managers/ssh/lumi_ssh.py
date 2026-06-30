@@ -10,6 +10,14 @@ logger = logging.getLogger(__name__)
 
 
 class LumiSsh(BaseSsh):
+    """SSH/SFTP helper for running pydelling jobs on LUMI.
+
+    Category: Remote execution.
+    Tags: ssh, sftp, lumi, slurm, hpc.
+    Use when: an MCP agent needs to understand the LUMI-specific remote paths,
+        queue commands, and job submission helpers used by pydelling managers.
+    """
+
     hostname = 'lumi.csc.fi'
     def __init__(self,
                  user,
@@ -18,11 +26,21 @@ class LumiSsh(BaseSsh):
                  project_id=465000475,
                  password=None,
                  ):
-        """
-        Connects to the remote server.
+        """Connect to LUMI and configure project paths.
+
+        Category: Remote execution.
+        Tags: ssh, lumi, hpc, project-paths, initialization.
+        Use when: creating a LUMI connector for remote PFLOTRAN study execution.
         Args:
-            user: username
-            pkey_path: path to the private key file
+            user: LUMI username.
+            pkey_path: Path to the private key file.
+            project_name: Project name retained for manager compatibility.
+            project_id: Numeric LUMI project id used to build scratch/project
+                paths.
+            password: Optional private-key password.
+        Side effects:
+            Opens the SSH/SFTP connection and stores LUMI project, scratch, and
+            flash paths.
         """
         super().__init__(user=user, pkey_path=pkey_path, password=password)
         self.project_name = project_name
@@ -36,6 +54,15 @@ class LumiSsh(BaseSsh):
 
     def connect(self):
         # Ask for password using a hidden input
+        """Open the Paramiko SSH and SFTP clients for LUMI.
+
+        Category: Remote execution.
+        Tags: ssh, sftp, lumi, paramiko.
+        Use when: establishing or refreshing the LUMI connection.
+        Side effects:
+            Prompts for a password when missing, loads the Ed25519 private key,
+            creates ``self.client``, and opens ``self.sftp``.
+        """
         if self.password is None:
             self.password = getpass.getpass(prompt='Password: ', stream=None)
         self.pkey = paramiko.ed25519key.Ed25519Key.from_private_key_file(self.pkey_path, password=self.password)
@@ -223,7 +250,6 @@ class LumiSsh(BaseSsh):
         """
         self.cd_scratch()
         self.cd(f'./{studies_folder_name}')
-
 
 
 

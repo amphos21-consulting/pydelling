@@ -7,14 +7,28 @@ if TYPE_CHECKING:
     from ..comsol_component import ComsolComponent
 
 class ComsolGeometry:
+    """Wrapper around a COMSOL component geometry API object.
+
+    Category: COMSOL management.
+    Tags: comsol, geometry, component, children.
+    Use when: an MCP agent needs to access geometry operations under a COMSOL
+        component through pydelling.
+    """
+
     def __init__(self,
                     comp: 'ComsolComponent',
                     tag: str = 'geom1'):
-        """
-        A class to handle the COMSOL geometry.
+        """Load a COMSOL geometry by component and tag.
+
+        Category: COMSOL management.
+        Tags: comsol, geometry, initialization.
+        Use when: attaching pydelling helpers to a component geometry.
         Parameters:
             comp (ComsolComponent): The ComsolComponent object where the geometry lives.
             tag (str): The tag of the geometry. Defaults to 'geom1'.
+        Side effects:
+            Registers this geometry wrapper under the component and assigns it as
+            ``comp.geom``.
         """
         self.comp = comp
         self.comsol = self.comp.comsol
@@ -33,11 +47,23 @@ class ComsolGeometry:
 
     def apply(self):
         #!TODO: To be implemented
+        """Placeholder for applying geometry changes.
+
+        Category: COMSOL management.
+        Tags: comsol, geometry, apply, extension-point.
+        Use when: extending geometry wrappers with explicit apply behavior.
+        """
         pass
 
     def get_childs(self):
-        """
-        Get the tags of the loaded childs of the ComsolGeometry
+        """Return tags for wrappers loaded under this geometry.
+
+        Category: COMSOL management.
+        Tags: comsol, geometry, children.
+        Use when: checking whether geometry child wrappers are already
+            registered.
+        Returns:
+            list: Child wrapper tags.
         """
         tags = []
         for child in self.childs:

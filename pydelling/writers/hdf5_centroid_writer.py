@@ -16,14 +16,28 @@ from .base_writer import BaseWriter
 logger = logging.getLogger(__name__)
 
 class HDF5CentroidWriter(BaseWriter):
+    """Write centroid-aligned datasets to PFLOTRAN-style HDF5 files.
+
+    Category: HDF5 writer.
+    Tags: hdf5, centroid, cell-ids, permeability, tensor.
+    Use when: an MCP agent needs to export cell-wise scalar, anisotropic, or
+        tensor datasets with one-based ``Cell Ids``.
+    """
+
     def run(self, filename=None, remove_if_exists=True, include_cell_id=True):
-        """
-        run method.
-        
+        """Write the configured dataset to an HDF5 file.
+
+        Category: HDF5 writer.
+        Tags: hdf5, centroid, dataset, cell-ids.
+        Use when: exporting ``self.data`` under ``self.var_name`` with optional
+            PFLOTRAN cell ids.
         Args:
-            filename (Any): Description.
-            remove_if_exists (Any): Description.
-            include_cell_id (Any): Description.
+            filename: Optional output filename overriding ``self.filename``.
+            remove_if_exists: Whether to remove an existing output file first.
+            include_cell_id: Whether to create a one-based ``Cell Ids`` dataset.
+        Side effects:
+            Creates or overwrites the HDF5 file and writes datasets when
+            ``check_data`` succeeds.
         """
         if filename is not None:
             self.filename = filename
@@ -53,14 +67,22 @@ class HDF5CentroidWriter(BaseWriter):
                                   remove_if_exists=True,
                                   var_name=None,
                                   ):
-        """
-        Writes anisotropic dataset to HDF5
+        """Write directional X/Y/Z datasets to HDF5.
+
+        Category: HDF5 writer.
+        Tags: hdf5, anisotropic, permeability, cell-ids.
+        Use when: exporting anisotropic cell-wise properties for PFLOTRAN-style
+            inputs.
         Args:
             filename: name of the file
             dataset_x: dataset containing data in the x-direction
             dataset_y: dataset containing data in the y-direction
             dataset_z: dataset containing data in the z-direction
             remove_if_exists: removes file if exists
+            var_name: Optional dataset name prefix overriding ``self.var_name``.
+        Side effects:
+            Creates ``<var>X``, ``<var>Y``, ``<var>Z``, and ``Cell Ids``
+            datasets.
         """
         filename_path = Path(filename if filename else self.filename)
         logger.info(f"Writing anisotropic permeability to {filename_path}")
@@ -86,8 +108,12 @@ class HDF5CentroidWriter(BaseWriter):
                                   remove_if_exists=True,
                                   var_name=None,
                                   ):
-        """
-        Writes anisotropic dataset to HDF5
+        """Write full tensor component datasets to HDF5.
+
+        Category: HDF5 writer.
+        Tags: hdf5, tensor, permeability, cell-ids.
+        Use when: exporting full tensor cell-wise properties with X, XY, XZ, Y,
+            YZ, and Z components.
         Args:
             filename: name of the file
             dataset_x: dataset containing data in the x-direction
@@ -97,6 +123,9 @@ class HDF5CentroidWriter(BaseWriter):
             dataset_yz: dataset containing data in the yz-direction
             dataset_z: dataset containing data in the z-direction
             remove_if_exists: removes file if exists
+            var_name: Optional dataset name prefix overriding ``self.var_name``.
+        Side effects:
+            Creates tensor component datasets and ``Cell Ids``.
         """
         filename_path = Path(filename if filename else self.filename)
         logger.info(f"Writing full tensor permeability to {filename_path}")
@@ -121,12 +150,18 @@ class HDF5CentroidWriter(BaseWriter):
                       remove_if_exists=True,
                       var_name=None,
                       ):
-        """
-        Writes isotropic dataset to HDF5
+        """Write one isotropic dataset to HDF5.
+
+        Category: HDF5 writer.
+        Tags: hdf5, isotropic, dataset, cell-ids.
+        Use when: exporting one scalar value per cell with one-based cell ids.
         Args:
             filename: name of the file
-            dataset_x: output dataset
+            dataset: output dataset
             remove_if_exists: removes file if exists
+            var_name: Optional dataset name overriding ``self.var_name``.
+        Side effects:
+            Creates the scalar dataset and ``Cell Ids``.
         """
         filename_path = Path(filename if filename else self.filename)
         logger.info(f"Writing anisotropic permeability to {filename_path}")

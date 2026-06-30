@@ -12,15 +12,28 @@ from .point import Point
 
 
 class Polyline(GidObject):
+    """GID helper that converts ordered points into connected line objects.
+
+    Category: GID preprocessing.
+    Tags: gid, polyline, points, lines, geometry.
+    Use when: an MCP agent needs to generate a chain or closed loop of GID line
+        entities from point objects.
+    """
+
     local_id: int = 1
 
     def __init__(self, points: List[Point], connect=False):
-        """
-        __init__ method.
-        
+        """Create a polyline from ordered points.
+
+        Category: GID preprocessing.
+        Tags: gid, polyline, points, initialization.
+        Use when: preparing a set of GID line objects from a point sequence.
         Args:
-            points (List[Point]): Description.
-            connect (Any): Description.
+            points: Ordered points in the polyline.
+            connect: If ``True``, add a closing line from the last point to the
+                first.
+        Side effects:
+            Creates the line objects by calling ``set_up``.
         """
         super().__init__()
         self.lines = []
@@ -29,6 +42,14 @@ class Polyline(GidObject):
         self.set_up()
 
     def set_up(self):
+        """Create line objects between consecutive polyline points.
+
+        Category: GID preprocessing.
+        Tags: gid, polyline, lines, setup.
+        Use when: rebuilding the internal line list after point assignment.
+        Side effects:
+            Populates ``self.lines`` and optionally adds a closing line.
+        """
         for idx, _ in enumerate(self.points[:-1]):
             point_a = self.points[idx]
             point_b = self.points[idx + 1]
@@ -39,12 +60,16 @@ class Polyline(GidObject):
             self.lines.append(aux_line)
 
     def construct(self, *args, **kwargs):
-        """
-        construct method.
-        
+        """Add all polyline points and lines to the GID object collection.
+
+        Category: GID preprocessing.
+        Tags: gid, polyline, construct, export.
+        Use when: emitting or registering every object needed by the polyline.
         Args:
-            *args (Any): Description.
-            **kwargs (Any): Description.
+            *args: Accepted for ``GidObject`` API compatibility.
+            **kwargs: Accepted for ``GidObject`` API compatibility.
+        Side effects:
+            Calls ``self.add`` for every point and generated line.
         """
         for point in self.points:
             self.add(point)

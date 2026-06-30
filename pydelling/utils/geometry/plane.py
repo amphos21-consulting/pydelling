@@ -16,13 +16,26 @@ from .vector import Vector
 
 
 class Plane(BasePrimitive):
+    """3D plane represented by a point and a normal vector.
+
+    Category: geometry primitive.
+    Tags: plane, point, normal, intersection, parallel.
+    Use when: an MCP agent needs plane geometry for intersections with planes,
+        lines, or segments.
+    """
+
     def __init__(self, point: Point or List or np.ndarray, normal: List or Vector or np.ndarray):
-        """
-        __init__ method.
-        
+        """Create a plane from an anchor point and normal vector.
+
+        Category: geometry primitive.
+        Tags: plane, point, normal, initialization.
+        Use when: constructing a geometric plane for intersection or parallel
+            checks.
         Args:
-            point (Point or List or np.ndarray): Description.
-            normal (List or Vector or np.ndarray): Description.
+            point: Point-like anchor coordinate.
+            normal: Vector-like plane normal.
+        Side effects:
+            Stores ``self.p`` as a ``Point`` and ``self.n`` as a ``Vector``.
         """
         self.p = Point(point)
         self.n = Vector(normal)
@@ -34,11 +47,18 @@ class Plane(BasePrimitive):
         return f"Plane(point:{self.p}, normal:{self.n})"
 
     def intersect(self, primitive: BasePrimitive):
-        """
-        Returns the intersection of this plane with the given primitive
-        
+        """Return the intersection with a supported primitive.
+
+        Category: geometry primitive.
+        Tags: plane, intersection, line, segment.
+        Use when: computing plane-plane, plane-line, or plane-segment
+            intersections using pydelling helpers.
         Args:
-            primitive (BasePrimitive): Description.
+            primitive: ``Plane``, ``Line``, or ``Segment`` instance.
+        Returns:
+            Result returned by the matching intersection helper.
+        Raises:
+            NotImplementedError: If the primitive type is unsupported.
         """
         from .intersections import intersect_plane_plane, intersect_plane_line, intersect_plane_segment
         if primitive.__class__.__name__ == "Plane":
@@ -52,14 +72,18 @@ class Plane(BasePrimitive):
             raise NotImplementedError(f"Intersection with {type(primitive)} is not implemented")
 
     def is_parallel(self, plane: Plane):
-        """
-        Returns True if this plane is parallel to the given plane
-        
+        """Return whether another plane is parallel or anti-parallel.
+
+        Category: geometry primitive.
+        Tags: plane, parallel, normal.
+        Use when: checking plane orientation before intersection operations.
         Args:
-            plane (Plane): Description.
+            plane: Other plane to compare against.
+        Returns:
+            bool | None: ``True`` when normals are parallel or anti-parallel;
+            otherwise ``None``.
         """
         if np.isclose(np.dot(self.n, plane.n), 1):
             return True
         if np.isclose(np.dot(self.n, plane.n), -1):
             return True
-

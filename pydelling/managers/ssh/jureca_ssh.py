@@ -10,6 +10,14 @@ logger = logging.getLogger(__name__)
 
 
 class JurecaSsh(BaseSsh):
+    """SSH/SFTP helper for running pydelling jobs on JURECA.
+
+    Category: Remote execution.
+    Tags: ssh, sftp, jureca, slurm, hpc.
+    Use when: an MCP agent needs to understand the JURECA-specific remote paths,
+        queue commands, and job submission helpers used by pydelling managers.
+    """
+
     hostname = 'jureca.fz-juelich.de'
     def __init__(self,
                  user,
@@ -17,11 +25,19 @@ class JurecaSsh(BaseSsh):
                  project_name,
                  password=None,
                  ):
-        """
-        Connects to the remote server.
+        """Connect to JURECA and store project context.
+
+        Category: Remote execution.
+        Tags: ssh, jureca, hpc, initialization.
+        Use when: creating a JURECA connector for remote PFLOTRAN study
+            execution.
         Args:
-            user: username
-            pkey_path: path to the private key
+            user: JURECA username.
+            pkey_path: Path to the private key file.
+            project_name: JURECA scratch project folder name.
+            password: Optional private-key password.
+        Side effects:
+            Opens the SSH/SFTP connection and stores remote project context.
         """
         super().__init__(user=user, pkey_path=pkey_path, password=password)
         self.project_name = project_name
@@ -29,6 +45,15 @@ class JurecaSsh(BaseSsh):
 
     def connect(self):
         # Ask for password using a hidden input
+        """Open the Paramiko SSH and SFTP clients for JURECA.
+
+        Category: Remote execution.
+        Tags: ssh, sftp, jureca, paramiko.
+        Use when: establishing or refreshing the JURECA connection.
+        Side effects:
+            Prompts for a password when missing, loads the Ed25519 private key,
+            creates ``self.client``, and opens ``self.sftp``.
+        """
         if self.password is None:
             self.password = getpass.getpass(prompt='Password: ', stream=None)
         self.pkey = paramiko.ed25519key.Ed25519Key.from_private_key_file(self.pkey_path, password=self.password)
@@ -206,7 +231,6 @@ class JurecaSsh(BaseSsh):
         """
         self.cd_project()
         self.cd(f'./{studies_folder_name}')
-
 
 
 

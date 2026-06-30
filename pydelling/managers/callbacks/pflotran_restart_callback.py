@@ -15,29 +15,51 @@ from pydelling.managers.ssh.steps import CopyStep
 
 
 class PflotranRestartCallback(BaseCallback):
+    """Callback that wires a previous PFLOTRAN restart file into the next study.
+
+    Category: PFLOTRAN callback.
+    Tags: pflotran, restart, callback, local, remote.
+    Use when: an MCP agent needs to understand how sequential PFLOTRAN studies
+        reuse restart HDF5 files.
+    """
+
     study: PflotranStudy
     def __init__(self, manager: PflotranManager,
                  study: PflotranStudy,
                  kind: str = 'post',
                  on_remote: bool = False, **kwargs):
-        """
-        __init__ method.
-        
+        """Create a restart callback for a PFLOTRAN study.
+
+        Category: PFLOTRAN callback.
+        Tags: pflotran, restart, callback, initialization.
+        Use when: adding restart-file propagation to a study sequence.
         Args:
-            manager (PflotranManager): Description.
-            study (PflotranStudy): Description.
-            kind (str): Description.
-            on_remote (bool): Description.
-            **kwargs (Any): Description.
+            manager: Manager containing the ordered study collection.
+            study: Current study that should receive the previous restart file.
+            kind: Callback kind retained for API compatibility.
+            on_remote: Whether restart handling should use remote SSH steps.
+            **kwargs: Extra callback parameters forwarded to ``BaseCallback``.
+        Side effects:
+            Initializes the callback as a pre-run callback.
         """
         super().__init__(manager, study, 'pre', on_remote=on_remote, **kwargs)
 
     def run(self, on_remote):
-        """
-        This method should detect the hdf5 file in the previous study and copy it to the current study
-        
+        """Attach the previous study's restart file to the current study.
+
+        Category: PFLOTRAN callback.
+        Tags: pflotran, restart, callback, ssh, hdf5.
+        Use when: running a sequence where each study should start from the
+            prior study's restart output.
         Args:
-            on_remote (Any): Description.
+            on_remote: If ``True``, add a remote copy step through the manager's
+                SSH connection; otherwise copy/register a local file.
+        Raises:
+            FileNotFoundError: If no restart HDF5 file is found in the previous
+                study outputs.
+        Side effects:
+            Adds input/restart references to the study and may add a remote
+            ``CopyStep``.
         """
         if not on_remote:
             if self.study.idx > 0:
@@ -74,5 +96,12 @@ class PflotranRestartCallback(BaseCallback):
                 raise FileNotFoundError('Restart file not found')
 
     def run_dummy(self):
-        """This method is called when the callback is run in dummy mode"""
+        """Handle dummy callback execution.
+
+        Category: PFLOTRAN callback.
+        Tags: pflotran, restart, dummy-run.
+        Use when: the manager is writing files without executing simulations.
+        Notes:
+            This callback intentionally performs no work in dummy mode.
+        """
         pass

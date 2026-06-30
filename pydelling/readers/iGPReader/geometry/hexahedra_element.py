@@ -11,16 +11,30 @@ from pydelling.readers.iGPReader.geometry import QuadrilateralFace, BaseElement
 
 
 class HexahedraElement(BaseElement):
+    """Eight-node iGP hexahedra element with quadrilateral faces.
+
+    Category: iGP geometry.
+    Tags: hexahedra, element, faces, volume, centroid.
+    Use when: an MCP agent needs to understand hexahedral element topology and
+        derived geometry used by iGP exports.
+    """
+
     def __init__(self, node_ids, node_coords, element_type_n, local_id, centroid_coords=None):
-        """
-        __init__ method.
-        
+        """Create a hexahedra element and derive faces and centroid.
+
+        Category: iGP geometry.
+        Tags: hexahedra, element, nodes, centroid, faces.
+        Use when: constructing a hexahedral element from mesh connectivity and
+            coordinates.
         Args:
-            node_ids (Any): Description.
-            node_coords (Any): Description.
-            element_type_n (Any): Description.
-            local_id (Any): Description.
-            centroid_coords (Any): Description.
+            node_ids: Eight node ids defining the element.
+            node_coords: Coordinates for each node.
+            element_type_n: Element node-count/type marker.
+            local_id: Local element id.
+            centroid_coords: Optional precomputed centroid coordinates.
+        Side effects:
+            Defines quadrilateral faces and sets ``type``, ``centroid``, and
+            ``centroid_coords``.
         """
         super().__init__(node_ids, node_coords, element_type_n, local_id, centroid_coords)
         self.define_faces()
@@ -37,6 +51,14 @@ class HexahedraElement(BaseElement):
 
     def define_faces(self):
         # Add faces that define the wedge
+        """Populate hexahedra face definitions.
+
+        Category: iGP geometry.
+        Tags: hexahedra, faces, quadrilateral.
+        Use when: rebuilding face topology for connection or region operations.
+        Side effects:
+            Adds six quadrilateral faces to ``self.faces``.
+        """
         # Face 1
         self.faces["q1"] = QuadrilateralFace(nodes=np.array([self.nodes[0],
                                                              self.nodes[1],
