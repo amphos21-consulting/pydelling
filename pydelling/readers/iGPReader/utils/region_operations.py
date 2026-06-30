@@ -21,6 +21,14 @@ from typing import List, Union
 
 
 class RegionOperations:
+    """Mixin with region splitting and nearest-node helpers for iGP readers.
+
+    Category: iGP region operations.
+    Tags: igp, regions, boundaries, kd-tree, clustering, nodes.
+    Use when: an MCP agent needs to understand how iGP regions can be split,
+        queried by x/y location, or linked to element centroids.
+    """
+
     boundaries: dict
     region_dict: dict
     # Add iGPReader class methods to this class namespace
@@ -32,18 +40,22 @@ class RegionOperations:
                                name_above: str = 'above',
                                cache_old_results: bool = False,
                                ) -> None:
-        """
-        Divide the topography into two regions, one above and one below a given z coordinate.
+        """Split a boundary region into below/above regions by centroid z.
 
+        Category: iGP region operations.
+        Tags: igp, regions, topography, z-split, boundaries.
+        Use when: separating a topographic boundary into two named regions for
+            material assignment, export, or boundary-condition workflows.
         Args:
             z: The z coordinate to divide the topography by.
             region_name: The name of the region to divide.
             name_below: The name of the region below the z coordinate.
             name_above: The name of the region above the z coordinate.
             cache_old_results: If True, each time this method is called the original region_dict will be used.
-
-        Returns:
-            None
+        Side effects:
+            Mutates ``self.boundaries`` and ``self.region_dict`` by replacing
+            ``region_name`` with the below/above regions. Optionally caches old
+            dictionaries for reuse.
         """
         if cache_old_results:
             if hasattr(self, 'old_region_dict'):
@@ -95,9 +107,12 @@ class RegionOperations:
                            eps: float = 2.5,
                            min_samples: int = 20,
                            ) -> list:
-        """
-        Returns a list of nodes closest to the specified x and y coordinates.
+        """Return node ids nearest to an x/y coordinate within a clustered subset.
 
+        Category: iGP region operations.
+        Tags: igp, nodes, clustering, nearest, xy.
+        Use when: locating mesh nodes by surface x/y coordinates, optionally
+            constrained by material or top-region context.
         Args:
             self: The iGPReader object that calls this method.
             x: The x-coordinate for which to find closest nodes.
@@ -107,9 +122,12 @@ class RegionOperations:
             tol: The tolerance used in the computation.
             eps: The epsilon value used in clustering.
             min_samples: The minimum number of samples required for a cluster.
-
         Returns:
-            A list of node IDs closest to the specified x and y coordinates.
+            np.ndarray: Node ids in ``self.node_id_subset`` selected by the
+            closest cluster ids.
+        Side effects:
+            Lazily initializes ``node_id_subset`` and ``cluster_engine`` when no
+            subset has been generated.
         """
 
 
@@ -176,13 +194,20 @@ class RegionOperations:
                                          x: float,
                                          y: float,
                                          ) -> list:
-        """
-        Returns the (x, y, z) coordinates of the closest specified region to the specified x and y coordinates.
-        
+        """Return the closest node coordinates in a region for an x/y point.
+
+        Category: iGP region operations.
+        Tags: igp, regions, nearest, kd-tree, xy.
+        Use when: projecting an x/y location onto the nearest node of a named
+            region.
         Args:
-            region_name (str): Description.
-            x (float): Description.
-            y (float): Description.
+            region_name: Region whose nodes should be searched.
+            x: Query x coordinate.
+            y: Query y coordinate.
+        Returns:
+            np.ndarray: Coordinates of the closest region node.
+        Side effects:
+            Lazily creates a region KD-tree attribute when missing.
         """
         # Carry out a
         if not hasattr(self, f"{region_name}_kd_tree"):
@@ -197,12 +222,21 @@ class RegionOperations:
                                          region_name: str,
                                          elements: Union[BaseElement, list],
                                          ) -> list:
-        """
-        Returns the (x, y, z) coordinates of the closest specified region to the specified x and y coordinates.
-        
+        """Return closest region node coordinates for one or more elements.
+
+        Category: iGP region operations.
+        Tags: igp, regions, elements, nearest, kd-tree.
+        Use when: mapping element centroids onto their nearest node in a named
+            region.
         Args:
-            region_name (str): Description.
-            elements (Union[BaseElement, list]): Description.
+            region_name: Region whose nodes should be searched.
+            elements: A single ``BaseElement`` or a list of elements with
+                ``centroid_coords``.
+        Returns:
+            list: Region-node coordinates closest to the element centroid x/y
+            positions.
+        Side effects:
+            Lazily creates a region KD-tree attribute when missing.
         """
         # Carry out a
         if not hasattr(self, f"{region_name}_kd_tree"):
@@ -224,11 +258,15 @@ class RegionOperations:
 
 
     def _setup_kd_tree_on_region(self: iGPReader, region_name):
-        """
-        _setup_kd_tree_on_region method.
-        
+        """Build a 2D KD-tree over the x/y coordinates of a region's nodes.
+
+        Category: iGP region operations.
+        Tags: igp, regions, kd-tree, xy.
+        Use when: nearest-node region queries need a spatial index.
         Args:
-            region_name (Any): Description.
+            region_name: Region whose nodes should be indexed.
+        Returns:
+            scipy.spatial.cKDTree: KD-tree built from x/y node coordinates.
         """
         region_nodes = self.get_region_nodes(region_name)
         # Get only the x and y coordinates
@@ -236,6 +274,4 @@ class RegionOperations:
         # Setup the KD tree
         kd_tree = KDTree(region_nodes)
         return kd_tree
-
-
 

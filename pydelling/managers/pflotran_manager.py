@@ -24,12 +24,25 @@ import os
 logger = logging.getLogger(__name__)
 
 class PflotranManager(BaseManager):
+    """Manager for writing, running, and collecting PFLOTRAN studies.
+
+    Category: PFLOTRAN management.
+    Tags: pflotran, studies, execution, docker, hpc, jureca, lumi, results.
+    Use when: an MCP agent needs to understand how pydelling launches
+        ``PflotranStudy`` objects locally, in Docker, or on remote HPC systems
+        and how it gathers results afterward.
+    """
+
     def _get_study_status(self, study_id: int):
-        """
-        This method returns the status of a study.
-        
+        """Return status information for a PFLOTRAN study.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, status, study.
+        Use when: extending the manager with study status queries.
         Args:
-            study_id (int): Description.
+            study_id: Integer identifier of the study to inspect.
+        Notes:
+            This base implementation is a placeholder.
         """
         pass
 
@@ -41,16 +54,23 @@ class PflotranManager(BaseManager):
                    pflotran_dir: str = 'pflotran',
                    **kwargs,
                    ):
-        """
-        This method runs a study.
-        
+        """Run one PFLOTRAN study on the local machine.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, local-execution, petsc, mpi.
+        Use when: a study should be executed by a local PFLOTRAN binary rather
+            than Docker or a remote HPC backend.
         Args:
-            study (PflotranStudy): Description.
-            n_cores (int): Description.
-            petsc_dir (str): Description.
-            petsc_arch (str): Description.
-            pflotran_dir (str): Description.
-            **kwargs (Any): Description.
+            study: ``PflotranStudy`` whose input file has been written to its
+                output folder.
+            n_cores: Number of MPI ranks. ``1`` uses serial execution.
+            petsc_dir: PETSc installation path used for parallel runs.
+            petsc_arch: PETSc architecture name used for parallel runs.
+            pflotran_dir: PFLOTRAN executable or command path.
+            **kwargs: Accepted for compatibility with ``BaseManager`` dispatch.
+        Side effects:
+            Runs a subprocess in ``study.output_folder`` and sets PETSc
+            environment variables for parallel execution.
         """
         if n_cores == 1:
             # Run the study in serial
@@ -70,14 +90,22 @@ class PflotranManager(BaseManager):
                           n_cores: int = 1,
                           **kwargs,
                           ):
-        """
-        This method runs a study using docker.
-        
+        """Run one PFLOTRAN study inside a Docker container.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, docker, container, execution.
+        Use when: PFLOTRAN should run from a Docker image instead of the host
+            environment.
         Args:
-            study (PflotranStudy): Description.
-            docker_image (str): Description.
-            n_cores (int): Description.
-            **kwargs (Any): Description.
+            study: ``PflotranStudy`` whose run folder is copied into the
+                container.
+            docker_image: Image used to create the PFLOTRAN container when it is
+                not already running.
+            n_cores: Number of MPI ranks. ``1`` uses serial execution.
+            **kwargs: Accepted for compatibility with ``BaseManager`` dispatch.
+        Side effects:
+            Creates or starts a container, archives the study folder into it,
+            runs PFLOTRAN, then stops and removes the container.
         """
         docker_client = docker.from_env()
             # Run the study in serial
@@ -141,20 +169,32 @@ class PflotranManager(BaseManager):
                             download_results: bool = True,
                             **kwargs,
                             ):
-        """
-        This method runs a study on JURECA
-        
+        """Run one PFLOTRAN study on JURECA through SSH.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, jureca, ssh, hpc, job-submission.
+        Use when: dispatching a PFLOTRAN study to the JURECA HPC environment
+            with a provided submission script.
         Args:
-            study (PflotranStudy): Description.
-            user (Any): Description.
-            project_name (Any): Description.
-            pkey_path (Any): Description.
-            n_cores (int): Description.
-            wallclock_limit (str): Description.
-            shell_script_path (str): Description.
-            download_file_extensions (list): Description.
-            download_results (bool): Description.
-            **kwargs (Any): Description.
+            study: ``PflotranStudy`` to upload and run.
+            user: Remote username.
+            project_name: JURECA project or allocation name.
+            pkey_path: SSH private key path.
+            n_cores: Number of requested cores, retained for dispatch
+                compatibility.
+            wallclock_limit: Optional wallclock limit retained for compatibility
+                with run configuration.
+            shell_script_path: Local submission script template. ``{input_name}``
+                is replaced with the study input filename before upload.
+            download_file_extensions: File suffixes to download after job
+                completion.
+            download_results: Whether to download result files after the job.
+            **kwargs: Extra backend options accepted for compatibility.
+        Raises:
+            ValueError: If no submission script is provided.
+        Side effects:
+            Prompts for a password if needed, creates remote folders, uploads
+            files, submits a job, waits for completion, and may download results.
         """
         if self.password is None:
             self.password = getpass.getpass(prompt='Password: ', stream=None)
@@ -221,20 +261,32 @@ class PflotranManager(BaseManager):
                             download_results: bool = True,
                             **kwargs,
                             ):
-        """
-        This method runs a study on JURECA
-        
+        """Run one PFLOTRAN study on LUMI through SSH.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, lumi, ssh, hpc, job-submission.
+        Use when: dispatching a PFLOTRAN study to the LUMI HPC environment with
+            a provided submission script.
         Args:
-            study (PflotranStudy): Description.
-            user (Any): Description.
-            project_name (Any): Description.
-            pkey_path (Any): Description.
-            n_cores (int): Description.
-            wallclock_limit (str): Description.
-            shell_script_path (str): Description.
-            download_file_extensions (Any): Description.
-            download_results (bool): Description.
-            **kwargs (Any): Description.
+            study: ``PflotranStudy`` to upload and run.
+            user: Remote username.
+            project_name: LUMI project or allocation name.
+            pkey_path: SSH private key path.
+            n_cores: Number of requested cores, retained for dispatch
+                compatibility.
+            wallclock_limit: Optional wallclock limit retained for compatibility
+                with run configuration.
+            shell_script_path: Local submission script template. ``{input_name}``
+                is replaced with the study input filename before upload.
+            download_file_extensions: File suffixes to download after job
+                completion.
+            download_results: Whether to download result files after the job.
+            **kwargs: Extra backend options accepted for compatibility.
+        Raises:
+            ValueError: If no submission script is provided.
+        Side effects:
+            Prompts for a password if needed, creates remote folders, uploads
+            files, submits a job, waits for completion, and may download results.
         """
         if self.password is None:
             self.password = getpass.getpass(prompt='Password: ', stream=None)
@@ -299,12 +351,19 @@ class PflotranManager(BaseManager):
                             ssh_manager: BaseSsh,
                             study: PflotranStudy,
                             ):
-        """
-        This method copies the data to the remote server. Takes care of the shared files.
-        
+        """Upload a study folder and its auxiliary files to a remote backend.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, ssh, upload, shared-files, input-files.
+        Use when: preparing a remote HPC study directory while avoiding repeated
+            uploads of shared auxiliary input files.
         Args:
-            ssh_manager (BaseSsh): Description.
-            study (PflotranStudy): Description.
+            ssh_manager: Connected SSH/SFTP helper for the target platform.
+            study: Study whose output folder and auxiliary files should be
+                uploaded.
+        Side effects:
+            Creates remote shared/input folders, uploads files through SFTP, and
+            copies shared files remotely when possible.
         """
         # Check if the shared files are already in the remote server
         if self.has_shared_files:
@@ -337,6 +396,16 @@ class PflotranManager(BaseManager):
 
     @property
     def has_shared_files(self):
+        """Return whether any registered study declares shared auxiliary files.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, shared-files, studies.
+        Use when: deciding whether remote uploads should use the shared-file
+            optimization path.
+        Returns:
+            bool: ``True`` when at least one study has entries in
+            ``_shared_files``.
+        """
         return any([len(study._shared_files) > 0 for study in self.studies.values()])
 
     def _ssh_download(self,
@@ -344,13 +413,19 @@ class PflotranManager(BaseManager):
                       file_ext=None,
                       job_id=None,
                       ):
-        """
-        This method downloads the results from the remote server.
-        
+        """Download selected remote result files into a study output folder.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, ssh, download, results, hdf5.
+        Use when: collecting files produced by a remote PFLOTRAN job after the
+            queue reports completion.
         Args:
-            study (PflotranStudy): Description.
-            file_ext (Any): Description.
-            job_id (Any): Description.
+            study: Study whose local output folder receives downloaded files.
+            file_ext: Optional list of suffixes to match. Defaults to ``[".h5"]``.
+            job_id: Optional job id used to also match scheduler output files.
+        Side effects:
+            Attempts to download matching remote files through ``self.ssh`` and
+            logs warnings for files that cannot be retrieved.
         """
         print(file_ext)
         if file_ext is None:
@@ -371,12 +446,20 @@ class PflotranManager(BaseManager):
 
 
     def merge_results(self, move=False, postprocess=True):
-        """
-        This method merges the results of all the studies.
-        
+        """Merge HDF5 results from all studies into one results folder.
+
+        Category: PFLOTRAN management.
+        Tags: pflotran, results, merge, hdf5, postprocessing.
+        Use when: a batch of PFLOTRAN studies should be consolidated for
+            combined post-processing.
         Args:
-            move (Any): Description.
-            postprocess (Any): Description.
+            move: If ``True``, move result files instead of copying them.
+            postprocess: If ``True``, copy the domain file and run
+                ``PflotranPostprocessing`` in the merged folder.
+        Side effects:
+            Creates a merged results folder, copies or moves HDF5 files, may
+            copy the domain HDF5 file, changes the current working directory, and
+            may run PFLOTRAN post-processing.
         """
         self.run(dummy=True)
         import shutil
@@ -404,7 +487,6 @@ class PflotranManager(BaseManager):
             os.chdir(self.results_folder / 'merged_results')
             pflotran_postprocesser.run()
             # Return to the original working directory
-
 
 
 

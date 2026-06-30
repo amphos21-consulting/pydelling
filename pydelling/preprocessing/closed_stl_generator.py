@@ -14,18 +14,33 @@ from pydelling.utils import create_results_folder
 logger = logging.getLogger(__name__)
 
 class ClosedStlGenerator(object):
+    """Generate a closed STL volume from raster top and bottom surfaces.
+
+    Category: preprocessing.
+    Tags: stl, raster, surface, aperture, mesh-export.
+    Use when: an MCP agent needs to turn regular raster surfaces into a closed
+        triangulated STL shell for meshing or visualization.
+    """
+
     def __init__(self, bottom_surface: RasterFileReader,
                  top_surface: RasterFileReader = None,
                  aperture: RasterFileReader = None,
     ):
         # Generate needed data
-        """
-        __init__ method.
-        
+        """Configure raster surfaces used to build the closed STL.
+
+        Category: preprocessing.
+        Tags: stl, raster, top-surface, bottom-surface, aperture.
+        Use when: preparing an STL shell from a bottom raster and either a top
+            raster or an aperture raster.
         Args:
-            bottom_surface (RasterFileReader): Description.
-            top_surface (RasterFileReader): Description.
-            aperture (RasterFileReader): Description.
+            bottom_surface: Raster defining the lower surface.
+            top_surface: Raster defining the upper surface.
+            aperture: Optional raster defining separation between surfaces.
+        Raises:
+            AssertionError: If no aperture can be derived.
+        Side effects:
+            Stores the surface rasters and initializes the STL mesh attribute.
         """
         self.bottom_surface = bottom_surface
         if top_surface is not None:
@@ -40,12 +55,19 @@ class ClosedStlGenerator(object):
     def run(self, output_filename: str = 'closed_stl.stl',
             export_faces=True,
             ):
-        """
-        This method runs the closed STL generator
-        
+        """Build and export the closed STL mesh.
+
+        Category: preprocessing.
+        Tags: stl, raster, triangulation, export.
+        Use when: generating the complete STL shell and optional per-side STL
+            files from the configured rasters.
         Args:
-            output_filename (str): Description.
-            export_faces (Any): Description.
+            output_filename: Name of the combined STL output file.
+            export_faces: Whether to also write separate STL files for bottom,
+                top, and side faces.
+        Side effects:
+            Builds ``self.stl_file`` and ``self.faces_stl`` then writes STL
+            files through ``export_stl``.
         """
         logger.info(f'Generating closed STL based on bottom raster file: {self.bottom_surface.filename} and top raster file: {self.top_surface.filename}')
         # First, we need to generate the vertices
@@ -203,12 +225,17 @@ class ClosedStlGenerator(object):
 
 
     def export_stl(self, output_filename, faces=False):
-        """
-        Exports the generated closed STL
-        
+        """Write the generated STL mesh to a results folder.
+
+        Category: preprocessing.
+        Tags: stl, export, results-folder.
+        Use when: persisting a generated closed STL and optional individual face
+            meshes.
         Args:
-            output_filename (Any): Description.
-            faces (Any): Description.
+            output_filename: Combined STL output filename.
+            faces: Whether to write the entries in ``self.faces_stl``.
+        Side effects:
+            Creates a results folder and writes one or more STL files.
         """
         from pathlib import Path
         results_folder = create_results_folder()
@@ -226,5 +253,13 @@ class ClosedStlGenerator(object):
 
 
     def plot_aperture(self):
-        """This method plots the aperture"""
+        """Plot the aperture raster.
+
+        Category: preprocessing.
+        Tags: aperture, raster, plot.
+        Use when: visually checking the surface separation before or after STL
+            generation.
+        Side effects:
+            Delegates plotting to ``self.aperture.plot``.
+        """
         self.aperture.plot(colorbar_label='Aperture')

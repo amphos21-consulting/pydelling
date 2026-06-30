@@ -10,13 +10,26 @@ from . import Line, Point, BasePrimitive
 
 
 class Segment(Line):
+    """Finite line segment represented by two endpoint ``Point`` objects.
+
+    Category: geometry primitive.
+    Tags: segment, point, length, intersection, containment.
+    Use when: an MCP agent needs bounded line geometry for mesh, polygon, or
+        plane-intersection workflows.
+    """
+
     def __init__(self, p1, p2):
-        """
-        __init__ method.
-        
+        """Create a segment from two endpoints.
+
+        Category: geometry primitive.
+        Tags: segment, endpoints, point, direction-vector.
+        Use when: constructing bounded geometry from two coordinates or points.
         Args:
-            p1 (Any): Description.
-            p2 (Any): Description.
+            p1: First endpoint coordinate or ``Point``.
+            p2: Second endpoint coordinate or ``Point``.
+        Side effects:
+            Initializes the parent line, stores endpoints as ``Point`` objects,
+            and computes endpoint displacement.
         """
         super().__init__(p1, p2)
         self.p1 = Point(p1)
@@ -31,15 +44,29 @@ class Segment(Line):
 
     @property
     def length(self):
+        """Return the Euclidean distance between segment endpoints.
+
+        Category: geometry primitive.
+        Tags: segment, length, distance.
+        Use when: geometric workflows need the finite segment length.
+        Returns:
+            float: Norm of ``p2 - p1``.
+        """
         return np.sqrt(np.sum(self.displacement ** 2))
 
 
     def intersect(self, primitive: BasePrimitive):
-        """
-        intersect method.
-        
+        """Intersect this segment with a supported primitive.
+
+        Category: geometry primitive.
+        Tags: segment, intersection, plane.
+        Use when: clipping or testing a finite segment against a plane.
         Args:
-            primitive (BasePrimitive): Description.
+            primitive: Currently only ``Plane`` is supported.
+        Returns:
+            Result returned by ``intersect_plane_segment``.
+        Raises:
+            NotImplementedError: If the primitive type is unsupported.
         """
         from .intersections import intersect_plane_segment
 
@@ -51,11 +78,17 @@ class Segment(Line):
 
     def contains(self, point):
         # Calculate direction vectors
-        """
-        contains method.
-        
+        """Return whether a point lies on the finite segment.
+
+        Category: geometry primitive.
+        Tags: segment, containment, point, bounds.
+        Use when: verifying that a candidate intersection lies between segment
+            endpoints.
         Args:
-            point (Any): Description.
+            point: Point-like coordinate to test.
+        Returns:
+            bool: ``True`` when the point is collinear with the segment and lies
+            between both endpoints.
         """
         segment_vector = self.p2 - self.p1
         point_vector = point - self.p1
@@ -70,5 +103,4 @@ class Segment(Line):
         segment_length_squared = np.dot(segment_vector, segment_vector)
 
         return 0 <= dot_product <= segment_length_squared
-
 

@@ -8,16 +8,30 @@ from pydelling.config import config
 
 
 class BaseElement:
+    """Base iGP mesh element storing connectivity, coordinates, and faces.
+
+    Category: iGP geometry.
+    Tags: element, mesh, nodes, faces, centroid.
+    Use when: an MCP agent needs the common attributes shared by iGP element
+        types before export or region operations.
+    """
+
     def __init__(self, node_ids, node_coords, element_type_n, local_id, centroid_coords=None):
-        """
-        __init__ method.
-        
+        """Create a base mesh element from node ids and coordinates.
+
+        Category: iGP geometry.
+        Tags: element, nodes, coordinates, centroid, faces.
+        Use when: constructing element subclasses that share connectivity and
+            face-storage behavior.
         Args:
-            node_ids (Any): Description.
-            node_coords (Any): Description.
-            element_type_n (Any): Description.
-            local_id (Any): Description.
-            centroid_coords (Any): Description.
+            node_ids: Node ids defining the element connectivity.
+            node_coords: Coordinates for each node.
+            element_type_n: Number of nodes for this element type.
+            local_id: Element id in the local mesh.
+            centroid_coords: Optional precomputed centroid coordinates.
+        Side effects:
+            Stores connectivity, coordinates, type metadata, local id, and an
+            empty face dictionary.
         """
         self.nodes = node_ids  # Node id set
         self.coords = node_coords  # Coordinates of each node
@@ -43,6 +57,14 @@ class BaseElement:
 
 
     def print_element_info(self):
+        """Print element connectivity and type metadata.
+
+        Category: iGP geometry.
+        Tags: element, debug, connectivity.
+        Use when: interactively inspecting an iGP element during debugging.
+        Side effects:
+            Writes element information to stdout.
+        """
         print("### Element info ###")
         print(f"Element ID: {self.local_id}")
         print(f"Number of nodes: {self.n_type}")
@@ -51,6 +73,15 @@ class BaseElement:
         print("### End element info ###")
 
     def print_face_info(self):
+        """Print stored face coordinate information.
+
+        Category: iGP geometry.
+        Tags: element, faces, debug.
+        Use when: interactively inspecting face geometry attached to an iGP
+            element.
+        Side effects:
+            Writes face information to stdout.
+        """
         print("### Face info ###")
         for face in self.faces:
             print(f"{face}: {self.faces[face].coords}")

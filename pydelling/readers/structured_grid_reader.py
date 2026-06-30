@@ -13,17 +13,28 @@ logger = logging.getLogger(__name__)
 
 
 class StructuredGridReader(BaseReader):
+    """Read structured-grid centroid rows and an associated variable.
+
+    Category: structured-grid reader.
+    Tags: structured-grid, centroids, variable, csv.
+    Use when: an MCP agent needs to load structured-grid coordinate rows and
+        combine them with a scalar variable column.
+    """
+
     def __init__(self, filename, var_pos=3, var_name="var", var_type=np.float32, centroid_pos=(0, 3), header=False):
-        """
-        __init__ method.
-        
+        """Configure structured-grid parsing positions and load the file.
+
+        Category: structured-grid reader.
+        Tags: structured-grid, initialization, centroids, variable.
+        Use when: constructing a reader for text rows containing centroid
+            coordinates and a variable value.
         Args:
-            filename (Any): Description.
-            var_pos (Any): Description.
-            var_name (Any): Description.
-            var_type (Any): Description.
-            centroid_pos (Any): Description.
-            header (Any): Description.
+            filename: Source text file.
+            var_pos: Column index containing the variable value.
+            var_name: Logical name of the variable.
+            var_type: NumPy dtype used for the variable array.
+            centroid_pos: Start/end positions for centroid coordinate columns.
+            header: Whether the file contains a leading header line.
         """
         self.var_pos = None
         self.var = None
@@ -38,11 +49,15 @@ class StructuredGridReader(BaseReader):
                          header=header)
 
     def read_file(self, opened_file: BaseReader):
-        """
-        read_file method.
-        
+        """Parse centroid coordinates and variable values from an open file.
+
+        Category: structured-grid reader.
+        Tags: structured-grid, parse, centroids, variable.
+        Use when: reading structured-grid text rows into NumPy arrays.
         Args:
-            opened_file (BaseReader): Description.
+            opened_file: Open file handle positioned at data rows.
+        Side effects:
+            Sets ``self.data`` and ``self.var``.
         """
         temp_centroid = []
         temp_id = []
@@ -55,24 +70,38 @@ class StructuredGridReader(BaseReader):
 
 
     def read_header(self):
-        """
-        TODO: Add the header reader of the centroid file
-        Reads the header of the file
-        :return:
+        """Placeholder for structured-grid header parsing.
+
+        Category: structured-grid reader.
+        Tags: structured-grid, header, extension-point.
+        Use when: implementing support for structured-grid formats with
+            explicit headers.
+        Notes:
+            The current implementation does not parse header content.
         """
         pass
 
     def get_data(self) -> np.ndarray:
-        """
-        Outputs the data
-        :return: np.ndarray object containing centroid information and variable output
+        """Return centroid coordinates concatenated with variable values.
+
+        Category: structured-grid reader.
+        Tags: structured-grid, data, numpy, variable.
+        Use when: downstream workflows need one array containing coordinates and
+            the parsed variable.
+        Returns:
+            np.ndarray: ``self.data`` horizontally stacked with ``self.var``.
         """
         return np.hstack((self.data, self.var))
 
     def build_info(self):
-        """
-        Generates a dictionary containing the basic info of the read data
-        :return:
+        """Build metadata for the parsed structured-grid file.
+
+        Category: structured-grid reader.
+        Tags: structured-grid, metadata, info.
+        Use when: MCP tools need cell count, source filename, and variable
+            metadata after parsing.
+        Side effects:
+            Updates ``self.info["reader"]``.
         """
         self.info["reader"] = {"n_cells": self.data.shape[0],
                      "filename": self.filename,
@@ -80,14 +109,17 @@ class StructuredGridReader(BaseReader):
                      "var_position": self.var_pos}
 
     def dump_to_csv(self, output_file, delimiter=","):
-        """
-        Writes the data into a csv file
-        
+        """Write parsed structured-grid data to a delimited text file.
+
+        Category: structured-grid reader.
+        Tags: structured-grid, csv, export.
+        Use when: exporting loaded structured-grid coordinates and values.
         Args:
-            output_file (Any): Description.
-            delimiter (Any): Description.
+            output_file: Destination file path.
+            delimiter: Output delimiter.
+        Side effects:
+            Writes ``self.get_data()`` to ``output_file``.
         """
         print(f"Starting dump into {output_file}")
         np.savetxt(output_file, self.get_data(), delimiter=delimiter)
         print(f"The data has been properly exported to the {output_file} file")
-

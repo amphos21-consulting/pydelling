@@ -14,7 +14,14 @@ logger = logging.getLogger(__name__)
 
 
 class CentroidReader(BaseReader):
-    """This class reads a data file described by a set of centroids"""
+    """Read centroid coordinate files with an optional associated variable.
+
+    Category: centroid reader.
+    Tags: centroids, coordinates, variable, csv, dataframe.
+    Use when: an MCP agent needs to load x/y/z centroid locations and an
+        optional scalar value from a text file.
+    """
+
     def __init__(self, filename, var_pos=3, var_name="var", var_type=np.float32, centroid_pos=(0, 3), header=False, separator=None):
         """
         __init__ method.
@@ -47,11 +54,16 @@ class CentroidReader(BaseReader):
                          header=header)
 
     def read_file(self, opened_file):
-        """
-        Reads the data and stores it inside the class
-        
+        """Parse centroid coordinates and optional variable values.
+
+        Category: centroid reader.
+        Tags: centroids, parse, text-file, variable.
+        Use when: loading centroid rows from an already opened text file.
         Args:
-            opened_file (Any): Description.
+            opened_file: Open file handle positioned at the centroid rows.
+        Side effects:
+            Sets ``self.data`` to centroid coordinates and ``self.var`` when a
+            variable position is configured.
         """
         logger.info(f"Reading centroid file from {self.filename}")
         temp_centroid = []
@@ -70,19 +82,30 @@ class CentroidReader(BaseReader):
 
 
     def read_header(self):
-        """
-        TODO: Add the header reader of the centroid file
-        Reads the header of the file
-        :return:
+        """Placeholder for centroid-file header parsing.
+
+        Category: centroid reader.
+        Tags: centroids, header, extension-point.
+        Use when: implementing support for centroid formats with explicit
+            headers.
+        Notes:
+            The current implementation does not parse header content.
         """
         pass
 
     def get_data(self, as_dataframe=False) -> pd.DataFrame:
-        """
-        Outputs the data
-        
+        """Return centroid data as a NumPy array or DataFrame.
+
+        Category: centroid reader.
+        Tags: centroids, data, dataframe, numpy.
+        Use when: downstream processing needs parsed centroid coordinates and,
+            when configured, the associated variable values.
         Args:
-            as_dataframe (Any): Description.
+            as_dataframe: If ``True``, return a pandas DataFrame with named
+                columns.
+        Returns:
+            np.ndarray | pd.DataFrame: Parsed centroid coordinates, optionally
+            converted to a DataFrame.
         """
         if as_dataframe:
             if self.var_pos:
@@ -94,9 +117,14 @@ class CentroidReader(BaseReader):
 
 
     def build_info(self):
-        """
-        Generates a dictionary containing the basic info of the read data
-        :return:
+        """Build metadata for the parsed centroid file.
+
+        Category: centroid reader.
+        Tags: centroids, metadata, info.
+        Use when: MCP tools need cell count, source filename, and variable
+            metadata after parsing.
+        Side effects:
+            Updates ``self.info["reader"]``.
         """
         self.info["reader"] = {"n_cells": self.data.shape[0],
                      "filename": self.filename,
@@ -104,23 +132,33 @@ class CentroidReader(BaseReader):
                      "var_position": self.var_pos}
 
     def to_csv(self, output_file, delimiter=","):
-        """
-        Writes the data into a csv file
-        
+        """Write parsed centroid data to a delimited text file.
+
+        Category: centroid reader.
+        Tags: centroids, csv, export.
+        Use when: exporting loaded centroid coordinates for another tool.
         Args:
-            output_file (Any): Description.
-            delimiter (Any): Description.
+            output_file: Destination file path.
+            delimiter: Output delimiter.
+        Side effects:
+            Writes ``self.get_data()`` to ``output_file``.
         """
         logger.info(f"Starting dump into {output_file}")
         np.savetxt(output_file, self.get_data(), delimiter=delimiter)
         logger.info(f"The data has been properly exported to the {output_file} file")
 
     def shift(self, direction=np.array([0.0, 0.0, 0.0])):
-        """Shifts the data coordinates on the given direction
+        """Shift centroid coordinates by a direction vector.
+
+        Category: centroid reader.
+        Tags: centroids, coordinates, transform, shift.
+        Use when: converting centroid coordinates between local and translated
+            coordinate systems.
         Args:
-            direction: direction vector
+            direction: 3D offset added to the first three data columns.
+        Side effects:
+            Mutates ``self.data`` in place.
         """
         if type(direction) is list:
             direction = np.array(direction)
         self.data[:, 0:3] += direction
-

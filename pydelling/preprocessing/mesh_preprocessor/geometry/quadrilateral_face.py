@@ -10,20 +10,43 @@ from pydelling.preprocessing.mesh_preprocessor.geometry import BaseFace
 
 
 class QuadrilateralFace(BaseFace):
+    """Quadrilateral mesh face with edge connectivity helpers.
+
+    Category: mesh geometry.
+    Tags: quadrilateral, face, edges, centroid, mesh-preprocessor.
+    Use when: an MCP agent needs to recognize four-node faces produced by the
+        mesh preprocessor and inspect their edge topology.
+    """
+
     def __init__(self, node_ids, node_coords, *args, **kwargs):
-        """
-        __init__ method.
-        
+        """Create a quadrilateral face from four node ids and coordinates.
+
+        Category: mesh geometry.
+        Tags: quadrilateral, face, nodes, coordinates.
+        Use when: constructing a mesh-preprocessor face for quadrilateral
+            boundaries or element sides.
         Args:
-            node_ids (Any): Description.
-            node_coords (Any): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+            node_ids: Connectivity ids for the four face nodes.
+            node_coords: Coordinate array for the four face vertices.
+            *args: Positional arguments forwarded to ``BaseFace``.
+            **kwargs: Keyword arguments forwarded to ``BaseFace``.
+        Side effects:
+            Initializes base face geometry and sets ``type`` to
+            ``"quadrilateral"``.
         """
         super().__init__(node_ids, node_coords, *args, **kwargs)
         self.type = "quadrilateral"
 
     def compute_centroid(self):
+        """Return the arithmetic mean centroid of the quadrilateral vertices.
+
+        Category: mesh geometry.
+        Tags: quadrilateral, centroid, coordinates.
+        Use when: geometric processing needs a representative point for a
+            quadrilateral face.
+        Returns:
+            np.ndarray: Mean coordinate of the quadrilateral vertices.
+        """
         return np.mean(self.coords, axis=0)
         # t1 = [0, 1, 3]
         # t2 = [1, 2, 3]
@@ -49,6 +72,14 @@ class QuadrilateralFace(BaseFace):
 
     @property
     def edges(self):
+        """Return the four directed node-id edges of the quadrilateral.
+
+        Category: mesh geometry.
+        Tags: quadrilateral, edges, connectivity.
+        Use when: matching, comparing, or exporting quadrilateral face edges.
+        Returns:
+            list: Four ``[start_node, end_node]`` edge pairs.
+        """
         return [
             [self.nodes[0], self.nodes[1]],
             [self.nodes[1], self.nodes[2]],
@@ -58,6 +89,15 @@ class QuadrilateralFace(BaseFace):
 
     @property
     def edge_vectors(self):
+        """Return coordinate vectors for each quadrilateral edge.
+
+        Category: mesh geometry.
+        Tags: quadrilateral, edges, vectors, coordinates.
+        Use when: computing lengths, normals, or geometric checks for a
+            quadrilateral face.
+        Returns:
+            list: Four vectors following the face edge order.
+        """
         return [
             self.coords[1] - self.coords[0],
             self.coords[2] - self.coords[1],

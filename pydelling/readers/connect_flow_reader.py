@@ -19,23 +19,42 @@ from linecache import getline
 
 
 class ConnectFlowReader(BaseReader):
+    """Read ConnectFlow mesh nodes and expose basic spatial metadata.
+
+    Category: ConnectFlow reader.
+    Tags: connectflow, mesh, nodes, bounds, span.
+    Use when: an MCP agent needs to parse ConnectFlow mesh node coordinates and
+        reason about their spatial extent.
+    """
+
     def __init__(self, filename=None):
-        """
-        __init__ method.
-        
+        """Create a reader for a ConnectFlow mesh file.
+
+        Category: ConnectFlow reader.
+        Tags: connectflow, mesh, initialization.
+        Use when: loading a ConnectFlow mesh from an explicit path or from the
+            configured default path.
         Args:
-            filename (Any): Description.
+            filename: Path to the ConnectFlow mesh file. If omitted, the
+                configured OpenFOAM reader filename is used as the fallback.
+        Side effects:
+            Calls ``BaseReader`` initialization, which reads the file.
         """
         self.filename = Path(filename) if filename else Path(config.open_foam_reader.filename)
         logger.info(f"Reading ConnectFlow mesh file from {self.filename}")
         super().__init__(filename=self.filename)
 
     def open_file(self, filename):
-        """
-        open_file method.
-        
+        """Parse ConnectFlow header counts and node coordinates.
+
+        Category: ConnectFlow reader.
+        Tags: connectflow, mesh, nodes, pandas.
+        Use when: loading mesh-node data from a ConnectFlow text file.
         Args:
-            filename (Any): Description.
+            filename: ConnectFlow mesh file path.
+        Side effects:
+            Sets ``n_nodes``, ``n_elements``, ``n_mat``, ``_mesh_nodes``, and
+            rebuilt ``info`` metadata.
         """
         filename_string = str(filename)
         header = getline(filename_string, 1).split()
@@ -50,22 +69,43 @@ class ConnectFlowReader(BaseReader):
 
     @property
     def mesh_nodes(self) -> pd.DataFrame:
+        """Return parsed ConnectFlow mesh nodes.
+
+        Category: ConnectFlow reader.
+        Tags: connectflow, mesh, nodes, dataframe.
+        Use when: workflows need node ids and x/y/z coordinates as a
+            DataFrame.
+        Returns:
+            pd.DataFrame: Node table indexed by node id.
+        Raises:
+            AssertionError: If node data has not been parsed.
+        """
         assert hasattr(self, "_mesh_nodes"), "Mesh has not been properly assigned"
         return self._mesh_nodes
 
 
     def get_data(self) -> np.ndarray:
-        """
-        Outputs the read data
-        :return:
+        """Return the generic reader payload placeholder.
+
+        Category: ConnectFlow reader.
+        Tags: connectflow, base-reader, data.
+        Use when: code expects the ``BaseReader`` data accessor; use
+            ``mesh_nodes`` for actual parsed node coordinates.
+        Returns:
+            np.ndarray: Current placeholder zero array.
         """
         return np.array(0)
 
 
     def build_info(self):
-        """
-        Generates a dictionary containing the basic info of the read data
-        :return:
+        """Build bounds and span metadata from parsed mesh nodes.
+
+        Category: ConnectFlow reader.
+        Tags: connectflow, bounds, span, metadata.
+        Use when: an MCP workflow needs the spatial extent of the ConnectFlow
+            mesh after parsing.
+        Side effects:
+            Sets ``self.info["bounds"]`` and ``self.info["span"]`` for x/y/z.
         """
         min_x = self._mesh_nodes["x"].min()
         max_x = self._mesh_nodes["x"].max()
@@ -89,18 +129,24 @@ class ConnectFlowReader(BaseReader):
         })
 
     def get_bounds(self):
-        """
-        Returns the x, y and z axis bounds
+        """Return x/y/z coordinate bounds.
+
+        Category: ConnectFlow reader.
+        Tags: connectflow, bounds, metadata.
+        Use when: downstream workflows need minimum and maximum coordinates.
         Returns:
-            A list containing the bounds
+            dict: Bounds dictionary with ``x``, ``y``, and ``z`` entries.
         """
         return self.info["bounds"]
 
 
     def get_span(self):
-        """
-        Returns the x, y and z axis span
+        """Return x/y/z coordinate spans.
+
+        Category: ConnectFlow reader.
+        Tags: connectflow, span, metadata.
+        Use when: downstream workflows need total mesh extents by axis.
         Returns:
-            A list containing the span
+            dict: Span dictionary with ``x``, ``y``, and ``z`` entries.
         """
         return self.info["span"]

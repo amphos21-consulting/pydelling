@@ -15,15 +15,31 @@ from .point import Point
 
 
 class Line(BasePrimitive):
+    """Infinite 3D line represented by a point and a unit direction vector.
+
+    Category: geometry primitive.
+    Tags: line, point, direction-vector, intersection, angle.
+    Use when: an MCP agent needs geometric line operations for intersections or
+        angular comparisons.
+    """
+
     def __init__(self, p1: np.ndarray or Point or List = None, p2: np.ndarray or Point or List = None,
                  direction_vector: np.ndarray or List = None):
-        """
-        __init__ method.
-        
+        """Create a line from two points or from one point and a direction.
+
+        Category: geometry primitive.
+        Tags: line, point, direction-vector, initialization.
+        Use when: constructing an infinite line for geometric intersection
+            routines.
         Args:
-            p1 (np.ndarray or Point or List): Description.
-            p2 (np.ndarray or Point or List): Description.
-            direction_vector (np.ndarray or List): Description.
+            p1: First point, or the anchor point when ``direction_vector`` is
+                provided.
+            p2: Second point, or the anchor point when ``p1`` is omitted and
+                ``direction_vector`` is provided.
+            direction_vector: Direction vector normalized during construction.
+        Side effects:
+            Sets ``self.p`` to an anchor ``Point`` and ``self.direction_vector``
+            to a normalized vector.
         """
         if p1 is not None and p2 is not None:
             p1 = Point(p1)
@@ -49,11 +65,17 @@ class Line(BasePrimitive):
                     self.p = Point(p2)
 
     def is_parallel(self, line: Line):
-        """
-        is_parallel method.
-        
+        """Return whether another line is parallel or anti-parallel.
+
+        Category: geometry primitive.
+        Tags: line, parallel, direction-vector.
+        Use when: checking geometric relationships before attempting line-line
+            intersections.
         Args:
-            line (Line): Description.
+            line: Other ``Line`` instance to compare against.
+        Returns:
+            bool | None: ``True`` when direction vectors are parallel or
+            anti-parallel; otherwise ``None``.
         """
         if np.isclose(np.dot(self.direction_vector, line.direction_vector), 1):
             return True
@@ -61,21 +83,32 @@ class Line(BasePrimitive):
             return True
 
     def angle(self, line: Line):
-        """
-        angle method.
-        
+        """Compute the angle between this line and another line.
+
+        Category: geometry primitive.
+        Tags: line, angle, direction-vector.
+        Use when: measuring angular relationships between two geometric lines.
         Args:
-            line (Line): Description.
+            line: Other ``Line`` instance.
+        Returns:
+            float: Angle in radians.
         """
         return np.arccos(np.dot(self.direction_vector, line.direction_vector) /
                          (np.linalg.norm(self.direction_vector) * np.linalg.norm(line.direction_vector)))
 
     def intersect(self, primitive: BasePrimitive):
-        """
-        intersect method.
-        
+        """Intersect this line with another supported primitive.
+
+        Category: geometry primitive.
+        Tags: line, intersection, plane.
+        Use when: an MCP workflow needs the library's built-in line-line or
+            line-plane intersection routines.
         Args:
-            primitive (BasePrimitive): Description.
+            primitive: ``Line`` or ``Plane`` instance.
+        Returns:
+            Result returned by the matching intersection helper.
+        Raises:
+            NotImplementedError: If the primitive type is unsupported.
         """
         from .intersections import intersect_line_line, intersect_plane_line
 

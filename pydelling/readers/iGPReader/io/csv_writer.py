@@ -8,7 +8,24 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 
 class CsvWriter:
+    """CSV export mixin for iGP cell centroids and connection geometry.
+
+    Category: iGP export.
+    Tags: igp, csv, cells, connections, centroids.
+    Use when: an MCP agent needs to identify the CSV export helpers available on
+        iGP reader/writer objects.
+    """
+
     def write_csv_cells(self):
+        """Write element centroid coordinates and volumes to CSV.
+
+        Category: iGP export.
+        Tags: igp, csv, cells, centroids, volume.
+        Use when: exporting a compact table of mesh cell centers and volumes.
+        Side effects:
+            Writes ``<project_name>_cell.csv`` either in the current directory or
+            under the configured output folder.
+        """
         if not self.output_folder:
             file_csv = open(f"{self.project_name}_cell.csv", "w")
         else:
@@ -19,6 +36,16 @@ class CsvWriter:
         file_csv.close()
 
     def write_csv_connection(self):
+        """Write connection centroid coordinates and face areas to CSV.
+
+        Category: iGP export.
+        Tags: igp, csv, connections, face-area, centroids.
+        Use when: exporting cell-to-cell connection geometry for diagnostics or
+            downstream processing.
+        Side effects:
+            Writes ``<project_name>_connections.csv`` using connection face
+            intersections and areas.
+        """
         if self.output_folder is None:
             file_csv = open(f"{self.project_name}_connections.csv", "w")
         else:
