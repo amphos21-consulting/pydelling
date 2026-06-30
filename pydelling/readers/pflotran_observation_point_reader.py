@@ -20,6 +20,12 @@ logger = logging.getLogger(__name__)
 
 
 class PflotranObservationPointReader(BaseReader):
+    """Read and plot PFLOTRAN observation-point time series outputs.
+
+    Category: reader
+    Tags: pflotran, observation-points, time-series, geochemistry, plotting
+    Use when: scripts need tabular PFLOTRAN observation results, species keys, or quick plots.
+    """
     observation_point: np.ndarray
     observation_boundary: str
     observation_node: int
@@ -43,11 +49,14 @@ class PflotranObservationPointReader(BaseReader):
         # self.variables = list(self.results[self.time_values[0]].variable_keys)
 
     def open_file(self, filename):
-        """
-        open_file method.
-        
-        Args:
-            filename (Any): Description.
+        """Load the PFLOTRAN observation-point file into a DataFrame.
+
+        Category: reader
+        Tags: pflotran, observation-points, csv, dataframe, variables
+        Use when: scripts need parsed observation output with normalized variable names.
+
+        Returns:
+            None: populates data and variables mappings.
         """
         self.data: pd.DataFrame = pd.read_csv(self.filename,
                                               skiprows=1,
@@ -82,29 +91,57 @@ class PflotranObservationPointReader(BaseReader):
 
     @property
     def mineral_names(self):
+        """Return mineral volume-fraction variable names.
+
+        Category: reader
+        Tags: pflotran, minerals, volume-fraction, variables
+        Use when: scripts need to select mineral VF columns from observation results.
+
+        Returns:
+            list: variable names containing VF.
+        """
         temp_keys = [key for key in self.variables if 'VF' in key]
         return temp_keys
 
     @property
     def total_species_names(self):
+        """Return total species variable names.
+
+        Category: reader
+        Tags: pflotran, species, total, variables
+        Use when: scripts need total concentration/species columns from observation results.
+
+        Returns:
+            list: variable names containing Total.
+        """
         temp_keys = [key for key in self.variables if 'Total' in key]
         return temp_keys
 
     @property
     def free_species_names(self):
+        """Return free species variable names.
+
+        Category: reader
+        Tags: pflotran, species, free, variables
+        Use when: scripts need free species columns from observation results.
+
+        Returns:
+            list: variable names containing Free.
+        """
         temp_keys = [key for key in self.variables if 'Free' in key]
         return temp_keys
 
     def plot_variable(self, variable,
                       delete_previous=True,
                       label=None ) -> plt.Axes:
-        """
-        plot_variable method.
-        
-        Args:
-            variable (Any): Description.
-            delete_previous (Any): Description.
-            label (Any): Description.
+        """Plot one observation variable against time.
+
+        Category: reader
+        Tags: pflotran, observation-points, plot, time-series
+        Use when: scripts need a quick matplotlib line for one PFLOTRAN observation variable.
+
+        Returns:
+            matplotlib.axes.Axes: plotted line object.
         """
         logger.info(f'Creating lineplot of {variable}')
         if delete_previous:
@@ -115,12 +152,14 @@ class PflotranObservationPointReader(BaseReader):
         return lineplot
 
     def to_csv(self, filename='postprocess/results.csv', variables=None) -> pd.DataFrame:
-        """
-        to_csv method.
-        
-        Args:
-            filename (Any): Description.
-            variables (Any): Description.
+        """Export observation results to CSV.
+
+        Category: writer
+        Tags: pflotran, observation-points, csv, export
+        Use when: scripts need selected or full observation results as a CSV artifact.
+
+        Returns:
+            None: writes the CSV file.
         """
         self.create_postprocess_dict()
         logger.info(f'Exporting results to csv')
@@ -133,54 +172,75 @@ class PflotranObservationPointReader(BaseReader):
         # print(self.variables)
 
     def get_mineral_vf_key(self, mineral) -> str:
-        """
-        Returns the correct key of the mineral volume fraction name
-        Args:
-            mineral: mineral name
+        """Build the PFLOTRAN mineral volume-fraction key.
 
         Returns:
-            mineral volume fraction key
+            str: mineral volume-fraction column key.
+
+        Category: reader
+        Tags: pflotran, minerals, volume-fraction, key
+        Use when: scripts need to construct the raw mineral VF column name.
         """
         return f"{mineral}_VF [m^3 mnrl_m^3 bulk]"
 
     def get_mineral_rate_key(self, mineral) -> str:
-        """
-        Returns the correct key of the mineral rate name
-        Args:
-            mineral: mineral name
+        """Build the PFLOTRAN mineral rate key.
 
         Returns:
-            mineral rate key
+            str: mineral rate column key.
+
+        Category: reader
+        Tags: pflotran, minerals, rate, key
+        Use when: scripts need to construct the raw mineral rate column name.
         """
         return f"{mineral}_Rate [mol_m^3_sec]"
 
     def get_mineral_si_key(self, mineral) -> str:
-        """
-        Returns the correct key of the mineral si name
-        Args:
-            mineral: mineral name
+        """Build the PFLOTRAN mineral saturation-index key.
 
         Returns:
-            mineral si key
+            str: mineral saturation-index column key.
+
+        Category: reader
+        Tags: pflotran, minerals, saturation-index, key
+        Use when: scripts need to construct the mineral SI column name.
         """
         return f"{mineral}_SI"
 
     def get_primary_species_key(self, species) -> str:
-        """
-        Returns the correct key of the given species name
-        Args:
-            species: specie name
+        """Build the PFLOTRAN primary species total key.
 
         Returns:
-            specie key
+            str: total species column key.
+
+        Category: reader
+        Tags: pflotran, species, primary, key
+        Use when: scripts need to construct the Total_species column name.
         """
         return f"Total_{species}"
 
     @property
     def time_series(self):
+        """Return the first result column as the time series.
+
+        Category: reader
+        Tags: pflotran, time-series, observation-points
+        Use when: plotting routines need x-axis time values from observation results.
+
+        Returns:
+            pandas.Series: time values.
+        """
         return self.results.iloc[:, 0]
 
     @property
     def columns(self):
-        return self.results.columns
+        """Return observation result column labels.
 
+        Category: reader
+        Tags: pflotran, observation-points, columns, variables
+        Use when: scripts need to inspect available result variables.
+
+        Returns:
+            pandas.Index: result column labels.
+        """
+        return self.results.columns

@@ -27,36 +27,11 @@ logger = logging.getLogger(__name__)
 
 
 class MassBalanceCheckPflotran:
-    """
-    Analyse PFLOTRAN mass-balance files and evaluate mass-balance residuals.
+    """Analyse PFLOTRAN mass-balance files and evaluate residuals.
 
-    This class reads one or more PFLOTRAN mass-balance files, identifies the
-    relevant species columns, computes residuals between changes in global
-    amount and cumulative fluxes, and summarizes the associated percent errors.
-
-    It can be used to process individual files or entire groups of files
-    matched through glob patterns. It also supports exporting summary tables
-    and generating heatmaps for visual comparison across files and species.
-
-    Parameters
-    ----------
-    input_patterns : Sequence[str]
-        One or more file paths or glob patterns pointing to PFLOTRAN
-        mass-balance files.
-    outdir : str, optional
-        Output directory where summary tables and figures will be saved.
-        Defaults to the current working directory.
-    base_folder : str, optional
-        Base folder used to build relative file labels in combined summaries.
-        If not provided, it is inferred from the input patterns.
-
-    Examples
-    --------
-        checker = MassBalanceCheckPflotran(
-        input_patterns="results/**/*.mass_balance",
-        outdir="out"
-        )
-        checker.summarize_all_files()
+    Category: postprocessing
+    Tags: pflotran, mass-balance, residuals, species, heatmap
+    Use when: scripts need to QA PFLOTRAN mass-balance files across one or more simulations.
     """
 
     def __init__(
@@ -65,13 +40,14 @@ class MassBalanceCheckPflotran:
         outdir: Optional[str] = None,
         base_folder: Optional[str] = None,
     ) -> None:
-        """
-        __init__ method.
-        
-        Args:
-            input_patterns (Sequence[str]): Description.
-            outdir (Optional[str]): Description.
-            base_folder (Optional[str]): Description.
+        """Initialize mass-balance inputs and output location.
+
+        Category: postprocessing
+        Tags: pflotran, mass-balance, files, setup
+        Use when: scripts need to configure file patterns and output folders for balance summaries.
+
+        Returns:
+            None: stores input patterns, output directory, and base-folder label root.
         """
         if isinstance(input_patterns, str):
             input_patterns = [input_patterns]
@@ -103,11 +79,14 @@ class MassBalanceCheckPflotran:
     # ---- low level / utilities ----
     @staticmethod
     def read_pflotran_balance(path: str) -> pd.DataFrame:
-        """
-        Reads a file with CSV header (in quotes) and numeric data separated by spaces.
-        
-        Args:
-            path (str): Description.
+        """Read a PFLOTRAN mass-balance file into a DataFrame.
+
+        Category: reader
+        Tags: pflotran, mass-balance, dataframe, parser
+        Use when: scripts need quoted CSV headers with whitespace-delimited numeric rows parsed.
+
+        Returns:
+            pandas.DataFrame: parsed mass-balance table with normalized column spacing.
         """
         with open(path, "r", encoding="utf-8") as f:
             header_line = f.readline().strip()
@@ -119,11 +98,14 @@ class MassBalanceCheckPflotran:
 
     @staticmethod
     def get_time_column(df: pd.DataFrame) -> str:
-        """
-        Returns the name of the time column, e.g. 'Time [h]', 'Time [y]', or 'Time [d]'.
-        
-        Args:
-            df (pd.DataFrame): Description.
+        """Return the time column name in a mass-balance DataFrame.
+
+        Category: postprocessing
+        Tags: pflotran, mass-balance, time, dataframe
+        Use when: balance calculations need the timestep column regardless of unit.
+
+        Returns:
+            str: column name beginning with Time.
         """
         for col in df.columns:
             if col.lower().startswith("time"):
@@ -132,11 +114,14 @@ class MassBalanceCheckPflotran:
 
     @staticmethod
     def find_species_columns(df: pd.DataFrame) -> Dict[str, Tuple[str, List[str]]]:
-        """
-        For each species X, find the 'Global X [mol]' column and all columns 'X [mol]' (not containing 'Region').
-        
-        Args:
-            df (pd.DataFrame): Description.
+        """Map species to global amount and cumulative flux columns.
+
+        Category: postprocessing
+        Tags: pflotran, mass-balance, species, columns
+        Use when: residual calculations need to pair Global species amounts with flux columns.
+
+        Returns:
+            dict: species mapped to global column and flux column list.
         """
         species_map: Dict[str, Tuple[str, List[str]]] = {}
         # Find all global columns
@@ -154,12 +139,14 @@ class MassBalanceCheckPflotran:
 
     @staticmethod
     def compute_mass_balance(df: pd.DataFrame, species_map: Dict[str, Tuple[str, List[str]]]) -> Dict[str, pd.DataFrame]:
-        """
-        For each species, compares the change in global amount to the sum of cumulative flux columns ([mol]).
-        
-        Args:
-            df (pd.DataFrame): Description.
-            species_map (Dict[str, Tuple[str, List[str]]]): Description.
+        """Compute per-species mass-balance residual time series.
+
+        Category: postprocessing
+        Tags: pflotran, mass-balance, residuals, species
+        Use when: scripts need ΔGlobal, ΔFlux, absolute residual, and relative residual by timestep.
+
+        Returns:
+            dict: species mapped to residual DataFrames.
         """
         time_col = MassBalanceCheckPflotran.get_time_column(df)
 
@@ -215,6 +202,15 @@ class MassBalanceCheckPflotran:
 
     # ---- high level operations ----
     def expand_input_patterns(self) -> List[str]:
+        """Expand configured file paths and glob patterns.
+
+        Category: postprocessing
+        Tags: files, glob, pflotran, mass-balance
+        Use when: batch processing needs the concrete mass-balance files to read.
+
+        Returns:
+            list: matched file paths.
+        """
         files: List[str] = []
         for pattern in self.input_patterns:
             matched = sorted(glob.glob(pattern, recursive=True))
@@ -225,11 +221,14 @@ class MassBalanceCheckPflotran:
         return files
 
     def process_file(self, path: str) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
-        """
-        Process a single file: compute per-species timeseries and a summary DataFrame.
-        
-        Args:
-            path (str): Description.
+        """Process one PFLOTRAN mass-balance file.
+
+        Category: postprocessing
+        Tags: pflotran, mass-balance, summary, residuals
+        Use when: scripts need both detailed per-species residuals and a summary table for one file.
+
+        Returns:
+            tuple: per-species residual DataFrames and summary DataFrame.
         """
         print(f"\n==> File: {path}")
         df = self.read_pflotran_balance(path)
@@ -245,11 +244,14 @@ class MassBalanceCheckPflotran:
         return per_species, summary
 
     def summarize_residuals(self, per_species: Dict[str, pd.DataFrame]) -> pd.DataFrame:
-        """
-        Summarizes for each species:
-        
-        Args:
-            per_species (Dict[str, pd.DataFrame]): Description.
+        """Summarize final mass-balance residuals by species.
+
+        Category: postprocessing
+        Tags: pflotran, mass-balance, summary, percent-error
+        Use when: scripts need final residual and percent error per species.
+
+        Returns:
+            pandas.DataFrame: summary rows sorted by species.
         """
         rows = []
         eps = 1e-30
@@ -271,9 +273,14 @@ class MassBalanceCheckPflotran:
         return pd.DataFrame(rows).sort_values("Species").reset_index(drop=True)
 
     def summarize_all_files(self) -> pd.DataFrame:
-        """
-        Process all files matching input patterns. Saves combined CSV and produces a heatmap.
-        Returns combined summary DataFrame.
+        """Process all configured files and export combined summaries.
+
+        Category: postprocessing
+        Tags: pflotran, mass-balance, batch, heatmap, csv
+        Use when: scripts need a cross-file mass-balance summary and percent-error heatmap.
+
+        Returns:
+            pandas.DataFrame: combined summary across all processed files.
         """
         files = self.expand_input_patterns()
         if not files:
@@ -310,11 +317,14 @@ class MassBalanceCheckPflotran:
         return combined
 
     def summarize_errors_matrix(self, all_summaries: List[pd.DataFrame]) -> None:
-        """
-        Creates a matrix summary: rows = files, columns = species, values = percent error,
-        
-        Args:
-            all_summaries (List[pd.DataFrame]): Description.
+        """Create a file-by-species percent-error matrix.
+
+        Category: postprocessing
+        Tags: pflotran, mass-balance, matrix, percent-error
+        Use when: heatmap plotting needs a pivoted percent-error table.
+
+        Returns:
+            None: builds the matrix and delegates plotting.
         """
         if not all_summaries:
             print("No summaries to create error matrix.")
@@ -375,11 +385,14 @@ class MassBalanceCheckPflotran:
         self.plot_percent_error_matrix(matrix)
 
     def plot_percent_error_matrix(self, matrix: pd.DataFrame) -> None:
-        """
-        Plots a heatmap of the percent error matrix and saves the figure in outdir.
-        
-        Args:
-            matrix (pd.DataFrame): Description.
+        """Plot and save a mass-balance percent-error heatmap.
+
+        Category: writer
+        Tags: pflotran, mass-balance, heatmap, percent-error, plot
+        Use when: scripts need a visual QA artifact for mass-balance errors by file and species.
+
+        Returns:
+            None: writes the heatmap PNG.
         """
         if matrix.empty:
             print("Empty matrix, nothing to plot.")

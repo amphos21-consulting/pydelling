@@ -10,17 +10,22 @@ import numpy as np
 
 
 class BaseWriter:
+    """Base writer for exporting array-like data artifacts.
+
+    Category: writer
+    Tags: writer, export, numpy, data, file
+    Use when: implementing concrete writers that share data loading, limits, and output-file cleanup.
+    """
     info: dict
     def __init__(self, filename=None, var_name=None, data=None, region_name=None, **kwargs):
-        """
-        __init__ method.
-        
-        Args:
-            filename (Any): Description.
-            var_name (Any): Description.
-            data (Any): Description.
-            region_name (Any): Description.
-            **kwargs (Any): Description.
+        """Initialize writer state and optional data.
+
+        Category: writer
+        Tags: writer, data, filename, initialization
+        Use when: concrete writers need shared filename, variable, region, and data state.
+
+        Returns:
+            None: stores configuration and marks data as loaded when provided.
         """
         self.data_loaded = False
         self.a_min = None
@@ -36,12 +41,14 @@ class BaseWriter:
             self.data_loaded = True
 
     def set_data_limits(self, a_min=None, a_max=None):
-        """
-        set_data_limits method.
-        
-        Args:
-            a_min (Any): Description.
-            a_max (Any): Description.
+        """Set optional clipping limits for exported data.
+
+        Category: writer
+        Tags: writer, data-limits, clipping, export
+        Use when: scripts need to constrain numeric output values before writing.
+
+        Returns:
+            None: stores min and max clipping limits.
         """
         if a_min == 'None':
             a_min = None
@@ -53,6 +60,15 @@ class BaseWriter:
             self.a_max = float(a_max)
 
     def apply_data_limits(self):
+        """Apply configured clipping limits to loaded data.
+
+        Category: writer
+        Tags: writer, data-limits, clipping, numpy
+        Use when: data should be constrained before writing an output artifact.
+
+        Returns:
+            None: mutates data when clipping is possible.
+        """
         print(f"Applying data limits to {self.data} with minimum value: {self.a_min} and maximum value: {self.a_max}")
         if not (self.a_min is None and self.a_max is None):
             try:
@@ -63,13 +79,14 @@ class BaseWriter:
                 print(f"ERROR: {e}")
 
     def load_data(self, var_name=None, data=None, apply_data_limits=True):
-        """
-        Load data to export
-        
-        Args:
-            var_name (Any): Description.
-            data (Any): Description.
-            apply_data_limits (Any): Description.
+        """Load data and optional variable name for export.
+
+        Category: writer
+        Tags: writer, data, variable, clipping
+        Use when: scripts need to replace writer data before running an export.
+
+        Returns:
+            bool: True when data is loaded.
         """
         self.wipe_data()
         if var_name is not None and data is not None:
@@ -81,19 +98,40 @@ class BaseWriter:
         return self.data_loaded
 
     def wipe_data(self):
+        """Clear loaded writer data.
+
+        Category: writer
+        Tags: writer, data, reset
+        Use when: reusing a writer instance for a different variable or artifact.
+
+        Returns:
+            None: clears data, var_name, and data_loaded state.
+        """
         self.var_name = None
         self.data_loaded = False
         self.data = None
 
     def check_data(self):
+        """Return whether data is currently loaded.
+
+        Category: writer
+        Tags: writer, data, validation
+        Use when: callers need to verify a writer can run.
+
+        Returns:
+            bool: True when data has been loaded.
+        """
         return self.data_loaded
 
     def run(self, filename=None):
-        """
-        run method.
-        
-        Args:
-            filename (Any): Description.
+        """Write loaded numpy data to the output file.
+
+        Category: writer
+        Tags: writer, numpy, export, file
+        Use when: scripts need the base text-array writer behavior.
+
+        Returns:
+            None: writes the output file or reports missing data.
         """
         if filename is not None:
             self.filename = filename
@@ -109,11 +147,14 @@ class BaseWriter:
             print("Couldn't find data to dump!")
 
     def remove_output_file(self, filename=None):
-        """
-        remove_output_file method.
-        
-        Args:
-            filename (Any): Description.
+        """Remove the configured output file.
+
+        Category: writer
+        Tags: writer, cleanup, output-file, remove
+        Use when: scripts need to delete a generated writer artifact.
+
+        Returns:
+            None: removes the file when present.
         """
         if filename is None:
             filename = self.filename
@@ -128,5 +169,13 @@ class BaseWriter:
             exit(1)
 
     def has_data_loaded(self):
-        return self.data_loaded
+        """Return whether writer data has been loaded.
 
+        Category: writer
+        Tags: writer, data, state
+        Use when: callers need a semantic check before export.
+
+        Returns:
+            bool: True when data is loaded.
+        """
+        return self.data_loaded
