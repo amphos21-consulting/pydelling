@@ -21,6 +21,7 @@ Main responsibilities
 
 import logging.config
 import os
+from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path
 from importlib.metadata import PackageNotFoundError, version as package_version
 from rich.logging import RichHandler
@@ -102,7 +103,10 @@ try:
         setup_file = setup_file.read()
         version = setup_file.split("version = \"")[1].split("\"")[0]
 except:
-    version = pkg_resources.get_distribution("pydelling").version
+    try:
+        version = package_version("pydelling")
+    except PackageNotFoundError:
+        version = "unknown"
 
 with open(Path(__file__).parent / "logger_config.yaml", "r") as ymlfile:
     log_config = yaml.safe_load(ymlfile)

@@ -1,6 +1,8 @@
-from .base_preprocessing import BasePreprocessing
-# from .stl_from_point_cloud import STLFromPointCloud
-from .dfn_preprocessor import DfnPreprocessor
-from .mesh_preprocessor import MeshPreprocessor
-from .closed_stl_generator import ClosedStlGenerator
+"""Preprocessing package namespace."""
 
+__all__ = [
+    "base_preprocessing",
+    "closed_stl_generator",
+    "dfn_preprocessor",
+    "mesh_preprocessor",
+]

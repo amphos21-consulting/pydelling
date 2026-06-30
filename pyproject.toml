@@ -47,12 +47,16 @@ dependencies = [
     "docker>=7.1.0",
     "extra-streamlit-components>=0.1.71",
     "translate>=3.6.1",
-    "mph>=1.2.4",
     "black>=25.9.0",
     "ruff>=0.13.1",
     "rasterio>=1.4.3",
     "pytest>=8.4.2",
     "pytest-cov>=6.0.0",
+]
+
+[project.optional-dependencies]
+comsol = [
+    "mph>=1.2.4",
 ]
 
 [tool.hatch.build.targets."pydelling"]

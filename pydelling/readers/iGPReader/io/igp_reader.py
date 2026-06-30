@@ -23,7 +23,7 @@ from pydelling.config import config
 # from pydelling.readers.iGPReader.geometry import *
 from pydelling.preprocessing.mesh_preprocessor.geometry import BaseElement, BaseFace
 from pydelling.readers.iGPReader.io import BaseReader
-from pydelling.readers import RasterFileReader
+from pydelling.readers.raster_file_reader import RasterFileReader
 from pydelling.readers.iGPReader.utils import get_output_path, RegionOperations
 from tqdm import tqdm
 import re
@@ -792,6 +792,32 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             file.write(f"{node[0]},{node[1]},{self.nodes[id][2]:5.5f}\n")
         file.close()
         logger.info(f"Mesh data has been properly exported to csv format into the '{filename}' file")
+
+    def to_vtk(self, filename='mesh.vtk'):
+        """
+        Export the iGP mesh to a VTK file using meshio.
+
+        Args:
+            filename: name of the output VTK file
+        """
+        import meshio as msh
+
+        cell_type_by_node_count = {
+            4: "tetra",
+            5: "pyramid",
+            6: "wedge",
+            8: "hexahedron",
+        }
+        cells = {}
+        for element in self.element_nodes:
+            cell_type = cell_type_by_node_count.get(len(element))
+            if cell_type is None:
+                logger.warning(f"Skipping unsupported VTK cell with {len(element)} nodes")
+                continue
+            cells.setdefault(cell_type, []).append(element)
+        mesh = msh.Mesh(points=self.nodes, cells=cells)
+        mesh.write(filename)
+        logger.info(f"Mesh data has been properly exported to VTK into the '{filename}' file")
 
     @staticmethod
     def chunks(l, n):
