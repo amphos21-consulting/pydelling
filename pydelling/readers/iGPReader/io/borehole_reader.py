@@ -23,19 +23,36 @@ import matplotlib.pyplot as plt
 
 
 class BoreholeReader(BaseReader):
+    """Read borehole Excel data and assign properties to iGP mesh materials.
+
+    Category: reader
+    Tags: boreholes, excel, materials, permeability, porosity
+    Use when: scripts need borehole-derived material ids, permeability, porosity, or diagnostic plots.
+    """
     def __init__(self, igp_reader=None, filename=None):
-        """
-        __init__ method.
-        
-        Args:
-            igp_reader (Any): Description.
-            filename (Any): Description.
+        """Initialize borehole processing with an optional iGP reader.
+
+        Category: reader
+        Tags: boreholes, excel, igp, setup
+        Use when: scripts need borehole property data connected to an iGP mesh reader.
+
+        Returns:
+            None: stores filename, reader reference, and borehole metadata container.
         """
         self.filename = filename if filename else config.data_files.borehole_data if config.data_files.borehole_data else None
         self.igp_reader = igp_reader
         self.boreholes_info = {}
 
     def run(self):
+        """Run configured borehole processing steps.
+
+        Category: preprocessing
+        Tags: boreholes, materials, permeability, porosity, plots
+        Use when: scripts need to read boreholes, assign materials, update properties, and optionally plot.
+
+        Returns:
+            None: mutates borehole data and igp_reader material information.
+        """
         self.read()
         self.set_materials_to_boreholes()
         if config.borehole_processing.permeability_from_borehole_data:
@@ -46,7 +63,15 @@ class BoreholeReader(BaseReader):
             self.make_material_plots()
 
     def read(self):
-        """Reads the borehole information data from a excel file"""
+        """Read borehole information from an Excel file.
+
+        Category: reader
+        Tags: boreholes, excel, dataframe, metadata
+        Use when: scripts need borehole sheets and collar coordinates loaded into memory.
+
+        Returns:
+            None: populates data and boreholes_info.
+        """
         if self.filename:
             if not Path(self.filename).suffix == ".xlsx" or Path(self.filename).suffix == ".xls":
                 logger.error(f"{self.filename} is not an Excel file")
@@ -76,6 +101,15 @@ class BoreholeReader(BaseReader):
                                              }
 
     def set_permeability_from_excel(self):
+        """Set iGP material permeability from borehole data.
+
+        Category: preprocessing
+        Tags: boreholes, permeability, materials, igp
+        Use when: material permeability should be estimated from borehole sheet values.
+
+        Returns:
+            None: updates igp_reader.material_info permeability values.
+        """
         logger.info(f"Setting the permeability values based on the {self.filename} file")
         for material in self.igp_reader.material_dict:
             # Compute an approximated permeability value for each material
@@ -90,6 +124,15 @@ class BoreholeReader(BaseReader):
             self.igp_reader.material_info[material]["permeability"] = material_permeability
 
     def set_porosity_from_excel(self):
+        """Set iGP material porosity from borehole data.
+
+        Category: preprocessing
+        Tags: boreholes, porosity, materials, igp
+        Use when: material porosity should be estimated from borehole sheet values.
+
+        Returns:
+            None: updates igp_reader.material_info porosity values.
+        """
         logger.info(f"Setting the porosity values based on the {self.filename} file")
         for material in self.igp_reader.material_dict:
             # Compute an approximated permeability value for each material
@@ -101,7 +144,15 @@ class BoreholeReader(BaseReader):
             self.igp_reader.material_info[material]["porosity"] = material_porosity
 
     def set_materials_to_boreholes(self):
-        """This method should assign a material ID to each depth of the borehole"""
+        """Assign mesh material ids and names to borehole depth samples.
+
+        Category: preprocessing
+        Tags: boreholes, materials, igp, coordinates
+        Use when: borehole intervals need to be matched to iGP mesh materials by coordinate.
+
+        Returns:
+            None: adds Material_ID and Material_name columns to borehole data.
+        """
         logger.info("Setting materials to boreholes")
         for borehole in self.boreholes_info:
             self.data[borehole].insert(self.data[borehole].shape[1], "Material_ID", np.zeros(self.data[borehole].shape[0]))
@@ -118,6 +169,15 @@ class BoreholeReader(BaseReader):
             self.data[borehole]["Material_name"] = [self.igp_reader.material_names[material_id] for material_id in self.data[borehole]["Material_ID"]]
 
     def make_material_plots(self):
+        """Create configured material-property borehole plots.
+
+        Category: preprocessing
+        Tags: boreholes, materials, plot, permeability, porosity
+        Use when: configuration requests diagnostic plots for borehole-derived properties.
+
+        Returns:
+            None: writes configured plot images.
+        """
         # print(self.data['Borehole1Data'])
         if config.borehole_processing.permeability_from_borehole_data:
             if config.borehole_processing.anisotropic_borehole_data:
@@ -131,11 +191,14 @@ class BoreholeReader(BaseReader):
             self.borehole_plot(variable='Porosity (-)')
 
     def borehole_plot(self, variable) -> [plt.Figure, plt.Axes]:
-        """
-        This method plots the permeability and porosity values taken from the boreholes for each material
-        
-        Args:
-            variable (Any): Description.
+        """Plot one borehole variable grouped by material.
+
+        Category: preprocessing
+        Tags: boreholes, plot, materials, permeability, porosity
+        Use when: scripts need a material-colored diagnostic plot versus depth or cross-correlation variable.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting borehole {variable} data vs "Z (mAOD)"')
         fig: plt.Figure

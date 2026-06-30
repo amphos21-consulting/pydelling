@@ -14,47 +14,94 @@ except:
 
 
 class VtkReader(BaseReader):
+    """Read legacy VTK files through ParaView and expose point data.
+
+    Category: reader
+    Tags: vtk, paraview, point-data, calculator, postprocessing
+    Use when: scripts need ParaView-backed access to VTK point arrays or calculator filters.
+    """
     current_array: None
     calculator: None
 
     def read_file(self, opened_file):
-        """
-        read_file method.
-        
-        Args:
-            opened_file (Any): Description.
+        """Load the configured VTK file with ParaView's LegacyVTKReader.
+
+        Category: reader
+        Tags: vtk, paraview, reader, legacy
+        Use when: scripts need a VTK file registered as the current ParaView pipeline source.
+
+        Returns:
+            None: stores vtk_file and current_array.
         """
         self.vtk_file = LegacyVTKReader(FileNames=self.filename)
         self.current_array = self.vtk_file
 
     @property
     def values(self):
+        """Return point-data values from the current ParaView array.
+
+        Category: reader
+        Tags: vtk, paraview, point-data, values
+        Use when: scripts need point-data arrays after optional filter processing.
+
+        Returns:
+            Any: wrapped VTK PointData object.
+        """
         _vtk_object = sm.Fetch(self.current_array)
         _vtk_object = dsa.WrapDataObject(_vtk_object)
         return _vtk_object.PointData
 
     @property
     def keys(self):
+        """Return the current ParaView array/filter object.
+
+        Category: reader
+        Tags: vtk, paraview, current-array, metadata
+        Use when: scripts need access to the active pipeline object.
+
+        Returns:
+            object: current ParaView array or filter proxy.
+        """
         return self.current_array
 
     @property
     def data_keys(self):
+        """Return point-data array keys from the original VTK source.
+
+        Category: reader
+        Tags: vtk, paraview, point-data, keys
+        Use when: scripts need to inspect available arrays in the loaded VTK file.
+
+        Returns:
+            list: point-data keys from the VTK source.
+        """
         _vtk_object = sm.Fetch(self.vtk_file)
         return self.vtk_file.PointData.keys()
 
     @property
     def data_values(self):
+        """Return point-data values from the original VTK source.
+
+        Category: reader
+        Tags: vtk, paraview, point-data, values
+        Use when: scripts need raw VTK point data before calculator filters.
+
+        Returns:
+            Any: wrapped VTK PointData object.
+        """
         _vtk_object = sm.Fetch(self.vtk_file)
         _vtk_object = dsa.WrapDataObject(_vtk_object)
         return _vtk_object.PointData
 
     def add_calculator(self, input=None, function=''):
-        """
-        Adds a calculator filter to a dataset
-        
-        Args:
-            input (Any): Description.
-            function (Any): Description.
+        """Add a ParaView Calculator filter to the current pipeline.
+
+        Category: postprocessing
+        Tags: vtk, paraview, calculator, filter
+        Use when: scripts need a derived array expression evaluated on a VTK dataset.
+
+        Returns:
+            object: calculator filter proxy now set as current_array.
         """
         input = input if input else self.current_array
         self.calculator = Calculator(Input=input)

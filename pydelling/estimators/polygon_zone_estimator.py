@@ -18,6 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 class PolygonZoneEstimator(BaseEstimator):
+    """Classify x,y points into named polygon zones.
+
+    Category: estimator
+    Tags: polygons, zones, classification, shapely, plot
+    Use when: scripts need to assign spatial zone names or ids from polygon boundaries.
+    """
     def __init__(self, zones_dict: dict[str, Union[str, Path]]):
         """
         Initializes the PolygonZoneEstimator class.
@@ -32,12 +38,14 @@ class PolygonZoneEstimator(BaseEstimator):
         logger.info(f"Initialized PolygonZoneEstimator with {len(self.data)} zones.")
 
     def read_data(self, file_path, zones_dict: dict[str, Union[str, Path]] = None):
-        """
-        Reads the data from the polygon files.
-        
-        Args:
-            file_path (Any): Description.
-            zones_dict (dict[str, Union[str, Path]]): Description.
+        """Read polygon coordinates for each named zone.
+
+        Category: estimator
+        Tags: polygons, zones, csv, dataframe, coordinates
+        Use when: scripts need polygon zones loaded from CSV, Path, arrays, lists, or DataFrames.
+
+        Returns:
+            dict: zone names mapped to x/y coordinate DataFrames.
         """
         if zones_dict is None:
             logger.error("No valid {zone: polygon_file} dictionary was provided.")
@@ -60,29 +68,40 @@ class PolygonZoneEstimator(BaseEstimator):
         return temp_data
 
     def process_data(self):
-        """Processes the self.data variable."""
+        """Convert zone coordinate data into Shapely polygons.
+
+        Category: estimator
+        Tags: polygons, shapely, zones, preprocessing
+        Use when: zone membership queries need geometric polygon objects.
+
+        Returns:
+            None: replaces each zone coordinate table with a Polygon.
+        """
         # Convert the data to sympy polygons
         for zone, data in self.data.items():
             self.data[zone] = Polygon(data.values)
 
     def smooth_data(self, window_size=3, sigma=1):
-        """
-        No-op smoothing hook for polygon zones.
-        
-        Args:
-            window_size (Any): Description.
-            sigma (Any): Description.
+        """No-op smoothing hook for polygon zones.
+
+        Category: estimator
+        Tags: polygons, smoothing, compatibility
+        Use when: estimator pipelines call smooth_data but polygon zones should remain unchanged.
+
+        Returns:
+            None: leaves polygon data unchanged.
         """
         pass
 
     def plot_data(self, filename=None, *args, **kwargs):
-        """
-        PLots all the polygons
-        
-        Args:
-            filename (Any): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Plot all polygon zones with matplotlib.
+
+        Category: estimator
+        Tags: polygons, zones, matplotlib, plot
+        Use when: scripts need a quick static visualization of configured zones.
+
+        Returns:
+            None: shows or saves the plot.
         """
         import matplotlib.pyplot as plt
         for zone, data in self.data.items():
@@ -98,11 +117,14 @@ class PolygonZoneEstimator(BaseEstimator):
             plt.show()
 
     def plot_data_plotly(self, filename=None) -> go.Figure:
-        """
-        Plots all the polygons using Plotly
-        
-        Args:
-            filename (Any): Description.
+        """Plot all polygon zones with Plotly.
+
+        Category: estimator
+        Tags: polygons, zones, plotly, interactive, plot
+        Use when: scripts need an interactive or exportable polygon-zone figure.
+
+        Returns:
+            plotly.graph_objects.Figure: figure containing all zones.
         """
         fig = go.Figure()
         from plotly.colors import qualitative
@@ -129,12 +151,14 @@ class PolygonZoneEstimator(BaseEstimator):
         return fig
 
     def point_in_zone(self, x, y):
-        """
-        Returns the zone in which the point (x, y) is located.
-        
-        Args:
-            x (Any): Description.
-            y (Any): Description.
+        """Return the zone name containing an x,y point.
+
+        Category: estimator
+        Tags: polygons, zones, point-query, classification
+        Use when: scripts need a human-readable zone label for coordinates.
+
+        Returns:
+            str | None: containing zone name, or None outside all zones.
         """
         point = Point(x, y)
         for zone, polygon in self.data.items():
@@ -144,12 +168,14 @@ class PolygonZoneEstimator(BaseEstimator):
         return None
 
     def point_in_zone_id(self, x, y):
-        """
-        Returns the zone id in which the point (x, y) is located.
-        
-        Args:
-            x (Any): Description.
-            y (Any): Description.
+        """Return the numeric zone id containing an x,y point.
+
+        Category: estimator
+        Tags: polygons, zones, point-query, ids
+        Use when: scripts need a stable numeric zone code for coordinates.
+
+        Returns:
+            int: zone id, or one id beyond the largest known zone when outside.
         """
         zone = self.point_in_zone(x, y)
         if zone is None:
@@ -158,11 +184,14 @@ class PolygonZoneEstimator(BaseEstimator):
         return self.zone_to_ids[zone]
 
     def predict(self, **kwargs):
-        """
-        Placeholder prediction method for API compatibility.
-        
-        Args:
-            **kwargs (Any): Description.
+        """Placeholder prediction hook for estimator compatibility.
+
+        Category: estimator
+        Tags: polygons, predict, compatibility
+        Use when: generic estimator code expects a predict method but zone queries are used directly.
+
+        Returns:
+            None: base implementation does nothing.
         """
         pass
 
@@ -170,5 +199,11 @@ class PolygonZoneEstimator(BaseEstimator):
     def zone_names(self):
         """Return configured zone names in deterministic order.
 
+        Category: estimator
+        Tags: polygons, zones, names, metadata
+        Use when: scripts need the available zone labels.
+
+        Returns:
+            list: configured zone names.
         """
         return list(self.original_data.keys())

@@ -16,7 +16,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PflotranPostprocessing:
-    """This class manages the structure of the output files"""
+    """Generate visualization companions for PFLOTRAN output files.
+
+    Category: postprocessing
+    Tags: pflotran, hdf5, xmf, vtk, visualization
+    Use when: scripts need PFLOTRAN HDF5/VTK outputs prepared for ParaView or XDMF workflows.
+    """
     def __init__(self, dt=0.2, unit="y"):
         """
         __init__ method.
@@ -32,7 +37,15 @@ class PflotranPostprocessing:
         self.project_name = None
 
     def run(self):
-        "Method that runs the post-processing engine"
+        """Run the complete PFLOTRAN post-processing workflow.
+
+        Category: postprocessing
+        Tags: pflotran, hdf5, xmf, vtk, workflow
+        Use when: scripts need discovery, optional velocity merging, XMF export, and domain-file handling in one call.
+
+        Returns:
+            None: writes post-processing artifacts in the output directory.
+        """
         self.find_directories()
         self.find_output_files()
         self.find_domain_file()
@@ -44,7 +57,15 @@ class PflotranPostprocessing:
         self.copy_domain_file()
 
     def find_output_files(self):
-        """This method searches the current directory and the directory called "./output-hdf5" to find PFLOTRAN output files"""
+        """Find PFLOTRAN HDF5 output files and optional velocity VTK files.
+
+        Category: postprocessing
+        Tags: pflotran, hdf5, vtk, output-files, discovery
+        Use when: scripts need sorted result files and project naming before XMF export.
+
+        Returns:
+            None: stores output file lists, directories, and project name.
+        """
         # First, see if the directory contains the output files
         if self.current_directory.stem == "output-hdf5":
             self.output_h5_files = list(self.current_directory.glob("*.h5"))
@@ -90,7 +111,15 @@ class PflotranPostprocessing:
         self.output_vtk_vel_files = sorted(self.output_vtk_vel_files)
 
     def find_directories(self):
-        """Test """
+        """Resolve the PFLOTRAN case root and input directories.
+
+        Category: postprocessing
+        Tags: pflotran, directories, discovery, input-files
+        Use when: post-processing is launched from a case root, input_files, or output-hdf5 folder.
+
+        Returns:
+            None: stores current_directory, root_directory, and input_directory.
+        """
         self.current_directory = Path.cwd()
         if self.current_directory.stem == "output-hdf5":
             self.root_directory = self.current_directory.parent
@@ -103,7 +132,15 @@ class PflotranPostprocessing:
         self.input_directory = self.root_directory / "input_files"
 
     def find_domain_file(self):
-        """This method finds the domain file"""
+        """Find the PFLOTRAN domain HDF5 file.
+
+        Category: postprocessing
+        Tags: pflotran, domain, hdf5, discovery
+        Use when: XMF export needs mesh topology and vertices.
+
+        Returns:
+            pathlib.Path: located domain HDF5 file.
+        """
         if len(list(self.input_directory.glob("*-domain.h5"))) > 0:
             self.domain_file = list(self.input_directory.glob("*-domain.h5"))[0]
         else:
@@ -111,6 +148,15 @@ class PflotranPostprocessing:
         return self.domain_file
 
     def find_input_file(self):
+        """Find the PFLOTRAN input file if present.
+
+        Category: postprocessing
+        Tags: pflotran, input-file, discovery
+        Use when: scripts need to associate outputs with the original input deck.
+
+        Returns:
+            pathlib.Path | None: PFLOTRAN input file path when available.
+        """
         self.input_file = None
         try:
             self.input_file = list(self.input_directory.glob("*.in"))[0]
@@ -119,6 +165,15 @@ class PflotranPostprocessing:
         return self.input_file
 
     def add_velocity_to_hdf5(self):
+        """Merge velocity variables from VTK files into HDF5 outputs.
+
+        Category: postprocessing
+        Tags: pflotran, vtk, velocity, hdf5, merge
+        Use when: velocity output is stored in VTK files but should be available in HDF5 results.
+
+        Returns:
+            None: creates missing velocity datasets in each HDF5 output file.
+        """
         for i in range(0, self.n_output_files):
             with h5py.File(self.output_h5_files[i], "r+") as h5_file:
                 vtk_filename = self.output_vtk_vel_files[i]
@@ -132,6 +187,15 @@ class PflotranPostprocessing:
                         hdf5_group.create_dataset(name=var, data=vtk_file_dict[var]["data"])
 
     def find_attributes(self):
+        """Read mesh and output metadata required for XMF export.
+
+        Category: postprocessing
+        Tags: pflotran, hdf5, variables, times, metadata
+        Use when: XMF generation needs cell counts, vertex counts, variables, and output times.
+
+        Returns:
+            None: stores mesh counts, output variables, times, and units.
+        """
         # Find number of cells and number of vertices
         with h5py.File(self.domain_file, "r") as file:
             self.n_vertices = len(file["Domain"]["Vertices"])
@@ -153,6 +217,15 @@ class PflotranPostprocessing:
                 self.output_units.append(attribute_list[3])
 
     def copy_domain_file(self):
+        """Handle domain-file copying for the output directory.
+
+        Category: postprocessing
+        Tags: pflotran, domain, hdf5, copy
+        Use when: workflows expect a hook for placing the domain file beside output files.
+
+        Returns:
+            None: current implementation leaves files unchanged.
+        """
         # check if file exists and delete otherwise
         # if list(self.output_directory.glob("*-domain.h5")):
         #     os.remove(list(self.output_directory.glob("*-domain.h5"))[0])
@@ -162,6 +235,15 @@ class PflotranPostprocessing:
         pass
 
     def export_xmf(self):
+        """Export XMF files for PFLOTRAN HDF5 outputs.
+
+        Category: writer
+        Tags: pflotran, xmf, hdf5, visualization, export
+        Use when: scripts need ParaView-readable XMF companions for each PFLOTRAN time step.
+
+        Returns:
+            None: writes one XMF file per output HDF5 file.
+        """
         # Input variables
         dt = self.dt  # time interval between individual result files
         file_name = self.project_name
@@ -201,12 +283,14 @@ class PflotranPostprocessing:
                 self.output_file.write('</Xdmf>\n')
 
     def export_attribute(self, var, i):
-        """
-        export_attribute method.
-        
-        Args:
-            var (Any): Description.
-            i (Any): Description.
+        """Write one XMF Attribute block for a variable and time step.
+
+        Category: writer
+        Tags: pflotran, xmf, attribute, hdf5, export
+        Use when: export_xmf needs to reference a cell-centered HDF5 dataset.
+
+        Returns:
+            None: appends XML text to the active XMF file.
         """
         self.output_file.write('\t\t<Attribute Name="%s" AttributeType="Scalar"  Center="Cell">\n' % var)
         self.output_file.write('\t\t\t<DataItem Dimensions="%s 1" Format="HDF">\n' % self.n_cells)
@@ -216,11 +300,14 @@ class PflotranPostprocessing:
 
     @staticmethod
     def read_vtk_file(filename) -> Dict:
-        """
-        This method reads an VTK file and returns the data
-        
-        Args:
-            filename (Any): Description.
+        """Read scalar CELL_DATA arrays from a VTK file.
+
+        Category: reader
+        Tags: vtk, cell-data, scalar, parser
+        Use when: PFLOTRAN velocity variables need to be merged from VTK into HDF5.
+
+        Returns:
+            dict: variable metadata and numpy arrays keyed by variable name.
         """
         # Process vtk file
         print("Processing {} VTK file".format(filename))
@@ -260,5 +347,14 @@ class PflotranPostprocessing:
 
     @property
     def n_output_files(self):
+        """Return the number of PFLOTRAN HDF5 output files.
+
+        Category: postprocessing
+        Tags: pflotran, hdf5, output-files, count
+        Use when: loops need the current number of discovered output time steps.
+
+        Returns:
+            int: number of output HDF5 files.
+        """
 
         return len(self.output_h5_files)

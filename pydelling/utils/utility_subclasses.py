@@ -72,8 +72,11 @@ class UnitConverter:
 
 
 class SemistructuredFinder:
-    """A class for processing a semi-structured grid based on a set of points.
-    Based on a cloud of points, the algorithm creates clusters of points that share a common z coordinate.
+    """Cluster point clouds into semi-structured groups.
+
+    Category: util
+    Tags: points, clustering, semistructured, dbscan, kmeans
+    Use when: scripts need to group 3D points by their projected 2D layout and query nearby clusters.
     """
     engine = None  # The clustering engine used to generate the clusters
     is_run = False
@@ -115,13 +118,14 @@ class SemistructuredFinder:
         self.is_run = True
 
     def generate_clusters_dbscan(self, eps, min_samples, **kwargs):
-        """
-        Generates clusters of points using the DBSCAN algorithm.
-        
-        Args:
-            eps (Any): Description.
-            min_samples (Any): Description.
-            **kwargs (Any): Description.
+        """Generate point clusters using DBSCAN.
+
+        Category: util
+        Tags: points, clustering, dbscan, semistructured
+        Use when: scripts need automatic cluster count discovery from projected point coordinates.
+
+        Returns:
+            list: clusters containing original 3D points.
         """
         import numpy as np
         from sklearn.cluster import DBSCAN
@@ -151,12 +155,14 @@ class SemistructuredFinder:
         return clusters
 
     def generate_clusters_kmeans(self, n_clusters, **kwargs):
-        """
-        Generates clusters of points using the KMeans algorithm.
-        
-        Args:
-            n_clusters (Any): Description.
-            **kwargs (Any): Description.
+        """Generate point clusters using KMeans.
+
+        Category: util
+        Tags: points, clustering, kmeans, semistructured
+        Use when: scripts know the expected number of semi-structured point groups.
+
+        Returns:
+            list: clusters containing original 3D points.
         """
         from sklearn.cluster import KMeans
         self.engine: KMeans = KMeans(n_clusters=self._n_clusters, random_state=0, **kwargs)
@@ -171,12 +177,28 @@ class SemistructuredFinder:
 
     @functools.cached_property
     def n_clusters(self):
-        """Returns the number of clusters."""
+        """Return the number of generated clusters.
+
+        Category: util
+        Tags: points, clustering, count, metadata
+        Use when: scripts need cluster count after DBSCAN or KMeans generation.
+
+        Returns:
+            int: number of non-noise clusters.
+        """
         return len(self.clusters)
 
     @functools.cached_property
     def point_idx(self):
-        """Returns a list of indices of the points in the clusters."""
+        """Return original point indexes grouped by cluster.
+
+        Category: util
+        Tags: points, clustering, indexes, metadata
+        Use when: scripts need original point ids corresponding to each cluster.
+
+        Returns:
+            list: cluster-indexed lists of original point indexes.
+        """
         point_idx = []
         for i in range(self.n_clusters):
             point_idx.append([])
@@ -186,20 +208,26 @@ class SemistructuredFinder:
         return point_idx
 
     def get_point_idx_in_cluster(self, cluster_idx):
-        """
-        Returns the indices of the points in the specified cluster.
-        
-        Args:
-            cluster_idx (Any): Description.
+        """Return original point indexes for one cluster.
+
+        Category: util
+        Tags: points, clustering, indexes, lookup
+        Use when: scripts need source point ids for a selected cluster.
+
+        Returns:
+            list: original point indexes in the cluster.
         """
         return self.point_idx[cluster_idx]
 
     def get_closest_cluster_from_point(self, point: np.array):
-        """
-        Returns the cluster closest to a point.
-        
-        Args:
-            point (np.array): Description.
+        """Return the cluster whose projected center is closest to a point.
+
+        Category: util
+        Tags: points, clustering, nearest, lookup
+        Use when: scripts need the nearest semi-structured group for a 3D query point.
+
+        Returns:
+            list: points in the nearest cluster.
         """
         dist = []
         # Compute the projected point
@@ -213,21 +241,26 @@ class SemistructuredFinder:
         return self.clusters[np.argmin(dist)]
 
     def get_closest_cluster_from_xy(self, x: float, y: float):
-        """
-        Returns the cluster closest to a point.
-        
-        Args:
-            x (float): Description.
-            y (float): Description.
+        """Return the nearest cluster for x,y coordinates.
+
+        Category: util
+        Tags: points, clustering, nearest, xy
+        Use when: scripts need the nearest semi-structured group from plan-view coordinates.
+
+        Returns:
+            list: points in the nearest cluster.
         """
         return self.get_closest_cluster_from_point(np.array([x, y, 0]))
 
     def get_closest_point_ids_from_point(self, point: np.array):
-        """
-        Returns the cluster closest to a point using KDTree.
-        
-        Args:
-            point (np.array): Description.
+        """Return point indexes for the nearest cluster using a KDTree.
+
+        Category: util
+        Tags: points, clustering, kdtree, nearest, indexes
+        Use when: scripts need fast nearest-cluster lookup and original point ids.
+
+        Returns:
+            list: original point indexes in the nearest cluster.
         """
         import numpy as np
         from scipy.spatial import KDTree
@@ -240,18 +273,28 @@ class SemistructuredFinder:
         return self.point_idx[idx]
 
     def get_closest_point_ids_from_xy(self, x: float, y: float):
-        """
-        Returns the cluster closest to a point.
-        
-        Args:
-            x (float): Description.
-            y (float): Description.
+        """Return point indexes for the nearest cluster from x,y coordinates.
+
+        Category: util
+        Tags: points, clustering, nearest, xy, indexes
+        Use when: scripts need original point ids for the nearest plan-view cluster.
+
+        Returns:
+            list: original point indexes in the nearest cluster.
         """
         return self.get_closest_point_ids_from_point(np.array([x, y, 0]))
 
     @functools.cached_property
     def projected_cluster_centers(self):
-        """Returns the cluster centers."""
+        """Return cluster centers in projected coordinate space.
+
+        Category: util
+        Tags: points, clustering, centers, projection
+        Use when: scripts need plan-view or projected cluster centers for nearest lookup.
+
+        Returns:
+            list: projected cluster center coordinates.
+        """
 
         centers = []
         for cluster in self.clusters:
@@ -267,19 +310,34 @@ class SemistructuredFinder:
 
     @functools.cached_property
     def projected_cluster_centers_kdtree(self) -> scipy.spatial.KDTree:
-        """Returns the cluster centers."""
+        """Return a KDTree over projected cluster centers.
+
+        Category: util
+        Tags: points, clustering, kdtree, centers
+        Use when: scripts need fast nearest-center lookup.
+
+        Returns:
+            scipy.spatial.KDTree: tree built from projected cluster centers.
+        """
         return scipy.spatial.KDTree(self.projected_cluster_centers)
 
 
 
     @functools.cached_property
     def cluster_centers(self):
-        """Returns the cluster centers."""
+        """Return cluster centers in full 3D coordinate space.
+
+        Category: util
+        Tags: points, clustering, centers, geometry
+        Use when: scripts need representative 3D locations for each cluster.
+
+        Returns:
+            list: mean 3D coordinates for each cluster.
+        """
         centers = []
         for cluster in self.clusters:
             centers.append(np.mean(cluster, axis=0))
         return centers
-
 
 
 

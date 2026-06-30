@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 class StructuredListReader(BaseReader):
+    """Read structured list values into x,y,z,value rows.
+
+    Category: reader
+    Tags: structured-list, grid, coordinates, values, csv
+    Use when: scripts need a config-defined structured grid list converted to tabular point data.
+    """
     data: pd.DataFrame
     def __init__(self, filename=None, var_pos=3, var_name="var", var_type=np.float32, centroid_pos=(0, 3), header=False):
         """
@@ -44,15 +50,27 @@ class StructuredListReader(BaseReader):
                          header=header)
 
     def open_file(self, filename):
-        """
-        open_file method.
-        
-        Args:
-            filename (Any): Description.
+        """Open and read the configured structured list file.
+
+        Category: reader
+        Tags: structured-list, open, grid, values
+        Use when: BaseReader calls open_file and the reader should populate data from config.
+
+        Returns:
+            None: delegates to read_file.
         """
         self.read_file()
 
     def read_file(self):
+        """Read structured grid values from the configured list file.
+
+        Category: reader
+        Tags: structured-list, grid, coordinates, values
+        Use when: scripts need x,y,z coordinates generated from configured origin, spacing, and dimensions.
+
+        Returns:
+            None: populates data with x, y, z, and v columns.
+        """
         logger.info(f"Reading list file from {self.filename.stem}")
         _temp_array = []
         with open(config.structured_list_reader.filename, "r") as reading_file:
@@ -74,33 +92,65 @@ class StructuredListReader(BaseReader):
         self.data = grain_array
 
     def read_header(self):
-        """
-        TODO: Add the header reader of the centroid file
-        Reads the header of the file
-        :return:
+        """Placeholder for structured list header parsing.
+
+        Category: reader
+        Tags: structured-list, header, placeholder
+        Use when: subclasses or future readers need to implement header extraction.
+
+        Returns:
+            None: current implementation does nothing.
         """
         pass
 
 
     def get_data(self) -> np.ndarray:
-        """
-        Outputs the data
-        :return: np.ndarray object containing centroid information and variable output
+        """Return structured list data as a numpy array.
+
+        Category: reader
+        Tags: structured-list, data, numpy, coordinates
+        Use when: scripts need x,y,z,value rows for downstream interpolation or export.
+
+        Returns:
+            numpy.ndarray: data values as float array.
         """
         return self.data.values.astype(np.float)
 
     @property
     def coordinates(self):
+        """Return coordinate columns as a numpy array.
+
+        Category: reader
+        Tags: structured-list, coordinates, numpy
+        Use when: scripts need point coordinates from the structured list.
+
+        Returns:
+            numpy.ndarray: coordinate values.
+        """
         return self.data[["x", "y", "x"]].values.astype(np.float)
 
     @property
     def values(self):
+        """Return structured list scalar values.
+
+        Category: reader
+        Tags: structured-list, values, numpy
+        Use when: scripts need the scalar value column only.
+
+        Returns:
+            numpy.ndarray: value column.
+        """
         return self.data[["v"]].values.astype(np.float)
 
     def build_info(self):
-        """
-        Generates a dictionary containing the basic info of the read data
-        :return:
+        """Store metadata about the loaded structured list data.
+
+        Category: reader
+        Tags: structured-list, metadata, info
+        Use when: downstream writers or tools need source filename and variable-position metadata.
+
+        Returns:
+            None: updates info["reader"].
         """
         self.info["reader"] = {"n_cells": self.data.shape[0],
                      "filename": self.filename,
@@ -108,14 +158,15 @@ class StructuredListReader(BaseReader):
                      "var_position": self.var_pos}
 
     def dump_to_csv(self, output_file, delimiter=","):
-        """
-        Writes the data into a csv file
-        
-        Args:
-            output_file (Any): Description.
-            delimiter (Any): Description.
+        """Write structured list data to CSV.
+
+        Category: writer
+        Tags: structured-list, csv, export, coordinates
+        Use when: scripts need a plain text artifact with x,y,z,value rows.
+
+        Returns:
+            None: writes the CSV file.
         """
         print(f"Starting dump into {output_file}")
         np.savetxt(output_file, self.get_data(), delimiter=delimiter)
         print(f"The data has been properly exported to the {output_file} file")
-
