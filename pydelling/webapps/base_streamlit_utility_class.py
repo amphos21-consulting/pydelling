@@ -12,7 +12,7 @@ class BaseStreamlitUtilityClass:
 
     Category: Web application utility.
     Tags: streamlit, session-state, cookie-manager, ui-state.
-    Use when: an MCP agent needs to identify the common helper API used by
+    Use when: to identify the common helper API used by
         Streamlit components to persist values across reruns.
     """
 

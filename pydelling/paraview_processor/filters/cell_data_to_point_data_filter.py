@@ -16,7 +16,7 @@ class CellDataToPointDataFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, cell-data, point-data, conversion.
-    Use when: an MCP agent needs to convert cell-centered arrays into point data
+    Use when: to convert cell-centered arrays into point data
         for visualization or sampling.
     """
 

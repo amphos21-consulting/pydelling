@@ -17,7 +17,7 @@ class BaseComponent(ABC, BaseStreamlitUtilityClass):
 
     Category: Web application component.
     Tags: streamlit, component, session-state, translation.
-    Use when: an MCP agent needs to understand the common lifecycle for
+    Use when: to understand the common lifecycle for
         pydelling Streamlit components.
     """
 

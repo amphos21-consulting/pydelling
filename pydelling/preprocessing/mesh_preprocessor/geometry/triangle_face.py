@@ -14,7 +14,7 @@ class TriangleFace(BaseFace):
 
     Category: mesh geometry.
     Tags: triangle, face, edges, centroid, mesh-preprocessor.
-    Use when: an MCP agent needs to recognize three-node faces produced by the
+    Use when: to recognize three-node faces produced by the
         mesh preprocessor and inspect their edge topology.
     """
 

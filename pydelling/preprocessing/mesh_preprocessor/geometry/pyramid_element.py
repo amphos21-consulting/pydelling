@@ -15,7 +15,7 @@ class PyramidElement(BaseElement):
 
     Category: mesh geometry.
     Tags: pyramid, element, meshio, faces, centroid.
-    Use when: an MCP agent needs the mesh-preprocessor representation of pyramid
+    Use when: to understand the mesh-preprocessor representation of pyramid
         cells.
     """
 

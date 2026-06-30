@@ -23,7 +23,7 @@ class PlotOverLineFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, plot-over-line, sampling, point-data.
-    Use when: an MCP agent needs to configure line sampling in a ParaView
+    Use when: to configure line sampling in a ParaView
         processing pipeline and retrieve sampled point data.
     """
 

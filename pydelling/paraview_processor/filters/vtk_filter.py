@@ -16,7 +16,7 @@ class VtkFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, vtk, reader, bounds.
-    Use when: an MCP agent needs to load a legacy VTK dataset into a ParaView
+    Use when: to load a legacy VTK dataset into a ParaView
         pipeline and inspect its spatial extents.
     """
 

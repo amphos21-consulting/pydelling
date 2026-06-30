@@ -23,7 +23,7 @@ class ConnectFlowReader(BaseReader):
 
     Category: ConnectFlow reader.
     Tags: connectflow, mesh, nodes, bounds, span.
-    Use when: an MCP agent needs to parse ConnectFlow mesh node coordinates and
+    Use when: to parse ConnectFlow mesh node coordinates and
         reason about their spatial extent.
     """
 

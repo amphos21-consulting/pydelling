@@ -12,7 +12,7 @@ class ComsolVariables:
 
     Category: COMSOL management.
     Tags: comsol, variables, component, dataframe.
-    Use when: an MCP agent needs to set, list, or move COMSOL variable
+    Use when: to set, list, or move COMSOL variable
         collections through pydelling.
     """
 
@@ -158,7 +158,7 @@ class ComsolParameters:
 
     Category: COMSOL management.
     Tags: comsol, parameters, dataframe.
-    Use when: an MCP agent needs to set or inspect global COMSOL parameters.
+    Use when: to set or inspect global COMSOL parameters.
     """
 
     def __init__(self,

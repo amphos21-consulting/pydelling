@@ -14,7 +14,7 @@ class QuadrilateralFace(BaseFace):
 
     Category: iGP geometry.
     Tags: quadrilateral, face, centroid.
-    Use when: an MCP agent needs to identify quadrilateral boundary faces in iGP
+    Use when: to identify quadrilateral boundary faces in iGP
         mesh geometry.
     """
 

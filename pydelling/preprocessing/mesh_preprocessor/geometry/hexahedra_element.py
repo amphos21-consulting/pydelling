@@ -15,7 +15,7 @@ class HexahedraElement(BaseElement):
 
     Category: mesh geometry.
     Tags: hexahedra, element, meshio, faces, centroid.
-    Use when: an MCP agent needs the mesh-preprocessor representation of
+    Use when: to understand the mesh-preprocessor representation of
         hexahedral cells.
     """
 

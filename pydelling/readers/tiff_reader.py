@@ -18,7 +18,7 @@ class TiffReader(BaseReader, ImageOperations):
 
     Category: raster reader.
     Tags: tiff, raster, rasterio, image, bounds.
-    Use when: an MCP agent needs to load TIFF raster values and spatial bounds
+    Use when: to load TIFF raster values and spatial bounds
         through pydelling's reader interface.
     """
 

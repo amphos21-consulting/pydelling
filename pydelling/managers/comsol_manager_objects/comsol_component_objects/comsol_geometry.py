@@ -11,7 +11,7 @@ class ComsolGeometry:
 
     Category: COMSOL management.
     Tags: comsol, geometry, component, children.
-    Use when: an MCP agent needs to access geometry operations under a COMSOL
+    Use when: to access geometry operations under a COMSOL
         component through pydelling.
     """
 

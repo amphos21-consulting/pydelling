@@ -18,7 +18,7 @@ class Polygon(BasePrimitive):
 
     Category: geometry primitive.
     Tags: polygon, points, segments, csv.
-    Use when: an MCP agent needs polygon boundary geometry for export or
+    Use when: to use polygon boundary geometry for export or
         intersection workflows.
     """
 

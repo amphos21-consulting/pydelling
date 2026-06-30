@@ -18,7 +18,7 @@ class PflotranImplicitWriter(BaseWriter):
 
     Category: Mesh export.
     Tags: pflotran, implicit-grid, hdf5, vertices, elements, regions.
-    Use when: an MCP agent needs to identify the writer that serializes iGP
+    Use when: to identify the writer that serializes iGP
         mesh data into PFLOTRAN implicit mesh text or HDF5 domain/region
         structures.
     """

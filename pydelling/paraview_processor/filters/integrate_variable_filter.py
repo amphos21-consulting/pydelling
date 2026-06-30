@@ -18,7 +18,7 @@ class IntegrateVariablesFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, integrate-variables, cell-data, volume.
-    Use when: an MCP agent needs to integrate field variables over a ParaView
+    Use when: to integrate field variables over a ParaView
         dataset.
     """
 

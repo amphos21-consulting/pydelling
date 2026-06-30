@@ -25,7 +25,7 @@ class BaseManager(ABC):
 
     Category: Simulation management.
     Tags: studies, execution, docker, hpc, ssh, callbacks.
-    Use when: an MCP agent needs to understand how pydelling batches
+    Use when: to understand how pydelling batches
         ``BaseStudy`` instances, writes run files, and dispatches simulations to
         local, Docker, or remote HPC backends.
     """
@@ -190,7 +190,7 @@ class BaseManager(ABC):
 
         Category: Simulation management.
         Tags: studies, file-generation, dry-run.
-        Use when: an MCP agent needs reproducible solver input decks on disk but
+        Use when: to write reproducible solver input decks on disk but
             should not launch the solver.
         Args:
             studies_folder: Kept for API compatibility; run files are written
@@ -309,7 +309,7 @@ class BaseManager(ABC):
 
         Category: Simulation management.
         Tags: study, execution, callbacks, docker, hpc.
-        Use when: an MCP agent needs the per-study execution path used by
+        Use when: to understand the per-study execution path used by
             ``run`` or wants to understand how manager backends are selected.
         Args:
             study: Study instance to write and execute.

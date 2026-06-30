@@ -8,7 +8,7 @@ class BaseAbstractMeshObject:
 
     Category: mesh geometry.
     Tags: mesh, geometry, nodes, coordinates, centroid.
-    Use when: an MCP agent needs the common attribute contract shared by
+    Use when: to understand the common attribute contract shared by
         mesh-preprocessor elements and faces.
     """
 

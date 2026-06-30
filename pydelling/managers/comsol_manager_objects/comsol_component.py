@@ -16,7 +16,7 @@ class ComsolComponent:
 
     Category: COMSOL management.
     Tags: comsol, component, geometry, variables, model-input.
-    Use when: an MCP agent needs to discover how pydelling accesses component
+    Use when: to discover how pydelling accesses component
         geometry, variables, and model inputs through the COMSOL Java API.
     """
 

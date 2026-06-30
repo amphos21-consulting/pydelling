@@ -16,7 +16,7 @@ class AppendArcLengthFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, arc-length, polyline, filter.
-    Use when: an MCP agent needs to append cumulative arc-length values to a
+    Use when: to append cumulative arc-length values to a
         ParaView line or path dataset.
     """
 

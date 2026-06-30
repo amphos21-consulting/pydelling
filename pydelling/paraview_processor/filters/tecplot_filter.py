@@ -16,7 +16,7 @@ class TecplotFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, tecplot, reader, filter.
-    Use when: an MCP agent needs to load Tecplot files into a pydelling ParaView
+    Use when: to load Tecplot files into a pydelling ParaView
         processing pipeline.
     """
 

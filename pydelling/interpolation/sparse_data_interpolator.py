@@ -18,7 +18,7 @@ class SparseDataInterpolator(BaseInterpolator):
 
     Category: interpolation.
     Tags: sparse-data, griddata, mesh, pointwise, scipy.
-    Use when: an MCP agent needs to map sparse xyz/value observations onto a
+    Use when: to map sparse xyz/value observations onto a
         target mesh using SciPy interpolation.
     """
 

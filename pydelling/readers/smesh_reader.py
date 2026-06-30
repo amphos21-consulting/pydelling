@@ -24,7 +24,7 @@ class SmeshReader(MeshPreprocessor):
 
     Category: mesh reader.
     Tags: smesh, mesh, tetgen, kd-tree, streamlit.
-    Use when: an MCP agent needs to load SMesh nodes/elements and create
+    Use when: to load SMesh nodes/elements and create
         pydelling mesh-preprocessor elements.
     """
 

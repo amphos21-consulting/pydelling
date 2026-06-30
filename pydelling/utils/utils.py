@@ -229,7 +229,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
         Category: utilities.
         Tags: sampling, distribution, sensitivity-analysis.
-        Use when: an MCP agent needs to understand the local sampler contract
+        Use when: to understand the local sampler contract
             used to generate sensitivity-analysis cases.
         """
 

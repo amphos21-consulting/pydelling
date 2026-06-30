@@ -21,7 +21,7 @@ class ComsolResults:
 
     Category: COMSOL management.
     Tags: comsol, results, plots, tables, derived-values.
-    Use when: an MCP agent needs to create or inspect COMSOL post-processing
+    Use when: to create or inspect COMSOL post-processing
         result objects through pydelling.
     """
 

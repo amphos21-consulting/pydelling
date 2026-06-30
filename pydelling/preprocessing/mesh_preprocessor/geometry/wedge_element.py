@@ -15,7 +15,7 @@ class WedgeElement(BaseElement):
 
     Category: mesh geometry.
     Tags: wedge, element, meshio, faces, centroid.
-    Use when: an MCP agent needs the mesh-preprocessor representation of wedge
+    Use when: to understand the mesh-preprocessor representation of wedge
         cells imported from meshio or generated internally.
     """
 

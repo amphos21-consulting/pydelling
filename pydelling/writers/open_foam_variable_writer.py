@@ -19,7 +19,7 @@ class OpenFoamVariableWriter(BaseWriter):
 
     Category: OpenFOAM writer.
     Tags: openfoam, variable, field-file, boundary-field, export.
-    Use when: an MCP agent needs to create an OpenFOAM scalar field file from
+    Use when: to create an OpenFOAM scalar field file from
         computed pydelling values.
     """
 

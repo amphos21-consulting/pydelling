@@ -21,7 +21,7 @@ class InputComponent(BaseComponent):
 
     Category: Web application component.
     Tags: streamlit, upload, csv, vtk, fem, smesh, session-state.
-    Use when: an MCP agent needs to identify which UI component turns uploaded
+    Use when: to identify which UI component turns uploaded
         files into pandas data frames or pydelling reader objects.
     """
 

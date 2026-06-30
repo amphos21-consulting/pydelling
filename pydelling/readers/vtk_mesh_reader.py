@@ -20,7 +20,7 @@ class VTKMeshReader(MeshPreprocessor):
 
     Category: mesh reader
     Tags: vtk, vtu, meshio, mesh-preprocessor, kd-tree, streamlit.
-    Use when: an MCP agent needs to load VTK mesh files, inspect point/cell
+    Use when: to load VTK mesh files, inspect point/cell
         variables, or convert supported cell blocks into pydelling mesh
         elements.
     """

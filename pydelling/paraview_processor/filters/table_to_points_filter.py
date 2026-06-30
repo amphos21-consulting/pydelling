@@ -16,7 +16,7 @@ class TableToPointsFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, table-to-points, coordinates, csv.
-    Use when: an MCP agent needs to configure a ParaView table source as point
+    Use when: to configure a ParaView table source as point
         geometry.
     """
 

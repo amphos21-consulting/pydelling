@@ -8,7 +8,7 @@ class PflotranRunnerWebapp(WebAppRunner):
 
     Category: Web application.
     Tags: streamlit, pflotran, runner, prototype.
-    Use when: an MCP agent needs to identify the current PFLOTRAN runner webapp
+    Use when: to identify the current PFLOTRAN runner webapp
         prototype and understand that it does not yet launch simulations.
     """
 

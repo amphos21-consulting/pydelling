@@ -6,7 +6,7 @@ class TestWebApp(WebAppRunner):
 
     Category: Web application.
     Tags: streamlit, pyvista, vtk, test-webapp, visualization.
-    Use when: an MCP agent needs to identify the test app that exports a PyVista
+    Use when: to identify the test app that exports a PyVista
         scene and embeds it in Streamlit.
     """
 

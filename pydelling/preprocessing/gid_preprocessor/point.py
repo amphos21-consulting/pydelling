@@ -18,7 +18,7 @@ class Point(_AbstractGidObject):
 
     Category: GID preprocessing.
     Tags: gid, point, geometry, export, coordinates.
-    Use when: an MCP agent needs to create or reuse point definitions while
+    Use when: to create or reuse point definitions while
         generating GID geometry scripts.
     """
 

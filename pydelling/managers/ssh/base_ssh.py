@@ -16,7 +16,7 @@ class BaseSsh(ABC):
 
     Category: Remote execution.
     Tags: ssh, sftp, hpc, files, commands, remote-manager.
-    Use when: an MCP agent needs to understand how pydelling managers run shell
+    Use when: to understand how pydelling managers run shell
         commands and move files on remote HPC systems.
     """
 

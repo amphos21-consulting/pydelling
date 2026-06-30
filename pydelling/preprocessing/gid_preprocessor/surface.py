@@ -22,7 +22,7 @@ class Surface(_AbstractGidObject):
 
     Category: GID preprocessing.
     Tags: gid, surface, nurbs, lines, extrusion.
-    Use when: an MCP agent needs to create GID surface commands from previously
+    Use when: to create GID surface commands from previously
         defined line objects.
     """
 

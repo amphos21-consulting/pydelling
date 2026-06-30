@@ -14,7 +14,7 @@ class QuadrilateralFace(BaseFace):
 
     Category: mesh geometry.
     Tags: quadrilateral, face, edges, centroid, mesh-preprocessor.
-    Use when: an MCP agent needs to recognize four-node faces produced by the
+    Use when: to recognize four-node faces produced by the
         mesh preprocessor and inspect their edge topology.
     """
 

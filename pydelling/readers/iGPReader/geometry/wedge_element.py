@@ -15,7 +15,7 @@ class WedgeElement(BaseElement):
 
     Category: iGP geometry.
     Tags: wedge, element, faces, volume, centroid.
-    Use when: an MCP agent needs to understand wedge element topology and
+    Use when: to understand wedge element topology and
         derived geometry used by iGP exports.
     """
 

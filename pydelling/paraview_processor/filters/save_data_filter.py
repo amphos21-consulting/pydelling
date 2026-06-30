@@ -16,7 +16,7 @@ class SaveDataFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, save-data, export, cell-data, point-data.
-    Use when: an MCP agent needs to persist a ParaView proxy with selected point
+    Use when: to persist a ParaView proxy with selected point
         and cell data arrays.
     """
 

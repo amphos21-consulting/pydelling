@@ -16,7 +16,7 @@ class _LineGraph:
 
     Category: COMSOL management.
     Tags: comsol, results, line-graph, plot.
-    Use when: an MCP agent needs to configure line graph expressions, styling,
+    Use when: to configure line graph expressions, styling,
         legends, or datasets under a 1D plot group.
     """
 

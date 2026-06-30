@@ -15,7 +15,7 @@ class HexahedraElement(BaseElement):
 
     Category: iGP geometry.
     Tags: hexahedra, element, faces, volume, centroid.
-    Use when: an MCP agent needs to understand hexahedral element topology and
+    Use when: to understand hexahedral element topology and
         derived geometry used by iGP exports.
     """
 

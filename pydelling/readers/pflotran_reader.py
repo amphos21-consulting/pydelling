@@ -528,7 +528,7 @@ class PflotranResults:
 
     Category: PFLOTRAN reader.
     Tags: pflotran, results, time-step, variables.
-    Use when: an MCP agent needs to inspect available result arrays for a single
+    Use when: to inspect available result arrays for a single
         PFLOTRAN output time.
     """
     def __init__(self, time, data) -> None:

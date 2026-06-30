@@ -12,7 +12,7 @@ class WebAppRunner(ABC, BaseStreamlitUtilityClass):
 
     Category: Web application.
     Tags: streamlit, webapp, runner, lifecycle.
-    Use when: an MCP agent needs to understand the legacy webapp runner import
+    Use when: to understand the legacy webapp runner import
         path and how pydelling webapps launch or render inside Streamlit.
     """
 

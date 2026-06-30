@@ -12,7 +12,7 @@ class CsvWriter:
 
     Category: iGP export.
     Tags: igp, csv, cells, connections, centroids.
-    Use when: an MCP agent needs to identify the CSV export helpers available on
+    Use when: to identify the CSV export helpers available on
         iGP reader/writer objects.
     """
 

@@ -8,7 +8,7 @@ class TestWebApp(WebAppRunner):
 
     Category: Web application.
     Tags: streamlit, test-webapp, runner, smoke-test.
-    Use when: an MCP agent needs to identify the simplest pydelling webapp
+    Use when: to identify the simplest pydelling webapp
         implementation and its render hook.
     """
 

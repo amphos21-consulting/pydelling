@@ -21,7 +21,7 @@ class FemReader(MeshPreprocessor):
 
     Category: mesh reader.
     Tags: fem, mesh, ascii, kd-tree, feflow.
-    Use when: an MCP agent needs to load FEM mesh nodes/elements for
+    Use when: to load FEM mesh nodes/elements for
         interpolation or mesh preprocessing.
     """
 

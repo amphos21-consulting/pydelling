@@ -25,7 +25,7 @@ class RegionOperations:
 
     Category: iGP region operations.
     Tags: igp, regions, boundaries, kd-tree, clustering, nodes.
-    Use when: an MCP agent needs to understand how iGP regions can be split,
+    Use when: to understand how iGP regions can be split,
         queried by x/y location, or linked to element centroids.
     """
 

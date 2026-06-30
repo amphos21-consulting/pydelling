@@ -15,7 +15,7 @@ class LineNotFound(Exception):
 
     Category: PFLOTRAN study.
     Tags: pflotran, input-file, exception, lookup.
-    Use when: an MCP agent needs to identify errors from PFLOTRAN input-deck
+    Use when: to identify errors from PFLOTRAN input-deck
         editing operations.
     """
 

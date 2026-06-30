@@ -11,7 +11,7 @@ class BaseReader:
 
     Category: iGP reader.
     Tags: igp, reader, dataframe, copy.
-    Use when: an MCP agent needs the common contract for iGP reader subclasses
+    Use when: to understand the common contract for iGP reader subclasses
         that populate keyed pandas DataFrames.
     """
 

@@ -27,7 +27,7 @@ class ComsolManager:
 
     Category: COMSOL management.
     Tags: comsol, mph, manager, model, simulation.
-    Use when: an MCP agent needs to open COMSOL through pydelling and create
+    Use when: to open COMSOL through pydelling and create
         model wrappers for studies, components, variables, parameters, and
         results.
     """

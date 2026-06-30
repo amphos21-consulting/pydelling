@@ -14,7 +14,7 @@ class ImageOperations:
 
     Category: image operations.
     Tags: image, polygons, contours, raster.
-    Use when: an MCP agent needs to identify helper methods that derive polygon
+    Use when: to identify helper methods that derive polygon
         geometry from image-like reader data.
     """
 

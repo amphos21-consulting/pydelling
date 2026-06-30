@@ -15,7 +15,7 @@ class TetrahedraElement(BaseElement):
 
     Category: iGP geometry.
     Tags: tetrahedra, element, faces, volume, centroid.
-    Use when: an MCP agent needs to understand tetrahedral element topology and
+    Use when: to understand tetrahedral element topology and
         derived geometry used by iGP exports.
     """
 

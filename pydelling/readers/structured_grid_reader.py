@@ -17,7 +17,7 @@ class StructuredGridReader(BaseReader):
 
     Category: structured-grid reader.
     Tags: structured-grid, centroids, variable, csv.
-    Use when: an MCP agent needs to load structured-grid coordinate rows and
+    Use when: to load structured-grid coordinate rows and
         combine them with a scalar variable column.
     """
 

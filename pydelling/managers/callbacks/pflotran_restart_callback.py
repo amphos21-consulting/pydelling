@@ -19,7 +19,7 @@ class PflotranRestartCallback(BaseCallback):
 
     Category: PFLOTRAN callback.
     Tags: pflotran, restart, callback, local, remote.
-    Use when: an MCP agent needs to understand how sequential PFLOTRAN studies
+    Use when: to understand how sequential PFLOTRAN studies
         reuse restart HDF5 files.
     """
 
@@ -100,7 +100,7 @@ class PflotranRestartCallback(BaseCallback):
 
         Category: PFLOTRAN callback.
         Tags: pflotran, restart, dummy-run.
-        Use when: the manager is writing files without executing simulations.
+        Use when: to understand the manager is writing files without executing simulations.
         Notes:
             This callback intentionally performs no work in dummy mode.
         """

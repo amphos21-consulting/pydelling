@@ -17,7 +17,7 @@ class ComsolStudy:
 
     Category: COMSOL management.
     Tags: comsol, study, run, parametric-sweep, progress.
-    Use when: an MCP agent needs to run COMSOL studies, watch progress logs, or
+    Use when: to run COMSOL studies, watch progress logs, or
         perform parameter sweeps through pydelling.
     """
 

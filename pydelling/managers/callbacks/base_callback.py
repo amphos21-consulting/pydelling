@@ -15,7 +15,7 @@ class BaseCallback(ABC):
 
     Category: simulation callback.
     Tags: callback, study, manager, pre-run, post-run.
-    Use when: an MCP agent needs to understand how pydelling attaches custom
+    Use when: to understand how pydelling attaches custom
         pre/post behavior to managed studies.
     """
 

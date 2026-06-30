@@ -17,7 +17,7 @@ class UnitConverter:
 
     Category: utilities.
     Tags: units, time, conversion.
-    Use when: an MCP agent needs to convert between seconds, minutes, hours,
+    Use when: to convert between seconds, minutes, hours,
         days, and years.
     """
 

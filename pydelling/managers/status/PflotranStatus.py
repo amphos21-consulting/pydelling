@@ -15,7 +15,7 @@ class PflotranStatus(BaseStatus):
 
     Category: PFLOTRAN status.
     Tags: pflotran, status, progress, wall-clock, timestep.
-    Use when: an MCP agent needs to inspect PFLOTRAN run status files and infer
+    Use when: to inspect PFLOTRAN run status files and infer
         current simulation time, timestep history, or completion.
     """
 

@@ -23,7 +23,7 @@ class FeflowBaseRader:
 
     Category: FEFLOW reader.
     Tags: feflow, reader, base-class.
-    Use when: an MCP agent needs the common parent type used by FEFLOW reader
+    Use when: to understand the common parent type used by FEFLOW reader
         implementations before selecting concrete parsing helpers.
     """
 
@@ -49,7 +49,7 @@ class FeflowReader(FeflowBaseRader):
 
     Category: FEFLOW reader.
     Tags: feflow, dat, point-data, concentration, plotting.
-    Use when: an MCP agent needs to parse FEFLOW ``.dat`` exports, compare two
+    Use when: to parse FEFLOW ``.dat`` exports, compare two
         fields, or plot node values.
 
     Examples:

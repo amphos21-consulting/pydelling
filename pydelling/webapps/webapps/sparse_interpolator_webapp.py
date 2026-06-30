@@ -19,7 +19,7 @@ class SparseInterpolatorWebapp(WebAppRunner):
 
     Category: Web application.
     Tags: streamlit, interpolation, sparse-data, mesh, csv, vtk, fem.
-    Use when: an MCP agent needs to understand the user-facing workflow that
+    Use when: to understand the user-facing workflow that
         uploads sparse points, uploads a target mesh, interpolates values, and
         downloads CSV output.
     """

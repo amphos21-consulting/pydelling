@@ -16,7 +16,7 @@ class XDMFFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, xdmf, reader, bounds.
-    Use when: an MCP agent needs to load an XDMF dataset into a ParaView
+    Use when: to load an XDMF dataset into a ParaView
         pipeline and inspect its spatial extents.
     """
 

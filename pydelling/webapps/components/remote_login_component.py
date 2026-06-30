@@ -22,7 +22,7 @@ class RemoteLoginComponent(BaseComponent):
 
     Category: Web application component.
     Tags: streamlit, ssh, login, cookies, session-state.
-    Use when: an MCP agent needs to understand the UI flow that stores remote
+    Use when: to understand the UI flow that stores remote
         host credentials for pydelling webapp sessions.
     """
 
@@ -121,7 +121,7 @@ class RemoteLoginComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, ssh, login, cookies, session-state.
-        Use when: the login form has been submitted and the component should
+        Use when: to understand the login form has been submitted and the component should
             verify SSH access and store credentials for the session.
         Args:
             username: Remote SSH username.

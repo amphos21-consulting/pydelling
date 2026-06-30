@@ -14,7 +14,7 @@ class SubfishException(Exception):
 
     Category: utilities.
     Tags: subfish, exception, transport.
-    Use when: an MCP agent needs to recognize errors originating from the
+    Use when: to recognize errors originating from the
         SubFISH analytical solution module.
     """
 

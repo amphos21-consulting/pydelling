@@ -14,7 +14,7 @@ class TriangleFace(BaseFace):
 
     Category: iGP geometry.
     Tags: triangle, face, centroid.
-    Use when: an MCP agent needs to identify triangular boundary faces in iGP
+    Use when: to identify triangular boundary faces in iGP
         mesh geometry.
     """
 

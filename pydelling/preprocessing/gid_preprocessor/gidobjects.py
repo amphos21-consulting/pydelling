@@ -16,7 +16,7 @@ class Polyline(GidObject):
 
     Category: GID preprocessing.
     Tags: gid, polyline, points, lines, geometry.
-    Use when: an MCP agent needs to generate a chain or closed loop of GID line
+    Use when: to generate a chain or closed loop of GID line
         entities from point objects.
     """
 

@@ -21,7 +21,7 @@ class Line(_AbstractGidObject):
 
     Category: GID preprocessing.
     Tags: gid, line, points, export, duplicate-detection.
-    Use when: an MCP agent needs to create or reuse line definitions while
+    Use when: to create or reuse line definitions while
         generating GID geometry scripts.
     """
 

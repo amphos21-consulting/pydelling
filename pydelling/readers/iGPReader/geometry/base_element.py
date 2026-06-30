@@ -12,7 +12,7 @@ class BaseElement:
 
     Category: iGP geometry.
     Tags: element, mesh, nodes, faces, centroid.
-    Use when: an MCP agent needs the common attributes shared by iGP element
+    Use when: to understand the common attributes shared by iGP element
         types before export or region operations.
     """
 

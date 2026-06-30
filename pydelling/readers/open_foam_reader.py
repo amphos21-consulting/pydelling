@@ -23,7 +23,7 @@ class OpenFoamReader(BaseReader):
 
     Category: OpenFOAM reader.
     Tags: openfoam, mesh, cell-centers, cell-volumes, Ofpp.
-    Use when: an MCP agent needs to locate OpenFOAM mesh geometry data such as
+    Use when: to locate OpenFOAM mesh geometry data such as
         cell centers and cell volumes for interpolation or export workflows.
     """
 

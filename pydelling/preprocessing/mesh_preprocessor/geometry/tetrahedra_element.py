@@ -14,7 +14,7 @@ class TetrahedraElement(BaseElement):
 
     Category: mesh geometry.
     Tags: tetrahedra, element, meshio, faces, centroid.
-    Use when: an MCP agent needs the mesh-preprocessor representation of
+    Use when: to understand the mesh-preprocessor representation of
         tetrahedral cells.
     """
 

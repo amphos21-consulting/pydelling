@@ -14,7 +14,7 @@ class Segment(Line):
 
     Category: geometry primitive.
     Tags: segment, point, length, intersection, containment.
-    Use when: an MCP agent needs bounded line geometry for mesh, polygon, or
+    Use when: to use bounded line geometry for mesh, polygon, or
         plane-intersection workflows.
     """
 

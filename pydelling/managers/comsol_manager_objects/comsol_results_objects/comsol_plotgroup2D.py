@@ -16,7 +16,7 @@ class _PlotGroup2D:
 
     Category: COMSOL management.
     Tags: comsol, results, plot-group, 2d, surface.
-    Use when: an MCP agent needs to create or modify 2D COMSOL result plot
+    Use when: to create or modify 2D COMSOL result plot
         groups and surface plot children.
     """
 

@@ -14,7 +14,7 @@ class JurecaSsh(BaseSsh):
 
     Category: Remote execution.
     Tags: ssh, sftp, jureca, slurm, hpc.
-    Use when: an MCP agent needs to understand the JURECA-specific remote paths,
+    Use when: to understand the JURECA-specific remote paths,
         queue commands, and job submission helpers used by pydelling managers.
     """
 

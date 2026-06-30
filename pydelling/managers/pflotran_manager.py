@@ -28,7 +28,7 @@ class PflotranManager(BaseManager):
 
     Category: PFLOTRAN management.
     Tags: pflotran, studies, execution, docker, hpc, jureca, lumi, results.
-    Use when: an MCP agent needs to understand how pydelling launches
+    Use when: to understand how pydelling launches
         ``PflotranStudy`` objects locally, in Docker, or on remote HPC systems
         and how it gathers results afterward.
     """

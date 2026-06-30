@@ -22,7 +22,7 @@ class _Table:
 
     Category: COMSOL management.
     Tags: comsol, results, table, export, dataframe.
-    Use when: an MCP agent needs to create, read, update, or export COMSOL
+    Use when: to create, read, update, or export COMSOL
         result tables through pydelling.
     """
 

@@ -20,7 +20,7 @@ class HDF5CentroidWriter(BaseWriter):
 
     Category: HDF5 writer.
     Tags: hdf5, centroid, cell-ids, permeability, tensor.
-    Use when: an MCP agent needs to export cell-wise scalar, anisotropic, or
+    Use when: to export cell-wise scalar, anisotropic, or
         tensor datasets with one-based ``Cell Ids``.
     """
 

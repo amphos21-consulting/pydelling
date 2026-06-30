@@ -11,7 +11,7 @@ class CopyStep(BaseStep):
 
     Category: Remote execution.
     Tags: ssh, sftp, copy, step.
-    Use when: an MCP agent needs to understand how pydelling schedules local or
+    Use when: to understand how pydelling schedules local or
         remote file copies during SSH-backed manager workflows.
     """
 

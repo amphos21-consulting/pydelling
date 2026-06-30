@@ -18,7 +18,7 @@ class ClosedStlGenerator(object):
 
     Category: preprocessing.
     Tags: stl, raster, surface, aperture, mesh-export.
-    Use when: an MCP agent needs to turn regular raster surfaces into a closed
+    Use when: to turn regular raster surfaces into a closed
         triangulated STL shell for meshing or visualization.
     """
 

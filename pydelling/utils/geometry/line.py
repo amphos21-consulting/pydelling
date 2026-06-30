@@ -19,7 +19,7 @@ class Line(BasePrimitive):
 
     Category: geometry primitive.
     Tags: line, point, direction-vector, intersection, angle.
-    Use when: an MCP agent needs geometric line operations for intersections or
+    Use when: to use geometric line operations for intersections or
         angular comparisons.
     """
 

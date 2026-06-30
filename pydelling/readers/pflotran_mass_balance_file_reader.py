@@ -24,7 +24,7 @@ class PflotranMassBalanceFileReader(PflotranObservationPointReader):
 
     Category: PFLOTRAN reader.
     Tags: pflotran, mass-balance, observation, plot.
-    Use when: an MCP agent needs to load PFLOTRAN mass-balance outputs and
+    Use when: to load PFLOTRAN mass-balance outputs and
         generate mass-balance plots.
     """
 

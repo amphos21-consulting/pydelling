@@ -24,7 +24,7 @@ class BaseStep(ABC):
 
     Category: Remote execution.
     Tags: ssh, step, callback, deferred-operation.
-    Use when: an MCP agent needs to understand how pydelling stores remote
+    Use when: to understand how pydelling stores remote
         operations for execution during manager workflows.
     """
 

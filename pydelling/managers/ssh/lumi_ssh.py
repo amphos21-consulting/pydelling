@@ -14,7 +14,7 @@ class LumiSsh(BaseSsh):
 
     Category: Remote execution.
     Tags: ssh, sftp, lumi, slurm, hpc.
-    Use when: an MCP agent needs to understand the LUMI-specific remote paths,
+    Use when: to understand the LUMI-specific remote paths,
         queue commands, and job submission helpers used by pydelling managers.
     """
 

@@ -15,7 +15,7 @@ class _DerivedValue:
 
     Category: COMSOL management.
     Tags: comsol, results, derived-value, table, evaluation.
-    Use when: an MCP agent needs to configure COMSOL evaluations such as
+    Use when: to configure COMSOL evaluations such as
         averages, integrals, minima, maxima, or point/global evaluations.
     """
 

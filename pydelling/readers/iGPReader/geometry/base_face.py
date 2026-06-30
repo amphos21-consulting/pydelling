@@ -12,7 +12,7 @@ class BaseFace:
 
     Category: iGP geometry.
     Tags: face, polygon, area, centroid, mesh.
-    Use when: an MCP agent needs to understand the common geometry stored by
+    Use when: to understand the common geometry stored by
         iGP face classes before export or mesh processing.
     """
 

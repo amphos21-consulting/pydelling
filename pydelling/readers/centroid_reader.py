@@ -18,7 +18,7 @@ class CentroidReader(BaseReader):
 
     Category: centroid reader.
     Tags: centroids, coordinates, variable, csv, dataframe.
-    Use when: an MCP agent needs to load x/y/z centroid locations and an
+    Use when: to load x/y/z centroid locations and an
         optional scalar value from a text file.
     """
 

@@ -25,7 +25,7 @@ class CsvReaderFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, csv, table-to-points, coordinates, bounds.
-    Use when: an MCP agent needs to load CSV point data into a ParaView pipeline
+    Use when: to load CSV point data into a ParaView pipeline
         and expose x/y/z ranges.
     """
 

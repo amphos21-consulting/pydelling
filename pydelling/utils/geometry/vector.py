@@ -19,7 +19,7 @@ class Vector(np.ndarray, BasePrimitive):
 
     Category: geometry primitive.
     Tags: vector, numpy, point, geometry.
-    Use when: an MCP agent needs to understand vector creation from coordinates
+    Use when: to understand vector creation from coordinates
         or from the displacement between two points.
     """
 

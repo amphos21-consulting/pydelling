@@ -16,7 +16,7 @@ class CalculatorFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, calculator, expression, cell-data, point-data.
-    Use when: an MCP agent needs to add a calculated field to a ParaView
+    Use when: to add a calculated field to a ParaView
         processing pipeline.
     """
 

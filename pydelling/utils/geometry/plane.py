@@ -20,7 +20,7 @@ class Plane(BasePrimitive):
 
     Category: geometry primitive.
     Tags: plane, point, normal, intersection, parallel.
-    Use when: an MCP agent needs plane geometry for intersections with planes,
+    Use when: to use plane geometry for intersections with planes,
         lines, or segments.
     """
 

@@ -16,7 +16,7 @@ class _PointGraph:
 
     Category: COMSOL management.
     Tags: comsol, results, point-graph, plot.
-    Use when: an MCP agent needs to configure point graph expressions, styling,
+    Use when: to configure point graph expressions, styling,
         legends, or datasets under a 1D plot group.
     """
 

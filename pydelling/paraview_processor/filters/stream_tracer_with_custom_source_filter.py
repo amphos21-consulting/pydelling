@@ -16,7 +16,7 @@ class StreamTracerWithCustomSourceFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, stream-tracer, seed-source, vectors, filter.
-    Use when: an MCP agent needs to configure streamline generation from a
+    Use when: to configure streamline generation from a
         custom source object in a ParaView processing pipeline.
     """
 
