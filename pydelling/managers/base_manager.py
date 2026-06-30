@@ -23,7 +23,11 @@ logger = logging.getLogger(__name__)
 class BaseManager(ABC):
     """Abstract manager for orchestrating simulation studies and execution backends.
 
-    
+    Category: Simulation management.
+    Tags: studies, execution, docker, hpc, ssh, callbacks.
+    Use when: an MCP agent needs to understand how pydelling batches
+        ``BaseStudy`` instances, writes run files, and dispatches simulations to
+        local, Docker, or remote HPC backends.
     """
 
     def __init__(self, name: str = None):
@@ -42,11 +46,18 @@ class BaseManager(ABC):
 
 
     def add_study(self, study: BaseStudy):
-        """
-        This method adds a study to the manager.
-        
+        """Register a study in the manager by its ``study.name``.
+
+        Category: Simulation management.
+        Tags: studies, registry, base-study.
+        Use when: building a batch of simulations before calling ``run`` or
+            ``generate_run_files``.
         Args:
-            study (BaseStudy): Description.
+            study: ``BaseStudy`` instance to add to the manager.
+        Raises:
+            AssertionError: If ``study`` is not a ``BaseStudy`` instance.
+        Side effects:
+            Stores the study in ``self.studies`` keyed by name.
         """
         assert isinstance(study, BaseStudy), f"Study must be a object from a class inherited from BaseStudy, not {type(study)}"
         self.studies[study.name] = study
@@ -72,29 +83,45 @@ class BaseManager(ABC):
             password: str = None,
             **kwargs,
             ):
-        """
-        This method runs all the studies.
-        
+        """Run every registered study through the selected execution backend.
+
+        Category: Simulation management.
+        Tags: studies, execution, docker, jureca, lumi, callbacks.
+        Use when: an MCP workflow has a populated manager and needs to create
+            result folders, initialize study callbacks, run optional setup
+            commands, and dispatch each study.
         Args:
-            studies_folder (str): Description.
-            n_cores (int): Description.
-            docker_image (str): Description.
-            dummy (bool): Description.
-            start_from (int): Description.
-            petsc_dir (str): Description.
-            petsc_arch (str): Description.
-            pflotran_dir (str): Description.
-            pre_commands (List[str]): Description.
-            run_on (str): Description.
-            user (str): Description.
-            project_name (str): Description.
-            pkey_path (str): Description.
-            wallclock_limit (float): Description.
-            shell_script (str): Description.
-            download_file_extensions (List[str]): Description.
-            download_results (bool): Description.
-            password (str): Description.
-            **kwargs (Any): Description.
+            studies_folder: Base directory where timestamped result folders are
+                created.
+            n_cores: Number of CPU cores requested for each study.
+            docker_image: Docker image name for container execution. When
+                provided and ``run_on`` is not a remote platform, studies are
+                routed through ``_run_study_docker``.
+            dummy: If ``True``, write study files without executing solvers.
+            start_from: One-based study index from which real execution starts;
+                earlier studies are written in dummy mode.
+            petsc_dir: PETSc installation path forwarded to concrete PFLOTRAN
+                managers.
+            petsc_arch: PETSc architecture name forwarded to concrete managers.
+            pflotran_dir: PFLOTRAN executable or installation selector passed to
+                concrete managers.
+            pre_commands: Shell commands executed before iterating studies.
+            run_on: Remote platform selector. Supported values here are
+                ``"jureca"`` and ``"lumi"``.
+            user: Remote user for HPC execution.
+            project_name: Remote allocation or project name for HPC execution.
+            pkey_path: Path to the SSH private key for remote execution.
+            wallclock_limit: Wallclock limit in hours for remote jobs.
+            shell_script: Optional shell script used by remote runners.
+            download_file_extensions: Result file extensions to download from
+                remote runs.
+            download_results: Whether remote runs should download results.
+            password: Optional password forwarded to SSH helpers.
+            **kwargs: Extra backend-specific parameters passed to
+                ``run_study`` and concrete manager implementations.
+        Side effects:
+            Creates ``self.results_folder``, may run shell commands, writes
+            study files, starts simulations, and may configure SSH state.
         """
         # Set ssh
         if run_on in ['jureca', 'lumi']:
@@ -159,11 +186,17 @@ class BaseManager(ABC):
                            **kwargs)
 
     def generate_run_files(self, studies_folder: str = './studies'):
-        """
-        This method generates the run files for all the studies.
-        
+        """Write input files for all registered studies without dispatching them.
+
+        Category: Simulation management.
+        Tags: studies, file-generation, dry-run.
+        Use when: an MCP agent needs reproducible solver input decks on disk but
+            should not launch the solver.
         Args:
-            studies_folder (str): Description.
+            studies_folder: Kept for API compatibility; run files are written
+                under ``self.results_folder``.
+        Side effects:
+            Calls ``study.to_file`` for each registered study.
         """
         for study in self.studies.values():
             study: BaseStudy
@@ -272,23 +305,30 @@ class BaseManager(ABC):
                   download_results: bool = True,
                   **kwargs,
                   ):
-        """
-        This method runs a study.
-        
+        """Write and execute one study with callbacks and post-processing.
+
+        Category: Simulation management.
+        Tags: study, execution, callbacks, docker, hpc.
+        Use when: an MCP agent needs the per-study execution path used by
+            ``run`` or wants to understand how manager backends are selected.
         Args:
-            study (BaseStudy): Description.
-            n_cores (int): Description.
-            docker_image (str): Description.
-            run_on (str): Description.
-            dummy (bool): Description.
-            user (str): Description.
-            project_name (str): Description.
-            pkey_path (str): Description.
-            wallclock_limit (float): Description.
-            shell_script (str): Description.
-            download_file_extensions (List[str]): Description.
-            download_results (bool): Description.
-            **kwargs (Any): Description.
+            study: Study instance to write and execute.
+            n_cores: Number of CPU cores requested for execution.
+            docker_image: Docker image used when dispatching through Docker.
+            run_on: Remote platform selector, currently ``"jureca"`` or
+                ``"lumi"`` for built-in SSH helpers.
+            dummy: If ``True``, only writes the study files.
+            user: Remote username for HPC execution.
+            project_name: Remote project or allocation name.
+            pkey_path: SSH private key path for remote execution.
+            wallclock_limit: Wallclock limit in hours for remote jobs.
+            shell_script: Optional script passed to remote execution helpers.
+            download_file_extensions: Remote result extensions to retrieve.
+            download_results: Whether remote execution should retrieve results.
+            **kwargs: Additional concrete backend parameters.
+        Side effects:
+            Sets ``study.output_folder``, runs pre/post callbacks, writes files,
+            calls one concrete execution method, and invokes ``study.post_run``.
         """
         logger.info(f"Running study {study.name}")
         # Create the study files
@@ -346,16 +386,22 @@ class BaseManager(ABC):
                 password: str = None,
                 **kwargs,
                 ):
-        """
-        This method sets the ssh object to the manager.
-        
+        """Attach the SSH helper for a supported remote platform.
+
+        Category: Simulation management.
+        Tags: ssh, hpc, jureca, lumi, remote-execution.
+        Use when: a manager is preparing to run studies on a configured HPC
+            backend rather than locally or in Docker.
         Args:
-            platform (str): Description.
-            user (str): Description.
-            pkey_path (str): Description.
-            project_name (str): Description.
-            password (str): Description.
-            **kwargs (Any): Description.
+            platform: Remote platform key. Supported values are ``"jureca"`` and
+                ``"lumi"``.
+            user: Remote username.
+            pkey_path: Path to an SSH private key.
+            project_name: Remote allocation or project name.
+            password: Optional SSH password.
+            **kwargs: Extra constructor parameters forwarded to the SSH helper.
+        Side effects:
+            Instantiates and stores ``self.ssh``.
         """
         platform_to_ssh = {
             'jureca': JurecaSsh,

@@ -26,13 +26,19 @@ class PflotranProcessingUtils:
     }
 
     def get_slice(self, data: np.ndarray, axis: str, index: int) -> np.ndarray:
-        """
-        This function returns a slice of the data array along the axis and index provided
-        
+        """Return a 2D slice from a 3D PFLOTRAN data cube by axis index.
+
+        Category: reader
+        Tags: pflotran, slice, array, x, y, z
+        Use when: scripts need a plane from a full 3D PFLOTRAN result array.
         Args:
-            data (np.ndarray): Description.
-            axis (str): Description.
-            index (int): Description.
+            data: Three-dimensional array ordered as ``x, y, z``.
+            axis: Axis to slice, one of ``"x"``, ``"y"``, or ``"z"``.
+            index: Integer index along the selected axis.
+        Returns:
+            np.ndarray: 2D data plane extracted from ``data``.
+        Raises:
+            AssertionError: If ``data`` is not 3D or ``axis`` is unsupported.
         """
         assert len(data.shape) == 3, "The full data array must be provided"
         assert axis in ['x', 'y', 'z'], "The axis must be x, y, or z"
@@ -45,13 +51,21 @@ class PflotranProcessingUtils:
             return data[:, :, index]
 
     def get_slice_from_coordinates(self, data: np.ndarray, axis: str, coordinate: float) -> np.ndarray:
-        """
-        This function returns a slice of the data array along the axis and index provided
-        
+        """Return a slice at the grid coordinate nearest to ``coordinate``.
+
+        Category: reader
+        Tags: pflotran, slice, coordinates, nearest-neighbor
+        Use when: scripts need to request a PFLOTRAN slice by physical
+            coordinate instead of array index.
         Args:
-            data (np.ndarray): Description.
-            axis (str): Description.
-            coordinate (float): Description.
+            data: Three-dimensional array ordered as ``x, y, z``.
+            axis: Axis to slice, one of ``"x"``, ``"y"``, or ``"z"``.
+            coordinate: Physical coordinate in meters along the selected axis.
+        Returns:
+            np.ndarray: Sliced data with the selected axis kept as a singleton
+            dimension.
+        Raises:
+            AssertionError: If ``data`` is not 3D or ``axis`` is unsupported.
         """
         assert len(data.shape) == 3, "The full data array must be provided"
         assert axis in ['x', 'y', 'z'], "The axis must be x, y, or z"
@@ -80,11 +94,17 @@ class PflotranProcessingUtils:
 
 
     def get_shape_dimensions(self, data: np.ndarray) -> tuple:
-        """
-        This function returns the cartesians dimensions present on a data array
-        
+        """Return which Cartesian axes have more than one cell.
+
+        Category: reader
+        Tags: pflotran, dimensions, shape, cartesian-grid
+        Use when: scripts need to infer whether an array represents a 1D, 2D, or
+            3D PFLOTRAN result.
         Args:
-            data (np.ndarray): Description.
+            data: Array with dimensions ordered as ``x, y, z``.
+        Returns:
+            str: Concatenated axis labels with length greater than one, such as
+            ``"xy"`` or ``"xyz"``.
         """
         dims = ''
         if data.shape[0] > 1:
@@ -97,11 +117,18 @@ class PflotranProcessingUtils:
 
 
     def axis_centroids(self, axis):
-        """
-        This function returns the centroids of the axis provided
-        
+        """Return centroid coordinates for the selected PFLOTRAN axis.
+
+        Category: reader
+        Tags: pflotran, coordinates, centroids, axis
+        Use when: scripts need cell-center coordinates for plotting, sampling,
+            or interpolation along a named axis.
         Args:
-            axis (Any): Description.
+            axis: Axis selector, one of ``"x"``, ``"y"``, or ``"z"``.
+        Returns:
+            np.ndarray: Cell centroid coordinates along the selected axis.
+        Raises:
+            AssertionError: If ``axis`` is unsupported.
         """
         assert axis in ['x', 'y', 'z'], "The axis must be x, y, or z"
         axis = self.axis_translator[axis]

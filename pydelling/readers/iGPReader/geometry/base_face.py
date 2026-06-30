@@ -8,13 +8,26 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 
 class BaseFace:
+    """Represent a polygonal face from iGP mesh node ids and coordinates.
+
+    Category: iGP geometry.
+    Tags: face, polygon, area, centroid, mesh.
+    Use when: an MCP agent needs to understand the common geometry stored by
+        iGP face classes before export or mesh processing.
+    """
+
     def __init__(self, nodes, coords):
-        """
-        __init__ method.
-        
+        """Create a face and precompute its area and centroid.
+
+        Category: iGP geometry.
+        Tags: face, nodes, coordinates, area, centroid.
+        Use when: constructing a mesh face from node ids and 3D coordinates.
         Args:
-            nodes (Any): Description.
-            coords (Any): Description.
+            nodes: Node identifiers that define the face connectivity.
+            coords: Coordinate array for the face vertices.
+        Side effects:
+            Stores connectivity and coordinates, computes ``area`` and
+            ``centroid``, and labels the instance type as ``"BaseFace"``.
         """
         self.nodes = nodes
         self.coords = coords
@@ -28,9 +41,14 @@ class BaseFace:
         #     self.plot_face()
 
     def compute_area(self):
-        """
-        This function computes the area of a 3D planar polygon
-        :return: Area of a 3D planar polygon
+        """Compute the projected area of the 3D planar polygon.
+
+        Category: iGP geometry.
+        Tags: face, area, polygon, normal-vector.
+        Use when: deriving geometric measures for mesh faces used by iGP export
+            or preprocessing workflows.
+        Returns:
+            float: Projected polygon area based on the face normal.
         """
         assert len(self.coords >= 3), "Incorrect number of points, more are needed to form a polygon"
         # Compute normal
@@ -48,12 +66,37 @@ class BaseFace:
         return projected_area
 
     def compute_centroid(self):
+        """Compute the arithmetic mean centroid of face coordinates.
+
+        Category: iGP geometry.
+        Tags: face, centroid, coordinates.
+        Use when: a face needs a representative center point for geometric
+            checks or plotting.
+        Returns:
+            np.ndarray: Mean coordinate of the face vertices.
+        """
         return np.mean(self.coords, axis=0)
 
     def compute_centroid_mean(self):
+        """Return the arithmetic mean centroid of face coordinates.
+
+        Category: iGP geometry.
+        Tags: face, centroid, coordinates, compatibility.
+        Use when: legacy code calls the explicit mean-centroid helper.
+        Returns:
+            np.ndarray: Mean coordinate of the face vertices.
+        """
         return np.mean(self.coords, axis=0)
 
     def plot_face(self):
+        """Plot the face polygon and centroid markers in 3D.
+
+        Category: iGP geometry.
+        Tags: face, plot, matplotlib, debug.
+        Use when: visually debugging face geometry or centroid calculations.
+        Side effects:
+            Creates and shows a Matplotlib 3D plot.
+        """
         from mpl_toolkits.mplot3d import Axes3D
         from mpl_toolkits.mplot3d.art3d import Poly3DCollection
         import matplotlib.pyplot as plt

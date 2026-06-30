@@ -14,13 +14,26 @@ if TYPE_CHECKING:
 
 
 class PflotranImplicitWriter(BaseWriter):
+    """Writer for PFLOTRAN unstructured implicit mesh exports.
+
+    Category: Mesh export.
+    Tags: pflotran, implicit-grid, hdf5, vertices, elements, regions.
+    Use when: an MCP agent needs to identify the writer that serializes iGP
+        mesh data into PFLOTRAN implicit mesh text or HDF5 domain/region
+        structures.
+    """
 
     def write_elements(self, export_file):
-        """
-        write_elements method.
-        
+        """Write the PFLOTRAN ``ELEMENTS`` section.
+
+        Category: Mesh export.
+        Tags: pflotran, elements, implicit-grid, connectivity.
+        Use when: exporting element connectivity for a PFLOTRAN unstructured
+            implicit grid file.
         Args:
-            export_file (Any): Description.
+            export_file: Writable text stream receiving the element section.
+        Side effects:
+            Writes one connectivity line per element using one-based node ids.
         """
         export_file.write(f"ELEMENTS {self.mesh_info['n_elements']}\n")
         for element in self.elements:
@@ -28,22 +41,34 @@ class PflotranImplicitWriter(BaseWriter):
                 f"{config.globals.element_dict[len(element.coords)]} {' '.join(map(str, np.array(element.nodes) + 1))}\n")
 
     def write_nodes(self, export_file):
-        """
-        write_nodes method.
-        
+        """Write the PFLOTRAN ``VERTICES`` section.
+
+        Category: Mesh export.
+        Tags: pflotran, vertices, implicit-grid, coordinates.
+        Use when: exporting node coordinates for a PFLOTRAN unstructured
+            implicit grid file.
         Args:
-            export_file (Any): Description.
+            export_file: Writable text stream receiving the vertex section.
+        Side effects:
+            Writes one coordinate line per node.
         """
         export_file.write(f"VERTICES {self.mesh_info['n_nodes']}\n")
         for id, node in enumerate(self.nodes_output):
             export_file.write(f"{node[0]} {node[1]} {self.nodes[id][2]:5.5f}\n")
 
     def write_domain_hdf5(self, export_file):
-        """
-        Writes the domain info (i.e. grid info) into an hdf5 file
-        
+        """Write PFLOTRAN HDF5 domain cells and vertices.
+
+        Category: Mesh export.
+        Tags: pflotran, hdf5, domain, cells, vertices.
+        Use when: creating a PFLOTRAN HDF5 mesh file from an unbuilt iGP mesh.
         Args:
-            export_file (Any): Description.
+            export_file: Open HDF5 file handle that receives a ``Domain`` group.
+        Raises:
+            RuntimeError: If called after the mesh has been built, which is not
+                supported by this writer.
+        Side effects:
+            Creates ``Domain/Cells`` and ``Domain/Vertices`` datasets.
         """
         if self.is_mesh_built:
             raise RuntimeError("Exporting built mesh into hdf5 still under development")
@@ -61,11 +86,20 @@ class PflotranImplicitWriter(BaseWriter):
             domain_group.create_dataset("Vertices", data=node_data)
 
     def write_regions_hdf5(self, export_file):
-        """
-        write_regions_hdf5 method.
-        
+        """Write PFLOTRAN HDF5 material and region datasets.
+
+        Category: Mesh export.
+        Tags: pflotran, hdf5, regions, materials, boundary-faces.
+        Use when: exporting cell material ids and named region face vertices for
+            a PFLOTRAN HDF5 mesh file.
         Args:
-            export_file (Any): Description.
+            export_file: Open HDF5 file handle that receives a ``Regions`` group.
+        Raises:
+            RuntimeError: If called after the mesh has been built, which is not
+                supported by this writer.
+        Side effects:
+            Creates ``Regions/all`` plus one dataset for each material and named
+            region available on the writer.
         """
         def add_dataset(hdf5_file, group_name, dataset_type, data):
             temp_group = hdf5_file.create_group(group_name)

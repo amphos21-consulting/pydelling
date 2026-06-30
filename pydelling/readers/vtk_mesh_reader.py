@@ -16,6 +16,15 @@ import numpy as np
 
 
 class VTKMeshReader(MeshPreprocessor):
+    """Read VTK/VTU meshes and expose them through ``MeshPreprocessor`` helpers.
+
+    Category: mesh reader
+    Tags: vtk, vtu, meshio, mesh-preprocessor, kd-tree, streamlit.
+    Use when: an MCP agent needs to load VTK mesh files, inspect point/cell
+        variables, or convert supported cell blocks into pydelling mesh
+        elements.
+    """
+
     has_kd_tree = False
 
     def __init__(self, filename,
@@ -23,14 +32,24 @@ class VTKMeshReader(MeshPreprocessor):
                  st_file=False,
                  generate_internal_mesh=True,
                  ):
-        """
-        __init__ method.
-        
+        """Load a VTK/VTU mesh or a pickled ``VTKMeshReader`` state.
+
+        Category: mesh reader
+        Tags: vtk, vtu, meshio, pickle, kd-tree.
+        Use when: creating a reader from a mesh file for interpolation,
+            pre-processing, or UI upload workflows.
         Args:
-            filename (Any): Description.
-            kd_tree (Any): Description.
-            st_file (Any): Description.
-            generate_internal_mesh (Any): Description.
+            filename: Path to a ``.vtk``/``.vtu`` mesh file or to a previously
+                saved pickle file.
+            kd_tree: Whether to build a spatial index after internal mesh
+                conversion.
+            st_file: Whether this reader is being used inside Streamlit and
+                should report progress through Streamlit widgets.
+            generate_internal_mesh: Whether to convert meshio cell blocks into
+                pydelling mesh elements immediately.
+        Side effects:
+            Reads mesh data from disk, may populate mesh elements, and may build
+            a KD-tree.
         """
         super().__init__()
         self.is_streamlit = st_file
@@ -48,6 +67,16 @@ class VTKMeshReader(MeshPreprocessor):
 
 
     def convert_meshio_to_meshpreprocessor(self):
+        """Convert meshio cell blocks into pydelling mesh elements.
+
+        Category: mesh reader
+        Tags: meshio, mesh-preprocessor, wedge, hexahedron, tetra, pyramid.
+        Use when: mesh data loaded by meshio must be available through
+            ``MeshPreprocessor`` element collections and spatial utilities.
+        Side effects:
+            Adds wedge, hexahedron, tetrahedron, and pyramid elements to the
+            inherited mesh preprocessor state; may render Streamlit progress.
+        """
         if self.is_streamlit:
             import streamlit as st
         for cell_block in self.meshio_mesh.cells:
@@ -108,11 +137,17 @@ class VTKMeshReader(MeshPreprocessor):
 
 
     def save(self, filename):
-        """
-        Save the mesh to a file.
-        
+        """Serialize mesh elements, coordinates, and KD-tree state to pickle.
+
+        Category: mesh reader
+        Tags: pickle, cache, mesh, kd-tree.
+        Use when: a workflow needs to cache a converted VTK mesh for faster
+            reloads without reparsing the original mesh file.
         Args:
-            filename (Any): Description.
+            filename: Destination pickle path.
+        Side effects:
+            Writes a pickle file containing ``elements``, ``coords``,
+            ``kd_tree``, and ``has_kd_tree``.
         """
         import pickle
         logger.info(f'Saving mesh to {filename}')
@@ -126,11 +161,17 @@ class VTKMeshReader(MeshPreprocessor):
             pickle.dump(save_dictionary, f)
 
     def load(self, filename):
-        """
-        Load the mesh from a file.
-        
+        """Restore mesh elements, coordinates, and KD-tree state from pickle.
+
+        Category: mesh reader
+        Tags: pickle, cache, mesh, kd-tree.
+        Use when: loading a previously saved ``VTKMeshReader`` state instead of
+            reading a VTK/VTU file again.
         Args:
-            filename (Any): Description.
+            filename: Source pickle path produced by ``save``.
+        Side effects:
+            Replaces ``elements``, ``_coords``, ``kd_tree``, and
+            ``has_kd_tree`` on the reader.
         """
         logger.info(f'Loading mesh from {filename}')
         import pickle
@@ -143,27 +184,64 @@ class VTKMeshReader(MeshPreprocessor):
 
     @property
     def cell_data_values(self) -> dict:
-        """Return the cell data from the meshio mesh. Data is structured for each cell type."""
+        """Return meshio cell data grouped by variable and cell type.
+
+        Category: mesh reader
+        Tags: meshio, cell-data, variables.
+        Use when: scripts need per-cell variables while preserving the meshio
+            cell-block structure.
+        Returns:
+            dict: ``meshio_mesh.cell_data_dict``.
+        """
         return self.meshio_mesh.cell_data_dict
 
     @property
     def point_data_values(self) -> dict:
-        """Return the point data from the meshio mesh."""
+        """Return meshio point data arrays.
+
+        Category: mesh reader
+        Tags: meshio, point-data, variables.
+        Use when: scripts need variables attached to mesh points.
+        Returns:
+            dict: ``meshio_mesh.point_data``.
+        """
         return self.meshio_mesh.point_data
 
     @property
     def cell_variables(self) -> list:
-        """Return a list of cell variable names."""
+        """Return available cell-data variable names.
+
+        Category: mesh reader
+        Tags: meshio, cell-data, variables.
+        Use when: an MCP tool needs to discover selectable cell variables.
+        Returns:
+            list: Names of variables in ``meshio_mesh.cell_data``.
+        """
         return list(self.meshio_mesh.cell_data.keys())
 
     @property
     def point_variables(self) -> list:
-        """Return a list of point variable names."""
+        """Return available point-data variable names.
+
+        Category: mesh reader
+        Tags: meshio, point-data, variables.
+        Use when: an MCP tool needs to discover selectable point variables.
+        Returns:
+            list: Names of variables in ``meshio_mesh.point_data``.
+        """
         return list(self.meshio_mesh.point_data.keys())
 
     @property
     def cell_data_flatten(self) -> dict:
-        """Return the cell data from the meshio mesh. Data is flattened for each cell type into a single array."""
+        """Return cell-data variables flattened across cell blocks.
+
+        Category: mesh reader
+        Tags: meshio, cell-data, flatten, variables.
+        Use when: downstream processing expects one NumPy array per cell
+            variable instead of meshio's per-cell-type grouping.
+        Returns:
+            dict: Mapping of cell variable name to flattened NumPy array.
+        """
         data_dict = self.meshio_mesh.cell_data_dict
         temp_dict = {}
         for key, value in data_dict.items():
@@ -172,7 +250,6 @@ class VTKMeshReader(MeshPreprocessor):
                 temp_dict[key] += cell_values.tolist()
             temp_dict[key] = np.array(temp_dict[key])
         return temp_dict
-
 
 
 

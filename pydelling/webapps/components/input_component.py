@@ -17,17 +17,31 @@ from pydelling.webapps.components import BaseComponent
 
 
 class InputComponent(BaseComponent):
+    """Streamlit upload component for tabular and mesh-like pydelling inputs.
+
+    Category: Web application component.
+    Tags: streamlit, upload, csv, vtk, fem, smesh, session-state.
+    Use when: an MCP agent needs to identify which UI component turns uploaded
+        files into pandas data frames or pydelling reader objects.
+    """
+
     def __init__(self, input_type: str, key: str, webapp: WebAppRunner=None, lang=None, *args, **kwargs):
-        """
-        __init__ method.
-        
+        """Configure an upload component and its Streamlit state keys.
+
+        Category: Web application component.
+        Tags: streamlit, upload, state, initialization.
+        Use when: constructing a file input widget for a pydelling webapp.
         Args:
-            input_type (str): Description.
-            key (str): Description.
-            webapp (WebAppRunner): Description.
-            lang (Any): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+            input_type: Input handler to render. Supported values are ``"csv"``,
+                ``"vtk"``, ``"fem"``, and ``"smesh"``.
+            key: Base Streamlit session-state key used for the resulting object
+                and for the ``"{key}_done"`` completion flag.
+            webapp: Optional owning ``WebAppRunner``.
+            lang: Optional language selector retained for compatibility.
+            *args: Positional arguments forwarded to ``BaseComponent``.
+            **kwargs: Keyword arguments forwarded to ``BaseComponent``.
+        Side effects:
+            Initializes ``st.session_state[f"{key}_done"]`` when missing.
         """
         self.key = key
         if not f'{self.key}_done' in st.session_state:
@@ -40,7 +54,16 @@ class InputComponent(BaseComponent):
 
 
     def run(self):
-        """Runs the component"""
+        """Render the configured upload form.
+
+        Category: Web application component.
+        Tags: streamlit, upload, dispatch.
+        Use when: a webapp needs to render the upload workflow selected by
+            ``input_type``.
+        Side effects:
+            Delegates to the matching ``run_*_input`` method and may populate
+            Streamlit session state.
+        """
         if self.input_type == 'csv':
             self.run_csv_input()
         elif self.input_type == 'vtk':
@@ -51,6 +74,17 @@ class InputComponent(BaseComponent):
             self.run_smesh_input()
 
     def run_csv_input(self):
+        """Render a CSV upload form and store a pandas data frame.
+
+        Category: Web application component.
+        Tags: streamlit, upload, csv, pandas, session-state.
+        Use when: an MCP-assisted UI workflow needs tabular interpolation data
+            loaded through Streamlit.
+        Side effects:
+            On submit, reads the uploaded CSV with the selected delimiter,
+            stores the data frame in ``self._value`` and ``st.session_state`` at
+            ``self.key``, and sets ``f"{self.key}_done"`` to ``True``.
+        """
         with st.form(f"{self.key}_form"):
             st.write("Drop your input data (the data that contains the information to interpolate) in the box below")
             data = st.file_uploader("Upload your data", type=config.globals.webapp.supported_input_data)
@@ -75,6 +109,17 @@ class InputComponent(BaseComponent):
 
 
     def run_vtk_input(self):
+        """Render a VTK upload form and store a ``VTKMeshReader``.
+
+        Category: Web application component.
+        Tags: streamlit, upload, vtk, mesh-reader, session-state.
+        Use when: a webapp needs uploaded VTK mesh or centroid data available as
+            a pydelling reader object.
+        Side effects:
+            Writes the upload to ``temp.vtk``, constructs ``VTKMeshReader`` with
+            ``st_file=True``, deletes the temporary file, stores the reader in
+            ``st.session_state[self.key]``, and marks the input as done.
+        """
         desc = "Drop your mesh/centroid data (the mesh/location you want to interpolate into) in the box below"
         format_desc = 'This data must be in VTK format'
         upload_desc = 'Upload your data'
@@ -101,6 +146,17 @@ class InputComponent(BaseComponent):
 
 
     def run_fem_input(self):
+        """Render a FEM upload form and store a ``FemReader``.
+
+        Category: Web application component.
+        Tags: streamlit, upload, fem, mesh-reader, session-state.
+        Use when: a webapp needs FEM ASCII mesh or centroid data available as a
+            pydelling reader object.
+        Side effects:
+            Writes the upload to ``temp.fem``, constructs ``FemReader`` with
+            ``st_file=True``, deletes the temporary file, stores the reader in
+            ``st.session_state[self.key]``, and marks the input as done.
+        """
         desc = "Drop your mesh/centroid data (the mesh/location you want to interpolate into) in the box below"
         format_desc = 'This data must be in FEM ASCII format'
         upload_desc = 'Upload your data'
@@ -127,6 +183,17 @@ class InputComponent(BaseComponent):
 
 
     def run_smesh_input(self):
+        """Render an SMesh upload form and store a ``SmeshReader``.
+
+        Category: Web application component.
+        Tags: streamlit, upload, smesh, mesh-reader, session-state.
+        Use when: a webapp needs SMesh ASCII mesh or centroid data available as
+            a pydelling reader object.
+        Side effects:
+            Writes the upload to ``temp.smesh``, constructs ``SmeshReader`` with
+            ``st_file=True``, deletes the temporary file, stores the reader in
+            ``st.session_state[self.key]``, and marks the input as done.
+        """
         desc = "Drop your mesh/centroid data (the mesh/location you want to interpolate into) in the box below"
         format_desc = 'This data must be in SMesh ASCII format'
         upload_desc = 'Upload your data'

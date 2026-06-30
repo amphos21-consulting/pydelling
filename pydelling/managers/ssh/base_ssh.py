@@ -12,6 +12,14 @@ logger = logging.getLogger(__name__)
 from pathlib import Path
 
 class BaseSsh(ABC):
+    """Abstract SSH/SFTP helper used by remote simulation managers.
+
+    Category: Remote execution.
+    Tags: ssh, sftp, hpc, files, commands, remote-manager.
+    Use when: an MCP agent needs to understand how pydelling managers run shell
+        commands and move files on remote HPC systems.
+    """
+
     client: paramiko.SSHClient
     sftp: paramiko.SFTPClient
     def __init__(self,
@@ -20,11 +28,19 @@ class BaseSsh(ABC):
                  project_name=None,
                  password=None,
                  ):
-        """
-        Connects to the remote server.
+        """Store credentials and open the remote connection.
+
+        Category: Remote execution.
+        Tags: ssh, credentials, connection, initialization.
+        Use when: creating a platform-specific SSH helper such as JURECA or
+            LUMI.
         Args:
-            user: username
-            pkey_path: path to the private key
+            user: Remote username.
+            pkey_path: Path to the private key used for authentication.
+            project_name: Optional HPC project or allocation name.
+            password: Optional password used by platform-specific connectors.
+        Side effects:
+            Calls the subclass ``connect`` implementation.
         """
         self.pkey_path = pkey_path
         self.user = user
@@ -33,36 +49,60 @@ class BaseSsh(ABC):
 
     @abstractmethod
     def connect(self):
+        """Open ``self.client`` and ``self.sftp`` for the target platform.
+
+        Category: Remote execution.
+        Tags: ssh, sftp, connection, extension-point.
+        Use when: implementing a concrete remote platform connector.
+        Side effects:
+            Implementations should create an authenticated Paramiko SSH client
+            and SFTP client.
+        """
         pass
 
     def run_command(self, command):
-        """
-        Runs a ssh command in the remote server.
+        """Run a shell command on the remote server.
+
+        Category: Remote execution.
+        Tags: ssh, command, remote-shell.
+        Use when: a manager needs to submit jobs, copy files remotely, or query
+            the HPC filesystem.
         Args:
-            command: command to run
-
-        Returns: stdout
-
+            command: Shell command to execute through Paramiko.
+        Returns:
+            Decoded stdout with surrounding whitespace removed.
         """
         stdin, stdout, stderr = self.client.exec_command(command)
         return stdout.read().decode('utf-8').strip()
 
     def cp_remote(self, src, dst):
-        """
-        Copies a file from the remote server to another location in the remote server.
+        """Copy a remote file to another remote path.
+
+        Category: Remote execution.
+        Tags: ssh, remote-copy, file.
+        Use when: a workflow needs a server-side file copy without downloading
+            the file locally.
         Args:
-            src: source file
-            dst: destination file
+            src: Source path on the remote server.
+            dst: Destination path on the remote server.
+        Side effects:
+            Executes ``cp`` remotely.
         """
         self.run_command(f'cp {src} {dst}')
         logger.info(f'Copied (remote -> remote) {src} to {dst}')
 
     def cpdir_remote(self, src, dst):
-        """
-        Copies a directory from the remote server to another location in the remote server.
+        """Copy a remote directory tree to another remote path.
+
+        Category: Remote execution.
+        Tags: ssh, remote-copy, directory.
+        Use when: a workflow needs a server-side recursive copy of study files or
+            results.
         Args:
-            src: source directory
-            dst: destination directory
+            src: Source directory on the remote server.
+            dst: Destination directory on the remote server.
+        Side effects:
+            Executes ``cp -r`` remotely.
         """
         self.run_command(f'cp -r {src} {dst}')
         logger.info(f'Copied (remote -> remote) {src} to {dst}')
@@ -70,27 +110,42 @@ class BaseSsh(ABC):
 
     @property
     def pwd(self):
-        """
-        Returns the current working directory in the remote server.
-        Returns: current working directory
+        """Return the SFTP current working directory.
+
+        Category: Remote execution.
+        Tags: sftp, working-directory, remote.
+        Use when: a workflow needs to know the current remote SFTP context.
+        Returns:
+            Remote working directory path reported by Paramiko SFTP.
         """
         return self.sftp.getcwd()
 
     def cd(self, path):
-        """
-        Changes the current working directory in the remote server.
+        """Change the current SFTP working directory.
+
+        Category: Remote execution.
+        Tags: sftp, working-directory, cd.
+        Use when: subsequent relative SFTP operations should target a remote
+            study folder.
         Args:
-            path: path to change to
-            """
+            path: Remote directory to switch to.
+        Side effects:
+            Updates Paramiko SFTP working directory.
+        """
         path = str(path)
         self.sftp.chdir(path)
         logger.info(f'Changed directory to {path}')
 
     def mkdir(self, path):
-        """
-        Creates a directory in the remote server.
+        """Create a remote directory if it is not already listed.
+
+        Category: Remote execution.
+        Tags: sftp, mkdir, remote-directory.
+        Use when: preparing remote study or results folders.
         Args:
-            path: path to create
+            path: Remote directory path to create.
+        Side effects:
+            Calls ``sftp.mkdir`` when the directory name is absent.
         """
         path = Path(path)
         if path.name in self.ls:
@@ -101,13 +156,15 @@ class BaseSsh(ABC):
             logger.info(f'Created directory {path}')
 
     def rm(self, path: str):
-        """
-        Removes a file in the remote server.
+        """Remove a remote file through SFTP.
+
+        Category: Remote execution.
+        Tags: sftp, remove, remote-file.
+        Use when: cleaning remote files generated by a study workflow.
         Args:
-            path: file to remove
-
-        Returns:
-
+            path: Remote file path to remove.
+        Side effects:
+            Deletes the file from the remote server.
         """
         path = str(path)
         self.sftp.remove(path)
@@ -116,14 +173,15 @@ class BaseSsh(ABC):
     def rmdir(self,
               path: str,
               ):
-        """
-        Removes a directory in the remote server.
+        """Recursively remove a remote directory through SFTP.
 
+        Category: Remote execution.
+        Tags: sftp, remove, remote-directory, recursive.
+        Use when: cleaning complete remote study folders.
         Args:
-            path: directory to remove
-
-        Returns:
-
+            path: Remote directory path to remove.
+        Side effects:
+            Removes nested files/directories and then the root directory.
         """
         path = Path(path)
         for file in self.sftp.listdir(str(path)):
@@ -135,21 +193,31 @@ class BaseSsh(ABC):
         logger.info(f'Removed (remote) directory {path}')
 
     def cp(self, src, dst):
-        """
-        Copies a file from the local machine to the remote server.
+        """Upload a local file to the remote server.
+
+        Category: Remote execution.
+        Tags: sftp, upload, file.
+        Use when: sending solver inputs, scripts, or assets to an HPC workspace.
         Args:
-            src: source file
-            dst: destination file
+            src: Local source file.
+            dst: Remote destination file.
+        Side effects:
+            Uploads the file through SFTP.
         """
         self.sftp.put(src, dst)
         logger.info(f'Copied (local -> remote) {src} to {dst}')
 
     def cpdir(self, src, dst):
-        """
-        Copies a directory from the local machine to the remote server.
+        """Recursively upload a local directory to the remote server.
+
+        Category: Remote execution.
+        Tags: sftp, upload, directory, recursive.
+        Use when: transferring a complete study folder to a remote HPC system.
         Args:
-            src: source directory
-            dst: destination directory
+            src: Local source directory.
+            dst: Remote destination directory.
+        Side effects:
+            Creates the destination directory and uploads contained files.
         """
         src = Path(src)
         dst = Path(dst)
@@ -162,21 +230,32 @@ class BaseSsh(ABC):
                 self.cp(file, str(dst / file.name))
 
     def get(self, src, dst):
-        """
-        Copies a file from the remote server to the local machine.
+        """Download a remote file to the local machine.
+
+        Category: Remote execution.
+        Tags: sftp, download, file.
+        Use when: retrieving solver outputs or logs from a remote run.
         Args:
-            src: source file
-            dst: destination file
+            src: Remote source file.
+            dst: Local destination file.
+        Side effects:
+            Downloads the file through SFTP.
         """
         self.sftp.get(src, dst)
         logger.info(f'Copied (remote -> local) {src} to {dst}')
 
     def getdir(self, src, dst):
-        """
-        Copies a directory from the remote server to the local machine.
+        """Download files from a remote directory into a local directory.
+
+        Category: Remote execution.
+        Tags: sftp, download, directory.
+        Use when: retrieving result files from the current remote study folder.
         Args:
-            src: source directory
-            dst: destination directory
+            src: Remote source directory.
+            dst: Local destination directory.
+        Side effects:
+            Creates the local directory, changes remote SFTP directory, and
+            downloads listed files.
         """
         src = Path(src)
         dst = Path(dst)
@@ -189,28 +268,44 @@ class BaseSsh(ABC):
 
     @property
     def ls(self):
-        """
-        Returns the content of the current working directory in the remote server.
-        Returns: content of the current working directory
+        """List the current remote SFTP directory.
+
+        Category: Remote execution.
+        Tags: sftp, listdir, remote-directory.
+        Use when: checking whether remote files or folders exist before
+            transfer operations.
+        Returns:
+            List of names in the current remote directory.
         """
         return self.sftp.listdir()
 
     def ls_dir(self, dir):
-        """
-        Returns the content of a directory in the remote server.
-        
+        """List a specific remote directory.
+
+        Category: Remote execution.
+        Tags: sftp, listdir, remote-directory.
+        Use when: an MCP workflow needs directory contents without changing the
+            current SFTP working directory.
         Args:
-            dir (Any): Description.
+            dir: Remote directory path to list.
+        Returns:
+            List of names in ``dir``.
         """
         return self.sftp.listdir(dir)
 
     @abstractmethod
     def cd_studies_folder(self, project_name):
-        """
-        Changes the current working directory to the studies folder.
-        
+        """Change into the platform-specific remote studies folder.
+
+        Category: Remote execution.
+        Tags: ssh, hpc, studies, extension-point.
+        Use when: a concrete HPC connector must locate the workspace where
+            pydelling studies should be uploaded and run.
         Args:
-            project_name (Any): Description.
+            project_name: Remote allocation or project name used to locate the
+                studies folder.
+        Returns:
+            Platform implementations should change directory and return their
+            own result, if any.
         """
         return NotImplementedError('Method not implemented')
-
