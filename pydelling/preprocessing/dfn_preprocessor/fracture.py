@@ -13,6 +13,12 @@ from pydelling.utils.geometry import Plane, Segment, Point, Line
 
 
 class Fracture(object):
+    """Represent a rectangular or polygonal DFN fracture with hydraulic properties.
+
+    Category: preprocessing
+    Tags: dfn, fracture, geometry, aperture, transmissivity
+    Use when: scripts need fracture geometry, containment checks, or hydraulic properties for DFN upscaling.
+    """
     local_id = 0
     eps = 1e-3
     _transmissivity = None
@@ -37,24 +43,14 @@ class Fracture(object):
         normal_vector=None,
         polygon: List[np.ndarray] = None,
     ):
-        """
-        __init__ method.
-        
-        Args:
-            x (Any): Description.
-            y (Any): Description.
-            z (Any): Description.
-            dip (Any): Description.
-            dip_dir (Any): Description.
-            size (Any): Description.
-            aperture (Any): Description.
-            hydraulic_aperture (Any): Description.
-            rock_type (Any): Description.
-            aperture_constant (Any): Description.
-            transmissivity_constant (Any): Description.
-            storativity_constant (Any): Description.
-            normal_vector (Any): Description.
-            polygon (List[np.ndarray]): Description.
+        """Initialize fracture geometry and optional hydraulic constants.
+
+        Category: preprocessing
+        Tags: dfn, fracture, geometry, aperture, rock-type
+        Use when: scripts need a fracture from centroid/dip/size inputs or explicit polygon points.
+
+        Returns:
+            None: stores geometry, hydraulic fields, side points, and local id.
         """
         if normal_vector is not None:
             self._unit_normal_vector: np.ndarray = normal_vector
@@ -117,9 +113,14 @@ class Fracture(object):
         Fracture.local_id += 1
 
     def get_side_points_v1(self):
-        """
-        Finds the side points of the fracture
-        Returns: Coordinates of the plane side points
+        """Compute rectangular fracture corners with the v1 orientation formula.
+
+        Category: preprocessing
+        Tags: dfn, fracture, corners, dip, geometry
+        Use when: generating side points from dip, dip direction, centroid, and size.
+
+        Returns:
+            numpy.ndarray: four corner coordinates.
         """
         phi = self.dip_dir / 360 * (2 * np.pi)
         theta = self.dip / 360 * (2 * np.pi)
@@ -139,23 +140,14 @@ class Fracture(object):
         return np.array([A, B, C, D])
 
     def get_side_points_v3(self):
-        """
-        alpha = 45; %strike
-        delta = 30; %dip
-        w = 4; %width (dipping side)
-        L = 9; %Length (side parallel to the surface)
+        """Compute rectangular fracture corners with the v3 strike/dip formula.
 
-        A = [0,0,0]; % Pivot point at the surface
+        Category: preprocessing
+        Tags: dfn, fracture, corners, strike, dip
+        Use when: legacy workflows need the v3 corner construction for a square fracture.
 
-        H = w*sind(alpha+90);
-        V = w*cosd(alpha+90);
-        Z = -w*sind(delta);
-
-        B = [L*sind(alpha) L*cosd(alpha) 0]+A;
-        C = [L*cosd(90-alpha)+H L*sind(90-alpha)+V Z]+A;
-        D = [w*sind(alpha+90) w*cosd(alpha+90) -w*sind(delta)]+A;
-
-        P = [A; B; C; D];
+        Returns:
+            numpy.ndarray: four corner coordinates.
         """
         alpha = self.dip_dir / 360 * (2 * np.pi)
         delta = self.dip / 360 * (2 * np.pi)
@@ -198,9 +190,14 @@ class Fracture(object):
         return P
 
     def get_side_points_v2(self):
-        """
-        Finds the side points of the fracture
-        Returns: Coordinates of the plane side points
+        """Compute rectangular fracture corners with the v2 orientation formula.
+
+        Category: preprocessing
+        Tags: dfn, fracture, corners, dip, geometry
+        Use when: scripts need the alternate dip/dip-direction corner construction.
+
+        Returns:
+            numpy.ndarray: four corner coordinates.
         """
         alpha = self.dip / 360 * (2 * np.pi)
         beta = self.dip_dir / 360 * (2 * np.pi)
@@ -242,11 +239,14 @@ class Fracture(object):
         return np.array([A, B, C, D])
 
     def get_side_points(self, method="v1"):
-        """
-        get_side_points method.
-        
-        Args:
-            method (Any): Description.
+        """Return fracture side points using an explicit polygon or a construction method.
+
+        Category: preprocessing
+        Tags: dfn, fracture, corners, polygon, geometry
+        Use when: intersection and export routines need fracture corner coordinates.
+
+        Returns:
+            numpy.ndarray: fracture side point coordinates.
         """
         if self._side_points is not None:
             return self._side_points
@@ -258,12 +258,14 @@ class Fracture(object):
             return self.get_side_points_v3()
 
     def to_obj(self, global_id=0, method="v1"):
-        """
-        Converts the fracture to an obj file
-        
-        Args:
-            global_id (Any): Description.
-            method (Any): Description.
+        """Return this fracture polygon as Wavefront OBJ text.
+
+        Category: writer
+        Tags: dfn, fracture, obj, export, geometry
+        Use when: scripts need a simple visual-debug representation of one fracture.
+
+        Returns:
+            str: OBJ vertex and face records.
         """
         side_points = self.get_side_points(method=method)
         if isinstance(side_points[0], np.ndarray):
@@ -287,7 +289,15 @@ class Fracture(object):
 
     @property
     def unit_normal_vector(self):
-        """Returns the normal vector of the fracture"""
+        """Return the fracture unit normal vector.
+
+        Category: preprocessing
+        Tags: dfn, fracture, normal, orientation, geometry
+        Use when: plane construction, distance checks, or intersections need fracture orientation.
+
+        Returns:
+            numpy.ndarray: unit normal vector.
+        """
         if self._unit_normal_vector is None:
             get_side_points = self.get_side_points()
             v1 = get_side_points[1] - get_side_points[0]
@@ -297,11 +307,14 @@ class Fracture(object):
         return self._unit_normal_vector
 
     def distance_to_point(self, point: np.ndarray):
-        """
-        Returns the minimum distance to a point from the fracture plane
-        
-        Args:
-            point (np.ndarray): Description.
+        """Compute perpendicular distance from a point to the fracture plane.
+
+        Category: preprocessing
+        Tags: dfn, fracture, distance, point, plane
+        Use when: containment checks or mesh-fracture filtering need point-to-plane distance.
+
+        Returns:
+            float: absolute distance to the fracture plane.
         """
         a = self.unit_normal_vector[0]
         b = self.unit_normal_vector[1]
@@ -312,7 +325,15 @@ class Fracture(object):
         )
 
     def get_bounding_box(self):
-        """Returns the bounding box of the fracture"""
+        """Return the axis-aligned bounding box of the fracture.
+
+        Category: preprocessing
+        Tags: dfn, fracture, bounding-box, geometry
+        Use when: scripts need quick spatial filtering before exact intersection checks.
+
+        Returns:
+            numpy.ndarray: x_min, x_max, y_min, y_max, z_min, z_max.
+        """
         side_points = self.get_side_points()
         x_min = np.min(side_points[:, 0])
         x_max = np.max(side_points[:, 0])
@@ -323,12 +344,14 @@ class Fracture(object):
         return np.array([x_min, x_max, y_min, y_max, z_min, z_max])
 
     def point_inside_bounding_box(self, point: np.ndarray, scale_factor=0.0):
-        """
-        Returns if a point is inside the bounding box of the fracture
-        
-        Args:
-            point (np.ndarray): Description.
-            scale_factor (Any): Description.
+        """Check whether a point lies inside the fracture bounding box.
+
+        Category: preprocessing
+        Tags: dfn, fracture, bounding-box, point, filter
+        Use when: scripts need a fast pre-check before fracture polygon containment.
+
+        Returns:
+            bool: True when the point is inside the scaled bounding box.
         """
         bounding_box = self.get_bounding_box()
         lx = bounding_box[1] - bounding_box[0]
@@ -355,17 +378,43 @@ class Fracture(object):
 
     @property
     def centroid(self):
+        """Return the fracture centroid coordinates.
+
+        Category: preprocessing
+        Tags: dfn, fracture, centroid, geometry
+        Use when: scripts need the fracture center for distance, export, or reporting.
+
+        Returns:
+            numpy.ndarray: x, y, z centroid.
+        """
         return np.array([self.x_centroid, self.y_centroid, self.z_centroid])
 
     @property
     def polygon(self):
+        """Return the fracture as a Shapely polygon.
+
+        Category: preprocessing
+        Tags: dfn, fracture, polygon, shapely, geometry
+        Use when: scripts need polygon operations on the fracture side points.
+
+        Returns:
+            shapely.geometry.Polygon: polygon built from side points.
+        """
         side_points = self.get_side_points()
         self._polygon = geom.Polygon(side_points)
         return self._polygon
 
     @property
     def plane(self):
-        """Returns the plane of the fracture"""
+        """Return the geometric plane containing this fracture.
+
+        Category: preprocessing
+        Tags: dfn, fracture, plane, normal, geometry
+        Use when: mesh-element intersection routines need the fracture plane.
+
+        Returns:
+            Plane: plane defined by centroid and unit normal vector.
+        """
         if not hasattr(self, "_plane"):
             self._plane = Plane(self.centroid, normal=self.unit_normal_vector)
 
@@ -373,14 +422,30 @@ class Fracture(object):
 
     @property
     def corners(self) -> List[Point]:
-        """Returns the corners of the fracture"""
+        """Return fracture corners as Point objects.
+
+        Category: preprocessing
+        Tags: dfn, fracture, corners, points, geometry
+        Use when: intersection routines need corner objects instead of raw arrays.
+
+        Returns:
+            list: Point objects for each corner.
+        """
         if not hasattr(self, "_corners"):
             self._corners = [Point(point) for point in self.get_side_points()]
         return self._corners
 
     @property
     def corner_segments(self):
-        """Returns the corner lines of the fracture"""
+        """Return fracture boundary edges as Segment objects.
+
+        Category: preprocessing
+        Tags: dfn, fracture, segments, boundary, geometry
+        Use when: scripts need finite fracture edges for geometric intersection checks.
+
+        Returns:
+            list: Segment objects around the fracture boundary.
+        """
         corner_segments = [
             Segment(self.corners[0], self.corners[1]),
             Segment(self.corners[1], self.corners[2]),
@@ -391,7 +456,15 @@ class Fracture(object):
 
     @property
     def corner_lines(self):
-        """Returns the corner lines of the fracture"""
+        """Return fracture boundary edges as Line objects.
+
+        Category: preprocessing
+        Tags: dfn, fracture, lines, boundary, geometry
+        Use when: element intersection routines need fracture edge-line intersections.
+
+        Returns:
+            list: Line objects around the fracture boundary.
+        """
         corner_segments = [
             Line(self.corners[0], self.corners[1]),
             Line(self.corners[1], self.corners[2]),
@@ -401,14 +474,14 @@ class Fracture(object):
         return corner_segments
 
     def contains(self, point: np.ndarray) -> bool:
-        """
-        Determines if a given 3D point is inside the fracture's polygon using the Ray Casting algorithm.
+        """Check whether a 3D point lies inside the fracture polygon.
 
-        Parameters:
-        - point (np.ndarray): A 3D point as a NumPy array [x, y, z].
+        Category: preprocessing
+        Tags: dfn, fracture, contains, point, polygon
+        Use when: mesh-fracture intersection routines need to filter candidate points.
 
         Returns:
-        - bool: True if the point is inside the fracture polygon, False otherwise.
+            bool: True when the point is on the fracture plane and inside its polygon.
         """
         # Step 1: Check if the point is close to the fracture's plane
         distance = self.distance_to_point(point)
@@ -460,15 +533,14 @@ class Fracture(object):
         return num_intersections % 2 == 1
 
     def _point_on_segment(self, px, py, x1, y1, x2, y2) -> bool:
-        """
-        Checks if a point (px, py) lies on the segment [(x1, y1), (x2, y2)].
-
-        Parameters:
-        - px, py: Coordinates of the point.
-        - x1, y1, x2, y2: Coordinates of the segment's endpoints.
+        """Check whether a projected point lies on a projected segment.
 
         Returns:
-        - bool: True if the point lies on the segment, False otherwise.
+            bool: True when the point lies on the segment within tolerance.
+
+        Category: util
+        Tags: dfn, fracture, segment, containment, geometry
+        Use when: contains needs to treat boundary points as inside the fracture polygon.
         """
         # Check if the point is within the bounding box of the segment
         if (
@@ -495,13 +567,14 @@ class Fracture(object):
         return False
 
     def shift(self, x, y, z):
-        """
-        Shifts the fracture
-        
-        Args:
-            x (Any): Description.
-            y (Any): Description.
-            z (Any): Description.
+        """Translate the fracture by x, y, and z offsets.
+
+        Category: preprocessing
+        Tags: dfn, fracture, translate, geometry
+        Use when: scripts need to move a fracture while preserving its shape and properties.
+
+        Returns:
+            None: updates centroid fields and polygon side points.
         """
         self.x_centroid += x
         self.y_centroid += y
@@ -513,15 +586,26 @@ class Fracture(object):
 
     @property
     def largest_index_normal_vector(self):
-        """Returns the largest coordinate index of the normal vector"""
+        """Return the dominant coordinate index of the fracture normal.
+
+        Category: preprocessing
+        Tags: dfn, fracture, normal, projection, geometry
+        Use when: containment routines need a 2D projection plane.
+
+        Returns:
+            int: index of the largest absolute normal-vector component.
+        """
         return np.argmax(self.unit_normal_vector)
 
     def compute_aperture(self, const=3.020e-3):
-        """
-        Computes the aperture of the fracture
-        
-        Args:
-            const (Any): Description.
+        """Compute or return the fracture mechanical aperture.
+
+        Category: preprocessing
+        Tags: dfn, fracture, aperture, hydraulic, size
+        Use when: scripts need fracture aperture from explicit input or an aperture-size law.
+
+        Returns:
+            float: fracture aperture.
         """
         if self._aperture is not None:
             return self._aperture
@@ -535,7 +619,15 @@ class Fracture(object):
 
     @property
     def transmissivity(self):
-        """Returns the transmissivity of the fracture"""
+        """Return fracture transmissivity.
+
+        Category: preprocessing
+        Tags: dfn, fracture, transmissivity, hydraulic, aperture
+        Use when: DFN upscaling needs transmissivity from explicit input, constants, or hydraulic aperture.
+
+        Returns:
+            float: fracture transmissivity.
+        """
         if self._transmissivity is not None:
             return self._transmissivity
         elif self.transmissivity_constant is not None:
@@ -551,7 +643,15 @@ class Fracture(object):
 
     @property
     def storativity(self):
-        """Returns the storativity of the fracture"""
+        """Return fracture storativity.
+
+        Category: preprocessing
+        Tags: dfn, fracture, storativity, hydraulic
+        Use when: DFN upscaling needs per-fracture storativity values.
+
+        Returns:
+            float: fracture storativity.
+        """
         if self._storativity is not None:
             return self._storativity
         elif self.storativity_constant is not None:
@@ -561,6 +661,15 @@ class Fracture(object):
             return 0.0
 
     def get_json(self):
+        """Build a JSON-serializable fracture metadata dictionary.
+
+        Category: writer
+        Tags: dfn, fracture, json, serialize, geometry
+        Use when: scripts need to persist fracture geometry and hydraulic constants.
+
+        Returns:
+            dict: serializable fracture metadata.
+        """
         cur_dict = {
             "x": self.x_centroid,
             "y": self.y_centroid,

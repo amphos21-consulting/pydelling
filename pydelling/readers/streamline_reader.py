@@ -18,28 +18,40 @@ logger = logging.getLogger(__name__)
 
 
 class StreamlineReader(BaseReader):
+    """Read and analyze ParaView streamline CSV outputs.
+
+    Category: reader
+    Tags: streamlines, csv, paraview, transport, analysis
+    Use when: scripts need arrival times, path lengths, beta values, or material-wise streamline summaries.
+    """
     data: pd.DataFrame
     raw_data: pd.DataFrame
     stream_data: DataFrameGroupBy
     is_aperture_zero: bool = False
 
     def __init__(self, filename, header=False):
-        """
-        __init__ method.
-        
-        Args:
-            filename (Any): Description.
-            header (Any): Description.
+        """Initialize the reader for a streamline CSV file.
+
+        Category: reader
+        Tags: streamlines, csv, open, reader
+        Use when: scripts need streamline records grouped by seed id.
+
+        Returns:
+            None: delegates file loading to BaseReader.
         """
         self.header = None
         super().__init__(filename,
                          header=header)
 
     def read_file(self, opened_file):
-        """
-        This method reads an opened file an sets the `self` variables properly to be used throuhgout the class
-        Args:
-            opened_file: the object containing the opened file
+        """Read streamline CSV data and normalize coordinate column names.
+
+        Category: reader
+        Tags: streamlines, csv, pandas, seedids
+        Use when: an opened ParaView streamline CSV should be loaded into grouped pandas data.
+
+        Returns:
+            None: populates data, raw_data, and stream_data grouped by SeedIds.
         """
         logger.info(f"Reading streamlines from {self.filename}")
         self.data = pd.read_csv(opened_file)
@@ -57,16 +69,14 @@ class StreamlineReader(BaseReader):
                               min_x: float | None = None,
                               min_y: float | None = None,
                               ) -> pd.Series:
-        """
-        This method computes the arrival times of the streamlines
-
-        Args:
-            reason_of_termination: Filter by the Paraview tag that defines the status of the streamlines
-            min_x: Filters the streamlines with their max x < min_x
+        """Compute final integration time for each filtered streamline.
 
         Returns:
-             A pd.Series object containing the arrival times of the streamlines
+            pandas.Series: arrival time per SeedIds group.
 
+        Category: postprocessing
+        Tags: streamlines, arrival-time, integration-time, filter
+        Use when: scripts need travel-time estimates from streamline endpoints.
         """
         logger.info("Computing arrival times of the streamlines")
         filtered_streamlines = self.filter_streamlines(reason_of_termination=reason_of_termination, min_x=min_x, min_y=min_y)
@@ -74,11 +84,14 @@ class StreamlineReader(BaseReader):
         return temp_series
 
     def compute_arrival_times_per_material(self, reason_of_termination=None) -> pd.Series:
-        """
-        This method computes the arrival times of the streamlines for a particular material
-        
-        Args:
-            reason_of_termination (Any): Description.
+        """Compute streamline arrival times grouped by material and seed id.
+
+        Category: postprocessing
+        Tags: streamlines, arrival-time, materials, seedids
+        Use when: scripts need travel-time summaries separated by material id.
+
+        Returns:
+            pandas.DataFrame: rows with Material ID, SeedIds, and IntegrationTime.
         """
         logger.info("Computing arrival times of the streamlines per material")
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.reason_of_termination
@@ -95,11 +108,14 @@ class StreamlineReader(BaseReader):
 
 
     def compute_arrival_times_per_material_paula(self, reason_of_termination=None) -> pd.Series:
-        """
-        This method computes the arrival times of the streamlines for a particular material
-        
-        Args:
-            reason_of_termination (Any): Description.
+        """Compute material arrival-time summaries plus cumulative material groups.
+
+        Category: postprocessing
+        Tags: streamlines, arrival-time, materials, cumulative, legacy
+        Use when: legacy workflows need both per-material rows and grouped IntegrationTime series.
+
+        Returns:
+            tuple: material summary DataFrame and cumulative group dictionary.
         """
         logger.info("Computing arrival times of the streamlines per material")
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.reason_of_termination
@@ -142,13 +158,14 @@ class StreamlineReader(BaseReader):
                                    normalize: bool = True,
                                    index_df: pd.Series=None,
                                    ):
-        """
-        This method computes the initial velocities each streamlines 'sees' at the beginning, it can be used to normalize them later on
+        """Compute initial x-velocity values for each streamline.
 
-        Args:
-            normalize: Parameter controlling whether the output vector should be normalized by dividing by the maximum velocity value.
+        Category: postprocessing
+        Tags: streamlines, velocity, initial, normalization
+        Use when: arrival-time or transport summaries need weights from starting streamline velocity.
 
-        Returns: a vector containing the initial velocities of the streamlines
+        Returns:
+            pandas.Series: initial U:0 values per SeedIds group, optionally normalized.
         """
         logger.info("Computing initial velocities of the streamlines")
         temp_df = self.data
@@ -163,11 +180,14 @@ class StreamlineReader(BaseReader):
         return temp_series
 
     def compute_length_streamlines(self, reason_of_termination=None) -> pd.Series:
-        """
-        This method computes the length of the streamlines
-        
-        Args:
-            reason_of_termination (Any): Description.
+        """Compute final arc length for each filtered streamline.
+
+        Category: postprocessing
+        Tags: streamlines, length, arc-length, filter
+        Use when: scripts need total path length per streamline.
+
+        Returns:
+            pandas.Series: maximum arc_length per SeedIds group.
         """
         logger.info("Computing length of the streamlines")
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.reason_of_termination
@@ -178,11 +198,14 @@ class StreamlineReader(BaseReader):
         return temp_series
 
     def compute_length_streamlines_per_material(self, reason_of_termination=None) -> pd.Series:
-        """
-        This method computes the length of the streamlines for a particular material
-        
-        Args:
-            reason_of_termination (Any): Description.
+        """Compute streamline path-length summaries grouped by material.
+
+        Category: postprocessing
+        Tags: streamlines, length, materials, arc-length
+        Use when: scripts need material-wise streamline length data.
+
+        Returns:
+            pandas.DataFrame: grouped material and seed-id streamline summaries.
         """
         logger.info("Computing length of the streamlines per material")
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.reason_of_termination
@@ -212,11 +235,14 @@ class StreamlineReader(BaseReader):
         # return ngroup_series
 
     def compute_beta(self, aperture_field: str = None) -> pd.Series:
-        """
-        This method computes beta values for each streamline
-        
-        Args:
-            aperture_field (str): Description.
+        """Compute beta values for streamlines from an aperture field.
+
+        Category: postprocessing
+        Tags: streamlines, beta, aperture, integration, transport
+        Use when: transport workflows need per-streamline beta calculated along path fragments.
+
+        Returns:
+            pandas.Series: maximum beta value per SeedIds group.
         """
         self.number_of_zero_apertures = 0
         aperture_field_file = aperture_field if aperture_field else config.beta_integrator.aperture_field_file if config.beta_integrator.aperture_field_file else None
@@ -248,13 +274,14 @@ class StreamlineReader(BaseReader):
         return self.data.groupby('SeedIds').max()["beta"]
 
     def integrate_beta(self, stream: pd.DataFrame, aperture_field: np.ndarray):
-        """
-        This method integrates a given streamline to compute the value of beta
-        Args:
-            stream: A pandas DataFrame containing the data of a given streamline
-            aperture_field: A matrix containing the information of the aperture field
-        Returns:
+        """Integrate beta along a single streamline.
 
+        Category: postprocessing
+        Tags: streamlines, beta, aperture, integration
+        Use when: scripts need the scalar beta contribution for one streamline path.
+
+        Returns:
+            float: integrated beta value.
         """
         beta = 0.0
         aperture_field_nx = aperture_field.shape[1]
@@ -294,19 +321,26 @@ class StreamlineReader(BaseReader):
         return beta
 
     def get_data(self) -> np.ndarray:
-        """
-        Outputs the data
-        :return: np.ndarray object containing centroid information and variable output
+        """Return streamline data as a numpy array.
+
+        Category: reader
+        Tags: streamlines, data, numpy, export
+        Use when: callers need raw numeric values from the loaded streamline table.
+
+        Returns:
+            numpy.ndarray: dataframe values.
         """
         return self.data.values
 
     def dump_to_csv(self, output_file, delimiter=","):
-        """
-        Writes the data into a csv file
-        
-        Args:
-            output_file (Any): Description.
-            delimiter (Any): Description.
+        """Write the current streamline table to CSV.
+
+        Category: writer
+        Tags: streamlines, csv, export, pandas
+        Use when: scripts need to persist processed streamline columns.
+
+        Returns:
+            None: writes a CSV file.
         """
         print(f"Starting dump into {output_file}")
         # self.data.to_csv(output_file, delimiter=delimiter)
@@ -314,12 +348,14 @@ class StreamlineReader(BaseReader):
         print(f"The data has been properly exported to the {output_file} file")
 
     def to_csv(self, output_file, delimiter=","):
-        """
-        Writes the data into a csv file
-        
-        Args:
-            output_file (Any): Description.
-            delimiter (Any): Description.
+        """Write the current streamline table to CSV.
+
+        Category: writer
+        Tags: streamlines, csv, export, pandas
+        Use when: scripts prefer the to_csv naming convention for exporting processed streamlines.
+
+        Returns:
+            None: writes a CSV file.
         """
         print(f"Starting dump into {output_file}")
         # self.data.to_csv(output_file, delimiter=delimiter)
@@ -333,13 +369,14 @@ class StreamlineReader(BaseReader):
                            ) -> DataFrameGroupBy:
 
 
-        """
-        filter_streamlines method.
-        
-        Args:
-            reason_of_termination (Any): Description.
-            min_x (Any): Description.
-            min_y (Any): Description.
+        """Filter streamlines by termination code and coordinate thresholds.
+
+        Category: postprocessing
+        Tags: streamlines, filter, termination, coordinates
+        Use when: analyses should include only streamlines that reached a target condition or region.
+
+        Returns:
+            pandas.core.groupby.DataFrameGroupBy: filtered data grouped by SeedIds.
         """
         reason_of_termination = reason_of_termination if reason_of_termination else config.streamline_reader.filter.reason_of_termination if config.streamline_reader.filter.reason_of_termination else None
         min_x = min_x if min_x else config.streamline_reader.filter.min_x if config.streamline_reader.filter.min_x else None
@@ -364,11 +401,14 @@ class StreamlineReader(BaseReader):
 
     @staticmethod
     def fix_aperture_field(aperture_matrix):
-        """
-        fix_aperture_field method.
-        
-        Args:
-            aperture_matrix (Any): Description.
+        """Patch aperture-field boundary cells from adjacent interior values.
+
+        Category: preprocessing
+        Tags: aperture, matrix, boundary, streamlines
+        Use when: beta integration needs a usable aperture value at field boundaries.
+
+        Returns:
+            numpy.ndarray: aperture matrix with boundary rows and columns replaced.
         """
         aperture_matrix[0, :] = aperture_matrix[1, :]
         aperture_matrix[:, 0] = aperture_matrix[:, 1]
@@ -383,16 +423,14 @@ class StreamlineReader(BaseReader):
                                             *args,
                                             **kwargs
                                             ):
-        """
-        integrate_variable_within_materials method.
-        
-        Args:
-            variable (Any): Description.
-            material_names (Any): Description.
-            add_variable_name_to_output (Any): Description.
-            output_variable_name (Any): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Integrate one cumulative variable within materials for every streamline.
+
+        Category: postprocessing
+        Tags: streamlines, materials, integration, variables
+        Use when: scripts need material-wise totals such as time or length per streamline.
+
+        Returns:
+            pandas.DataFrame: integrated variable values by streamline and material.
         """
         logger.info(f'Integrating variable {variable} within the materials for all the streamlines')
         output_list = []
@@ -421,13 +459,14 @@ class StreamlineReader(BaseReader):
                                             material_id_column: str='Material ID',
                                             material_id_offset: float = 0.45,
                                             ) -> dict:
-        """
-        This method implements an algorithm to integrate a given variable along the different materials of a streamline
-        Args:
-            variable: variable to integrate
+        """Integrate a cumulative variable by material for one streamline.
 
         Returns:
-            pd.Dataframe containing the materials and the integrated variable
+            dict: material ids mapped to integrated variable increments.
+
+        Category: postprocessing
+        Tags: streamlines, materials, integration, variable
+        Use when: material-wise integration is needed for a single streamline group.
         """
         streamline = streamline.reset_index()
         if categorize_materials:

@@ -20,6 +20,12 @@ import numpy as np
 
 
 class iGPLogic:
+    """Mixin for exporting implicit mesh data to iGP explicit mesh artifacts.
+
+    Category: preprocessing
+    Tags: mesh, iGP, explicit, hdf5, export
+    Use when: mesh preprocessors need iGP-compatible mesh, region, material, and post-processing files.
+    """
     elements: List[BaseElement]
     boundaries: Dict[str, List[BaseFace]]
     material_dict: Dict[str, List[int]]
@@ -34,16 +40,14 @@ class iGPLogic:
                              project_name='igp_mesh',
                              weight_by_volume=True,
                              ):
-        """
-        Function that transforms an implicit mesh into an explicit mesh
-        
-        Args:
-            dump_mesh_info (Any): Description.
-            write_cells (Any): Description.
-            write_regions (Any): Description.
-            output_folder (Any): Description.
-            project_name (Any): Description.
-            weight_by_volume (Any): Description.
+        """Export implicit mesh data into iGP explicit mesh files.
+
+        Category: writer
+        Tags: mesh, iGP, explicit, cells, regions
+        Use when: scripts need .mesh, .ex, .mat, and domain HDF5 files for iGP-style workflows.
+
+        Returns:
+            None: writes mesh and optional region/material artifacts.
         """
         self.output_folder = output_folder if output_folder is not None else 'output'
         self.project_name = project_name
@@ -73,9 +77,14 @@ class iGPLogic:
 
     def find_connectivities(self,
                            ):
-        """
-        Finds the connectivities of a given implicit mesh. It uses an algorithm that sorts all the faces and finds the
-        ones that are in contact to each other, and thus, is able to find connecting cells
+        """Find neighboring cells by matching sorted face node ids.
+
+        Category: preprocessing
+        Tags: mesh, connectivity, faces, adjacency, iGP
+        Use when: explicit mesh export needs cell-to-cell connection records.
+
+        Returns:
+            None: stores ordered connectivity data in connections.
         """
         logger.info("Finding implicit mesh connectivities")
         face_array = []
@@ -112,8 +121,14 @@ class iGPLogic:
 
     def write_hdf5_domain(self,
                          ):
-        """
-        Writes a hdf5 file containing the domain for post-processing
+        """Write the post-processing domain HDF5 file.
+
+        Category: writer
+        Tags: mesh, hdf5, domain, postprocessing, iGP
+        Use when: explicit mesh export should include an HDF5 domain artifact.
+
+        Returns:
+            None: writes the project domain HDF5 file.
         """
         if self.output_folder is None:
             hdf5_filename = self.project_name + "-domain.h5"
@@ -127,11 +142,14 @@ class iGPLogic:
 
     def write_cells(self,
                    export_file):
-        """
-        write_cells method.
-        
-        Args:
-            export_file (Any): Description.
+        """Write iGP CELLS records to an open mesh file.
+
+        Category: writer
+        Tags: mesh, iGP, cells, centroids, volume
+        Use when: creating an explicit mesh file from element centroids and volumes.
+
+        Returns:
+            None: writes cell records to export_file.
         """
         export_file.write(f"CELLS {len(self.elements)}\n")
         for element in self.elements:
@@ -143,12 +161,14 @@ class iGPLogic:
                           weight_by_volume=True,
                           ):
         # compute number of connection elements
-        """
-        write_connections method.
-        
-        Args:
-            export_file (Any): Description.
-            weight_by_volume (Any): Description.
+        """Write iGP CONNECTIONS records to an open mesh file.
+
+        Category: writer
+        Tags: mesh, iGP, connections, faces, area
+        Use when: explicit mesh export needs cell-to-cell connection centroids and areas.
+
+        Returns:
+            None: writes connection records and stores n_conn.
         """
         n_conn = 0
         for element in self.connections:
@@ -195,6 +215,15 @@ class iGPLogic:
                     f"{prime_element + 1} {connected_element + 1} {intersection_point[0]:1.8e} {intersection_point[1]:1.8e} {intersection_point[2]:1.8e} {conn_area:1.8e}\n")
     def write_condition_data(self,
                             ):
+        """Write boundary condition connection files.
+
+        Category: writer
+        Tags: mesh, iGP, boundaries, conditions, export
+        Use when: region boundary faces should become .ex files for iGP input.
+
+        Returns:
+            None: writes one condition file per boundary.
+        """
         for condition in self.boundaries:
             # Open file for dumping connection data
             if self.output_folder is None:
@@ -225,11 +254,14 @@ class iGPLogic:
                                      export_file):
 
         # Create domain group
-        """
-        write_domain_postprocess_hdf5 method.
-        
-        Args:
-            export_file (Any): Description.
+        """Write Domain datasets for post-processing HDF5 output.
+
+        Category: writer
+        Tags: mesh, hdf5, domain, cells, vertices
+        Use when: scripts need mesh connectivity and vertices in HDF5 format.
+
+        Returns:
+            None: creates Domain/Cells and Domain/Vertices datasets.
         """
         domain_group = export_file.create_group("Domain")
         # Create Cells dataset
@@ -245,6 +277,15 @@ class iGPLogic:
 
     def write_materials(self,
                        ):
+        """Write material element-id files.
+
+        Category: writer
+        Tags: mesh, materials, iGP, export
+        Use when: material groups should be exported as .mat files.
+
+        Returns:
+            None: writes one material file per material name.
+        """
         for material_name in self.material_dict:
             if self.output_folder is None:
                 file_mat = open(f"{material_name}.mat", "w")
@@ -257,11 +298,14 @@ class iGPLogic:
 
     def write_elements(self,
                       export_file):
-        """
-        write_elements method.
-        
-        Args:
-            export_file (Any): Description.
+        """Write element connectivity records for mesh visualization.
+
+        Category: writer
+        Tags: mesh, elements, connectivity, visualization, iGP
+        Use when: the explicit mesh file should include element topology for diagnostics.
+
+        Returns:
+            None: writes ELEMENTS records to export_file.
         """
         export_file.write(f"ELEMENTS {self.n_elements}\n")
         for element in self.elements:
@@ -270,11 +314,14 @@ class iGPLogic:
 
     def write_nodes(self,
                    export_file):
-        """
-        write_nodes method.
-        
-        Args:
-            export_file (Any): Description.
+        """Write vertex coordinate records for mesh visualization.
+
+        Category: writer
+        Tags: mesh, nodes, vertices, coordinates, iGP
+        Use when: the explicit mesh file should include node coordinates for diagnostics.
+
+        Returns:
+            None: writes VERTICES records to export_file.
         """
         export_file.write(f"VERTICES {self.n_nodes}\n")
         for id, node in enumerate(self.nodes):
@@ -282,11 +329,14 @@ class iGPLogic:
 
     def write_domain_hdf5(self,
                          export_file):
-        """
-        Writes the domain info (i.e. grid info) into an hdf5 file
-        
-        Args:
-            export_file (Any): Description.
+        """Write mesh domain cells and vertices to HDF5.
+
+        Category: writer
+        Tags: mesh, hdf5, domain, cells, vertices
+        Use when: scripts need domain grid data in HDF5 format.
+
+        Returns:
+            None: creates Domain datasets in export_file.
         """
         #  Pre-process cell data
         cell_data = np.zeros(shape=(self.n_elements, 9), dtype=np.int32)
@@ -302,11 +352,14 @@ class iGPLogic:
 
     def write_regions_hdf5(self,
                           export_file):
-        """
-        write_regions_hdf5 method.
-        
-        Args:
-            export_file (Any): Description.
+        """Write material and boundary regions to HDF5.
+
+        Category: writer
+        Tags: mesh, hdf5, regions, materials, boundaries
+        Use when: scripts need PFLOTRAN-style region and material groups in HDF5 output.
+
+        Returns:
+            None: creates Regions datasets in export_file.
         """
         def add_dataset(hdf5_file, group_name, dataset_type, data):
             temp_group = hdf5_file.create_group(group_name)
