@@ -9,6 +9,12 @@ import pandas as pd
 import h5py
 
 class PflotranProcessingUtils:
+    """Provide coordinate and slicing helpers for PFLOTRAN HDF5 output readers.
+
+    Category: reader
+    Tags: pflotran, hdf5, coordinates, slices, centroids
+    Use when: scripts need spatial extents, spacing, centroids, or slices from PFLOTRAN grids.
+    """
     variables: list
     coordinates: np.ndarray
     data: h5py.File
@@ -102,60 +108,195 @@ class PflotranProcessingUtils:
         return np.diff(self.coordinates[axis]) + self.coordinates[axis][0:-1]
     @property
     def x_centroid(self):
+        """Return centroid coordinates along the PFLOTRAN x axis.
+
+        Category: reader
+        Tags: pflotran, x, centroids, coordinates
+        Use when: scripts need cell-center x coordinates for plotting or sampling.
+
+        Returns:
+            np.ndarray: x-axis centroid coordinates.
+        """
         return np.diff(self.coordinates['x[m]']) + self.coordinates['x[m]'][0:-1]
 
     @property
     def y_centroid(self):
+        """Return centroid coordinates along the PFLOTRAN y axis.
+
+        Category: reader
+        Tags: pflotran, y, centroids, coordinates
+        Use when: scripts need cell-center y coordinates for plotting or sampling.
+
+        Returns:
+            np.ndarray: y-axis centroid coordinates.
+        """
         return np.diff(self.coordinates['y[m]']) + self.coordinates['y[m]'][0:-1]
 
     @property
     def z_centroid(self):
+        """Return centroid coordinates along the PFLOTRAN z axis.
+
+        Category: reader
+        Tags: pflotran, z, centroids, coordinates
+        Use when: scripts need cell-center z coordinates for plotting or sampling.
+
+        Returns:
+            np.ndarray: z-axis centroid coordinates.
+        """
         return np.diff(self.coordinates['z[m]']) + self.coordinates['z[m]'][0:-1]
 
     @property
     def x_min(self):
+        """Return the minimum x coordinate in the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, x, bounds, minimum
+        Use when: scripts need the lower x bound for spatial filtering or summaries.
+
+        Returns:
+            float: minimum x coordinate.
+        """
         return self.coordinates['x[m]'][0]
 
     @property
     def x_max(self):
+        """Return the maximum x coordinate in the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, x, bounds, maximum
+        Use when: scripts need the upper x bound for spatial filtering or summaries.
+
+        Returns:
+            float: maximum x coordinate.
+        """
         return self.coordinates['x[m]'][-1]
 
     @property
     def y_min(self):
+        """Return the minimum y coordinate in the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, y, bounds, minimum
+        Use when: scripts need the lower y bound for spatial filtering or summaries.
+
+        Returns:
+            float: minimum y coordinate.
+        """
         return self.coordinates['y[m]'][0]
 
     @property
     def y_max(self):
+        """Return the maximum y coordinate in the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, y, bounds, maximum
+        Use when: scripts need the upper y bound for spatial filtering or summaries.
+
+        Returns:
+            float: maximum y coordinate.
+        """
         return self.coordinates['y[m]'][-1]
 
     @property
     def z_min(self):
+        """Return the minimum z coordinate in the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, z, bounds, minimum
+        Use when: scripts need the lower z bound for spatial filtering or summaries.
+
+        Returns:
+            float: minimum z coordinate.
+        """
         return self.coordinates['z[m]'][0]
 
     @property
     def z_max(self):
+        """Return the maximum z coordinate in the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, z, bounds, maximum
+        Use when: scripts need the upper z bound for spatial filtering or summaries.
+
+        Returns:
+            float: maximum z coordinate.
+        """
         return self.coordinates['z[m]'][-1]
 
     @property
     def x_extent(self):
+        """Return the x-axis extent of the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, x, extent, bounds
+        Use when: scripts need total grid width along x.
+
+        Returns:
+            float: x_max minus x_min.
+        """
         return self.x_max - self.x_min
 
     @property
     def y_extent(self):
+        """Return the y-axis extent of the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, y, extent, bounds
+        Use when: scripts need total grid width along y.
+
+        Returns:
+            float: y_max minus y_min.
+        """
         return self.y_max - self.y_min
 
     @property
     def z_extent(self):
+        """Return the z-axis extent of the PFLOTRAN grid.
+
+        Category: reader
+        Tags: pflotran, z, extent, bounds
+        Use when: scripts need total grid width along z.
+
+        Returns:
+            float: z_max minus z_min.
+        """
         return self.z_max - self.z_min
 
     @property
     def x_spacing(self):
+        """Return cell spacing intervals along the x axis.
+
+        Category: reader
+        Tags: pflotran, x, spacing, coordinates
+        Use when: scripts need grid spacing along x.
+
+        Returns:
+            np.ndarray: adjacent x-coordinate differences.
+        """
         return np.diff(self.coordinates['x[m]'])
 
     @property
     def y_spacing(self):
+        """Return cell spacing intervals along the y axis.
+
+        Category: reader
+        Tags: pflotran, y, spacing, coordinates
+        Use when: scripts need grid spacing along y.
+
+        Returns:
+            np.ndarray: adjacent y-coordinate differences.
+        """
         return np.diff(self.coordinates['y[m]'])
 
     @property
     def z_spacing(self):
+        """Return cell spacing intervals along the z axis.
+
+        Category: reader
+        Tags: pflotran, z, spacing, coordinates
+        Use when: scripts need grid spacing along z.
+
+        Returns:
+            np.ndarray: adjacent z-coordinate differences.
+        """
         return np.diff(self.coordinates['z[m]'])

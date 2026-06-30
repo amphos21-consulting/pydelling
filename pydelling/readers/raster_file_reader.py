@@ -18,6 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 class RasterFileReader(BaseReader):
+    """Read, transform, sample, and export raster ASCII grid data.
+
+    Category: reader
+    Tags: raster, asc, grid, coordinates, interpolation
+    Use when: scripts need raster values, coordinate grids, contours, or ASC/CSV exports.
+    """
     def __init__(self,
                  filename=None,
                  header=False,
@@ -94,6 +100,15 @@ class RasterFileReader(BaseReader):
             self.data[id] = np.array(line.split(), dtype=np.float32)
 
     def build_structure(self):
+        """Build in-memory raster arrays and coordinate meshes from header metadata.
+
+        Category: reader
+        Tags: raster, grid, coordinates, mesh, metadata
+        Use when: a raster header has been read and data arrays need consistent dimensions.
+
+        Returns:
+            None: initializes data, x_mesh, and y_mesh.
+        """
         assert self.info is not {}
         self.xydata_computed = False
         self.data = np.zeros(shape=(int(self.reader_info["nrows"]), int(self.reader_info["ncols"])))
@@ -127,6 +142,15 @@ class RasterFileReader(BaseReader):
         self.z_coord = z_coord
 
     def get_data(self) -> np.ndarray:
+        """Return raster data as coordinates plus values.
+
+        Category: reader
+        Tags: raster, data, coordinates, xyz, xy
+        Use when: scripts need flattened raster samples for interpolation, export, or analysis.
+
+        Returns:
+            np.ndarray: columns of x, y, value or x, y, z, value.
+        """
         # self.rebuild_x_y()
         if hasattr(self, "z_coord"):
             return self.get_xyz_data()
@@ -134,6 +158,15 @@ class RasterFileReader(BaseReader):
             return self.get_xy_data()
 
     def rebuild_x_y(self):
+        """Rebuild coordinate meshes after raster spacing or origin changes.
+
+        Category: reader
+        Tags: raster, coordinates, mesh, rebuild
+        Use when: downsampling, flipping, or metadata changes alter raster grid coordinates.
+
+        Returns:
+            None: updates x_mesh and y_mesh.
+        """
         if 'cellsize' in self.info['reader']:
             x_range = np.arange(self.info['reader']["xllcorner"],
                                 self.info['reader']["xllcorner"] + self.info['reader']["nrows"] * self.info['reader']["cellsize"],
@@ -153,6 +186,15 @@ class RasterFileReader(BaseReader):
 
 
     def get_xy_data(self) -> np.ndarray:
+        """Flatten raster cells into x, y, value rows.
+
+        Category: reader
+        Tags: raster, xy, flatten, coordinates, values
+        Use when: exporting a 2D raster grid to point samples.
+
+        Returns:
+            np.ndarray: array with x, y, value columns.
+        """
         ndata = int(self.info["reader"]["nrows"] * self.info["reader"]["ncols"])
         self.xydata = np.zeros(shape=(ndata, 3))
         rows_mesh_flatten = np.fliplr(self.x_mesh).T.flatten()
@@ -163,6 +205,15 @@ class RasterFileReader(BaseReader):
         return self.xydata
 
     def get_xyz_data(self) -> np.ndarray:
+        """Flatten raster cells into x, y, z, value rows.
+
+        Category: reader
+        Tags: raster, xyz, flatten, coordinates, values
+        Use when: exporting a raster layer at a fixed z coordinate.
+
+        Returns:
+            np.ndarray: array with x, y, z, value columns.
+        """
         assert hasattr(self, "z_coord"), "The z-coordinate of this raster file is not given"
         ndata = int(self.info["reader"]["nrows"] * self.info["reader"]["ncols"])
         self.flatten_data = np.zeros(shape=(ndata, 4))
@@ -424,10 +475,28 @@ class RasterFileReader(BaseReader):
         return self.get_value_from_coord(x, y)
 
     def flip_y(self):
+        """Shift the raster origin by one grid height along y and rebuild coordinates.
+
+        Category: preprocessing
+        Tags: raster, flip, y, origin, coordinates
+        Use when: adapting ASC raster orientation to another coordinate convention.
+
+        Returns:
+            None: updates y origin and coordinate mesh.
+        """
         self.info['reader']["yllcorner"] = self.info['reader']["yllcorner"] + self.info['reader']["cellsize"] * self.info['reader']["nrows"]
         RasterFileReader.rebuild_x_y(self)
 
     def flip_x(self):
+        """Shift the raster origin by one grid width along x and rebuild coordinates.
+
+        Category: preprocessing
+        Tags: raster, flip, x, origin, coordinates
+        Use when: adapting ASC raster orientation to another coordinate convention.
+
+        Returns:
+            None: updates x origin and coordinate mesh.
+        """
         self.info['reader']["xllcorner"] = self.info['reader']["xllcorner"] + self.info['reader']["cellsize"] * self.info['reader']["ncols"]
         RasterFileReader.rebuild_x_y(self)
 
@@ -496,22 +565,67 @@ class RasterFileReader(BaseReader):
 
     @property
     def nx(self) -> int:
+        """Return the number of raster columns.
+
+        Category: reader
+        Tags: raster, columns, count, nx
+        Use when: scripts need the x-direction grid size.
+
+        Returns:
+            int: number of columns.
+        """
         return int(self.info['reader']["ncols"])
 
     @property
     def ny(self) -> int:
+        """Return the number of raster rows.
+
+        Category: reader
+        Tags: raster, rows, count, ny
+        Use when: scripts need the y-direction grid size.
+
+        Returns:
+            int: number of rows.
+        """
         return int(self.info['reader']["nrows"])
 
     @property
     def nrows(self) -> int:
+        """Return the number of raster rows.
+
+        Category: reader
+        Tags: raster, rows, count
+        Use when: scripts need raster row count metadata.
+
+        Returns:
+            int: number of rows.
+        """
         return int(self.info['reader']["nrows"])
 
     @property
     def ncols(self) -> int:
+        """Return the number of raster columns.
+
+        Category: reader
+        Tags: raster, columns, count
+        Use when: scripts need raster column count metadata.
+
+        Returns:
+            int: number of columns.
+        """
         return int(self.info['reader']["ncols"])
 
     @property
     def dx(self):
+        """Return raster spacing in the x direction.
+
+        Category: reader
+        Tags: raster, spacing, dx, cellsize
+        Use when: scripts need horizontal grid spacing.
+
+        Returns:
+            float: x-direction cell spacing.
+        """
         if 'dx' in self.info['reader']:
             return self.info['reader']['dx']
         else:
@@ -519,6 +633,15 @@ class RasterFileReader(BaseReader):
 
     @property
     def dy(self):
+        """Return raster spacing in the y direction.
+
+        Category: reader
+        Tags: raster, spacing, dy, cellsize
+        Use when: scripts need vertical grid spacing.
+
+        Returns:
+            float: y-direction cell spacing.
+        """
         if 'dy' in self.info['reader']:
             return self.info['reader']['dy']
         else:
@@ -600,10 +723,28 @@ class RasterFileReader(BaseReader):
 
     @property
     def x(self):
+        """Return x coordinates for raster column centers.
+
+        Category: reader
+        Tags: raster, x, coordinates, columns
+        Use when: scripts need the coordinate vector for raster columns.
+
+        Returns:
+            np.ndarray: x coordinate vector.
+        """
         return self.info['reader']["xllcorner"] + np.arange(self.nx) * self.dx
 
     @property
     def y(self):
+        """Return y coordinates for raster row centers.
+
+        Category: reader
+        Tags: raster, y, coordinates, rows
+        Use when: scripts need the coordinate vector for raster rows.
+
+        Returns:
+            np.ndarray: y coordinate vector.
+        """
         return self.info['reader']["yllcorner"] + np.arange(self.ny) * self.dy
 
     # Add difference of two raster files
@@ -734,4 +875,13 @@ class RasterFileReader(BaseReader):
 
     @property
     def reader_info(self):
+        """Return parsed ASC raster header metadata.
+
+        Category: reader
+        Tags: raster, header, metadata, info
+        Use when: scripts need nrows, ncols, origin, spacing, or NODATA metadata.
+
+        Returns:
+            dict: raster reader metadata.
+        """
         return self.info['reader']

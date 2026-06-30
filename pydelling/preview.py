@@ -322,15 +322,51 @@ class BaseAssetHandle:
 
     @property
     def is_binary(self) -> bool:
+        """Report whether this asset appears to be binary data.
+
+        Category: asset-handle
+        Tags: binary, text, detection, header
+        Use when: scripts need to decide whether text-oriented parsing is safe.
+
+        Returns:
+            bool: True when the header sample is not probably text.
+        """
         return not is_probably_text(self.header)
 
     def schema(self) -> dict[str, Any]:
+        """Return basic schema metadata for this asset handle.
+
+        Category: asset-handle
+        Tags: schema, metadata, asset
+        Use when: scripts need a lightweight description of asset structure.
+
+        Returns:
+            dict[str, Any]: schema metadata for the handle.
+        """
         return {"kind": self.kind}
 
     def preview(self) -> dict[str, Any]:
+        """Return a compact data preview for this asset handle.
+
+        Category: asset-handle
+        Tags: preview, data, rows, metadata
+        Use when: scripts need the smallest available preview payload for an asset.
+
+        Returns:
+            dict[str, Any]: preview metadata or sample rows.
+        """
         return {}
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return UI-ready preview sections for this asset handle.
+
+        Category: asset-handle
+        Tags: preview, sections, table, binary, ui
+        Use when: pydelling-cloud needs bounded preview sections for display or MCP context.
+
+        Returns:
+            list[dict[str, Any]]: preview sections with table, text, mesh, image, or binary content.
+        """
         preview = self.preview()
         columns = preview.get("columns")
         rows = preview.get("rows")
@@ -409,6 +445,15 @@ class BaseAssetHandle:
         raise TypeError(f"{self.__class__.__name__} does not expose a VTK export.")
 
     def summary_text(self) -> str:
+        """Return a short human-readable summary for this asset.
+
+        Category: asset-handle
+        Tags: summary, inventory, asset
+        Use when: building asset inventories or compact loader descriptions.
+
+        Returns:
+            str: one-line summary of the asset.
+        """
         return f"{self.kind} asset"
 
     def _flatten_description(self) -> dict[str, Any]:
@@ -451,6 +496,15 @@ class BaseAssetHandle:
         max_rows: int = PREVIEW_ROW_LIMIT,
         max_bytes: int = HEADER_READ_BYTES,
     ) -> dict[str, Any]:
+        """Build the versioned preview document for this asset.
+
+        Category: asset-handle
+        Tags: preview, document, sections, limits, metadata
+        Use when: pydelling-cloud needs the standard preview contract for an asset.
+
+        Returns:
+            dict[str, Any]: versioned preview document with sections and limits.
+        """
         warnings: list[str] = []
         sections = self.preview_sections(max_rows=max_rows, max_bytes=max_bytes)
         return {
@@ -498,14 +552,41 @@ class TabularAssetHandle(BaseAssetHandle):
 
     @cached_property
     def delimiter(self) -> str:
+        """Detect the delimiter used by this tabular asset.
+
+        Category: asset-handle
+        Tags: tabular, delimiter, csv, tsv
+        Use when: parsing a delimited table with the correct separator.
+
+        Returns:
+            str: detected delimiter character.
+        """
         return _guess_delimiter(self.source.normalized_extension, self.header)
 
     @cached_property
     def dataframe(self) -> pd.DataFrame:
+        """Load and cache this tabular asset as a pandas DataFrame.
+
+        Category: asset-handle
+        Tags: tabular, dataframe, csv, tsv
+        Use when: repeated tabular operations should avoid reparsing the file.
+
+        Returns:
+            pd.DataFrame: parsed tabular data.
+        """
         return pd.read_csv(self.source.path, sep=self.delimiter)
 
     @cached_property
     def max_eager_bytes(self) -> int:
+        """Return the byte limit for eager full-table metadata loading.
+
+        Category: asset-handle
+        Tags: tabular, performance, metadata, limit
+        Use when: deciding whether to load the full table or only a sample for metadata.
+
+        Returns:
+            int: configured or default eager-loading byte threshold.
+        """
         metadata = self.source.metadata or {}
         configured = metadata.get("max_tabular_eager_bytes")
         if isinstance(configured, int) and configured > 0:
@@ -514,6 +595,15 @@ class TabularAssetHandle(BaseAssetHandle):
 
     @cached_property
     def eager_metadata_enabled(self) -> bool:
+        """Report whether the full table can be loaded for metadata.
+
+        Category: asset-handle
+        Tags: tabular, performance, metadata, eager
+        Use when: scripts need row counts and dtypes without overloading large files.
+
+        Returns:
+            bool: True when full-table metadata loading is allowed.
+        """
         return self.source.size_bytes is None or self.source.size_bytes <= self.max_eager_bytes
 
     def _read_sample_frame(self, nrows: int = PREVIEW_ROW_LIMIT) -> pd.DataFrame:
@@ -521,10 +611,28 @@ class TabularAssetHandle(BaseAssetHandle):
 
     @cached_property
     def sample_dataframe(self) -> pd.DataFrame:
+        """Load a bounded sample of the tabular asset.
+
+        Category: asset-handle
+        Tags: tabular, sample, dataframe, preview
+        Use when: previewing a large table without loading every row.
+
+        Returns:
+            pd.DataFrame: sample rows from the table.
+        """
         return self._read_sample_frame(PREVIEW_ROW_LIMIT)
 
     @cached_property
     def row_count(self) -> int:
+        """Return the number of data rows in the tabular asset.
+
+        Category: asset-handle
+        Tags: tabular, rows, count, metadata
+        Use when: summaries or schema output need a row count.
+
+        Returns:
+            int: number of table rows.
+        """
         if self.eager_metadata_enabled:
             return int(self.dataframe.shape[0])
         with self.source.path.open("r", encoding="utf-8", errors="replace", newline="") as handle:
@@ -560,6 +668,15 @@ class TabularAssetHandle(BaseAssetHandle):
         return self.dataframe.fillna("").to_dict(orient="records")
 
     def schema(self) -> dict[str, Any]:
+        """Return row, column, delimiter, and field metadata for this table.
+
+        Category: asset-handle
+        Tags: tabular, schema, columns, dtype, delimiter
+        Use when: scripts need table structure before selecting columns or transformations.
+
+        Returns:
+            dict[str, Any]: tabular schema metadata.
+        """
         frame = self._metadata_frame()
         return {
             "kind": self.kind,
@@ -574,6 +691,15 @@ class TabularAssetHandle(BaseAssetHandle):
         }
 
     def preview(self) -> dict[str, Any]:
+        """Return a bounded row preview for this table.
+
+        Category: asset-handle
+        Tags: tabular, preview, rows, columns
+        Use when: the user asks to inspect sample rows from a table.
+
+        Returns:
+            dict[str, Any]: table preview with columns and rows.
+        """
         preview = (
             self.dataframe.head(PREVIEW_ROW_LIMIT)
             if self.eager_metadata_enabled
@@ -586,6 +712,15 @@ class TabularAssetHandle(BaseAssetHandle):
         }
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return a table preview section for this tabular asset.
+
+        Category: asset-handle
+        Tags: tabular, preview, section, rows, columns
+        Use when: the UI or MCP context needs sample rows plus truncation metadata.
+
+        Returns:
+            list[dict[str, Any]]: one table preview section.
+        """
         preview = (
             self.dataframe.head(max_rows)
             if self.eager_metadata_enabled
@@ -603,6 +738,15 @@ class TabularAssetHandle(BaseAssetHandle):
         }]
 
     def summary_text(self) -> str:
+        """Return row-by-column dimensions for this table.
+
+        Category: asset-handle
+        Tags: tabular, summary, rows, columns
+        Use when: inventory output needs a compact table summary.
+
+        Returns:
+            str: table dimensions.
+        """
         schema = self.schema()
         return f"{schema['rows']} rows x {schema['columns']} columns"
 
@@ -630,6 +774,15 @@ class JsonAssetHandle(BaseAssetHandle):
 
     @cached_property
     def payload(self) -> Any:
+        """Load and cache the JSON payload from disk.
+
+        Category: asset-handle
+        Tags: json, payload, load, cache
+        Use when: scripts need the parsed JSON object, list, or scalar.
+
+        Returns:
+            Any: parsed JSON payload.
+        """
         return json.loads(self.source.path.read_text(encoding="utf-8"))
 
     def to_records(self) -> list[dict[str, Any]]:
@@ -671,6 +824,15 @@ class JsonAssetHandle(BaseAssetHandle):
         return json.dumps(self.payload, indent=2, ensure_ascii=True)
 
     def schema(self) -> dict[str, Any]:
+        """Return structural metadata for the JSON payload.
+
+        Category: asset-handle
+        Tags: json, schema, records, object, fields
+        Use when: scripts need to know whether JSON is records, object, list, or scalar.
+
+        Returns:
+            dict[str, Any]: JSON schema metadata.
+        """
         payload = self.payload
         if isinstance(payload, list):
             sample = payload[:PREVIEW_ROW_LIMIT]
@@ -707,6 +869,15 @@ class JsonAssetHandle(BaseAssetHandle):
         return {"kind": "json_scalar", "top_level_type": type(payload).__name__}
 
     def preview(self) -> dict[str, Any]:
+        """Return a bounded preview of the JSON payload.
+
+        Category: asset-handle
+        Tags: json, preview, records, object, list
+        Use when: the user asks to inspect JSON contents in table or key-value form.
+
+        Returns:
+            dict[str, Any]: JSON preview payload.
+        """
         payload = self.payload
         schema = self.schema()
         if schema["kind"] == "json_records":
@@ -738,6 +909,15 @@ class JsonAssetHandle(BaseAssetHandle):
         }
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return JSON and optional table preview sections.
+
+        Category: asset-handle
+        Tags: json, preview, section, records, table
+        Use when: pydelling-cloud needs both raw JSON context and tabular record samples.
+
+        Returns:
+            list[dict[str, Any]]: JSON preview sections.
+        """
         if self.schema()["kind"] == "json_records":
             frame = self.to_dataframe().head(max_rows)
             sections = [{
@@ -762,6 +942,15 @@ class JsonAssetHandle(BaseAssetHandle):
         ]
 
     def summary_text(self) -> str:
+        """Return a short summary of the JSON payload shape.
+
+        Category: asset-handle
+        Tags: json, summary, records, keys
+        Use when: inventory output needs compact JSON metadata.
+
+        Returns:
+            str: one-line JSON summary.
+        """
         schema = self.schema()
         if schema["kind"] == "json_records":
             return f"{schema['rows']} JSON records"
@@ -799,10 +988,28 @@ class TextAssetHandle(BaseAssetHandle):
 
     @cached_property
     def text(self) -> str:
+        """Load and cache the asset as decoded UTF-8 text.
+
+        Category: asset-handle
+        Tags: text, load, utf-8, cache
+        Use when: scripts need the full decoded text content.
+
+        Returns:
+            str: decoded text.
+        """
         return self.source.path.read_text(encoding="utf-8", errors="replace")
 
     @cached_property
     def lines(self) -> list[str]:
+        """Split the decoded text into lines.
+
+        Category: asset-handle
+        Tags: text, lines, split
+        Use when: previews or scripts need line-oriented text processing.
+
+        Returns:
+            list[str]: decoded text lines.
+        """
         return self.text.splitlines()
 
     def to_text(self) -> str:
@@ -818,6 +1025,15 @@ class TextAssetHandle(BaseAssetHandle):
         return self.text
 
     def schema(self) -> dict[str, Any]:
+        """Return line count and encoding metadata for this text asset.
+
+        Category: asset-handle
+        Tags: text, schema, rows, encoding
+        Use when: scripts need text size metadata before processing.
+
+        Returns:
+            dict[str, Any]: text schema metadata.
+        """
         return {
             "kind": self.kind,
             "rows": len(self.lines),
@@ -825,6 +1041,15 @@ class TextAssetHandle(BaseAssetHandle):
         }
 
     def preview(self) -> dict[str, Any]:
+        """Return the first lines of this text asset as a table preview.
+
+        Category: asset-handle
+        Tags: text, preview, lines, table
+        Use when: the user asks to inspect a text file without reading all lines in the UI.
+
+        Returns:
+            dict[str, Any]: line-numbered text preview.
+        """
         return {
             "kind": "text",
             "columns": ["line_no", "text"],
@@ -833,6 +1058,15 @@ class TextAssetHandle(BaseAssetHandle):
         }
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return a bounded text preview section.
+
+        Category: asset-handle
+        Tags: text, preview, section, lines
+        Use when: pydelling-cloud needs display-ready text lines with truncation status.
+
+        Returns:
+            list[dict[str, Any]]: one text preview section.
+        """
         lines = self.lines[:max_rows]
         return [{
             "kind": "text",
@@ -842,6 +1076,15 @@ class TextAssetHandle(BaseAssetHandle):
         }]
 
     def summary_text(self) -> str:
+        """Return the number of text lines in the asset.
+
+        Category: asset-handle
+        Tags: text, summary, lines
+        Use when: inventory output needs compact text metadata.
+
+        Returns:
+            str: line-count summary.
+        """
         return f"{len(self.lines)} text lines"
 
     def _flatten_description(self) -> dict[str, Any]:
@@ -860,6 +1103,15 @@ class ImageAssetHandle(BaseAssetHandle):
     strategy_name = "image"
 
     def schema(self) -> dict[str, Any]:
+        """Return MIME, size, and dimension metadata for this image.
+
+        Category: asset-handle
+        Tags: image, schema, dimensions, mime
+        Use when: scripts need image metadata without decoding the full image.
+
+        Returns:
+            dict[str, Any]: image schema metadata.
+        """
         dimensions = _image_dimensions(self.source.path, self.source.normalized_extension) or {}
         return {
             "kind": self.kind,
@@ -869,6 +1121,15 @@ class ImageAssetHandle(BaseAssetHandle):
         }
 
     def preview(self) -> dict[str, Any]:
+        """Return image preview metadata.
+
+        Category: asset-handle
+        Tags: image, preview, mime, dimensions
+        Use when: pydelling-cloud needs to identify the asset as an image preview.
+
+        Returns:
+            dict[str, Any]: image preview metadata.
+        """
         return {
             "kind": "image",
             "mime_type": self.source.guessed_mime_type,
@@ -876,6 +1137,15 @@ class ImageAssetHandle(BaseAssetHandle):
         }
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return an image preview section.
+
+        Category: asset-handle
+        Tags: image, preview, section, mime
+        Use when: the UI needs display metadata for an image asset.
+
+        Returns:
+            list[dict[str, Any]]: one image preview section.
+        """
         return [{
             "kind": "image",
             "title": "Image",
@@ -884,6 +1154,15 @@ class ImageAssetHandle(BaseAssetHandle):
         }]
 
     def summary_text(self) -> str:
+        """Return image dimensions when available.
+
+        Category: asset-handle
+        Tags: image, summary, dimensions
+        Use when: inventory output needs compact image metadata.
+
+        Returns:
+            str: image dimension summary or generic image text.
+        """
         schema = self.schema()
         if schema.get("width") and schema.get("height"):
             return f"{schema['width']} x {schema['height']} image"
@@ -902,10 +1181,28 @@ class IgpAssetHandle(BaseAssetHandle):
 
     @property
     def is_binary(self) -> bool:
+        """Report that iGP/GiD project directories are not binary blobs.
+
+        Category: asset-handle
+        Tags: igp, gid, directory, binary
+        Use when: preview logic needs text/binary behavior for directory-backed meshes.
+
+        Returns:
+            bool: always False.
+        """
         return False
 
     @cached_property
     def reader(self):
+        """Load and cache the iGPReader for this project directory.
+
+        Category: asset-handle
+        Tags: igp, gid, reader, cache
+        Use when: multiple schema, preview, or export operations need the same iGPReader.
+
+        Returns:
+            iGPReader: cached reader for the iGP/GiD project.
+        """
         return self.to_igp_reader()
 
     def to_igp_reader(self, *, build_mesh: bool = False, output_folder: str | Path | None = None):
@@ -979,6 +1276,15 @@ class IgpAssetHandle(BaseAssetHandle):
         return summaries
 
     def schema(self) -> dict[str, Any]:
+        """Return mesh, region, boundary, and material metadata for this iGP asset.
+
+        Category: asset-handle
+        Tags: igp, gid, mesh, schema, regions, materials
+        Use when: scripts need to understand iGP mesh structure before export or visualization.
+
+        Returns:
+            dict[str, Any]: iGP mesh schema metadata.
+        """
         element_counts = Counter(len(nodes) for nodes in self.reader.element_nodes)
         cell_types = {
             CELL_TYPE_BY_NODE_COUNT.get(node_count, f"{node_count}_node_cell"): count
@@ -1115,6 +1421,15 @@ class IgpAssetHandle(BaseAssetHandle):
         }
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return mesh and region preview sections for this iGP asset.
+
+        Category: asset-handle
+        Tags: igp, gid, mesh, preview, regions, boundaries
+        Use when: pydelling-cloud needs display-ready mesh geometry and region tables.
+
+        Returns:
+            list[dict[str, Any]]: mesh and table preview sections.
+        """
         return [
             {
                 "kind": "mesh",
@@ -1134,6 +1449,15 @@ class IgpAssetHandle(BaseAssetHandle):
         ]
 
     def summary_text(self) -> str:
+        """Return element and node counts for this iGP mesh.
+
+        Category: asset-handle
+        Tags: igp, gid, mesh, summary, nodes, elements
+        Use when: inventory output needs compact iGP mesh dimensions.
+
+        Returns:
+            str: element-by-node summary.
+        """
         return f"{self.reader.n_mesh_elements} iGP elements x {self.reader.n_mesh_nodes} nodes"
 
     def _flatten_description(self) -> dict[str, Any]:
@@ -1160,6 +1484,15 @@ class VtkAssetHandle(BaseAssetHandle):
 
     @cached_property
     def reader(self):
+        """Load the pydelling VTKMeshReader for this VTK asset.
+
+        Category: asset-handle
+        Tags: vtk, mesh, reader, cache
+        Use when: scripts need pydelling reader access to a VTK-family mesh file.
+
+        Returns:
+            VTKMeshReader: pydelling VTK mesh reader.
+        """
         from pydelling.readers.vtk_mesh_reader import VTKMeshReader
 
         return VTKMeshReader(
@@ -1170,6 +1503,15 @@ class VtkAssetHandle(BaseAssetHandle):
 
     @cached_property
     def meshio_mesh(self):
+        """Load this VTK-family asset as a meshio mesh.
+
+        Category: asset-handle
+        Tags: vtk, meshio, mesh, load
+        Use when: scripts need points, cells, or mesh data arrays from a VTK-family file.
+
+        Returns:
+            Any: meshio-compatible mesh object.
+        """
         try:
             return self.reader.meshio_mesh
         except Exception:
@@ -1178,6 +1520,15 @@ class VtkAssetHandle(BaseAssetHandle):
             return meshio.read(self.source.path)
 
     def schema(self) -> dict[str, Any]:
+        """Return point, cell, and variable metadata for this VTK mesh.
+
+        Category: asset-handle
+        Tags: vtk, mesh, schema, points, cells, variables
+        Use when: scripts need VTK mesh structure before selecting fields or visualization paths.
+
+        Returns:
+            dict[str, Any]: VTK mesh schema metadata.
+        """
         mesh = self.meshio_mesh
         cells = sum(len(block.data) for block in mesh.cells)
         return {
@@ -1189,6 +1540,15 @@ class VtkAssetHandle(BaseAssetHandle):
         }
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return a mesh metadata preview section for this VTK asset.
+
+        Category: asset-handle
+        Tags: vtk, mesh, preview, section
+        Use when: pydelling-cloud needs display-ready metadata for an existing VTK mesh.
+
+        Returns:
+            list[dict[str, Any]]: one mesh preview section.
+        """
         return [{
             "kind": "mesh",
             "title": "Mesh",
@@ -1196,6 +1556,15 @@ class VtkAssetHandle(BaseAssetHandle):
         }]
 
     def summary_text(self) -> str:
+        """Return point and cell counts for this VTK mesh.
+
+        Category: asset-handle
+        Tags: vtk, mesh, summary, points, cells
+        Use when: inventory output needs compact VTK mesh dimensions.
+
+        Returns:
+            str: point-by-cell summary.
+        """
         schema = self.schema()
         return f"{schema['points']} points x {schema['cells']} cells"
 
@@ -1215,9 +1584,27 @@ class StlAssetHandle(BaseAssetHandle):
 
     @cached_property
     def mesh(self):
+        """Load and cache the STL mesh with trimesh.
+
+        Category: asset-handle
+        Tags: stl, mesh, trimesh, load
+        Use when: scripts need vertices, faces, or bounds from an STL file.
+
+        Returns:
+            Any: trimesh mesh object.
+        """
         return trimesh.load_mesh(self.source.path)
 
     def schema(self) -> dict[str, Any]:
+        """Return vertices, faces, and bounds for this STL mesh.
+
+        Category: asset-handle
+        Tags: stl, mesh, schema, vertices, faces, bounds
+        Use when: scripts need STL geometry metadata.
+
+        Returns:
+            dict[str, Any]: STL mesh schema metadata.
+        """
         return {
             "kind": self.kind,
             "vertices": int(len(self.mesh.vertices)),
@@ -1240,6 +1627,15 @@ class StlAssetHandle(BaseAssetHandle):
         }
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return a mesh preview section for this STL asset.
+
+        Category: asset-handle
+        Tags: stl, mesh, preview, geometry, section
+        Use when: pydelling-cloud needs decimated STL geometry for visualization.
+
+        Returns:
+            list[dict[str, Any]]: one mesh preview section.
+        """
         section: dict[str, Any] = {
             "kind": "mesh",
             "title": "Mesh",
@@ -1251,6 +1647,15 @@ class StlAssetHandle(BaseAssetHandle):
         return [section]
 
     def summary_text(self) -> str:
+        """Return vertex and face counts for this STL mesh.
+
+        Category: asset-handle
+        Tags: stl, mesh, summary, vertices, faces
+        Use when: inventory output needs compact STL mesh dimensions.
+
+        Returns:
+            str: vertex-by-face summary.
+        """
         schema = self.schema()
         return f"{schema['vertices']} vertices x {schema['faces']} faces"
 
@@ -1270,6 +1675,15 @@ class Hdf5AssetHandle(BaseAssetHandle):
 
     @cached_property
     def datasets(self) -> list[dict[str, Any]]:
+        """List datasets contained in this HDF5 file.
+
+        Category: asset-handle
+        Tags: hdf5, datasets, schema, shape, dtype
+        Use when: scripts need dataset names, shapes, and dtypes before reading HDF5 content.
+
+        Returns:
+            list[dict[str, Any]]: dataset metadata entries.
+        """
         datasets: list[dict[str, Any]] = []
         with h5py.File(self.source.path, "r") as handle:
             def collect(name: str, obj: Any) -> None:
@@ -1286,6 +1700,15 @@ class Hdf5AssetHandle(BaseAssetHandle):
         return datasets
 
     def schema(self) -> dict[str, Any]:
+        """Return dataset count and field metadata for this HDF5 asset.
+
+        Category: asset-handle
+        Tags: hdf5, schema, datasets, fields
+        Use when: scripts need an overview of HDF5 structure.
+
+        Returns:
+            dict[str, Any]: HDF5 schema metadata.
+        """
         return {
             "kind": self.kind,
             "datasets": len(self.datasets),
@@ -1293,6 +1716,15 @@ class Hdf5AssetHandle(BaseAssetHandle):
         }
 
     def preview(self) -> dict[str, Any]:
+        """Return a table preview of HDF5 datasets.
+
+        Category: asset-handle
+        Tags: hdf5, preview, datasets, table
+        Use when: the user asks to inspect available datasets in an HDF5 file.
+
+        Returns:
+            dict[str, Any]: dataset table preview.
+        """
         return {
             "kind": "table",
             "columns": ["dataset", "shape", "dtype"],
@@ -1330,6 +1762,15 @@ class Hdf5AssetHandle(BaseAssetHandle):
         return None
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return dataset and sample preview sections for this HDF5 asset.
+
+        Category: asset-handle
+        Tags: hdf5, preview, sections, datasets, samples
+        Use when: pydelling-cloud needs dataset listings and small array samples.
+
+        Returns:
+            list[dict[str, Any]]: HDF5 preview sections.
+        """
         sections: list[dict[str, Any]] = [{
             "kind": "hdf5",
             "title": "Datasets",
@@ -1348,6 +1789,15 @@ class Hdf5AssetHandle(BaseAssetHandle):
         return sections
 
     def summary_text(self) -> str:
+        """Return the number of datasets in this HDF5 file.
+
+        Category: asset-handle
+        Tags: hdf5, summary, datasets
+        Use when: inventory output needs compact HDF5 metadata.
+
+        Returns:
+            str: dataset-count summary.
+        """
         return f"{len(self.datasets)} HDF5 datasets"
 
     def _flatten_description(self) -> dict[str, Any]:
@@ -1368,6 +1818,15 @@ class BinaryAssetHandle(BaseAssetHandle):
     strategy_name = "binary"
 
     def schema(self) -> dict[str, Any]:
+        """Return byte size and MIME metadata for this binary asset.
+
+        Category: asset-handle
+        Tags: binary, schema, bytes, mime
+        Use when: scripts need safe metadata for an otherwise unknown binary file.
+
+        Returns:
+            dict[str, Any]: binary schema metadata.
+        """
         return {
             "kind": self.kind,
             "bytes": self.source.size_bytes,
@@ -1375,6 +1834,15 @@ class BinaryAssetHandle(BaseAssetHandle):
         }
 
     def preview(self) -> dict[str, Any]:
+        """Return safe binary preview metadata.
+
+        Category: asset-handle
+        Tags: binary, preview, bytes, mime, header
+        Use when: the user needs to inspect binary file metadata without decoding file contents.
+
+        Returns:
+            dict[str, Any]: binary preview table payload.
+        """
         return {
             "kind": "mapping",
             "columns": ["property", "value"],
@@ -1386,6 +1854,15 @@ class BinaryAssetHandle(BaseAssetHandle):
         }
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return a binary metadata preview section.
+
+        Category: asset-handle
+        Tags: binary, preview, section, header
+        Use when: pydelling-cloud needs display-ready metadata for an unknown binary asset.
+
+        Returns:
+            list[dict[str, Any]]: one binary preview section.
+        """
         return [{
             "kind": "binary",
             "title": "Binary",
@@ -1394,6 +1871,15 @@ class BinaryAssetHandle(BaseAssetHandle):
         }]
 
     def summary_text(self) -> str:
+        """Return the byte size summary for this binary asset.
+
+        Category: asset-handle
+        Tags: binary, summary, bytes
+        Use when: inventory output needs compact binary metadata.
+
+        Returns:
+            str: binary byte-size summary.
+        """
         size = self.source.size_bytes if isinstance(self.source.size_bytes, int) else 0
         return f"{size} binary bytes"
 
@@ -1413,6 +1899,15 @@ class ErrorAssetHandle(BaseAssetHandle):
         self.error = error
 
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return an error preview section for a failed asset.
+
+        Category: asset-handle
+        Tags: error, preview, diagnostics, section
+        Use when: pydelling-cloud needs to show why an asset preview failed.
+
+        Returns:
+            list[dict[str, Any]]: one error preview section.
+        """
         return [{
             "kind": "error",
             "title": "Preview error",
@@ -1420,6 +1915,15 @@ class ErrorAssetHandle(BaseAssetHandle):
         }]
 
     def summary_text(self) -> str:
+        """Return a summary for a failed preview.
+
+        Category: asset-handle
+        Tags: error, summary, preview
+        Use when: inventory output needs a compact failure status.
+
+        Returns:
+            str: preview failure summary.
+        """
         return "Preview failed"
 
 
