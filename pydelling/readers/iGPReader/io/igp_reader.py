@@ -149,6 +149,15 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         logger.info(f"Mesh data has been read from {self.path / 'data.mesh'}")
 
     def initialize_info_dicts(self):
+        """Initialize material name and material metadata dictionaries.
+
+        Category: reader
+        Tags: igp, materials, metadata, initialize
+        Use when: scripts need material metadata containers before assigning material properties.
+
+        Returns:
+            None: resets material_info and material name mappings.
+        """
         self._material_names = {}
         for material_id, material in enumerate(self.material_dict):
             self._material_names[material_id] = material
@@ -157,6 +166,15 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             self.material_info[material] = {}
 
     def read_centroid_data(self):
+        """Read cell centroid coordinates from centroid.dat.
+
+        Category: reader
+        Tags: igp, centroids, mesh, cells
+        Use when: scripts need iGP element centroid coordinates for summaries, interpolation, or material assignment.
+
+        Returns:
+            None: populates centroids.
+        """
         self.centroids = np.zeros(shape=(len(self.element_nodes), 3))
         for _ in range(self.mesh_info["n_elements"]):
             mesh_line = self.centroid_data.readline().split()
@@ -164,9 +182,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         logger.info(f"Centroid data has been read from {self.path / 'centroid.dat'}")
 
     def read_region_data(self):
-        """
-        Reads region and material data
-        :return:
+        """Read region, boundary, and material assignments from source.ss.
+
+        Category: reader
+        Tags: igp, regions, boundaries, materials, source
+        Use when: scripts need iGP region faces, boundary names, or material cell assignments.
+
+        Returns:
+            None: populates region_dict, material_dict, and region metadata.
         """
         is_reading = True
         header = self.region_data.readline().split()
@@ -238,13 +261,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                              write_cells=True,
                              write_regions=True,
                              ):
-        """
-        Function that transforms an implicit mesh into an explicit mesh
-        
-        Args:
-            dump_mesh_info (Any): Description.
-            write_cells (Any): Description.
-            write_regions (Any): Description.
+        """Convert an implicit iGP mesh into explicit PFLOTRAN mesh files.
+
+        Category: mesh
+        Tags: igp, pflotran, implicit, explicit, mesh, export
+        Use when: scripts need PFLOTRAN explicit mesh, connection, region, or material files from an iGP project.
+
+        Returns:
+            None: writes explicit mesh artifacts to output_folder.
         """
         if not self.is_mesh_built:
             self.build_mesh_data()
@@ -273,16 +297,28 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                 self.ExplicitWriter.write_materials(self)
 
     def write_explicit_mesh_in_csv(self):
-        """
-        Writes a .csv file containing the centroids of the mesh elements and each connection's face centers
+        """Write explicit mesh cell and connection data as CSV files.
+
+        Category: writer
+        Tags: igp, mesh, csv, centroids, connections
+        Use when: scripts need tabular explicit mesh geometry for inspection or external processing.
+
+        Returns:
+            None: writes CSV files using the configured CsvWriter.
         """
         logger.info(f"Writing explicit mesh in csv format")
         self.CsvWriter.write_csv_cells(self)
         self.CsvWriter.write_csv_connection(self)
 
     def write_hdf5_domain(self):
-        """
-        Writes a hdf5 file containing the domain for post-processing
+        """Write the iGP mesh domain to an HDF5 postprocessing file.
+
+        Category: writer
+        Tags: igp, mesh, hdf5, domain, postprocessing
+        Use when: scripts need a PFLOTRAN-style HDF5 domain file for postprocessing.
+
+        Returns:
+            None: writes the domain HDF5 file.
         """
         if self.output_folder is None:
             hdf5_filename = self.project_name + "-domain.h5"
@@ -294,9 +330,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         hdf5_file.close()
 
     def find_connectivities(self):
-        """
-        Finds the connectivities of a given implicit mesh. It uses an algorithm that sorts all the faces and finds the
-        ones that are in contact to each other, and thus, is able to find connecting cells
+        """Find cell-to-cell connectivity by matching shared faces.
+
+        Category: mesh
+        Tags: igp, mesh, connectivity, faces, cells
+        Use when: scripts need explicit mesh connections before PFLOTRAN export.
+
+        Returns:
+            None: populates connections.
         """
         assert self.is_mesh_built, "Mesh is read but not built"
         logger.info("Finding implicit mesh connectivities")
@@ -343,18 +384,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                             second_layer_offset = None,
                             max_error: float = None, # Maximum error allowed in the interpolation
                             ):
-        """
-        Performs layer based raster interpolation
-        
-        Args:
-            regions (List): Description.
-            raster_filenames (dict): Description.
-            raster_folder (Any): Description.
-            top_regions (List): Description.
-            top_region_offset (float): Description.
-            second_layer (str): Description.
-            second_layer_offset (Any): Description.
-            max_error (float): Description.
+        """Interpolate raster layer elevations onto matching iGP mesh regions.
+
+        Category: interpolation
+        Tags: igp, raster, interpolation, layers, regions
+        Use when: scripts need to move mesh nodes to raster-defined stratigraphic layers.
+
+        Returns:
+            None: mutates mesh node coordinates for selected regions.
         """
         logger.info("Interpolating raster regions to mesh")
         if max_error is not None:
@@ -413,22 +450,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                                            eps: float = 0.5,
                                            growth_rate: float = None,
                                            ):
-        """
-        Performs a raster interpolation for semi-structured (layer based) meshes.
-        This method computes the first n_nearest nearest neighbours (in the z-direction) and
-        moves the mesh nodes proportionally to the raster surface
+        """Interpolate raster topography through semi-structured vertical mesh columns.
 
-        Args:
-            regions: List of regions to interpolate
-            raster_filenames: Dictionary with the raster filenames for each region
-            raster_folder: Folder where the raster files are located
-            n_nearest: Number of nearest neighbours (in z) to consider
-            material_subset: List of materials to consider in the interpolation
-            min_samples: Minimum samples used in the DBSCAN clustering
-            eps: Epsilon value used in the DBSCAN clustering
-            growth_rate: Growth rate of the mesh in the z-direction
+        Category: interpolation
+        Tags: igp, raster, interpolation, semi-structured, topography
+        Use when: scripts need to move layered mesh nodes proportionally below a raster surface.
+
         Returns:
-
+            None: mutates mesh node coordinates for selected regions.
         """
 
         logger.info("Interpolating topography layers to the mesh")
@@ -479,14 +508,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             logger.info(f"Interpolation of region {region} completed.")
 
     def geometric_growth(self, n, growth_rate=0.3) -> list:
-        """
-        Generates a geometric growth function from 0.0 to 1.0
-        Args:
-            n: Number of points
-            growth_rate: Growth rate
+        """Generate normalized geometric spacing values from 0 to 1.
 
-        Returns: List of values
+        Category: util
+        Tags: growth, spacing, interpolation, mesh
+        Use when: scripts need nonuniform vertical interpolation weights for layered meshes.
 
+        Returns:
+            list: normalized spacing values.
         """
         values = [1.0 - (1.0 - growth_rate) ** i for i in range(n)]
         values = np.array(values)
@@ -495,11 +524,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
 
     def write_ASCII_meshfile(self, filename):
-        """
-        Writes the mesh in PFLOTRAN ascii file
-        
-        Args:
-            filename (Any): Description.
+        """Write the iGP mesh in PFLOTRAN ASCII mesh format.
+
+        Category: writer
+        Tags: igp, pflotran, ascii, mesh, export
+        Use when: scripts need an implicit PFLOTRAN mesh file from iGP mesh data.
+
+        Returns:
+            None: writes the ASCII mesh file.
         """
         # TODO: Set-up default filename
         if self.is_mesh_built:  # We need it to dump it correctly into implicit/explicit format
@@ -532,11 +564,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         logger.info(f"Mesh data has been properly exported to PFLOTRAN mesh ASCII format into the {filename} file")
 
     def write_hdf5_meshfile(self, filename="regions.h5"):
-        """
-        Export the mesh into implicit hdf5 format.
-        
-        Args:
-            filename (Any): Description.
+        """Write the iGP mesh and regions in implicit HDF5 format.
+
+        Category: writer
+        Tags: igp, pflotran, hdf5, mesh, regions
+        Use when: scripts need PFLOTRAN implicit HDF5 domain and region datasets.
+
+        Returns:
+            None: writes the HDF5 mesh file.
         """
         hdf5_filename = filename
         if not filename.endswith(".h5"):
@@ -548,22 +583,43 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         logger.info(f"Mesh file has been properly written into '{hdf5_filename}'")
 
     def set_material_values_from_borehole_data(self):
+        """Assign material properties using configured borehole data.
+
+        Category: preprocessing
+        Tags: igp, materials, borehole, properties
+        Use when: scripts need to populate iGP material properties from borehole inputs.
+
+        Returns:
+            None: mutates material information from borehole reader output.
+        """
         logger.info("Setting permeability data from borehole files")
         # assert self.is_mesh_built, "Mesh is not built"
         borehole_reader = self.BoreholeReader(igp_reader=self)
         borehole_reader.run()
 
     def set_material_from_list(self, material_name: str, centroid_list: list):
-        """
-        Assigns a material to a list of centroids
-        Args:
-            material_name: Name of the material to assign
-            centroid_list: List of centroids to assign the material to
+        """Assign a material name to a list of one-based cell ids.
+
+        Category: preprocessing
+        Tags: igp, materials, cells, assignment
+        Use when: scripts need to override or create iGP material assignments from selected cells.
+
+        Returns:
+            None: updates material_dict.
         """
         self.material_dict[material_name] = np.array(centroid_list)
         logger.info(f"Material {material_name} has been assigned to {len(centroid_list)} centroids")
 
     def assign_heterogeneous_materials(self):
+        """Assign heterogeneous permeability and porosity arrays from configuration.
+
+        Category: preprocessing
+        Tags: igp, materials, heterogeneous, permeability, porosity
+        Use when: scripts need configured material property distributions written into material_info.
+
+        Returns:
+            None: populates heterogeneous material arrays.
+        """
         logger.info('Processing heterogeneous material properties')
         for material in config.borehole_processing.heterogeneous_distribution:
             material_properties = {'permeability': [], 'porosity': []}
@@ -718,37 +774,41 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
     @staticmethod
     def linear_distribution(x, y_bot, y_top, x_bot, x_top):
-        """
-        linear_distribution method.
-        
-        Args:
-            x (Any): Description.
-            y_bot (Any): Description.
-            y_top (Any): Description.
-            x_bot (Any): Description.
-            x_top (Any): Description.
+        """Evaluate a linear interpolation between bottom and top values.
+
+        Category: util
+        Tags: interpolation, linear, materials, distribution
+        Use when: scripts need depth-based material values between two endpoints.
+
+        Returns:
+            Any: interpolated value at x.
         """
         return (y_top - y_bot) / (x_top - x_bot) * x + (y_bot * x_top - y_top * x_bot) / (x_top - x_bot)
 
     @staticmethod
     def linear_log_distribution(x, x_top, x_bot, y_top, y_bot):
-        """
-        linear_log_distribution method.
-        
-        Args:
-            x (Any): Description.
-            x_top (Any): Description.
-            x_bot (Any): Description.
-            y_top (Any): Description.
-            y_bot (Any): Description.
+        """Evaluate log-scaled linear interpolation between bottom and top values.
+
+        Category: util
+        Tags: interpolation, logarithmic, materials, distribution
+        Use when: scripts need depth-based material values that vary logarithmically.
+
+        Returns:
+            Any: interpolated positive value at x.
         """
         y_top = np.log10(y_top)
         y_bot = np.log10(y_bot)
         return np.power(10.0, (y_top - y_bot) / (x_top - x_bot) * x + (y_bot * x_top - y_top * x_bot) / (x_top - x_bot))
 
     def export_materials_in_hdf5(self):
-        """
-        This method uses the information stored in material info to produce an hdf5 file containing heterogeneous data for each material
+        """Export heterogeneous material properties to PFLOTRAN-style HDF5 datasets.
+
+        Category: writer
+        Tags: igp, materials, hdf5, permeability, porosity
+        Use when: scripts need heterogeneous permeability or porosity files from material_info.
+
+        Returns:
+            None: writes one HDF5 file per exported material property.
         """
         idx_set = np.array([])
         perm_dataset = np.array([])
@@ -789,11 +849,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             hdf5_file.create_dataset(name, data=dataset)
 
     def write_csv(self, filename):
-        """
-        Writes the mesh centroids in .csv format
-        
-        Args:
-            filename (Any): Description.
+        """Write mesh node coordinates to CSV format.
+
+        Category: writer
+        Tags: igp, mesh, csv, nodes, coordinates
+        Use when: scripts need a simple CSV export of adjusted iGP mesh node coordinates.
+
+        Returns:
+            None: writes the CSV file.
         """
         # TODO: set-up default filename
         if self.output_folder is None:
@@ -837,12 +900,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
     @staticmethod
     def chunks(l, n):
-        """
-        chunks method.
-        
-        Args:
-            l (Any): Description.
-            n (Any): Description.
+        """Split a sequence into fixed-size chunks.
+
+        Category: util
+        Tags: chunks, multiprocessing, mesh, helper
+        Use when: mesh building or classification needs work split across processes.
+
+        Returns:
+            list: chunked sequence slices.
         """
         return [l[i:i + n] for i in range(0, len(l), n)]
 
@@ -939,6 +1004,15 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             self.is_mesh_built = True
 
     def set_material_z_ranges(self):
+        """Compute min and max centroid z values for each material.
+
+        Category: preprocessing
+        Tags: igp, materials, z-range, centroids
+        Use when: scripts need vertical material extents for summaries or property assignment.
+
+        Returns:
+            None: stores z ranges in material_info.
+        """
         logger.debug("Calculating z-ranges of the materials")
         self.material_ranges = {}
         for material in self.material_dict:
@@ -948,12 +1022,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             self.material_info[material] = {"min_z": _min_z, "max_z": _max_z}
 
     def write_input_raster_files(self, downsample_factor=None, file_format="asc"):
-        """
-        write_input_raster_files method.
-        
-        Args:
-            downsample_factor (Any): Description.
-            file_format (Any): Description.
+        """Export configured input raster files as ASC or CSV.
+
+        Category: writer
+        Tags: igp, raster, export, asc, csv
+        Use when: scripts need copies or downsampled versions of configured raster refinement inputs.
+
+        Returns:
+            None: writes raster files to the output path.
         """
         logger.info(f"Exporting raster files read from {config.data_files.raster_file_folder}")
         for region in config.raster_refinement.regions:
@@ -967,11 +1043,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                 raster_data.dump_to_csv(output_file=get_output_path() / f"{region}.csv")
 
     def export_recharge_file(self, csv_export=False):
-        """
-        export_recharge_file method.
-        
-        Args:
-            csv_export (Any): Description.
+        """Convert configured recharge raster data to model units and export it.
+
+        Category: writer
+        Tags: igp, recharge, raster, hdf5, csv
+        Use when: scripts need a recharge gridded dataset for PFLOTRAN input.
+
+        Returns:
+            None: writes recharge.h5 and optionally recharge.csv.
         """
         if config.data_files.recharge_file:
             logger.info(f"Processing recharge file located at {config.data_files.recharge_file}")
@@ -987,11 +1066,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             recharge_data.dump_to_csv(output_file="recharge.csv")
 
     def export_region_data(self, regions: List = None):
-        """
-        export_region_data method.
-        
-        Args:
-            regions (List): Description.
+        """Export node coordinates for selected iGP regions to CSV.
+
+        Category: writer
+        Tags: igp, regions, nodes, csv, export
+        Use when: scripts need coordinate tables for boundary or region nodes.
+
+        Returns:
+            None: writes one CSV file per region.
         """
         regions = regions if regions else config.extract_data.regions
         for region in regions:
@@ -1051,8 +1133,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         return self.mesh_info["n_nodes"]
 
     def print_material_info(self):
-        """
-        This method prints the material info in a neat way
+        """Print material metadata in an indented text format.
+
+        Category: reader
+        Tags: igp, materials, summary, metadata
+        Use when: scripts need a human-readable material property report.
+
+        Returns:
+            None: prints material information.
         """
         for material in self.material_info:
             step = 0
@@ -1062,20 +1150,26 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                 print(f"{step * '  '}{property} = {self.material_info[material][property]}")
 
     def get_region_centroids(self, region_name):
-        """
-        get_region_centroids method.
-        
-        Args:
-            region_name (Any): Description.
+        """Return centroid coordinates for cells associated with a region.
+
+        Category: reader
+        Tags: igp, regions, centroids, cells
+        Use when: scripts need spatial samples for one iGP region or boundary.
+
+        Returns:
+            np.ndarray: centroid coordinates for the region.
         """
         return self.centroids[self.region_dict[region_name]['centroid_id'] - 1]
 
     def get_region_nodes(self, region_name):
-        """
-        get_region_nodes method.
-        
-        Args:
-            region_name (Any): Description.
+        """Return unique node coordinates for a region.
+
+        Category: reader
+        Tags: igp, regions, nodes, coordinates
+        Use when: scripts need boundary or region node coordinates for export or analysis.
+
+        Returns:
+            np.ndarray: node coordinates for the region.
         """
         cur_array = self.region_dict[region_name]['elements']
         cur_array = cur_array.flatten()
@@ -1083,43 +1177,51 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         return self.nodes[cur_array]
 
     def get_boundary_faces(self, region_name) -> List[BaseFace]:
-        """
-        get_boundary_faces method.
-        
-        Args:
-            region_name (Any): Description.
+        """Return built boundary face objects for a region.
+
+        Category: mesh
+        Tags: igp, boundaries, faces, mesh, regions
+        Use when: scripts need explicit boundary face geometry after build_mesh_data.
+
+        Returns:
+            list[BaseFace]: boundary faces for the region.
         """
         assert self.is_mesh_built, "Mesh has to be built before calling this method"
         return self.boundaries[region_name]
 
     def get_material_elements(self, material_name) -> List[BaseElement]:
-        """
-        get_material_elements method.
-        
-        Args:
-            material_name (Any): Description.
+        """Return built mesh elements assigned to a material.
+
+        Category: mesh
+        Tags: igp, materials, elements, mesh
+        Use when: scripts need element objects for a named material.
+
+        Returns:
+            list[BaseElement]: material element objects.
         """
         return [self.elements[element_id - 1] for element_id in self.material_dict[material_name]]
 
     def get_material_centroids(self, material_name):
-        """
-        get_material_centroids method.
-        
-        Args:
-            material_name (Any): Description.
+        """Return centroid coordinates for cells assigned to a material.
+
+        Category: reader
+        Tags: igp, materials, centroids, cells
+        Use when: scripts need spatial summaries or exports for one material.
+
+        Returns:
+            np.ndarray: material centroid coordinates.
         """
         return self.centroids[self.material_dict[material_name]]
     
     def assign_material_from_stl(self, material_dict, stl_files, mpi_comm=None, rank=None, size=None):
-        """
-        Finds which cell belong to each material (in parallel)
-        
-        Args:
-            material_dict (Any): Description.
-            stl_files (Any): Description.
-            mpi_comm (Any): Description.
-            rank (Any): Description.
-            size (Any): Description.
+        """Assign iGP cells to materials using containing or nearest STL solids.
+
+        Category: preprocessing
+        Tags: igp, materials, stl, centroids, classification
+        Use when: scripts need to classify mesh cells into materials from STL geometry.
+
+        Returns:
+            None: updates material assignments in material_dict.
         """
         def dist(p1, p2):
             """
@@ -1239,77 +1341,197 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
     @property
     def min_x(self):
-        '''Returns the minimum x coordinate of the centroids of the mesh'''
+        """Return the minimum centroid x coordinate.
+
+        Category: mesh
+        Tags: igp, centroids, bounds, x
+        Use when: scripts need iGP cell-centroid spatial bounds.
+
+        Returns:
+            float: minimum centroid x coordinate.
+        """
         return min(self.centroids[:, 0])
 
     @property
     def max_x(self):
-        '''Returns the maximum x coordinate of the centroids of the mesh'''
+        """Return the maximum centroid x coordinate.
+
+        Category: mesh
+        Tags: igp, centroids, bounds, x
+        Use when: scripts need iGP cell-centroid spatial bounds.
+
+        Returns:
+            float: maximum centroid x coordinate.
+        """
         return max(self.centroids[:, 0])
 
     @property
     def min_y(self):
-        '''Returns the minimum y coordinate of the centroids of the mesh'''
+        """Return the minimum centroid y coordinate.
+
+        Category: mesh
+        Tags: igp, centroids, bounds, y
+        Use when: scripts need iGP cell-centroid spatial bounds.
+
+        Returns:
+            float: minimum centroid y coordinate.
+        """
         return min(self.centroids[:, 1])
 
     @property
     def max_y(self):
-        '''Returns the maximum y coordinate of the centroids of the mesh'''
+        """Return the maximum centroid y coordinate.
+
+        Category: mesh
+        Tags: igp, centroids, bounds, y
+        Use when: scripts need iGP cell-centroid spatial bounds.
+
+        Returns:
+            float: maximum centroid y coordinate.
+        """
         return max(self.centroids[:, 1])
 
     @property
     def min_z(self):
-        '''Returns the minimum z coordinate of the centroids of the mesh'''
+        """Return the minimum centroid z coordinate.
+
+        Category: mesh
+        Tags: igp, centroids, bounds, z
+        Use when: scripts need iGP cell-centroid spatial bounds.
+
+        Returns:
+            float: minimum centroid z coordinate.
+        """
         return min(self.centroids[:, 2])
 
     @property
     def max_z(self):
-        '''Returns the maximum z coordinate of the centroids of the mesh'''
+        """Return the maximum centroid z coordinate.
+
+        Category: mesh
+        Tags: igp, centroids, bounds, z
+        Use when: scripts need iGP cell-centroid spatial bounds.
+
+        Returns:
+            float: maximum centroid z coordinate.
+        """
         return max(self.centroids[:, 2])
 
     @property
     def coords_min_x(self):
-        '''Returns the minimum x coordinate of the nodes of the mesh'''
+        """Return the minimum node x coordinate.
+
+        Category: mesh
+        Tags: igp, nodes, bounds, x
+        Use when: scripts need iGP node-coordinate spatial bounds.
+
+        Returns:
+            float: minimum node x coordinate.
+        """
         return min(self.nodes[:, 0])
 
     @property
     def coords_max_x(self):
-        '''Returns the maximum x coordinate of the nodes of the mesh'''
+        """Return the maximum node x coordinate.
+
+        Category: mesh
+        Tags: igp, nodes, bounds, x
+        Use when: scripts need iGP node-coordinate spatial bounds.
+
+        Returns:
+            float: maximum node x coordinate.
+        """
         return max(self.nodes[:, 0])
 
     @property
     def coords_min_y(self):
-        '''Returns the minimum y coordinate of the nodes of the mesh'''
+        """Return the minimum node y coordinate.
+
+        Category: mesh
+        Tags: igp, nodes, bounds, y
+        Use when: scripts need iGP node-coordinate spatial bounds.
+
+        Returns:
+            float: minimum node y coordinate.
+        """
         return min(self.nodes[:, 1])
 
     @property
     def coords_max_y(self):
-        '''Returns the maximum y coordinate of the nodes of the mesh'''
+        """Return the maximum node y coordinate.
+
+        Category: mesh
+        Tags: igp, nodes, bounds, y
+        Use when: scripts need iGP node-coordinate spatial bounds.
+
+        Returns:
+            float: maximum node y coordinate.
+        """
         return max(self.nodes[:, 1])
 
     @property
     def coords_min_z(self):
-        '''Returns the minimum z coordinate of the nodes of the mesh'''
+        """Return the minimum node z coordinate.
+
+        Category: mesh
+        Tags: igp, nodes, bounds, z
+        Use when: scripts need iGP node-coordinate spatial bounds.
+
+        Returns:
+            float: minimum node z coordinate.
+        """
         return min(self.nodes[:, 2])
 
     @property
     def coords_max_z(self):
-        '''Returns the maximum z coordinate of the nodes of the mesh'''
+        """Return the maximum node z coordinate.
+
+        Category: mesh
+        Tags: igp, nodes, bounds, z
+        Use when: scripts need iGP node-coordinate spatial bounds.
+
+        Returns:
+            float: maximum node z coordinate.
+        """
         return max(self.nodes[:, 2])
 
     @property
     def region_names(self):
-        '''Returns the names of the regions'''
+        """Return all iGP region names.
+
+        Category: reader
+        Tags: igp, regions, names, metadata
+        Use when: scripts need to list available regions or boundaries.
+
+        Returns:
+            list: region names.
+        """
         return list(self.region_dict.keys())
 
     @property
     def boundary_names(self):
-        '''Returns the names of the boundaries'''
+        """Return all iGP boundary names.
+
+        Category: reader
+        Tags: igp, boundaries, names, metadata
+        Use when: scripts need to list named boundaries from the iGP project.
+
+        Returns:
+            list: boundary names.
+        """
         return list(self.region_dict.keys())
 
     @property
     def material_names(self):
-        '''Returns the names of the materials'''
+        """Return all iGP material names.
+
+        Category: reader
+        Tags: igp, materials, names, metadata
+        Use when: scripts need to list available material assignments.
+
+        Returns:
+            list: material names.
+        """
         return list(self.material_dict.keys())
 
     def __repr__(self):
@@ -1330,6 +1552,15 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
 
 def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_size, centroids):
+    """Build mesh element objects for one multiprocessing chunk.
+
+    Category: mesh
+    Tags: igp, mesh, multiprocessing, elements, helper
+    Use when: iGPReader.build_mesh_data splits element construction across processes.
+
+    Returns:
+        None: appends built elements to shared_list.
+    """
     from pydelling.preprocessing.mesh_preprocessor.geometry import TetrahedraElement, WedgeElement, HexahedraElement
     amount_read = 0.0
     for id_local, element in enumerate(elements):

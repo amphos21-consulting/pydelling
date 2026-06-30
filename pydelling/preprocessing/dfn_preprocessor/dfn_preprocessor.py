@@ -24,6 +24,12 @@ logger = logging.getLogger(__name__)
 
 
 class DfnPreprocessor(object):
+    """Build, inspect, visualize, and export discrete fracture networks.
+
+    Category: preprocessing
+    Tags: dfn, fractures, faults, vtk, obj, dfnworks
+    Use when: scripts need to load fracture geometry, add faults, summarize DFNs, or export fracture networks.
+    """
     dfn: List[Fracture] = []
     faults: List[Fault] = []
 
@@ -40,7 +46,15 @@ class DfnPreprocessor(object):
         self.clean_dfn()
 
     def clean_dfn(self):
-        """Removes dfn object"""
+        """Clear all fractures and faults from this DFN.
+
+        Category: preprocessing
+        Tags: dfn, reset, fractures, faults
+        Use when: scripts need to reuse a DfnPreprocessor instance for a new network.
+
+        Returns:
+            None: clears the fracture and fault lists.
+        """
         self.dfn = []
         self.faults = []
 
@@ -59,13 +73,14 @@ class DfnPreprocessor(object):
                        transmissivity_constant=None,
                        storativity_constant=None
                        ):
-        """
-        Loads the fractures from a pandas dataframe to the dfn object.
-        Args:
-            pd_df: pandas dataframe containing the fractures
+        """Load fractures from a pandas DataFrame.
+
+        Category: preprocessing
+        Tags: dfn, fractures, dataframe, load, aperture
+        Use when: scripts have tabular fracture parameters and need to build a DFN.
 
         Returns:
-
+            None: appends fractures to the DFN.
         """
         for index, row in tqdm(pd_df.iterrows()):
             self.add_fracture(
@@ -92,13 +107,14 @@ class DfnPreprocessor(object):
                        rock_type=None,
                        transmissivity_constant=None,
                        storativity_constant=None):
-        """
-        Loads the fractures from a list of polygons and apertures.
-        Args:
-            polygons: list of polygons
-            apertures: list of apertures
-            hydraulic_aperture: list of hydraulic apertures
-            radii: list of radii
+        """Load fractures from polygon geometry and optional aperture arrays.
+
+        Category: preprocessing
+        Tags: dfn, fractures, polygons, apertures, load
+        Use when: scripts already have fracture polygons from segmentation, raster contours, or external geometry.
+
+        Returns:
+            None: appends polygon-backed fractures to the DFN.
         """
         
         logger.info('Loading fractures from polygons and apertures')
@@ -130,23 +146,14 @@ class DfnPreprocessor(object):
                      storativity_constant=None,
                      polygon=None,
                      ):
-        """
-        Add individual fracture to the dfn object.
-        
-        Args:
-            x (Any): Description.
-            y (Any): Description.
-            z (Any): Description.
-            dip (Any): Description.
-            dip_dir (Any): Description.
-            size (Any): Description.
-            aperture (Any): Description.
-            hydraulic_aperture (Any): Description.
-            aperture_constant (Any): Description.
-            rock_type (Any): Description.
-            transmissivity_constant (Any): Description.
-            storativity_constant (Any): Description.
-            polygon (Any): Description.
+        """Add one fracture from orientation parameters or polygon geometry.
+
+        Category: preprocessing
+        Tags: dfn, fracture, add, aperture, polygon
+        Use when: scripts need to construct a DFN incrementally from one fracture definition.
+
+        Returns:
+            None: appends a Fracture object to dfn.
         """
         from pydelling.preprocessing.dfn_preprocessor import Fracture
         self.dfn.append(Fracture(
@@ -173,17 +180,14 @@ class DfnPreprocessor(object):
                   porosity=None,
                   storativity=None,
                   ):
-        """
-        Adds a fault to the dfn object.
-        
-        Args:
-            filename (Any): Description.
-            mesh (Any): Description.
-            aperture (Any): Description.
-            transmissivity (Any): Description.
-            effective_aperture (Any): Description.
-            porosity (Any): Description.
-            storativity (Any): Description.
+        """Add one fault from a file path or existing Fault object.
+
+        Category: preprocessing
+        Tags: dfn, fault, add, mesh, aperture
+        Use when: scripts need to include fault surfaces alongside fractures in a DFN export.
+
+        Returns:
+            None: appends a Fault object to faults.
         """
         from pydelling.preprocessing.dfn_preprocessor import Fault
         if aperture is None:
@@ -205,7 +209,15 @@ class DfnPreprocessor(object):
             raise TypeError('Fault filename must be a string or Fault object')
 
     def summary(self):
-        """Prints a summary of the dfn object."""
+        """Print a compact DFN summary table.
+
+        Category: preprocessing
+        Tags: dfn, summary, fractures, size
+        Use when: scripts need a quick textual report of fracture count and size range.
+
+        Returns:
+            None: prints the summary table.
+        """
         print(tabulate(
             [
                 ['Number of fractures', len(self.dfn)],
@@ -221,39 +233,41 @@ class DfnPreprocessor(object):
         return len(self.dfn)
 
     def visualize_dfn(self, add_centroid=True, fracture_color='blue', size_color=False):
-        """
-        Visualizes the dfn object.
-        
-        Args:
-            add_centroid (Any): Description.
-            fracture_color (Any): Description.
-            size_color (Any): Description.
+        """Render the DFN interactively with Plotly.
+
+        Category: preprocessing
+        Tags: dfn, visualize, plotly, fractures, centroids
+        Use when: scripts need to show an interactive 3D fracture network.
+
+        Returns:
+            None: displays the Plotly figure.
         """
         self.fig = self.generate_dfn_plotly(add_centroid=add_centroid, fracture_color=fracture_color, size_color=size_color)
         self.fig.show()
 
     def export_dfn_image(self, filename='dfn.png', add_centroid=True, fracture_color='blue', *args, **kwargs, ):
-        """
-        export_dfn_image method.
-        
-        Args:
-            filename (Any): Description.
-            add_centroid (Any): Description.
-            fracture_color (Any): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Export a static image of the DFN Plotly figure.
+
+        Category: writer
+        Tags: dfn, image, plotly, export, visualization
+        Use when: scripts need a PNG or other static image of the fracture network.
+
+        Returns:
+            None: writes the image file.
         """
         logger.info(f'Exporting dfn image to {filename}')
         self.fig = self.generate_dfn_plotly(add_centroid=add_centroid, fracture_color=fracture_color)
         self.fig.write_image(filename, *args, **kwargs)
 
     def to_obj(self, filename='dfn.obj', method='v1'):
-        """
-        Exports the dfn object to stl format.
-        
-        Args:
-            filename (Any): Description.
-            method (Any): Description.
+        """Export fractures and faults to an OBJ surface file.
+
+        Category: writer
+        Tags: dfn, obj, export, fractures, faults
+        Use when: scripts need a portable surface mesh representation of the DFN.
+
+        Returns:
+            None: writes the OBJ file.
         """
         logger.info(f'Exporting dfn + faults object to {filename}')
         obj_file = open(filename, 'w')
@@ -269,12 +283,14 @@ class DfnPreprocessor(object):
             global_id += fault.num_points
 
     def to_vtk(self, filename='dfn.vtk', method='v1'):
-        """
-        to_vtk method.
-        
-        Args:
-            filename (Any): Description.
-            method (Any): Description.
+        """Export fractures and faults to a VTK mesh with aperture cell data.
+
+        Category: writer
+        Tags: dfn, vtk, export, aperture, visualization
+        Use when: scripts need to visualize a DFN in VTK-compatible tools.
+
+        Returns:
+            None: writes the VTK file.
         """
         from pathlib import Path
         logger.info(f'Exporting dfn + faults object to {filename}')
@@ -288,12 +304,14 @@ class DfnPreprocessor(object):
 
 
     def to_dfnworks(self, filename='dfn.dat', method='v1'):
-        """
-        Exports the dfn object to dfnworks format.
-        
-        Args:
-            filename (Any): Description.
-            method (Any): Description.
+        """Export fractures to DFNWorks polygon format.
+
+        Category: writer
+        Tags: dfn, dfnworks, export, fractures, polygons
+        Use when: scripts need a DFNWorks-compatible input file from pydelling fractures.
+
+        Returns:
+            None: writes the DFNWorks file.
         """
         logger.info(f'Exporting dfn object to {filename}')
         dfn_file = open(filename, 'w')
@@ -307,13 +325,14 @@ class DfnPreprocessor(object):
             dfn_file.write('\n')
 
     def shift(self, x_shift=0, y_shift=0, z_shift=0):
-        """
-        Shifts the dfn object.
-        
-        Args:
-            x_shift (Any): Description.
-            y_shift (Any): Description.
-            z_shift (Any): Description.
+        """Translate all fractures in the DFN.
+
+        Category: preprocessing
+        Tags: dfn, shift, translate, coordinates
+        Use when: scripts need to align a fracture network with a mesh or coordinate origin.
+
+        Returns:
+            None: mutates fracture coordinates.
         """
         logger.info(f'Shifting dfn object by {x_shift}, {y_shift}, {z_shift}')
         for fracture in self.dfn:
@@ -321,13 +340,14 @@ class DfnPreprocessor(object):
 
 
     def generate_dfn_plotly(self, add_centroid=False, size_color=False, fracture_color='blue'):
-        """
-        Generates a plotly figure of the dfn object.
-        
-        Args:
-            add_centroid (Any): Description.
-            size_color (Any): Description.
-            fracture_color (Any): Description.
+        """Build a Plotly 3D figure for the DFN.
+
+        Category: preprocessing
+        Tags: dfn, plotly, visualize, fractures, centroids
+        Use when: scripts need a figure object for display, export, or further customization.
+
+        Returns:
+            plotly.graph_objects.Figure: 3D DFN figure.
         """
         logger.info('Generating plotly figure')
         fig = go.Figure()
@@ -366,20 +386,39 @@ class DfnPreprocessor(object):
 
     @property
     def max_size(self):
-        """Returns the maximum size of the dfn object."""
+        """Return the maximum fracture size in the DFN.
+
+        Category: preprocessing
+        Tags: dfn, size, maximum, statistics
+        Use when: scripts need DFN size statistics or size-based color scales.
+
+        Returns:
+            float: maximum fracture size.
+        """
         return max([fracture.size for fracture in self.dfn])
 
     @property
     def min_size(self):
-        """Returns the minimum size of the dfn object."""
+        """Return the minimum fracture size in the DFN.
+
+        Category: preprocessing
+        Tags: dfn, size, minimum, statistics
+        Use when: scripts need DFN size statistics or size-based color scales.
+
+        Returns:
+            float: minimum fracture size.
+        """
         return min([fracture.size for fracture in self.dfn])
 
     def plot_radii_histogram(self, filename='radii_histogram.png'):
-        """
-        Plots the radii histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of fracture radii.
+
+        Category: preprocessing
+        Tags: dfn, histogram, radii, plot, statistics
+        Use when: scripts need the fracture radius distribution.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting radii histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -388,11 +427,14 @@ class DfnPreprocessor(object):
         return fig, ax
 
     def plot_aperture_histogram(self, filename='aperture_histogram.png'):
-        """
-        Plots the aperture histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of fracture apertures.
+
+        Category: preprocessing
+        Tags: dfn, histogram, aperture, plot, statistics
+        Use when: scripts need the aperture distribution.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting aperture histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -401,11 +443,14 @@ class DfnPreprocessor(object):
         return fig, ax
 
     def plot_hydraulic_aperture_histogram(self, filename='aperture_histogram.png'):
-        """
-        Plots the hydraulic aperture histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of fracture hydraulic apertures.
+
+        Category: preprocessing
+        Tags: dfn, histogram, hydraulic-aperture, plot, statistics
+        Use when: scripts need the hydraulic aperture distribution.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting hydraulic aperture histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -414,11 +459,14 @@ class DfnPreprocessor(object):
         return fig, ax
 
     def plot_transmissivity_histogram(self, filename='transmissivity_histogram.png'):
-        """
-        Plots the transmissivity histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of fracture transmissivity.
+
+        Category: preprocessing
+        Tags: dfn, histogram, transmissivity, plot, statistics
+        Use when: scripts need the transmissivity distribution.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting aperture histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -427,11 +475,14 @@ class DfnPreprocessor(object):
         return fig, ax
 
     def plot_hkx_histogram(self, filename='hkx_histogram.png'):
-        """
-        Plots the x-hydraulic conductivity histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of x hydraulic conductivity estimates.
+
+        Category: preprocessing
+        Tags: dfn, histogram, hydraulic-conductivity, plot, statistics
+        Use when: scripts need transmissivity divided by aperture as an hk_x distribution.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting hk_x histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -441,11 +492,14 @@ class DfnPreprocessor(object):
 
 
     def plot_storativity_histogram(self, filename='storativity_histogram.png'):
-        """
-        Plots the storativity histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of fracture storativity.
+
+        Category: preprocessing
+        Tags: dfn, histogram, storativity, plot, statistics
+        Use when: scripts need the storativity distribution.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting aperture histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -455,6 +509,15 @@ class DfnPreprocessor(object):
 
     @property
     def apertures(self) -> np.ndarray:
+        """Return apertures for fractures and fault mesh triangles.
+
+        Category: preprocessing
+        Tags: dfn, aperture, faults, fractures, cell-data
+        Use when: scripts need aperture values for VTK cell data or DFN statistics.
+
+        Returns:
+            np.ndarray: aperture values for all exported DFN cells.
+        """
         fracture_apertures = [fracture.aperture for fracture in self.dfn]
         # Get fault apertures for each trimesh element
         fault_apertures = []
@@ -483,41 +546,106 @@ class DfnPreprocessor(object):
 
     @property
     def min_x(self):
+        """Return the minimum fracture centroid x coordinate.
+
+        Category: preprocessing
+        Tags: dfn, bounds, x, minimum
+        Use when: scripts need DFN spatial bounds.
+
+        Returns:
+            float: minimum x centroid.
+        """
         return min([fracture.x_centroid for fracture in self.dfn])
 
     @property
     def max_x(self):
+        """Return the maximum fracture centroid x coordinate.
+
+        Category: preprocessing
+        Tags: dfn, bounds, x, maximum
+        Use when: scripts need DFN spatial bounds.
+
+        Returns:
+            float: maximum x centroid.
+        """
         return max([fracture.x_centroid for fracture in self.dfn])
 
     @property
     def min_y(self):
+        """Return the minimum fracture centroid y coordinate.
+
+        Category: preprocessing
+        Tags: dfn, bounds, y, minimum
+        Use when: scripts need DFN spatial bounds.
+
+        Returns:
+            float: minimum y centroid.
+        """
         return min([fracture.y_centroid for fracture in self.dfn])
 
     @property
     def max_y(self):
+        """Return the maximum fracture centroid y coordinate.
+
+        Category: preprocessing
+        Tags: dfn, bounds, y, maximum
+        Use when: scripts need DFN spatial bounds.
+
+        Returns:
+            float: maximum y centroid.
+        """
         return max([fracture.y_centroid for fracture in self.dfn])
 
     @property
     def min_z(self):
+        """Return the minimum fracture centroid z coordinate.
+
+        Category: preprocessing
+        Tags: dfn, bounds, z, minimum
+        Use when: scripts need DFN spatial bounds.
+
+        Returns:
+            float: minimum z centroid.
+        """
         return min([fracture.z_centroid for fracture in self.dfn])
 
     @property
     def max_z(self):
+        """Return the maximum fracture centroid z coordinate.
+
+        Category: preprocessing
+        Tags: dfn, bounds, z, maximum
+        Use when: scripts need DFN spatial bounds.
+
+        Returns:
+            float: maximum z centroid.
+        """
         return max([fracture.z_centroid for fracture in self.dfn])
 
     def get_json(self):
-        """Returns a json representation of the dfn object."""
+        """Return a JSON-serializable representation of this DFN.
+
+        Category: preprocessing
+        Tags: dfn, json, serialize, fractures, faults
+        Use when: scripts need portable fracture and fault metadata.
+
+        Returns:
+            dict: DFN representation with fractures and faults.
+        """
         export_dict = {}
         export_dict['dfn'] = [fracture.get_json() for fracture in self.dfn]
         export_dict['faults'] = [fault.get_json() for fault in self.faults]
         return export_dict
 
     def to_json(self, filename):
-        """
-        Writes the dfn object to a json file.
-        
-        Args:
-            filename (Any): Description.
+        """Write this DFN to a JSON file.
+
+        Category: writer
+        Tags: dfn, json, export, serialize
+        Use when: scripts need to persist fracture and fault metadata.
+
+        Returns:
+            None: writes the JSON file.
         """
         import json
         with open(filename, 'w') as f:
@@ -525,12 +653,14 @@ class DfnPreprocessor(object):
 
     @classmethod
     def from_json(cls, filename='dfn.json'):
-        """
-        Loads a dfn object from a json file.
-        
-        Args:
-            cls (Any): Description.
-            filename (Any): Description.
+        """Load a DFN from a JSON file.
+
+        Category: preprocessing
+        Tags: dfn, json, load, serialize
+        Use when: scripts need to restore a saved fracture network from disk.
+
+        Returns:
+            DfnPreprocessor: loaded DFN instance.
         """
         import json
         from pydelling.preprocessing.dfn_preprocessor import Fracture, Fault
@@ -545,12 +675,14 @@ class DfnPreprocessor(object):
 
     @classmethod
     def from_dict(cls, dict: dict):
-        """
-        Loads a dfn object from a dict.
-        
-        Args:
-            cls (Any): Description.
-            dict (dict): Description.
+        """Load a DFN from a dictionary.
+
+        Category: preprocessing
+        Tags: dfn, dict, load, serialize
+        Use when: scripts already have parsed DFN JSON and need a DfnPreprocessor instance.
+
+        Returns:
+            DfnPreprocessor: loaded DFN instance.
         """
         from pydelling.preprocessing.dfn_preprocessor import Fracture, Fault
         Fracture.local_id = 0
@@ -566,9 +698,6 @@ class DfnPreprocessor(object):
 
     def __str__(self):
         return self.__repr__()
-
-
-
 
 
 

@@ -51,12 +51,11 @@ class MeshPreprocessor(iGPLogic):
     is_connections_found: bool = False
 
     def __init__(self, *args, **kwargs):
-        """
-        __init__ method.
-        
-        Args:
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Initialize an empty unstructured mesh workspace.
+
+        Category: mesh
+        Tags: mesh, preprocessing, initialize, elements, boundaries
+        Use when: scripts need a mutable mesh container before adding elements or loading saved geometry.
         """
         self.unordered_nodes = {}
         self.elements = []
@@ -76,69 +75,82 @@ class MeshPreprocessor(iGPLogic):
         }
 
     def add_element(self, element: geometry.base_element):
-        """
-        add_element method.
-        
-        Args:
-            element (geometry.base_element): Description.
+        """Append an already-built mesh element to this mesh.
+
+        Category: mesh
+        Tags: mesh, element, add, preprocessing
+        Use when: scripts already have a pydelling geometry element and need it included in the mesh.
+
+        Returns:
+            None: mutates the mesh element list.
         """
         self.elements.append(element)
 
     def add_tetrahedra(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """
-        Adds a tetrahedron to the mesh
-        
-        Args:
-            node_ids (List[int] or np.ndarray): Description.
-            node_coords (List[np.ndarray]): Description.
+        """Add one tetrahedral cell to the mesh.
+
+        Category: mesh
+        Tags: mesh, tetrahedra, element, nodes, cell
+        Use when: building an unstructured mesh from tetrahedral connectivity and coordinates.
+
+        Returns:
+            None: appends a tetrahedral element and stores its node coordinates.
         """
         self.elements.append(geometry.TetrahedraElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_hexahedra(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """
-        Adds a hexahedron to the mesh
-        
-        Args:
-            node_ids (List[int] or np.ndarray): Description.
-            node_coords (List[np.ndarray]): Description.
+        """Add one hexahedral cell to the mesh.
+
+        Category: mesh
+        Tags: mesh, hexahedra, element, nodes, cell
+        Use when: building an unstructured mesh from hexahedral connectivity and coordinates.
+
+        Returns:
+            None: appends a hexahedral element and stores its node coordinates.
         """
         self.elements.append(geometry.HexahedraElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_wedge(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """
-        Adds a wedge to the mesh
-        
-        Args:
-            node_ids (List[int] or np.ndarray): Description.
-            node_coords (List[np.ndarray]): Description.
+        """Add one wedge cell to the mesh.
+
+        Category: mesh
+        Tags: mesh, wedge, element, nodes, cell
+        Use when: building an unstructured mesh from wedge connectivity and coordinates.
+
+        Returns:
+            None: appends a wedge element and stores its node coordinates.
         """
         self.elements.append(geometry.WedgeElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_pyramid(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """
-        Adds a pyramid to the mesh
-        
-        Args:
-            node_ids (List[int] or np.ndarray): Description.
-            node_coords (List[np.ndarray]): Description.
+        """Add one pyramid cell to the mesh.
+
+        Category: mesh
+        Tags: mesh, pyramid, element, nodes, cell
+        Use when: building an unstructured mesh from pyramid connectivity and coordinates.
+
+        Returns:
+            None: appends a pyramid element and stores its node coordinates.
         """
         self.elements.append(geometry.PyramidElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_triangular_prism(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
-        """
-        Adds a triangular prism to the mesh
-        
-        Args:
-            node_ids (List[int] or np.ndarray): Description.
-            node_coords (List[np.ndarray]): Description.
+        """Add one triangular-prism cell to the mesh as a wedge element.
+
+        Category: mesh
+        Tags: mesh, triangular-prism, wedge, element, nodes
+        Use when: source connectivity names triangular prisms instead of wedge cells.
+
+        Returns:
+            None: appends a wedge element and stores its node coordinates.
         """
         self.elements.append(geometry.WedgeElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
@@ -146,7 +158,15 @@ class MeshPreprocessor(iGPLogic):
 
     @property
     def coords(self) -> np.ndarray:
-        """Orders the coords in the mesh"""
+        """Return node coordinates ordered by node id.
+
+        Category: mesh
+        Tags: mesh, coordinates, nodes, array
+        Use when: scripts need the mesh point array for export, bounds, or spatial analysis.
+
+        Returns:
+            np.ndarray: ordered node coordinate array.
+        """
         if self._coords is None:
             aux_nodes = np.ndarray(shape=(self.n_nodes, 3))
             for idx, node in self.unordered_nodes.items():
@@ -156,49 +176,81 @@ class MeshPreprocessor(iGPLogic):
 
     @property
     def nodes(self) -> np.ndarray:
+        """Return mesh node coordinates.
+
+        Category: mesh
+        Tags: mesh, nodes, coordinates, array
+        Use when: scripts need the node coordinate array using a common mesh naming convention.
+
+        Returns:
+            np.ndarray: ordered node coordinate array.
+        """
         return self.coords
 
     def add_quadrilateral(self, node_ids: List[int], node_coords: List[np.ndarray]):
-        """
-        add_quadrilateral method.
-        
-        Args:
-            node_ids (List[int]): Description.
-            node_coords (List[np.ndarray]): Description.
+        """Add one quadrilateral face to the mesh.
+
+        Category: mesh
+        Tags: mesh, quadrilateral, face, nodes, boundary
+        Use when: building surface or boundary geometry from four-node faces.
+
+        Returns:
+            None: appends a quadrilateral face and stores its node coordinates.
         """
         self.elements.append(geometry.quadrilateral_face(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_triangle(self, node_ids: List[int], node_coords: List[np.ndarray]):
-        """
-        add_triangle method.
-        
-        Args:
-            node_ids (List[int]): Description.
-            node_coords (List[np.ndarray]): Description.
+        """Add one triangular face to the mesh.
+
+        Category: mesh
+        Tags: mesh, triangle, face, nodes, boundary
+        Use when: building surface or boundary geometry from three-node faces.
+
+        Returns:
+            None: appends a triangular face and stores its node coordinates.
         """
         self.elements.append(geometry.triangle_face(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
 
     def add_node(self, node: np.ndarray):
-        """
-        Explicitly adds a node (deprecated)
-        
-        Args:
-            node (np.ndarray): Description.
+        """Append one node to the coordinate array.
+
+        Category: mesh
+        Tags: mesh, node, coordinates, deprecated
+        Use when: maintaining older scripts that add nodes directly instead of through elements.
+
+        Returns:
+            None: mutates the coordinate collection.
         """
         self.coords.append(node)
 
     @property
     def n_nodes(self):
-        """Returns the number of node_ids in the mesh"""
+        """Return the number of unique mesh nodes.
+
+        Category: mesh
+        Tags: mesh, nodes, count, metadata
+        Use when: scripts need mesh size metadata.
+
+        Returns:
+            int: number of known nodes.
+        """
         return len(self.unordered_nodes)
 
     @property
     def n_elements(self):
-        """Returns the number of elements in the mesh"""
+        """Return the number of mesh elements.
+
+        Category: mesh
+        Tags: mesh, elements, count, metadata
+        Use when: scripts need mesh size metadata.
+
+        Returns:
+            int: number of elements.
+        """
         return len(self.elements)
 
     def convert_mesh_to_meshio(self):
@@ -298,18 +350,29 @@ class MeshPreprocessor(iGPLogic):
         return elements_in_meshio
 
     def nodes_to_csv(self, filename='node_ids.csv'):
-        """
-        Exports the node_ids to CSV
-        
-        Args:
-            filename (Any): Description.
+        """Export mesh node coordinates to a CSV file.
+
+        Category: writer
+        Tags: mesh, nodes, csv, export, coordinates
+        Use when: scripts need a simple coordinate table for mesh nodes.
+
+        Returns:
+            None: writes the CSV file.
         """
         node_array = np.array(self.coords)
         np.savetxt(filename, node_array, delimiter=',')
 
     @property
     def centroids(self):
-        """Returns the centroids of the mesh"""
+        """Return centroid coordinates for all mesh elements.
+
+        Category: mesh
+        Tags: mesh, centroids, elements, coordinates
+        Use when: scripts need cell centers for nearest-neighbor queries, interpolation, or summaries.
+
+        Returns:
+            np.ndarray: element centroid coordinate array.
+        """
         if self._centroids is None:
             centroids = []
             for element in self.elements:
@@ -318,23 +381,28 @@ class MeshPreprocessor(iGPLogic):
         return self._centroids
 
     def create_kd_tree(self, kd_tree_config=None):
-        """
-        Create a KD-tree structure for the mesh.
-        Args:
-            kd_tree_config: A dictionary with the kd-tree configuration.
+        """Create a KD-tree over mesh element centroids.
+
+        Category: mesh
+        Tags: mesh, kd-tree, centroids, nearest, spatial
+        Use when: scripts need fast nearest-element or radius queries.
+
+        Returns:
+            None: stores the KDTree on kd_tree.
         """
         if kd_tree_config is None:
             kd_tree_config = {}
         self.kd_tree = KDTree(self.centroids, **kd_tree_config)
 
     def get_k_nearest_mesh_elements(self, point, k=15, distance_upper_bound=None):
-        """
-        Get the nearest mesh elements to a point.
-        Args:
-            point: A point in 3D space.
-            k: The number of nearest elements to return.
+        """Return the k nearest mesh elements to a point.
+
+        Category: mesh
+        Tags: mesh, nearest, kd-tree, point, elements
+        Use when: scripts need nearby cells for interpolation, sampling, or material assignment.
+
         Returns:
-            A list of the nearest mesh elements.
+            list: nearest mesh element objects.
         """
         if not hasattr(self, 'kd_tree'):
             self.create_kd_tree()
@@ -347,13 +415,14 @@ class MeshPreprocessor(iGPLogic):
         return [self.elements[i] for i in ids]
 
     def get_closest_mesh_elements(self, point, distance=None):
-        """
-        Get the nearest mesh elements to a point inside a distance.
-        Args:
-            point: A point in 3D space.
-            distance: The radius of the sphere.
+        """Return mesh elements within a radius of a point.
+
+        Category: mesh
+        Tags: mesh, nearest, radius, kd-tree, elements
+        Use when: scripts need all cells inside a spatial search radius.
+
         Returns:
-            A list of the nearest mesh elements.
+            list: mesh elements within the radius.
         """
         if self.kd_tree is None:
             self.create_kd_tree()
@@ -366,13 +435,14 @@ class MeshPreprocessor(iGPLogic):
                                     point,
                                     n=1
                                     ):
-        """
-        Get the nearest mesh elements to a point inside a distance.
-        Args:
-            point: A point in 3D space.
-            distance: The radius of the sphere.
+        """Return the closest n mesh elements to a point.
+
+        Category: mesh
+        Tags: mesh, nearest, kd-tree, point, elements
+        Use when: scripts need a fixed number of nearby cells for a coordinate.
+
         Returns:
-            A list of the nearest mesh elements.
+            list: closest mesh element objects.
         """
         if self.kd_tree is None:
             self.create_kd_tree()
@@ -381,7 +451,15 @@ class MeshPreprocessor(iGPLogic):
         return [self.elements[i] for i in ids]
 
     def clear(self):
-        """Clears the mesh"""
+        """Remove all nodes and elements from this mesh.
+
+        Category: mesh
+        Tags: mesh, clear, reset, elements
+        Use when: scripts need to reuse a MeshPreprocessor instance with new geometry.
+
+        Returns:
+            None: clears mesh nodes and elements.
+        """
         self.unordered_nodes = {}
         self.elements = []
 
@@ -423,11 +501,14 @@ class MeshPreprocessor(iGPLogic):
 
 
     def find_the_intersection_between_fracture_and_mesh(self, fracture: 'Fracture'):
-        """
-        Finds the intersection between a fracture and the mesh
-        
-        Args:
-            fracture ('Fracture'): Description.
+        """Find mesh elements intersected by a fracture and export them to VTK.
+
+        Category: mesh
+        Tags: mesh, fracture, intersection, vtk, subset
+        Use when: scripts need a VTK subset of cells cut by a fracture.
+
+        Returns:
+            None: writes intersections.vtk.
         """
         intersections = []
         for element in self.elements:
@@ -436,12 +517,14 @@ class MeshPreprocessor(iGPLogic):
         self.subset_to_vtk(intersections, filename='intersections.vtk')
 
     def find_intersection_points_between_fracture_and_mesh(self, fracture: 'Fracture', export_stats=False):
-        """
-        Finds the intersection points between a fracture and the mesh
-        
-        Args:
-            fracture ('Fracture'): Description.
-            export_stats (Any): Description.
+        """Compute fracture intersection points and areas for nearby mesh elements.
+
+        Category: mesh
+        Tags: mesh, fracture, intersection, area, aperture
+        Use when: scripts need fracture-cell intersection metadata for DFN or flow preprocessing.
+
+        Returns:
+            list: intersection points found for the processed elements.
         """
 
         intersection_points = []
@@ -473,11 +556,14 @@ class MeshPreprocessor(iGPLogic):
 
     def export_intersection_stats(self, filename='intersection_stats.txt'):
         # Export the run_stats dictionary to file
-        """
-        export_intersection_stats method.
-        
-        Args:
-            filename (Any): Description.
+        """Export accumulated fracture-intersection statistics to JSON.
+
+        Category: writer
+        Tags: mesh, fracture, intersection, stats, json
+        Use when: scripts need a diagnostic file after fracture-mesh intersection.
+
+        Returns:
+            None: writes run_stats.json.
         """
         assert self.is_intersected, 'The mesh has not been intersected yet.'
         import json
@@ -489,12 +575,14 @@ class MeshPreprocessor(iGPLogic):
                              edge_point: np.ndarray,
                              plane: 'Fracture',
                              ) -> np.ndarray or None:
-        """This method instersects a given edge with a plane.
-        Args:
-            edge: The edge to intersect.
-            plane: The plane to intersect with.
+        """Intersect one edge ray with a fracture plane.
+
+        Category: mesh
+        Tags: mesh, fracture, plane, edge, intersection
+        Use when: scripts need the geometric intersection point between a mesh edge and fracture plane.
+
         Returns:
-            The intersection point of the edge and the plane.
+            np.ndarray | None: intersection point inside the plane bounds, if present.
         """
 
         edge_dot = np.dot(edge, plane.unit_normal_vector)
@@ -511,35 +599,92 @@ class MeshPreprocessor(iGPLogic):
 
     @property
     def min_x(self):
+        """Return the minimum mesh x coordinate.
+
+        Category: mesh
+        Tags: mesh, bounds, x, minimum
+        Use when: scripts need mesh spatial bounds.
+
+        Returns:
+            float: minimum x coordinate.
+        """
         return self.coords[:, 0].min()
 
     @property
     def max_x(self):
+        """Return the maximum mesh x coordinate.
+
+        Category: mesh
+        Tags: mesh, bounds, x, maximum
+        Use when: scripts need mesh spatial bounds.
+
+        Returns:
+            float: maximum x coordinate.
+        """
         return self.coords[:, 0].max()
 
     @property
     def min_y(self):
+        """Return the minimum mesh y coordinate.
+
+        Category: mesh
+        Tags: mesh, bounds, y, minimum
+        Use when: scripts need mesh spatial bounds.
+
+        Returns:
+            float: minimum y coordinate.
+        """
         return self.coords[:, 1].min()
 
     @property
     def max_y(self):
+        """Return the maximum mesh y coordinate.
+
+        Category: mesh
+        Tags: mesh, bounds, y, maximum
+        Use when: scripts need mesh spatial bounds.
+
+        Returns:
+            float: maximum y coordinate.
+        """
         return self.coords[:, 1].max()
 
     @property
     def min_z(self):
+        """Return the minimum mesh z coordinate.
+
+        Category: mesh
+        Tags: mesh, bounds, z, minimum
+        Use when: scripts need mesh spatial bounds.
+
+        Returns:
+            float: minimum z coordinate.
+        """
         return self.coords[:, 2].min()
 
     @property
     def max_z(self):
+        """Return the maximum mesh z coordinate.
+
+        Category: mesh
+        Tags: mesh, bounds, z, maximum
+        Use when: scripts need mesh spatial bounds.
+
+        Returns:
+            float: maximum z coordinate.
+        """
         return self.coords[:, 2].max()
 
 
     def save(self, filename):
-        """
-        Save the mesh to a file.
-        
-        Args:
-            filename (Any): Description.
+        """Serialize mesh elements, coordinates, and KD-tree state with pickle.
+
+        Category: writer
+        Tags: mesh, save, pickle, serialize
+        Use when: scripts need to persist a preprocessed mesh for later reuse.
+
+        Returns:
+            None: writes the pickle file.
         """
         import pickle
         logger.info(f'Saving mesh to {filename}')
@@ -553,11 +698,14 @@ class MeshPreprocessor(iGPLogic):
             pickle.dump(save_dictionary, f)
 
     def load(self, filename):
-        """
-        Load the mesh from a file.
-        
-        Args:
-            filename (Any): Description.
+        """Load mesh elements, coordinates, and KD-tree state from a pickle file.
+
+        Category: mesh
+        Tags: mesh, load, pickle, serialize
+        Use when: scripts need to restore a previously saved MeshPreprocessor state.
+
+        Returns:
+            None: mutates this instance with saved mesh data.
         """
         logger.info(f'Loading mesh from {filename}')
         import pickle
@@ -569,7 +717,15 @@ class MeshPreprocessor(iGPLogic):
             self.has_kd_tree = save_dictionary['has_kd_tree']
 
     def get_json(self):
-        """Export the mesh to a json file."""
+        """Return a JSON-serializable dictionary for this mesh.
+
+        Category: mesh
+        Tags: mesh, json, serialize, elements, coordinates
+        Use when: scripts need portable mesh metadata or will write the mesh as JSON.
+
+        Returns:
+            dict: JSON-ready mesh representation.
+        """
         logger.info('Exporting mesh to json')
         save_dictionary = {}
         _elements = [element.get_json() for element in self.elements]
@@ -579,11 +735,14 @@ class MeshPreprocessor(iGPLogic):
         return save_dictionary
 
     def to_json(self, filename='mesh.json'):
-        """
-        Export the mesh to a json file.
-        
-        Args:
-            filename (Any): Description.
+        """Write this mesh to a JSON file.
+
+        Category: writer
+        Tags: mesh, json, export, serialize
+        Use when: scripts need a portable JSON representation of mesh elements and coordinates.
+
+        Returns:
+            None: writes the JSON file.
         """
         import json
         with open(filename, 'w') as f:
@@ -591,11 +750,14 @@ class MeshPreprocessor(iGPLogic):
 
     @classmethod
     def from_json(self, filename='mesh.json'):
-        """
-        Load the mesh from a json file.
-        
-        Args:
-            filename (Any): Description.
+        """Create a MeshPreprocessor from a JSON mesh file.
+
+        Category: mesh
+        Tags: mesh, json, load, serialize
+        Use when: scripts need to restore mesh geometry from a JSON export.
+
+        Returns:
+            MeshPreprocessor: loaded mesh instance.
         """
         logger.info(f'Loading mesh from {filename}')
         BaseElement.local_id = 0
@@ -612,12 +774,14 @@ class MeshPreprocessor(iGPLogic):
 
     @classmethod
     def from_dict(cls, dict: dict):
-        """
-        Load the mesh from a json file.
-        
-        Args:
-            cls (Any): Description.
-            dict (dict): Description.
+        """Create a MeshPreprocessor from a mesh dictionary.
+
+        Category: mesh
+        Tags: mesh, dict, load, serialize
+        Use when: scripts already have parsed mesh JSON and need a MeshPreprocessor instance.
+
+        Returns:
+            MeshPreprocessor: loaded mesh instance.
         """
         BaseElement.local_id = 0
         mesh = MeshPreprocessor()
@@ -630,12 +794,14 @@ class MeshPreprocessor(iGPLogic):
 
     @staticmethod
     def load_elements(mesh: MeshPreprocessor, element_dict):
-        """
-        Load the elements from a dictionary.
-        
-        Args:
-            mesh (MeshPreprocessor): Description.
-            element_dict (Any): Description.
+        """Load serialized elements into a MeshPreprocessor.
+
+        Category: mesh
+        Tags: mesh, elements, load, serialize
+        Use when: reconstructing a mesh from JSON or dictionary data.
+
+        Returns:
+            None: appends reconstructed elements to the mesh.
         """
         elements = []
         for local_id, element in tqdm(enumerate(element_dict), desc='Loading elements'):
@@ -661,11 +827,14 @@ class MeshPreprocessor(iGPLogic):
             mesh.elements[local_id].associated_fractures = temp_associated_fractures
 
     def refactor_array_by_element_type(self, array: np.ndarray or list) -> list:
-        """
-        Refactors a given array based on the element type
-        
-        Args:
-            array (np.ndarray or list): Description.
+        """Group per-element values by meshio cell type order.
+
+        Category: mesh
+        Tags: mesh, cell-data, meshio, element-types
+        Use when: attaching cell data to a meshio export that groups cells by type.
+
+        Returns:
+            list: values grouped by element type.
         """
         if isinstance(array, np.ndarray):
             array = array.tolist()
@@ -687,27 +856,39 @@ class MeshPreprocessor(iGPLogic):
         return f'Mesh with {len(self.elements)} elements and {len(self.coords)} nodes.'
 
     def add_cell_data(self, name, data):
-        """
-        add_cell_data method.
-        
-        Args:
-            name (Any): Description.
-            data (Any): Description.
+        """Attach named cell data to the mesh for meshio export.
+
+        Category: mesh
+        Tags: mesh, cell-data, meshio, variables, export
+        Use when: scripts need VTK or meshio outputs with per-cell variables.
+
+        Returns:
+            None: stores grouped cell data under name.
         """
         self.cell_data[name] = self.refactor_array_by_element_type(data)
 
     def add_point_data(self, name, data):
-        """
-        add_point_data method.
-        
-        Args:
-            name (Any): Description.
-            data (Any): Description.
+        """Attach named point data to the mesh for meshio export.
+
+        Category: mesh
+        Tags: mesh, point-data, meshio, variables, export
+        Use when: scripts need VTK or meshio outputs with per-node variables.
+
+        Returns:
+            None: stores point data under name.
         """
         self.point_data[name] = data
 
     def find_mesh_connections(self):
-        """Find the connections between the elements."""
+        """Find neighboring mesh elements that share faces.
+
+        Category: mesh
+        Tags: mesh, connections, faces, adjacency, topology
+        Use when: scripts need element adjacency before boundary detection or topology analysis.
+
+        Returns:
+            None: populates element connection maps.
+        """
         logger.info('Finding mesh connections')
         aux_vec = []
         for element in tqdm(self.elements, desc='Creating auxiliar vector'):
@@ -730,7 +911,15 @@ class MeshPreprocessor(iGPLogic):
         self.is_connections_found = True
 
     def find_boundary_elements(self):
-        """Returns the elements and their external faces."""
+        """Find elements that have external boundary faces.
+
+        Category: mesh
+        Tags: mesh, boundaries, external-faces, topology
+        Use when: scripts need boundary elements after mesh connections have been computed.
+
+        Returns:
+            None: populates external_boundaries.
+        """
         # self.find_mesh_connections() should be obtained first.
         if not self.is_connections_found:
             raise ValueError("Connections should be computed. Run self.find_mesh_connections()")
@@ -740,15 +929,14 @@ class MeshPreprocessor(iGPLogic):
                 self.external_boundaries[element.local_id] = element.external_faces
 
     def get_topography_faces(self) -> dict:
-        """Returns the topography elements.
+        """Return upward-facing external faces as topography candidates.
 
-        Examples:
-            >>> get_topography_faces()
-            {1: "quadrilateral-1"}
+        Category: mesh
+        Tags: mesh, topography, boundaries, faces, normals
+        Use when: scripts need top surface faces for boundary assignment or terrain extraction.
 
         Returns:
-            elem_vector: Dictionary with the element ID and the topography face.
-
+            dict: element ids mapped to topography face objects.
         """
         if not self.external_boundaries:
             raise ValueError("self.boundaries is None.")
@@ -762,14 +950,14 @@ class MeshPreprocessor(iGPLogic):
         return elem_vector
 
     def set_topography_boundaries(self, z_coord: float = 0.0, keys: list[str] = ["land", "sea"]):
-        """
-        Set the topography boundaries for the Obayashi project.
+        """Split topography faces into two named boundary groups by z coordinate.
 
-        Parameters:
-            z_coord: Coordinate to separate two regions (float).
+        Category: mesh
+        Tags: mesh, topography, boundaries, z, groups
+        Use when: scripts need land/sea or upper/lower topography boundary groups.
 
-            keys: List of the two keys (lisr).
-
+        Returns:
+            None: populates boundary groups named by keys.
         """
 
         for key in keys:
@@ -784,7 +972,15 @@ class MeshPreprocessor(iGPLogic):
                 self.boundaries[keys[1]][id_element] = face
 
     def plot_topography_centroids(self):
-        """ Plots the topography centroids. For testing reasons. """
+        """Plot topography boundary centroids for visual diagnostics.
+
+        Category: mesh
+        Tags: mesh, topography, plot, centroids, diagnostics
+        Use when: scripts need a quick matplotlib diagnostic of assigned topography boundaries.
+
+        Returns:
+            None: displays a matplotlib plot.
+        """
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
         logger.info('Ploting topography centroids')
@@ -800,12 +996,14 @@ class MeshPreprocessor(iGPLogic):
                                                 unit_vector: np.array or list,
                                                 tolerance: float = 0.1
                                                 ) -> List[geometry.base_face]:
-        """
-        Returns the elements and the face with a given normal unit vector.
-        
-        Args:
-            unit_vector (np.array or list): Description.
-            tolerance (float): Description.
+        """Return external faces whose normals match a target unit vector.
+
+        Category: mesh
+        Tags: mesh, boundaries, normals, faces, direction
+        Use when: scripts need top, bottom, north, south, east, or west boundary faces by normal direction.
+
+        Returns:
+            dict: element ids mapped to matching external face objects.
         """
         if not self.external_boundaries:
             raise ValueError("self.boundaries is None.")
@@ -833,7 +1031,15 @@ class MeshPreprocessor(iGPLogic):
         return elem_vector
 
     def assign_automatic_six_face_boundaries(self):
-        """This method as"""
+        """Assign six axis-aligned boundary groups from external face normals.
+
+        Category: mesh
+        Tags: mesh, boundaries, normals, top, bottom, sides
+        Use when: scripts need automatic top, bottom, north, south, east, and west boundary groups.
+
+        Returns:
+            None: populates the boundaries dictionary.
+        """
         self.boundaries['top']    = self.get_boundary_elements_given_unit_vector([0, 0, 1])
         self.boundaries['bottom'] = self.get_boundary_elements_given_unit_vector([0, 0, -1])
         self.boundaries['north']  = self.get_boundary_elements_given_unit_vector([0, 1,  0])
