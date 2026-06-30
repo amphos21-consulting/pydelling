@@ -13,8 +13,11 @@ import pydelling.utils.sub_fish_module as subfish
 
 
 class BaseReader:
-    """Base interface shared by data reader implementations.
+    """Provide the common interface for pydelling reader classes.
 
+    Category: reader
+    Tags: reader, file, data, csv, coordinates
+    Use when: scripts need the base contract shared by concrete pydelling file readers.
     """
 
     data: np.ndarray  # Hint of self.data array
@@ -62,12 +65,14 @@ class BaseReader:
         pass
 
     def open_file(self, filename, **kwargs):
-        """
-        Open a file handle, parse data, and refresh metadata.
-        
-        Args:
-            filename (Any): Description.
-            **kwargs (Any): Description.
+        """Open a file, optionally skip its header, read data, and build metadata.
+
+        Category: reader
+        Tags: reader, file, open, data, metadata
+        Use when: a concrete reader should load data from disk using its read_file implementation.
+
+        Returns:
+            None: updates reader data and info.
         """
         with open(filename) as opened_file:
             if self.header:
@@ -85,9 +90,14 @@ class BaseReader:
         pass
 
     def get_data(self) -> np.ndarray:
-        """
-        Outputs the read data
-        :return:
+        """Return data loaded by this reader.
+
+        Category: reader
+        Tags: reader, data, numpy, array
+        Use when: scripts need the numeric payload from a pydelling reader.
+
+        Returns:
+            np.ndarray: loaded reader data.
         """
         return np.array(0)
 
@@ -123,12 +133,14 @@ class BaseReader:
         self.data[:, 1] += y_local_to_global
 
     def dump_to_csv(self, output_file, delimiter=","):
-        """
-        Writes the data into a csv file
-        
-        Args:
-            output_file (Any): Description.
-            delimiter (Any): Description.
+        """Write reader data to a CSV file.
+
+        Category: writer
+        Tags: reader, writer, csv, export, data
+        Use when: scripts need to export loaded reader data as delimited text.
+
+        Returns:
+            None: writes output_file.
         """
         print(f"Starting dump into {output_file}")
         np.savetxt(output_file, self.get_data(), delimiter=delimiter)
@@ -142,13 +154,14 @@ class BaseReader:
         self.postprocessing_dict.mkdir(exist_ok=True)
 
     def generate_subfish_data(self, subfish_dict: dict, unit_factor=1/(365 * 24), unit_name='d') -> pd.DataFrame:
-        """
-        This method reads a given subfish dict and returns the calculated results
-        Args:
-            subfish_dict: dictionary containing subfish module parameters
-            unit_factor: factor multiplyin the results (originally computed in seconds)
+        """Generate SUBFISH results as a DataFrame from a parameter dictionary.
+
+        Category: reader
+        Tags: subfish, dataframe, transport, calculation
+        Use when: scripts need tabular SUBFISH output from pydelling reader utilities.
+
         Returns:
-            Array containing the times and computed values
+            pd.DataFrame: time and result columns.
         """
         if not subfish_dict:
             raise AttributeError('Please, provide a suitable subfish dict object')
@@ -162,7 +175,13 @@ class BaseReader:
 
     @property
     def values(self):
-        """Alias property returning reader values.
+        """Return the loaded data through the common values property.
 
+        Category: reader
+        Tags: reader, values, data, array
+        Use when: scripts need reader data through a property-style accessor.
+
+        Returns:
+            Any: value returned by get_data.
         """
         return self.get_data() 

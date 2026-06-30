@@ -43,12 +43,30 @@ FACE_TEMPLATES_BY_NODE_COUNT = {
 
 
 def normalize_extension(value: str | None) -> str:
+    """Normalize a file extension for asset type detection.
+
+    Category: util
+    Tags: extension, mime, detection, asset
+    Use when: code needs to compare uploaded asset extensions independent of dot prefix or case.
+
+    Returns:
+        str: lower-case extension without a leading dot.
+    """
     if not value:
         return ""
     return value.lower().lstrip(".")
 
 
 def read_asset_header(path: Path, limit: int = HEADER_READ_BYTES) -> bytes:
+    """Read the leading bytes used to classify an asset safely.
+
+    Category: util
+    Tags: header, bytes, detection, asset
+    Use when: asset detection needs a bounded binary sample without loading the full file.
+
+    Returns:
+        bytes: at most limit bytes from the file, or empty bytes for directories.
+    """
     if path.is_dir():
         return b""
     with path.open("rb") as handle:
@@ -62,6 +80,15 @@ def _path_size(path: Path) -> int:
 
 
 def is_probably_text(payload: bytes) -> bool:
+    """Detect whether a byte payload is likely UTF-8 text.
+
+    Category: util
+    Tags: text, binary, detection, encoding
+    Use when: choosing between text and binary asset handling from a header sample.
+
+    Returns:
+        bool: True when the sample can be treated as text.
+    """
     if not payload:
         return True
     if b"\x00" in payload:
@@ -219,6 +246,12 @@ def _is_igp_directory(path: Path) -> bool:
 
 @dataclass
 class AssetSource:
+    """Describe the file path and metadata used to build an asset handle.
+
+    Category: asset-handle
+    Tags: asset, source, metadata, file, context
+    Use when: constructing typed handles from runtime context asset entries.
+    """
     file_name: str
     path: Path
     extension: str = ""
@@ -229,12 +262,30 @@ class AssetSource:
 
     @property
     def normalized_extension(self) -> str:
+        """Return the source extension normalized for handle detection.
+
+        Category: asset-handle
+        Tags: asset, extension, detection
+        Use when: matching an asset source to a tabular, mesh, image, JSON, text, or binary handle.
+
+        Returns:
+            str: lower-case extension without a leading dot.
+        """
         if self.extension:
             return normalize_extension(self.extension)
         return normalize_extension(Path(self.file_name).suffix)
 
     @property
     def guessed_mime_type(self) -> str:
+        """Return the explicit or inferred MIME type for this source.
+
+        Category: asset-handle
+        Tags: asset, mime, metadata
+        Use when: previews and output manifests need a MIME type for an asset.
+
+        Returns:
+            str: MIME type, defaulting to application/octet-stream.
+        """
         return (
             self.mime_type
             or mimetypes.guess_type(self.file_name)[0]
@@ -243,6 +294,12 @@ class AssetSource:
 
 
 class BaseAssetHandle:
+    """Provide the common runtime contract for any typed user asset.
+
+    Category: asset-handle
+    Tags: asset, preview, schema, dataframe, records, text, mesh
+    Use when: scripts need a uniform interface before calling format-specific handle methods.
+    """
     kind = "binary"
     strategy_name = "binary"
 
@@ -252,6 +309,15 @@ class BaseAssetHandle:
 
     @cached_property
     def header(self) -> bytes:
+        """Load the cached header sample for this asset.
+
+        Category: asset-handle
+        Tags: asset, header, detection
+        Use when: code needs a bounded byte sample for binary/text checks or preview metadata.
+
+        Returns:
+            bytes: header bytes for the source path.
+        """
         return self._header if self._header is not None else read_asset_header(self.source.path)
 
     @property
@@ -283,18 +349,63 @@ class BaseAssetHandle:
         }]
 
     def to_dataframe(self) -> pd.DataFrame:
+        """Load this asset as a pandas DataFrame when the format supports rows and columns.
+
+        Category: asset-handle
+        Tags: tabular, dataframe, csv, json, records
+        Use when: the user needs asset data in DataFrame form for analysis or transformation.
+
+        Returns:
+            pd.DataFrame: parsed tabular data.
+        """
         raise TypeError(f"{self.__class__.__name__} does not expose a dataframe view.")
 
     def to_records(self) -> list[dict[str, Any]]:
+        """Load this asset as a list of row dictionaries when available.
+
+        Category: asset-handle
+        Tags: records, rows, json, tabular
+        Use when: scripts need simple Python dictionaries instead of a pandas DataFrame.
+
+        Returns:
+            list[dict[str, Any]]: parsed record rows.
+        """
         raise TypeError(f"{self.__class__.__name__} does not expose a record view.")
 
     def to_text(self) -> str:
+        """Load this asset as text when the format supports textual content.
+
+        Category: asset-handle
+        Tags: text, json, markdown, log
+        Use when: the user asks to read, summarize, transform, or inspect textual asset contents.
+
+        Returns:
+            str: decoded asset text.
+        """
         raise TypeError(f"{self.__class__.__name__} does not expose a text view.")
 
     def to_igp_reader(self, *, build_mesh: bool = False, output_folder: str | Path | None = None):
+        """Open this asset as an iGPReader when it is an iGP/GiD project directory.
+
+        Category: asset-handle
+        Tags: igp, gid, mesh, reader, regions, materials
+        Use when: scripts need pydelling iGP mesh operations, region access, or VTK export.
+
+        Returns:
+            iGPReader: reader configured for the asset directory.
+        """
         raise TypeError(f"{self.__class__.__name__} does not expose an iGPReader view.")
 
     def to_vtk(self, filename: str | Path):
+        """Export this asset to a VTK file when the handle supports mesh conversion.
+
+        Category: asset-handle
+        Tags: vtk, mesh, export, igp, visualization
+        Use when: the user asks to convert an iGP/GiD or mesh asset into VTK for visualization.
+
+        Returns:
+            Any: value returned by the concrete exporter.
+        """
         raise TypeError(f"{self.__class__.__name__} does not expose a VTK export.")
 
     def summary_text(self) -> str:
@@ -304,6 +415,15 @@ class BaseAssetHandle:
         return {}
 
     def describe(self) -> dict[str, Any]:
+        """Return schema, preview, loader, and metadata for this asset.
+
+        Category: asset-handle
+        Tags: describe, metadata, schema, preview, inventory
+        Use when: scripts or MCP tools need a machine-readable summary before selecting an operation.
+
+        Returns:
+            dict[str, Any]: structured description of the typed asset.
+        """
         schema = self.schema()
         preview = self.preview()
         payload: dict[str, Any] = {
@@ -345,6 +465,15 @@ class BaseAssetHandle:
         }
 
     def to_runtime_dict(self) -> dict[str, Any]:
+        """Serialize this handle into the runtime asset metadata contract.
+
+        Category: asset-handle
+        Tags: runtime, metadata, context, asset
+        Use when: exposing available assets and their typed preview metadata to generated scripts.
+
+        Returns:
+            dict[str, Any]: runtime-safe asset descriptor.
+        """
         metadata = self.describe()
         return {
             "reference_name": self.source.reference_name,
@@ -358,6 +487,12 @@ class BaseAssetHandle:
 
 
 class TabularAssetHandle(BaseAssetHandle):
+    """Handle CSV, TSV, and delimiter-detected tabular assets.
+
+    Category: asset-handle
+    Tags: tabular, csv, tsv, dataframe, records, columns
+    Use when: the asset should be read as rows and columns for analysis or transformation.
+    """
     kind = "tabular"
     strategy_name = "tabular"
 
@@ -401,9 +536,27 @@ class TabularAssetHandle(BaseAssetHandle):
         return self.sample_dataframe
 
     def to_dataframe(self) -> pd.DataFrame:
+        """Load this tabular asset as a pandas DataFrame.
+
+        Category: asset-handle
+        Tags: tabular, csv, tsv, dataframe, columns
+        Use when: the user needs the asset's rows and columns as a DataFrame.
+
+        Returns:
+            pd.DataFrame: parsed table with original column names.
+        """
         return self.dataframe.copy()
 
     def to_records(self) -> list[dict[str, Any]]:
+        """Load this tabular asset as row dictionaries.
+
+        Category: asset-handle
+        Tags: tabular, records, rows, csv, tsv
+        Use when: the user needs serializable rows from a delimited table.
+
+        Returns:
+            list[dict[str, Any]]: table rows keyed by column name.
+        """
         return self.dataframe.fillna("").to_dict(orient="records")
 
     def schema(self) -> dict[str, Any]:
@@ -466,6 +619,12 @@ class TabularAssetHandle(BaseAssetHandle):
 
 
 class JsonAssetHandle(BaseAssetHandle):
+    """Handle JSON assets as records, DataFrames, text, or structured previews.
+
+    Category: asset-handle
+    Tags: json, records, dataframe, text, object, list
+    Use when: the asset is JSON and the script needs structured data or formatted text.
+    """
     kind = "json"
     strategy_name = "json"
 
@@ -474,14 +633,41 @@ class JsonAssetHandle(BaseAssetHandle):
         return json.loads(self.source.path.read_text(encoding="utf-8"))
 
     def to_records(self) -> list[dict[str, Any]]:
+        """Load a JSON array of objects as row dictionaries.
+
+        Category: asset-handle
+        Tags: json, records, rows, list
+        Use when: a JSON payload is a list of objects that should behave like table rows.
+
+        Returns:
+            list[dict[str, Any]]: JSON objects from the top-level list.
+        """
         if isinstance(self.payload, list) and all(isinstance(item, dict) for item in self.payload):
             return list(self.payload)
         raise TypeError("JSON payload is not a list of objects.")
 
     def to_dataframe(self) -> pd.DataFrame:
+        """Load a JSON records payload as a pandas DataFrame.
+
+        Category: asset-handle
+        Tags: json, dataframe, records, table
+        Use when: the user wants to analyze or transform JSON records with pandas.
+
+        Returns:
+            pd.DataFrame: DataFrame built from top-level JSON objects.
+        """
         return pd.DataFrame(self.to_records())
 
     def to_text(self) -> str:
+        """Render the JSON payload as formatted text.
+
+        Category: asset-handle
+        Tags: json, text, pretty-print, serialize
+        Use when: the user asks to inspect, summarize, or write the JSON as readable text.
+
+        Returns:
+            str: indented JSON string.
+        """
         return json.dumps(self.payload, indent=2, ensure_ascii=True)
 
     def schema(self) -> dict[str, Any]:
@@ -602,6 +788,12 @@ class JsonAssetHandle(BaseAssetHandle):
 
 
 class TextAssetHandle(BaseAssetHandle):
+    """Handle plain text, Markdown, logs, YAML, and other text-like assets.
+
+    Category: asset-handle
+    Tags: text, markdown, log, yaml, lines
+    Use when: the asset should be read as decoded UTF-8 text.
+    """
     kind = "text"
     strategy_name = "text"
 
@@ -614,6 +806,15 @@ class TextAssetHandle(BaseAssetHandle):
         return self.text.splitlines()
 
     def to_text(self) -> str:
+        """Load this text asset as a string.
+
+        Category: asset-handle
+        Tags: text, lines, markdown, log, yaml
+        Use when: the user asks to read, summarize, transform, or extract text content.
+
+        Returns:
+            str: decoded asset contents.
+        """
         return self.text
 
     def schema(self) -> dict[str, Any]:
@@ -649,6 +850,12 @@ class TextAssetHandle(BaseAssetHandle):
 
 
 class ImageAssetHandle(BaseAssetHandle):
+    """Handle image assets for preview metadata and dimensions.
+
+    Category: asset-handle
+    Tags: image, png, jpg, jpeg, gif, dimensions, mime
+    Use when: the asset is an image and scripts need MIME type, size, or preview metadata.
+    """
     kind = "image"
     strategy_name = "image"
 
@@ -684,6 +891,12 @@ class ImageAssetHandle(BaseAssetHandle):
 
 
 class IgpAssetHandle(BaseAssetHandle):
+    """Handle iGP/GiD project directories with mesh, region, boundary, and material metadata.
+
+    Category: asset-handle
+    Tags: igp, gid, mesh, vtk, regions, boundaries, materials
+    Use when: the user asks to inspect, summarize, convert, or visualize an iGP/GiD mesh asset.
+    """
     kind = "igp_reader"
     strategy_name = "igp_gid"
 
@@ -696,6 +909,15 @@ class IgpAssetHandle(BaseAssetHandle):
         return self.to_igp_reader()
 
     def to_igp_reader(self, *, build_mesh: bool = False, output_folder: str | Path | None = None):
+        """Open this iGP/GiD asset with pydelling.readers.iGPReader.
+
+        Category: asset-handle
+        Tags: igp, gid, reader, mesh, regions, materials
+        Use when: scripts need direct iGPReader methods for mesh conversion, regions, or material access.
+
+        Returns:
+            iGPReader: initialized pydelling iGP reader.
+        """
         from pydelling.readers.iGPReader import iGPReader
 
         return iGPReader(
@@ -706,7 +928,15 @@ class IgpAssetHandle(BaseAssetHandle):
         )
 
     def to_vtk(self, filename: str | Path):
-        """Export this iGP/GiD asset to VTK using the pydelling iGP reader."""
+        """Export this iGP/GiD asset to a VTK mesh file.
+
+        Category: asset-handle
+        Tags: igp, gid, vtk, mesh, export, visualization
+        Use when: the user asks to convert an iGP/GiD project into VTK for visualization or download.
+
+        Returns:
+            Any: value returned by iGPReader.to_vtk.
+        """
         reader = self.to_igp_reader(build_mesh=False, output_folder=None)
         return reader.to_vtk(filename)
 
@@ -919,6 +1149,12 @@ class IgpAssetHandle(BaseAssetHandle):
 
 
 class VtkAssetHandle(BaseAssetHandle):
+    """Handle VTK-family mesh assets for mesh metadata and visualization previews.
+
+    Category: asset-handle
+    Tags: vtk, vtu, vtp, mesh, visualization, cells, points
+    Use when: the asset is already a VTK mesh and scripts need mesh metadata or previews.
+    """
     kind = "mesh"
     strategy_name = "vtk_mesh"
 
@@ -968,6 +1204,12 @@ class VtkAssetHandle(BaseAssetHandle):
 
 
 class StlAssetHandle(BaseAssetHandle):
+    """Handle STL mesh assets for geometry summaries and lightweight previews.
+
+    Category: asset-handle
+    Tags: stl, mesh, geometry, vertices, faces
+    Use when: the asset is an STL mesh and scripts need face, vertex, or bounds metadata.
+    """
     kind = "mesh"
     strategy_name = "stl_mesh"
 
@@ -1017,6 +1259,12 @@ class StlAssetHandle(BaseAssetHandle):
 
 
 class Hdf5AssetHandle(BaseAssetHandle):
+    """Handle HDF5 assets by listing datasets and small sample previews.
+
+    Category: asset-handle
+    Tags: hdf5, h5, datasets, arrays, schema
+    Use when: the asset is an HDF5 file and scripts need dataset names, shapes, or samples.
+    """
     kind = "hdf5"
     strategy_name = "hdf5"
 
@@ -1110,6 +1358,12 @@ class Hdf5AssetHandle(BaseAssetHandle):
 
 
 class BinaryAssetHandle(BaseAssetHandle):
+    """Handle unknown binary assets with safe header and MIME metadata.
+
+    Category: asset-handle
+    Tags: binary, bytes, mime, unknown, header
+    Use when: no richer asset handle matches and scripts should avoid assuming a text or tabular format.
+    """
     kind = "binary"
     strategy_name = "binary"
 
@@ -1145,6 +1399,12 @@ class BinaryAssetHandle(BaseAssetHandle):
 
 
 class ErrorAssetHandle(BaseAssetHandle):
+    """Represent an asset that failed preview or handle construction.
+
+    Category: asset-handle
+    Tags: error, preview, failure, diagnostics
+    Use when: surfacing asset inspection failures without crashing the whole asset inventory.
+    """
     kind = "error"
     strategy_name = "error"
 
@@ -1164,6 +1424,15 @@ class ErrorAssetHandle(BaseAssetHandle):
 
 
 def detect_asset_handle_class(source: AssetSource, header: bytes | None = None) -> type[BaseAssetHandle]:
+    """Select the typed asset handle class for a source.
+
+    Category: asset-handle
+    Tags: detection, asset, handle, mime, extension
+    Use when: code needs to choose the best pydelling handle for a runtime asset before loading it.
+
+    Returns:
+        type[BaseAssetHandle]: concrete handle class for the source.
+    """
     extension = source.normalized_extension
     metadata = source.metadata or {}
     if (
@@ -1196,6 +1465,15 @@ def detect_asset_handle_class(source: AssetSource, header: bytes | None = None) 
 
 
 def load_asset_handle(source: AssetSource, header: bytes | None = None) -> BaseAssetHandle:
+    """Build a typed asset handle from an AssetSource.
+
+    Category: asset-handle
+    Tags: load, asset, handle, runtime, context
+    Use when: scripts need a typed object exposing to_dataframe, to_text, to_vtk, or describe.
+
+    Returns:
+        BaseAssetHandle: concrete asset handle for the source.
+    """
     asset_class = detect_asset_handle_class(source, header=header)
     return asset_class(source, header=header)
 
@@ -1203,6 +1481,15 @@ def load_asset_handle(source: AssetSource, header: bytes | None = None) -> BaseA
 def load_asset_handles_from_context(
     items: dict[str, Any] | list[dict[str, Any]] | None,
 ) -> list[BaseAssetHandle]:
+    """Load typed asset handles from runtime context asset entries.
+
+    Category: asset-handle
+    Tags: runtime, context, assets, handles, load
+    Use when: generated scripts receive the execution context JSON and need all available assets.
+
+    Returns:
+        list[BaseAssetHandle]: typed handles for valid context assets.
+    """
     if isinstance(items, dict):
         nested_items = items.get("assets")
         items = nested_items if isinstance(nested_items, list) else []
@@ -1231,6 +1518,15 @@ def load_asset_handles_from_context(
 
 
 def inspect_asset_source(source: AssetSource, header: bytes | None = None) -> dict[str, Any]:
+    """Inspect one asset source without building a full preview document.
+
+    Category: asset-handle
+    Tags: inspect, asset, metadata, preview, loader
+    Use when: code needs quick type, MIME, binary, loader, and text-line metadata for one source.
+
+    Returns:
+        dict[str, Any]: compact inspection payload.
+    """
     handle = load_asset_handle(source, header=header)
     preview_lines: list[str] = []
     if not handle.is_binary:
@@ -1262,6 +1558,15 @@ def build_asset_preview(
     mime_type: str | None = None,
     size_bytes: int | None = None,
 ) -> dict[str, Any]:
+    """Build the standard preview document for an asset path.
+
+    Category: asset-handle
+    Tags: preview, asset, document, table, mesh, image
+    Use when: the UI or MCP needs a bounded preview document for a user-uploaded asset.
+
+    Returns:
+        dict[str, Any]: preview document with sections, limits, and warnings.
+    """
     asset_path = Path(path)
     source = AssetSource(
         reference_name=reference_name,
@@ -1293,6 +1598,15 @@ def build_asset_preview(
 
 
 def build_asset_inventory_output(handles: list[BaseAssetHandle]) -> dict[str, Any]:
+    """Build a table output listing all available asset handles.
+
+    Category: asset-handle
+    Tags: inventory, assets, table, summary, output
+    Use when: the user asks what assets are available or needs a compact asset catalog.
+
+    Returns:
+        dict[str, Any]: table output payload for available assets.
+    """
     rows = [
         [
             handle.source.reference_name or handle.source.file_name,
@@ -1312,6 +1626,15 @@ def build_asset_inventory_output(handles: list[BaseAssetHandle]) -> dict[str, An
 
 
 def build_asset_schema_output(handle: BaseAssetHandle) -> dict[str, Any]:
+    """Build a table output describing an asset schema.
+
+    Category: asset-handle
+    Tags: schema, fields, columns, datasets, table, output
+    Use when: the user asks for column names, field types, dataset shapes, or other asset structure.
+
+    Returns:
+        dict[str, Any]: table output payload for schema metadata.
+    """
     schema = handle.schema()
     if schema.get("fields"):
         fields = schema["fields"]
@@ -1342,6 +1665,15 @@ def build_asset_schema_output(handle: BaseAssetHandle) -> dict[str, Any]:
 
 
 def build_asset_data_output(handle: BaseAssetHandle) -> dict[str, Any]:
+    """Build a table output from an asset preview.
+
+    Category: asset-handle
+    Tags: data, preview, rows, columns, table, output
+    Use when: the user asks to view sample rows or extracted asset data inline.
+
+    Returns:
+        dict[str, Any]: table output payload for preview data.
+    """
     preview = handle.preview()
     columns = preview.get("columns")
     rows = preview.get("rows")
@@ -1363,6 +1695,15 @@ def build_asset_data_output(handle: BaseAssetHandle) -> dict[str, Any]:
 
 
 def build_asset_mesh_output(handle: BaseAssetHandle) -> dict[str, Any]:
+    """Build a mesh output from a mesh-capable asset handle.
+
+    Category: asset-handle
+    Tags: mesh, vtk, igp, visualization, output
+    Use when: the user asks to visualize or inspect geometry from an iGP, VTK, or STL-like asset.
+
+    Returns:
+        dict[str, Any]: mesh output payload with geometry and metadata.
+    """
     sections = handle.preview_sections(max_rows=PREVIEW_ROW_LIMIT)
     for section in sections:
         if section.get("kind") != "mesh":

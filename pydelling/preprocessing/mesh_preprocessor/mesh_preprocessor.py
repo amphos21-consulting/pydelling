@@ -26,6 +26,12 @@ logger = logging.getLogger(__name__)
 
 
 class MeshPreprocessor(iGPLogic):
+    """Preprocess generic unstructured meshes and export meshio-compatible geometry.
+
+    Category: mesh
+    Tags: mesh, preprocessing, vtk, meshio, elements, boundaries
+    Use when: scripts need to build, inspect, subset, annotate, or export unstructured mesh data.
+    """
     elements: List[geometry.base_element]
     external_boundaries: Dict[str, List[geometry.base_face]]
     boundaries: Dict[str, List[geometry.base_face]]
@@ -196,9 +202,14 @@ class MeshPreprocessor(iGPLogic):
         return len(self.elements)
 
     def convert_mesh_to_meshio(self):
-        """Converts the mesh into a meshio mesh
+        """Convert the internal mesh representation into a meshio Mesh.
+
+        Category: mesh
+        Tags: mesh, meshio, convert, cells, points
+        Use when: scripts need a meshio object before export or downstream geometry processing.
+
         Returns:
-            meshio mesh
+            meshio.Mesh: converted mesh object stored on meshio_mesh.
         """
 
         elements_in_meshio = self._create_meshio_dict(self.elements)
@@ -210,19 +221,28 @@ class MeshPreprocessor(iGPLogic):
         )
 
     def to_vtk(self, filename='mesh.vtk'):
-        """Converts the mesh into vtk using meshio
-        Args:
-            filename: name of the output file
+        """Export the preprocessed mesh to VTK using meshio.
+
+        Category: mesh
+        Tags: mesh, vtk, export, meshio, visualization
+        Use when: the user asks to write a mesh visualization file from MeshPreprocessor data.
+
+        Returns:
+            None: writes the VTK file to filename.
         """
         logger.info(f'Converting mesh to vtk and exporting to {filename}')
         self.convert_mesh_to_meshio()
         self.meshio_mesh.write(filename)
 
     def subset_to_vtk(self, elements: List[geometry.base_abstract_mesh_object], filename='subset.vtk'):
-        """Converts a subset of the mesh into a vtk file
-        Args:
-            elements: list of element indices
-            filename: name of the output file
+        """Export a subset of mesh elements to a VTK file.
+
+        Category: mesh
+        Tags: mesh, subset, vtk, export, elements
+        Use when: the user asks to visualize or download selected mesh elements only.
+
+        Returns:
+            None: writes the subset VTK file to filename.
         """
         assert len(elements) > 0, 'No elements to export'
         subset_mesh = self._convert_subset_to_meshio(elements)

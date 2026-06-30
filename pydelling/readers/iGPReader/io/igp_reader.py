@@ -36,6 +36,12 @@ logger = logging.getLogger(__name__)
 
 
 class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter, PflotranImplicitWriter):
+    """Read iGP/GiD project folders and expose mesh, region, boundary, and material operations.
+
+    Category: reader
+    Tags: igp, gid, mesh, reader, vtk, regions, boundaries, materials
+    Use when: scripts need to inspect, preprocess, export, or convert an iGP/GiD mesh project.
+    """
     element_dict = {"4": "T", "5": "P", "6": "W", "8": "H"}
     face_dict = {'T': 3, 'Q': 4}
 
@@ -112,7 +118,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         self.region_data = None
 
     def read_mesh_data(self):
-        """Reads mesh data
+        """Read nodes and element connectivity from the iGP data.mesh file.
+
+        Category: reader
+        Tags: igp, mesh, nodes, elements, connectivity
+        Use when: the reader must load raw mesh topology before export or inspection.
+
+        Returns:
+            None: updates mesh_info, element_nodes, nodes, and nodes_output.
         """
         header = self.mesh_data.readline().split()
         self.mesh_info["n_elements"] = int(header[0])
@@ -794,11 +807,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         logger.info(f"Mesh data has been properly exported to csv format into the '{filename}' file")
 
     def to_vtk(self, filename='mesh.vtk'):
-        """
-        Export the iGP mesh to a VTK file using meshio.
+        """Export the iGP/GiD mesh to a VTK file using meshio.
 
-        Args:
-            filename: name of the output VTK file
+        Category: reader
+        Tags: igp, gid, mesh, vtk, export, visualization
+        Use when: the user asks to convert an iGP/GiD project into a VTK mesh file.
+
+        Returns:
+            None: writes the VTK file to filename.
         """
         import meshio as msh
 
@@ -834,13 +850,14 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
                         generate_cells=True,
                         generate_boundaries=True,
                         ):
-        """
-        Creates an internal representation of the mesh based on a given unstructured implicit grid.
-        
-        Args:
-            processes (Any): Description.
-            generate_cells (Any): Description.
-            generate_boundaries (Any): Description.
+        """Build pydelling mesh element objects from iGP node connectivity.
+
+        Category: mesh
+        Tags: igp, mesh, elements, boundaries, preprocessing
+        Use when: scripts need explicit mesh objects, boundary objects, or downstream mesh preprocessing.
+
+        Returns:
+            None: populates elements, boundaries, and mesh-built state.
         """
         from pydelling.preprocessing.mesh_preprocessor.geometry import TetrahedraElement, WedgeElement, HexahedraElement, TriangleFace, QuadrilateralFace
         if config.general.constant_centroids:
@@ -983,32 +1000,53 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             node_coordinates_df.to_csv(get_output_path() / f"{region}_nodes.csv", index=False)
 
     def get_mesh(self):
+        """Return iGP cell centroids for mesh-oriented analysis.
+
+        Category: mesh
+        Tags: igp, mesh, centroids, cells
+        Use when: scripts need the mesh centroid array from an iGP project.
+
+        Returns:
+            Any: centroids loaded from centroid.dat.
+        """
         return self.centroids
 
     @property
     def materials(self) -> pd.DataFrame:
-        """
-        This property returns a pandas dataframe containing the materials of the iGP model
+        """Return material assignments from the iGP model.
+
+        Category: reader
+        Tags: igp, materials, cells, metadata
+        Use when: scripts need material names or cell assignments for an iGP project.
+
         Returns:
-            A pandas dataframe object containing the materials of the iGP project
+            dict: material assignment mapping.
         """
         return self.material_dict
 
     @property
     def n_mesh_elements(self) -> int:
-        """
-        Gives the total number of mesh elements
+        """Return the number of elements in the iGP mesh.
+
+        Category: mesh
+        Tags: igp, mesh, elements, count
+        Use when: scripts need mesh size metadata for summaries or validation.
+
         Returns:
-            The total number of mesh elements
+            int: total number of mesh elements.
         """
         return self.mesh_info["n_elements"]
 
     @property
     def n_mesh_nodes(self) -> int:
-        """
-        Gives the total number of mesh node_ids
+        """Return the number of nodes in the iGP mesh.
+
+        Category: mesh
+        Tags: igp, mesh, nodes, count
+        Use when: scripts need mesh size metadata for summaries or validation.
+
         Returns:
-            The total number of mesh node_ids
+            int: total number of mesh nodes.
         """
         return self.mesh_info["n_nodes"]
 
