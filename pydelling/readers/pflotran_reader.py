@@ -31,6 +31,12 @@ import seaborn as sns
 logger = logging.getLogger(__name__)
 
 class PflotranReader(BaseReader, PflotranProcessingUtils):
+    """Read and postprocess PFLOTRAN HDF5 result files.
+
+    Category: reader
+    Tags: pflotran, hdf5, results, geochemistry, plotting
+    Use when: scripts need time-indexed PFLOTRAN variables, observation extraction, or built-in plot helpers.
+    """
     def __init__(self,
                  filename=None,
                  variables=None,
@@ -63,14 +69,14 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
         self.variables = list(self.results[self.time_values[0]].variable_keys)
 
     def open_file(self, filename) -> None:
-        """
-        Open and parse PFLOTRAN HDF5 results file.
-        
-        Args:
-            filename (str or Path): Path to the PFLOTRAN HDF5 output file.
-        
+        """Open and index a PFLOTRAN HDF5 results file.
+
+        Category: reader
+        Tags: pflotran, hdf5, time-series, results
+        Use when: scripts need time-step keys and raw HDF5 data available for result extraction.
+
         Returns:
-            None. Sets internal attributes: data, time_dict_keys, time_keys.
+            None: sets data, time_dict_keys, and time_keys.
         """
         self.data: h5py.File = h5py.File(self.filename, 'r')
         # Obtain time keys
@@ -80,10 +86,28 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
     @property
     def time_values(self) -> list[float]:
+        """Return sorted PFLOTRAN output time values.
+
+        Category: reader
+        Tags: pflotran, time-series, hdf5, metadata
+        Use when: scripts need available output times for lookup or plotting.
+
+        Returns:
+            list: sorted time values.
+        """
         return natsort.natsorted(self.time_keys.keys())
 
     @property
     def coordinates(self) -> dict[str, np.ndarray]:
+        """Return PFLOTRAN coordinate arrays.
+
+        Category: reader
+        Tags: pflotran, coordinates, hdf5, mesh
+        Use when: scripts need x, y, and z coordinate arrays from the results file.
+
+        Returns:
+            dict: coordinate arrays keyed by x[m], y[m], and z[m].
+        """
         temp_coordinates = self.data['Coordinates']
         temp_df = {'x[m]': np.array(temp_coordinates['X [m]']),
                     'y[m]': np.array(temp_coordinates['Y [m]']),
@@ -92,28 +116,38 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
         return temp_df
 
     def get_data(self) -> np.ndarray:
-        """
-        Outputs the read data
-        :return:
+        """Return a placeholder array for BaseReader compatibility.
+
+        Category: reader
+        Tags: pflotran, data, compatibility
+        Use when: generic reader code expects get_data but PFLOTRAN results are accessed by time and variable.
+
+        Returns:
+            numpy.ndarray: placeholder zero array.
         """
         return np.array(0)
 
     def build_info(self):
-        """
-        Generates a dictionary containing the basic info of the read data
-        :return:
+        """Initialize reader metadata storage.
+
+        Category: reader
+        Tags: pflotran, metadata, info
+        Use when: generic reader code expects an info dictionary.
+
+        Returns:
+            None: sets info to an empty dictionary.
         """
         self.info = {}
 
     def get_observation_point(self, variable, point=(0, 0, 0)) -> pd.DataFrame:
-        """
-        Gets the time dependent evolution of a given variable at a given mesh point
-        Args:
-            variable: variable name to extract the data from
-            point: mesh location
+        """Extract one variable's time evolution at a mesh point.
 
         Returns:
-            Array containing the temporal evolution of the variable
+            pandas.DataFrame: variable values through all output times.
+
+        Category: reader
+        Tags: pflotran, observation-point, time-series, variable
+        Use when: scripts need a temporal series at one i,j,k mesh index.
         """
         temp_array = []
         for time in self.time_values:
@@ -123,116 +157,139 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
     @property
     def mineral_names(self) -> list:
+        """Return mineral names inferred from volume-fraction variables.
+
+        Category: reader
+        Tags: pflotran, minerals, variables, metadata
+        Use when: plotting or analysis needs mineral labels from PFLOTRAN outputs.
+
+        Returns:
+            list: mineral names.
+        """
         temp_keys = [key.split('_')[0] for key in self.variables if 'VF' in key]
         return temp_keys
 
     @property
     def species_names(self) -> list:
+        """Return species names inferred from Total variables.
+
+        Category: reader
+        Tags: pflotran, species, variables, metadata
+        Use when: plotting or analysis needs primary species labels from PFLOTRAN outputs.
+
+        Returns:
+            list: species names.
+        """
         temp_keys = [key.split('_')[1] for key in self.variables if 'Total' in key]
         return temp_keys
 
 
     def get_variable_by_time_index(self, variable: str, time_index: int) -> np.ndarray:
-        """
-        Returns the results of a given variable at a given time index
-        Args:
-            variable: variable name
-            time_index: time index
+        """Return one variable array by output time index.
 
         Returns:
-            results of the variable at the given time index
+            numpy.ndarray: variable values at the selected time index.
+
+        Category: reader
+        Tags: pflotran, variable, time-index, hdf5
+        Use when: scripts need a PFLOTRAN variable using positional time selection.
         """
         return self.results[self.time_values[time_index]].results[variable]
 
     def get_variable_by_time(self, variable: str, time: float) -> np.ndarray:
-        """
-        Returns the results of a given variable at a given time
-        Args:
-            variable: variable name
-            time: time
+        """Return one variable array by exact output time.
 
         Returns:
-            results of the variable at the given time
+            numpy.ndarray: variable values at the selected time.
+
+        Category: reader
+        Tags: pflotran, variable, time, hdf5
+        Use when: scripts need a PFLOTRAN variable using an explicit time value.
         """
         return self.results[time].results[variable]
 
     def get_results_by_time(self, time: float) -> dict:
-        """
-        Returns the results of a given time
-        Args:
-            time: time
+        """Return all result variables for an exact output time.
 
         Returns:
-            results of the given time
+            dict: variables mapped to arrays for the selected time.
+
+        Category: reader
+        Tags: pflotran, results, time, hdf5
+        Use when: scripts need the full result snapshot for one time.
         """
         return self.results[time].results
 
     def get_results_by_time_index(self, time_index: int) -> dict:
-        """
-        Returns the results of a given time index
-        Args:
-            time_index: time index
+        """Return all result variables for a positional output time index.
 
         Returns:
-            results of the given time index
+            dict: variables mapped to arrays for the selected time index.
+
+        Category: reader
+        Tags: pflotran, results, time-index, hdf5
+        Use when: scripts need the full result snapshot by index.
         """
         return self.results[self.time_values[time_index]].results
 
 
     def get_mineral_vf_key(self, mineral) -> str:
-        """
-        Returns the correct key of the mineral volume fraction name
-        Args:
-            mineral: mineral name
+        """Build the PFLOTRAN mineral volume-fraction key.
 
         Returns:
-            mineral volume fraction key
+            str: mineral volume-fraction variable key.
+
+        Category: reader
+        Tags: pflotran, minerals, volume-fraction, key
+        Use when: scripts need to construct a mineral VF variable name.
         """
         return f"{mineral}_VF [m^3 mnrl_m^3 bulk]"
 
     def get_mineral_rate_key(self, mineral) -> str:
-        """
-        Returns the correct key of the mineral rate name
-        Args:
-            mineral: mineral name
+        """Build the PFLOTRAN mineral rate key.
 
         Returns:
-            mineral rate key
+            str: mineral rate variable key.
+
+        Category: reader
+        Tags: pflotran, minerals, rate, key
+        Use when: scripts need to construct a mineral rate variable name.
         """
         return f"{mineral}_Rate [mol_m^3_sec]"
 
     def get_mineral_si_key(self, mineral) -> str:
-        """
-        Returns the correct key of the mineral si name
-        Args:
-            mineral: mineral name
+        """Build the PFLOTRAN mineral saturation-index key.
 
         Returns:
-            mineral si key
+            str: mineral saturation-index variable key.
+
+        Category: reader
+        Tags: pflotran, minerals, saturation-index, key
+        Use when: scripts need to construct a mineral SI variable name.
         """
         return f"{mineral}_SI"
 
     def get_primary_species_key(self, species) -> str:
-        """
-        Returns the correct key of the given species name
-        Args:
-            species: specie name
+        """Build the PFLOTRAN primary species total key.
 
         Returns:
-            specie key
+            str: Total_species variable key.
+
+        Category: reader
+        Tags: pflotran, species, primary, key
+        Use when: scripts need to construct a primary species total variable name.
         """
         return f"Total_{species}"
 
     def plot_primary_species(self, type='1D', postprocess_dir='./postprocess') -> None:
-        """
-        Plot the temporal evolution of primary species along a 1D domain.
-        
-        Args:
-            type (str): Model dimensionality type. Currently only '1D' is supported. Defaults to '1D'.
-            postprocess_dir (str or Path): Directory path where output plots will be saved. Defaults to './postprocess'.
-        
+        """Plot primary species evolution along a 1D domain.
+
+        Category: reader
+        Tags: pflotran, species, plot, time-series, 1d
+        Use when: scripts need PNG plots of Total_species values over space and time.
+
         Returns:
-            None. Saves individual plots for each species as PNG files in postprocess_dir.
+            None: saves individual species plots.
         """
         logger.info(f'Plotting [{self.species_names}] primary species from {self.filename}')
         postprocess_dir = Path(postprocess_dir)
@@ -255,16 +312,14 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
                 plt.savefig(postprocess_dir / f'{species}.png')
 
     def plot_vf_variation(self, type='1D', postprocess_dir='./postprocess', ignored_minerals=[]) -> None:
-        """
-        Plot the temporal variation of mineral volume fractions due to precipitation/dissolution.
-        
-        Args:
-            type (str): Model dimensionality type. Currently only '1D' is supported. Defaults to '1D'.
-            postprocess_dir (str or Path): Directory path where output plots will be saved. Defaults to './postprocess'.
-            ignored_minerals (list): List of mineral names to exclude from plotting. Defaults to empty list.
-        
+        """Plot mineral volume-fraction variation over time.
+
+        Category: reader
+        Tags: pflotran, minerals, volume-fraction, plot, 1d
+        Use when: scripts need PNG plots of mineral precipitation or dissolution changes.
+
         Returns:
-            None. Saves individual mineral variation plots as PNG files in postprocess_dir.
+            None: saves individual mineral variation plots.
         """
         logger.info(f'Plotting [{self.mineral_names}] primary species from {self.filename}')
         postprocess_dir = Path(postprocess_dir)
@@ -295,16 +350,14 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
                 plt.savefig(postprocess_dir / f'{mineral}.png')
 
     def plot_total_porosity_variation(self, type='1D', postprocess_dir='./postprocess', ignored_minerals=[]) -> None:
-        """
-        Plot the temporal variation of total porosity resulting from mineral precipitation/dissolution.
-        
-        Args:
-            type (str): Model dimensionality type. Currently only '1D' is supported. Defaults to '1D'.
-            postprocess_dir (str or Path): Directory path where output plots will be saved. Defaults to './postprocess'.
-            ignored_minerals (list): List of mineral names to exclude from porosity calculation. Defaults to empty list.
-        
+        """Plot total porosity variation from mineral volume changes.
+
+        Category: reader
+        Tags: pflotran, porosity, minerals, plot, 1d
+        Use when: scripts need porosity-change plots derived from mineral volume-fraction changes.
+
         Returns:
-            None. Generates and saves a porosity variation plot as PNG in postprocess_dir.
+            None: saves a porosity variation plot.
         """
         logger.info(f'Plotting [{self.mineral_names}] primary species from {self.filename}')
         postprocess_dir = Path(postprocess_dir)
@@ -344,19 +397,14 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
                                   postprocess_dir='./postprocess',
                                   color='b',
                                   ) -> plt.Axes:
-        """
-        Plot the spatial variation of a variable along one axis at specified time steps.
-        
-        Args:
-            variable (str): Name of the variable to plot from results.
-            times (list or str, optional): Time values to plot. If None, plots first time step. If 'all', plots all available time steps. Defaults to None.
-            axis (str): Axis along which to plot ('x', 'y', or 'z'). Defaults to 'x'.
-            coordinate (int): Coordinate value for the other two axes. Defaults to 0.
-            postprocess_dir (str or Path): Directory path where output plots will be saved. Defaults to './postprocess'.
-            color (str): Base color for the plot lines. Defaults to 'b' (blue).
-        
+        """Plot a 1D spatial slice of a variable for selected times.
+
+        Category: reader
+        Tags: pflotran, slice, plot, variable, 1d
+        Use when: scripts need spatial profiles through a 3D variable along one axis.
+
         Returns:
-            plt.Axes: Matplotlib axes object containing the plotted lines with legend and grid.
+            matplotlib.axes.Axes: axes containing plotted slice lines.
         """
         fig, ax = plt.subplots()
         ax: plt.Axes
@@ -397,19 +445,14 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
                                  color='b',
                                  ) -> plt.Axes:
 
-        """
-        Create a ridge line plot showing spatial variation of a variable across multiple time steps.
-        
-        Args:
-            variable (str): Name of the variable to plot from results.
-            times (list or str, optional): Time values to plot. If None, plots first time step. If 'all', plots all available time steps. Defaults to None.
-            axis (str): Axis along which to plot ('x', 'y', or 'z'). Defaults to 'x'.
-            coordinate (int): Coordinate value for the other two axes. Defaults to 0.
-            postprocess_dir (str or Path): Directory path where output plots will be saved. Defaults to './postprocess'.
-            color (str): Base color scheme for the plot. Defaults to 'b' (blue).
-        
+        """Create a ridgeline plot of a 1D variable slice over time.
+
+        Category: reader
+        Tags: pflotran, ridgeline, plot, variable, time-series
+        Use when: scripts need stacked spatial profiles for multiple PFLOTRAN times.
+
         Returns:
-            plt.Axes: Matplotlib FacetGrid object with ridge line plot showing overlapping time series.
+            None: builds a seaborn FacetGrid plot.
         """
         if times is None:
             times = [self.time_values[0]]
@@ -512,7 +555,6 @@ class PflotranResults:
     def species_names(self) -> list[str]:
         temp_keys = [key.split('_')[1] for key in self.variable_keys if 'Total' in key]
         return temp_keys
-
 
 
 

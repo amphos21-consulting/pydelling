@@ -18,6 +18,12 @@ logger = logging.getLogger(__name__)
 import seaborn as sns
 
 class KdeEstimator:
+    """Fit and sample kernel density estimates from tabular data.
+
+    Category: interpolation
+    Tags: kde, density-estimation, sampling, plotting, scikit-learn
+    Use when: scripts need a fitted KDE model, sampled synthetic values, or distribution comparison plots.
+    """
     is_run: bool
     kde_estimator: KernelDensity
     def __init__(self, data:pd.DataFrame=None, kernel='gaussian', bandwidth=1000, package='scikit'):
@@ -39,11 +45,14 @@ class KdeEstimator:
 
     @set_run
     def run(self, data: pd.DataFrame=None):
-        """
-        Fit the provided dataset to the corresponding kernel distribution
-        
-        Args:
-            data (pd.DataFrame): Description.
+        """Fit the KDE model to the current or provided data.
+
+        Category: interpolation
+        Tags: kde, fit, density-estimation, scikit-learn
+        Use when: scripts need a trained KernelDensity object before sampling or plotting.
+
+        Returns:
+            sklearn.neighbors.KernelDensity: fitted KDE estimator.
         """
         if data:
             self.data = data
@@ -60,17 +69,14 @@ class KdeEstimator:
                                       xlabel=None,
                                       ylabel=None
                                       ):
-        """
-        plot_1d_comparison_histograms method.
-        
-        Args:
-            variable (Any): Description.
-            n (Any): Description.
-            savefig (Any): Description.
-            bins (Any): Description.
-            colors (Any): Description.
-            xlabel (Any): Description.
-            ylabel (Any): Description.
+        """Plot original and KDE-sampled histograms for one variable.
+
+        Category: interpolation
+        Tags: kde, histogram, sampling, plot
+        Use when: scripts need to visually compare observed values against KDE-generated samples.
+
+        Returns:
+            matplotlib.axes.Axes: histogram axes.
         """
         plt.clf()
         fig, ax = plt.subplots()
@@ -108,16 +114,14 @@ class KdeEstimator:
         return ax
 
     def plot_1d_comparison_histograms_multi(self, variables, n=10000, savefig=None, bins=30, palette=None, dpi=150):
-        """
-        plot_1d_comparison_histograms_multi method.
-        
-        Args:
-            variables (Any): Description.
-            n (Any): Description.
-            savefig (Any): Description.
-            bins (Any): Description.
-            palette (Any): Description.
-            dpi (Any): Description.
+        """Plot original and KDE-sampled histograms for multiple variables.
+
+        Category: interpolation
+        Tags: kde, histogram, sampling, multi-variable, plot
+        Use when: scripts need a visual comparison across several KDE variables.
+
+        Returns:
+            matplotlib.axes.Axes: histogram axes.
         """
         plt.clf()
         fig, ax = plt.subplots()
@@ -148,13 +152,14 @@ class KdeEstimator:
         return ax
 
     def plot_1d(self, variable=None, n=100, savefig=None):
-        """
-        Plots the trained KDE using the original data bounds
-        
-        Args:
-            variable (Any): Description.
-            n (Any): Description.
-            savefig (Any): Description.
+        """Plot the trained KDE density over original data bounds.
+
+        Category: interpolation
+        Tags: kde, density, plot, diagnostics
+        Use when: scripts need to inspect the fitted density curve against observed values.
+
+        Returns:
+            matplotlib.axes.Axes: density plot axes.
         """
         plt.clf()
         if not variable:
@@ -198,11 +203,13 @@ class KdeEstimator:
         return self.data.values.reshape(-1, self.data.shape[1])
 
     def sample(self, *args, **kwargs):
-        """
-        sample method.
-        
-        Args:
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Sample values from the fitted KDE model.
+
+        Category: interpolation
+        Tags: kde, sampling, synthetic-data
+        Use when: scripts need synthetic values drawn from the fitted density.
+
+        Returns:
+            numpy.ndarray: samples returned by KernelDensity.sample.
         """
         return self.kde_estimator.sample(*args, **kwargs)

@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 
 class BaseEstimator(ABC):
     """Base interface for estimator implementations.
+
+    Category: estimator
+    Tags: estimator, data, prediction, smoothing, serialization
+    Use when: implementing estimators that load data, preprocess it, plot it, predict from it, and persist state.
     """
 
     def __init__(self, file_path: str | Path, *args, **kwargs):
@@ -34,41 +38,52 @@ class BaseEstimator(ABC):
 
     @abstractmethod
     def read_data(self, filename: Path) -> pd.DataFrame:
-        """
-        Reads data from an excel file.
-        
-        Args:
-            filename (Path): Description.
+        """Read estimator input data.
+
+        Category: estimator
+        Tags: estimator, input-data, dataframe, abstract
+        Use when: subclasses need to define how source data is loaded.
+
+        Returns:
+            pandas.DataFrame: loaded estimator data.
         """
         pass
 
     @abstractmethod
     def process_data(self):
-        """
-        Preprocesses the data and generate
+        """Preprocess loaded estimator data.
+
+        Category: estimator
+        Tags: estimator, preprocessing, abstract
+        Use when: subclasses need to normalize or derive fields before prediction.
+
+        Returns:
+            None: subclasses mutate estimator data.
         """
         pass
 
     @abstractmethod
     def smooth_data(self, window_size=3, sigma=1):
-        """
-        Smooths the self.data variable.
-        
-        Args:
-            window_size (Any): Description.
-            sigma (Any): Description.
+        """Smooth estimator data.
+
+        Category: estimator
+        Tags: estimator, smoothing, abstract
+        Use when: subclasses expose a public smoothing operation for noisy input data.
+
+        Returns:
+            None: subclasses mutate estimator data.
         """
         pass
 
     def _smooth_data(self, column_name, method="rolling", window_size=3, sigma=1):
-        """
-        Smooths the self.data variable.
-        
-        Args:
-            column_name (Any): Description.
-            method (Any): Description.
-            window_size (Any): Description.
-            sigma (Any): Description.
+        """Smooth one data column with rolling, exponential, or gaussian methods.
+
+        Category: estimator
+        Tags: estimator, smoothing, dataframe, preprocessing
+        Use when: subclasses need a shared column-level smoothing helper.
+
+        Returns:
+            None: mutates the selected data column.
         """
         assert self.data is not None, "Data is None"
         if method == "rolling":
@@ -85,13 +100,14 @@ class BaseEstimator(ABC):
 
     @abstractmethod
     def plot_data(self, filename=None, *args, **kwargs):
-        """
-        Makes some basic plots of the data.
-        
-        Args:
-            filename (Any): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Plot estimator data.
+
+        Category: estimator
+        Tags: estimator, plot, abstract, diagnostics
+        Use when: subclasses need to expose basic diagnostic plots.
+
+        Returns:
+            None: subclasses show or save plots.
         """
         pass
 
@@ -101,14 +117,14 @@ class BaseEstimator(ABC):
                    filename=None,
                    prediction_data=None,
                    ):
-        """
-        Plots the data.
-        
-        Args:
-            column_name (Any): Description.
-            title (Any): Description.
-            filename (Any): Description.
-            prediction_data (Any): Description.
+        """Plot one data column and optional prediction data.
+
+        Category: estimator
+        Tags: estimator, plot, prediction, diagnostics
+        Use when: subclasses need a shared matplotlib plot helper.
+
+        Returns:
+            None: shows or saves the plot.
         """
         assert self.data is not None, "Data is None"
         fig, ax = plt.subplots()
@@ -126,22 +142,26 @@ class BaseEstimator(ABC):
 
     @abstractmethod
     def predict(self, method=None, days=365, return_whole_data=False):
-        """
-        Makes a prediction.
-        
-        Args:
-            method (Any): Description.
-            days (Any): Description.
-            return_whole_data (Any): Description.
+        """Run estimator prediction.
+
+        Category: estimator
+        Tags: estimator, prediction, abstract
+        Use when: subclasses define forecasting or classification behavior.
+
+        Returns:
+            Any: subclass-specific prediction output.
         """
         pass
 
     def save(self, file_name: str):
-        """
-        Save the current object instance to a file.
-        
-        Args:
-            file_name (str): Description.
+        """Serialize this estimator instance with dill.
+
+        Category: writer
+        Tags: estimator, serialize, dill, save
+        Use when: scripts need to persist a fitted or configured estimator.
+
+        Returns:
+            None: writes the serialized estimator file.
         """
         with open(file_name, 'wb') as f:
             dill.dump(self, f)
@@ -149,12 +169,14 @@ class BaseEstimator(ABC):
 
     @classmethod
     def load(cls, file_name: str):
-        """
-        Load an object instance from a file.
-        
-        Args:
-            cls (Any): Description.
-            file_name (str): Description.
+        """Load a serialized estimator instance with dill.
+
+        Category: reader
+        Tags: estimator, serialize, dill, load
+        Use when: scripts need to restore a saved estimator object.
+
+        Returns:
+            BaseEstimator: deserialized estimator instance.
         """
         with open(file_name, 'rb') as f:
             logger.info(f"Loaded estimator instance from {file_name}")

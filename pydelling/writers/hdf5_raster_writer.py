@@ -17,6 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 class HDF5RasterWriter(BaseWriter):
+    """Write raster-like interpolation data to PFLOTRAN-style HDF5 datasets.
+
+    Category: writer
+    Tags: hdf5, raster, interpolation, pflotran, gridded-dataset
+    Use when: scripts need regular-grid data serialized with Times, Data, and spatial attributes.
+    """
     def __init__(self,
                  filename,
                  dataset_name,
@@ -33,24 +39,14 @@ class HDF5RasterWriter(BaseWriter):
                  dilatation_factor=1.0,
                  **kwargs,
                  ):
-        """
-        __init__ method.
-        
-        Args:
-            filename (Any): Description.
-            dataset_name (Any): Description.
-            data (Any): Description.
-            times (Any): Description.
-            attributes (Any): Description.
-            interpolation_info (Any): Description.
-            n_x (Any): Description.
-            n_y (Any): Description.
-            x_min (Any): Description.
-            x_max (Any): Description.
-            y_min (Any): Description.
-            y_max (Any): Description.
-            dilatation_factor (Any): Description.
-            **kwargs (Any): Description.
+        """Initialize the HDF5 raster writer and reshape data if needed.
+
+        Category: writer
+        Tags: hdf5, raster, interpolation, regular-mesh
+        Use when: scripts have flattened, centroid, or mesh-shaped data that must become an HDF5 raster.
+
+        Returns:
+            None: stores metadata, reshapes data, and marks it ready for writing.
         """
         assert data is not None, "You must provide the data"
         if interpolation_info is not None:
@@ -125,11 +121,14 @@ class HDF5RasterWriter(BaseWriter):
 
 
     def transform_flatten_to_regular_mesh(self, data):
-        """
-        transform_flatten_to_regular_mesh method.
-        
-        Args:
-            data (Any): Description.
+        """Reshape flattened values into regular mesh layers.
+
+        Category: writer
+        Tags: hdf5, raster, reshape, regular-mesh
+        Use when: flattened interpolation output needs n_y by n_x grid shape.
+
+        Returns:
+            numpy.ndarray: array of regular mesh layers.
         """
         aux_array = []
         if len(data.shape) == 2:
@@ -141,17 +140,29 @@ class HDF5RasterWriter(BaseWriter):
         return np.array(aux_array)
 
     def centroid_transform_to_mesh(self):
+        """Transform centroid x,y,value rows into a regular mesh array.
+
+        Category: writer
+        Tags: hdf5, raster, centroids, reshape
+        Use when: data is stored as centroid rows and needs grid shape.
+
+        Returns:
+            numpy.ndarray: reshaped mesh data.
+        """
         assert len(self.data.shape) >= 2 and self.data.shape[1] == 3
         _data = self.data[:, 2]
         _data = np.reshape(_data, (self.info["interpolation"]["n_x"], self.info["interpolation"]["n_y"]))
         return _data
 
     def _centroid_transform_to_mesh(self, data):
-        """
-        _centroid_transform_to_mesh method.
-        
-        Args:
-            data (Any): Description.
+        """Transform one centroid row array into a regular mesh array.
+
+        Category: writer
+        Tags: hdf5, raster, centroids, reshape
+        Use when: converting one layer of centroid x,y,value data into mesh shape.
+
+        Returns:
+            numpy.ndarray: reshaped mesh layer.
         """
         assert len(data.shape) >= 1 and data.shape[1] == 3
         _data = data[:, 2]
@@ -159,11 +170,14 @@ class HDF5RasterWriter(BaseWriter):
         return _data
 
     def add_default_attributes(self, hdf5_group: h5py.Dataset):
-        """
-        add_default_attributes method.
-        
-        Args:
-            hdf5_group (h5py.Dataset): Description.
+        """Add PFLOTRAN gridded dataset spatial attributes.
+
+        Category: writer
+        Tags: hdf5, raster, attributes, pflotran
+        Use when: Data datasets need Dimension, Discretization, Origin, and interpolation metadata.
+
+        Returns:
+            None: mutates HDF5 group attributes.
         """
         dilatation_factor = self.info['interpolation']['dilatation_factor']
         l_x = np.abs(self.info["interpolation"]["x_max"] - self.info["interpolation"]["x_min"])
@@ -181,11 +195,14 @@ class HDF5RasterWriter(BaseWriter):
         hdf5_group.attrs["Interpolation_Method"] = "STEP"
 
     def run(self, filename=None):
-        """
-        run method.
-        
-        Args:
-            filename (Any): Description.
+        """Write the HDF5 raster dataset to disk.
+
+        Category: writer
+        Tags: hdf5, raster, export, dataset
+        Use when: scripts need a complete HDF5 file with Times, Data, and attributes.
+
+        Returns:
+            None: writes or replaces the HDF5 file.
         """
         if filename is not None:
             self.filename = filename
@@ -224,10 +241,13 @@ class HDF5RasterWriter(BaseWriter):
 
 
     def add_dimension_attribute(self, dimension):
-        """
-        add_dimension_attribute method.
-        
-        Args:
-            dimension (Any): Description.
+        """Set the HDF5 Dimension attribute value.
+
+        Category: writer
+        Tags: hdf5, raster, attributes, dimension
+        Use when: scripts need to override the default XY dimension metadata.
+
+        Returns:
+            None: updates attributes["Dimension"].
         """
         self.attributes["Dimension"] = dimension

@@ -15,12 +15,21 @@ from pydelling.readers.iGPReader.utils.geometry_utils import *
 
 
 class PflotranExplicitWriter:
+    """Mixin for writing PFLOTRAN unstructured explicit mesh files.
+
+    Category: writer
+    Tags: pflotran, explicit-mesh, cells, connections, hdf5
+    Use when: iGP readers need to export mesh cells, connections, regions, materials, and domain HDF5 data.
+    """
     def write_cells(self, export_file):
-        """
-        write_cells method.
-        
-        Args:
-            export_file (Any): Description.
+        """Write PFLOTRAN CELLS records.
+
+        Category: writer
+        Tags: pflotran, explicit-mesh, cells, centroids, volume
+        Use when: exporting element centroids and volumes to an explicit mesh file.
+
+        Returns:
+            None: writes cell records to export_file.
         """
         export_file.write(f"CELLS {len(self.elements)}\n")
         for element in self.elements:
@@ -29,11 +38,14 @@ class PflotranExplicitWriter:
 
     def write_connections(self, export_file):
         # compute number of connection elements
-        """
-        write_connections method.
-        
-        Args:
-            export_file (Any): Description.
+        """Write PFLOTRAN CONNECTIONS records.
+
+        Category: writer
+        Tags: pflotran, explicit-mesh, connections, faces, area
+        Use when: exporting adjacent element connection geometry and face areas.
+
+        Returns:
+            None: writes connection records and stores n_conn.
         """
         n_conn = 0
         for element in self.connections:
@@ -59,6 +71,15 @@ class PflotranExplicitWriter:
                     f"{prime_element + 1} {connected_element + 1} {intersection_point[0]:1.8e} {intersection_point[1]:1.8e} {intersection_point[2]:1.8e} {conn_area:1.8e}\n")
 
     def write_condition_data(self):
+        """Write PFLOTRAN condition connection files.
+
+        Category: writer
+        Tags: pflotran, explicit-mesh, regions, boundary-conditions
+        Use when: region dictionaries should be exported as .ex condition files.
+
+        Returns:
+            None: writes one condition file per region.
+        """
         for condition in self.region_dict:
             # Open file for dumping connection data
             if self.output_folder is None:
@@ -86,11 +107,14 @@ class PflotranExplicitWriter:
     def write_domain_postprocess_hdf5(self, export_file):
 
         # Create domain group
-        """
-        write_domain_postprocess_hdf5 method.
-        
-        Args:
-            export_file (Any): Description.
+        """Write domain topology and vertices to HDF5.
+
+        Category: writer
+        Tags: pflotran, hdf5, domain, cells, vertices
+        Use when: post-processing needs PFLOTRAN mesh topology in HDF5 format.
+
+        Returns:
+            None: creates Domain/Cells and Domain/Vertices datasets.
         """
         domain_group = export_file.create_group("Domain")
         # Create Cells dataset
@@ -105,6 +129,15 @@ class PflotranExplicitWriter:
         domain_group.create_dataset("Vertices", data=self.nodes)
 
     def write_materials(self):
+        """Write PFLOTRAN material element-id files.
+
+        Category: writer
+        Tags: pflotran, materials, explicit-mesh, export
+        Use when: material element groups should be exported as .mat files.
+
+        Returns:
+            None: writes one material file per material name.
+        """
         for material_name in self.material_dict:
             if self.output_folder is None:
                 file_mat = open(f"{material_name}.mat", "w")
