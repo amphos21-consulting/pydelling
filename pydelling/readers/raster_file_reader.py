@@ -41,12 +41,14 @@ class RasterFileReader(BaseReader):
         super().__init__(filename=filename, header=header, read_data=read_data, **kwargs)
 
     def open_file(self, filename, n_header=6):
-        """
-        open_file method.
-        
-        Args:
-            filename (Any): Description.
-            n_header (Any): Description.
+        """Open an ASC raster file and load its header and grid data.
+
+        Category: reader
+        Tags: raster, asc, open, header, grid
+        Use when: scripts need to initialize RasterFileReader from an ASCII raster path.
+
+        Returns:
+            None: populates reader metadata and data arrays.
         """
         with open(filename, 'r') as opened_file:
             if self.header:
@@ -55,12 +57,14 @@ class RasterFileReader(BaseReader):
         self.build_info()
 
     def read_file(self, opened_file, n_header=6):
-        """
-        read_file method.
-        
-        Args:
-            opened_file (Any): Description.
-            n_header (Any): Description.
+        """Read ASC raster header, allocate arrays, and load grid values.
+
+        Category: reader
+        Tags: raster, asc, read, header, values
+        Use when: an opened ASC file handle should be parsed into raster metadata and data.
+
+        Returns:
+            None: updates header metadata, coordinate meshes, and raster data.
         """
         self.read_header(opened_file, n_header=n_header)
         self.build_structure()
@@ -68,12 +72,14 @@ class RasterFileReader(BaseReader):
         logger.info(f"Reading ASC raster file from {opened_file}")
 
     def read_header(self, opened_file, n_header=6):
-        """
-        read_header method.
-        
-        Args:
-            opened_file (Any): Description.
-            n_header (Any): Description.
+        """Parse ASC raster header key-value metadata.
+
+        Category: reader
+        Tags: raster, asc, header, metadata, cellsize
+        Use when: scripts need nrows, ncols, origin, spacing, and NODATA metadata from an ASC file.
+
+        Returns:
+            None: stores parsed header values in info["reader"].
         """
         flag_stop = False
         while not flag_stop:
@@ -90,11 +96,14 @@ class RasterFileReader(BaseReader):
 
 
     def read_data(self, opened_file):
-        """
-        read_data method.
-        
-        Args:
-            opened_file (Any): Description.
+        """Read raster grid values from the current file position.
+
+        Category: reader
+        Tags: raster, data, grid, values
+        Use when: the ASC header has been parsed and the remaining lines contain numeric grid rows.
+
+        Returns:
+            None: fills the raster data array.
         """
         for id, line in enumerate(opened_file.readlines()):
             self.data[id] = np.array(line.split(), dtype=np.float32)
@@ -127,17 +136,26 @@ class RasterFileReader(BaseReader):
         self.y_mesh = np.flipud(self.y_mesh)  # To fit into the .asc format criteria
 
     def build_info(self):
-        """
-        Function that creates the internal data structure of the raster file
+        """Store basic reader metadata for this raster file.
+
+        Category: reader
+        Tags: raster, metadata, filename
+        Use when: scripts need the source filename available in reader_info.
+
+        Returns:
+            None: updates info["reader"].
         """
         self.info["reader"]["filename"] = self.filename
 
     def add_z_info(self, z_coord):
-        """
-        add_z_info method.
-        
-        Args:
-            z_coord (Any): Description.
+        """Attach a fixed z coordinate to this raster layer.
+
+        Category: reader
+        Tags: raster, z, layer, coordinates
+        Use when: exporting a 2D raster as x, y, z, value samples.
+
+        Returns:
+            None: stores z_coord on the reader.
         """
         self.z_coord = z_coord
 
@@ -225,12 +243,14 @@ class RasterFileReader(BaseReader):
         return self.flatten_data
 
     def to_csv(self, output_file, z_coord=None):
-        """
-        Function that writes the ratser data into a csv file
-        
-        Args:
-            output_file (Any): Description.
-            z_coord (Any): Description.
+        """Write raster point samples to CSV.
+
+        Category: writer
+        Tags: raster, csv, export, coordinates, values
+        Use when: scripts need x,y,value or x,y,z,value rows from an ASC raster.
+
+        Returns:
+            None: writes the CSV file.
         """
 
         xydata = self.get_xy_data()
@@ -248,11 +268,14 @@ class RasterFileReader(BaseReader):
         logger.info(f"The raster file points have been exported to the CSV file {output_file}")
 
     def to_wsv(self, output_file):
-        """
-        to_wsv method.
-        
-        Args:
-            output_file (Any): Description.
+        """Write raster point samples as whitespace-separated values.
+
+        Category: writer
+        Tags: raster, wsv, export, coordinates, values
+        Use when: scripts need plain whitespace-delimited x y value raster samples.
+
+        Returns:
+            None: writes the output file.
         """
         print(f"Starting dump into {output_file}")
         if not self.xydata_computed:
@@ -266,11 +289,14 @@ class RasterFileReader(BaseReader):
         print(f"The data has been properly exported to the {output_file} file")
 
     def to_asc(self, output_file):
-        """
-        to_asc method.
-        
-        Args:
-            output_file (Any): Description.
+        """Write this raster back to ASC format.
+
+        Category: writer
+        Tags: raster, asc, export, header, grid
+        Use when: scripts need an ASCII grid file after modifying or downsampling raster data.
+
+        Returns:
+            None: writes the ASC file.
         """
         logger.info(f"Starting dump into {output_file}")
         with open(output_file, 'w') as file:
@@ -280,11 +306,14 @@ class RasterFileReader(BaseReader):
     def write_asc_header(self, file):
         # assert isinstance(file, type(open)), "is not a correct file"
         # Write info in ASC format
-        """
-        write_asc_header method.
-        
-        Args:
-            file (Any): Description.
+        """Write ASC header metadata to an open file handle.
+
+        Category: writer
+        Tags: raster, asc, header, metadata
+        Use when: scripts need to emit a valid ASC raster header before grid values.
+
+        Returns:
+            None: writes header lines to file.
         """
         file.write(f"ncols {self.info['reader']['ncols']}\n")
         file.write(f"nrows {self.info['reader']['nrows']}\n")
@@ -299,20 +328,26 @@ class RasterFileReader(BaseReader):
 
 
     def write_asc_data(self, file):
-        """
-        write_asc_data method.
-        
-        Args:
-            file (Any): Description.
+        """Write raster grid values to an open ASC file handle.
+
+        Category: writer
+        Tags: raster, asc, data, grid, values
+        Use when: scripts need to emit numeric raster rows after an ASC header.
+
+        Returns:
+            None: writes raster values to file.
         """
         np.savetxt(file, self.data)
 
     def downsample_data(self, slice_factor=2):
-        """
-        This module downsamples the data based on a constant stride in each direction
-        
-        Args:
-            slice_factor (Any): Description.
+        """Downsample the raster by a constant row and column stride.
+
+        Category: preprocessing
+        Tags: raster, downsample, grid, spacing
+        Use when: scripts need a coarser raster and updated grid spacing.
+
+        Returns:
+            None: mutates raster data, metadata, and coordinate meshes.
         """
         self.data = self.data[0::slice_factor, 0::slice_factor]
         self.info['reader']["nrows"] = self.data.shape[0]
@@ -326,14 +361,14 @@ class RasterFileReader(BaseReader):
         logger.info(f"Data has been downsampled by a factor of {slice_factor}")
 
     def get_value_from_coord(self, x: float, y: float) -> float:
-        """
-        This method returns the raster value finding the nearest neighbour of a given x, y coordinate
-        Args:
-            x: Coordinate of the x-direction
-            y: Coordinate of the y-direction
+        """Sample the nearest raster value at x and y coordinates.
+
+        Category: reader
+        Tags: raster, sample, coordinates, nearest, value
+        Use when: scripts need a raster elevation or property value at one coordinate.
 
         Returns:
-            Raster value at the given coordinate
+            float: nearest raster value.
         """
         # Define auxiliaty variables
         d_raster = self.reader_info["cellsize"]
@@ -354,14 +389,14 @@ class RasterFileReader(BaseReader):
                                export_polygons=True,
                                export_coordinates=True,
                                ):
-        """
-        Finds the polygons that enclose a given value
-        
-        Args:
-            val (Any): Description.
-            plot_polygons (Any): Description.
-            export_polygons (Any): Description.
-            export_coordinates (Any): Description.
+        """Find convex polygons enclosing raster cells equal to a value.
+
+        Category: preprocessing
+        Tags: raster, polygons, contours, regions, coordinates
+        Use when: scripts need polygon outlines for classified raster regions.
+
+        Returns:
+            list: polygons in raster coordinates or pixel coordinates.
         """
         import matplotlib.pyplot as plt
         self.data = self.data.astype(np.float32)
@@ -441,36 +476,42 @@ class RasterFileReader(BaseReader):
         return fig, ax
 
     def p2c(self, ix, iy):
-        """
-        Converts pixel to coordinate
-        
-        Args:
-            ix (Any): Description.
-            iy (Any): Description.
+        """Convert raster pixel indices to x and y coordinates.
+
+        Category: reader
+        Tags: raster, pixel, coordinates, conversion
+        Use when: scripts need world coordinates for raster pixel indices.
+
+        Returns:
+            tuple: x and y coordinates.
         """
         x = self.reader_info["xllcorner"] + ix * self.reader_info["cellsize"]
         y = self.reader_info["yllcorner"] + iy * self.reader_info["cellsize"]
         return x, y
 
     def get_coordinate_from_pixel(self, ix, iy):
-        """
-        Converts pixel to coordinate
-        
-        Args:
-            ix (Any): Description.
-            iy (Any): Description.
+        """Convert raster pixel indices to x and y coordinates.
+
+        Category: reader
+        Tags: raster, pixel, coordinates, conversion
+        Use when: scripts need coordinates for polygon vertices or raster indices.
+
+        Returns:
+            tuple: x and y coordinates.
         """
         x = self.reader_info["xllcorner"] + ix * self.reader_info["cellsize"]
         y = self.reader_info["yllcorner"] + iy * self.reader_info["cellsize"]
         return x, y
 
     def c2p(self, x, y):
-        """
-        Converts coordinate to pixel
-        
-        Args:
-            x (Any): Description.
-            y (Any): Description.
+        """Return the raster value for a coordinate lookup.
+
+        Category: reader
+        Tags: raster, coordinates, sample, value
+        Use when: scripts need the value associated with an x,y coordinate.
+
+        Returns:
+            float: nearest raster value.
         """
         return self.get_value_from_coord(x, y)
 
@@ -505,15 +546,14 @@ class RasterFileReader(BaseReader):
                        colorbar=True,
                        colorbar_label=None,
                        **kwargs):
-        """
-        get_plot_image method.
-        
-        Args:
-            ax (Any): Description.
-            fig (Any): Description.
-            colorbar (Any): Description.
-            colorbar_label (Any): Description.
-            **kwargs (Any): Description.
+        """Draw raster data on a matplotlib axes.
+
+        Category: reader
+        Tags: raster, plot, matplotlib, image, colorbar
+        Use when: scripts need a reusable axes image for raster visualization.
+
+        Returns:
+            Any: matplotlib axes containing the raster image.
         """
         import matplotlib.pyplot as plt
         if ax is None:
@@ -526,13 +566,14 @@ class RasterFileReader(BaseReader):
         return ax
 
     def plot(self, colorbar=True, colorbar_label=None, **kwargs):
-        """
-        plot method.
-        
-        Args:
-            colorbar (Any): Description.
-            colorbar_label (Any): Description.
-            **kwargs (Any): Description.
+        """Display the raster with matplotlib.
+
+        Category: reader
+        Tags: raster, plot, matplotlib, display
+        Use when: scripts need an immediate visual inspection of raster values.
+
+        Returns:
+            None: shows a matplotlib plot.
         """
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -544,14 +585,14 @@ class RasterFileReader(BaseReader):
         plt.show()
 
     def save_plot(self, output_file, colorbar=None, colorbar_label=None,**kwargs):
-        """
-        save_plot method.
-        
-        Args:
-            output_file (Any): Description.
-            colorbar (Any): Description.
-            colorbar_label (Any): Description.
-            **kwargs (Any): Description.
+        """Save a raster plot image to disk.
+
+        Category: writer
+        Tags: raster, plot, image, export, matplotlib
+        Use when: scripts need a PNG or other image artifact showing raster values.
+
+        Returns:
+            None: writes the plot image.
         """
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -650,12 +691,14 @@ class RasterFileReader(BaseReader):
     # Read raster file from a .csv file
     @classmethod
     def from_xyz_csv(self, file_name, dims=None,):
-        """
-        from_xyz_csv method.
-        
-        Args:
-            file_name (Any): Description.
-            dims (Any): Description.
+        """Build a RasterFileReader from an x,y,value CSV file.
+
+        Category: reader
+        Tags: raster, csv, xyz, load, grid
+        Use when: scripts need to reconstruct a raster grid from point-sample CSV data.
+
+        Returns:
+            RasterFileReader: raster reader initialized from CSV data.
         """
         data = np.loadtxt(file_name, delimiter=",", skiprows=1)
         if dims is None:
@@ -708,14 +751,14 @@ class RasterFileReader(BaseReader):
             return steps_with_same_x, steps_with_same_y
 
     def get_data_from_coordinates(self, x, y) -> float:
-        """
-        This method returns the data from the raster at the given coordinates
-        Args:
-            x: x coordinate
-            y: y coordinate
+        """Return the nearest raster data value at x and y coordinates.
+
+        Category: reader
+        Tags: raster, sample, coordinates, nearest, value
+        Use when: scripts need to query raster values by real-world coordinates.
 
         Returns:
-            The value of the raster at the given coordinates
+            float: nearest raster data value.
         """
         x_idx = np.argmin(np.abs(self.y - y))
         y_idx = np.argmin(np.abs(self.x - x))

@@ -24,6 +24,12 @@ from functools import cached_property, lru_cache
 
 
 class BaseElement(BaseAbstractMeshObject):
+    """Represent a mesh element with nodes, faces, and geometry helpers.
+
+    Category: preprocessing
+    Tags: mesh, element, geometry, faces, intersections
+    Use when: scripts need shared geometry behavior for hexahedra, tetrahedra, prisms, or other element subclasses.
+    """
     local_id = 0
     eps = 1e-2
     eps_zero = 1E-4
@@ -37,15 +43,14 @@ class BaseElement(BaseAbstractMeshObject):
                  local_id=None,
                  centroid_method="mean",
                  ):
-        """
-        __init__ method.
-        
-        Args:
-            node_ids (Any): Description.
-            node_coords (Any): Description.
-            centroid_coords (Any): Description.
-            local_id (Any): Description.
-            centroid_method (Any): Description.
+        """Initialize an element from node ids and node coordinates.
+
+        Category: preprocessing
+        Tags: mesh, element, nodes, centroid, faces
+        Use when: subclasses need the common element state before defining faces and topology.
+
+        Returns:
+            None: initializes geometry, association, and connection fields.
         """
         self.centroid_method = centroid_method
         self.nodes: np.ndarray = np.array(node_ids)  # Node id set
@@ -74,9 +79,27 @@ class BaseElement(BaseAbstractMeshObject):
         return f"{self.type} {self.local_id}"
 
     def define_faces(self):
+        """Define element faces in subclasses.
+
+        Category: preprocessing
+        Tags: mesh, element, faces, subclass
+        Use when: implementing a concrete element type with known local face topology.
+
+        Returns:
+            None: subclasses populate the faces dictionary.
+        """
         raise NotImplementedError("Define faces method not implemented")
 
     def print_element_info(self):
+        """Print a short summary of this element to stdout.
+
+        Category: util
+        Tags: mesh, element, debug, stdout
+        Use when: interactively inspecting an element's id, node count, type, and node ids.
+
+        Returns:
+            None: writes diagnostic text to stdout.
+        """
         print("### Element info ###")
         print(f"Element ID: {self.local_id}")
         print(f"Number of nodes: {self.n_nodes}")
@@ -85,18 +108,29 @@ class BaseElement(BaseAbstractMeshObject):
         print("### End element info ###")
 
     def print_face_info(self):
+        """Print the node ids for each face to stdout.
+
+        Category: util
+        Tags: mesh, element, faces, debug, stdout
+        Use when: interactively inspecting face topology for one element.
+
+        Returns:
+            None: writes diagnostic text to stdout.
+        """
         print("### Face info ###")
         for face in self.faces:
             print(f"{face}: {self.faces[face].nodes}")
         print("### End face info ###")
 
     def intersect_faces_with_plane(self, plane: Plane):
-        """Returns the intersection of a face with a plane
+        """Intersect all element faces with a plane.
 
-        Args:
-            plane: Plane to intersect with
+        Category: preprocessing
+        Tags: mesh, element, plane, intersection, faces
+        Use when: scripts need the points where a plane cuts through an element.
 
-        Returns: Intersection points
+        Returns:
+            list: unique intersection points contained inside the element.
         """
         intersected_lines = []
         intersected_points = []
@@ -122,12 +156,14 @@ class BaseElement(BaseAbstractMeshObject):
 
 
     def intersect_with_fracture(self, fracture: 'Fracture', export_all_points=False):
-        """
-        Intersects an element with a fracture
-        
-        Args:
-            fracture ('Fracture'): Description.
-            export_all_points (Any): Description.
+        """Intersect this element with a DFN fracture polygon.
+
+        Category: preprocessing
+        Tags: mesh, element, fracture, dfn, intersection
+        Use when: DFN upscaling needs fracture-element intersection points for area or volume estimates.
+
+        Returns:
+            list: intersection points that lie in both the element and fracture.
         """
         intersected_lines = []
         intersected_points = []
@@ -210,11 +246,14 @@ class BaseElement(BaseAbstractMeshObject):
         return final_points
 
     def _full_line_intersections(self, intersected_lines: List[Line]) -> List:
-        """
-        Intersects a list of lines with each other
-        
-        Args:
-            intersected_lines (List[Line]): Description.
+        """Intersect every pair of lines from a face-plane cut.
+
+        Category: preprocessing
+        Tags: mesh, geometry, lines, intersection
+        Use when: plane cuts are represented as lines and need candidate intersection points.
+
+        Returns:
+            list: points produced by pairwise line intersections.
         """
         intersected_points = []
         line_combination = list(combinations(intersected_lines, 2))
@@ -227,12 +266,14 @@ class BaseElement(BaseAbstractMeshObject):
         return intersected_points
 
     def contains(self, point: np.ndarray or Point, sign=1.0) -> bool:
-        """
-        Checks if a point is inside the element
-        
-        Args:
-            point (np.ndarray or Point): Description.
-            sign (Any): Description.
+        """Check whether a point lies inside this element.
+
+        Category: preprocessing
+        Tags: mesh, element, point, containment, geometry
+        Use when: filtering candidate fracture or plane intersection points to element-local points.
+
+        Returns:
+            bool: True when the point is inside the element bounds.
         """
         # self.plot_normal_vectors()
         # contains = Delaunay(self.coords).find_simplex(point) >= 0
@@ -261,11 +302,14 @@ class BaseElement(BaseAbstractMeshObject):
         return True
 
     def on_face(self, point):
-        """
-        Checks if a point is on a face of the element
-        
-        Args:
-            point (Any): Description.
+        """Check whether a point lies on any element face.
+
+        Category: preprocessing
+        Tags: mesh, element, point, face, geometry
+        Use when: intersection logic needs to identify points on element boundaries.
+
+        Returns:
+            bool: True when the point is within face-plane tolerance.
         """
         for face in self.faces:
             face_centroid = self.faces[face].centroid
@@ -278,9 +322,28 @@ class BaseElement(BaseAbstractMeshObject):
 
     @cached_property
     def n_nodes(self):
+        """Return the number of nodes in this element.
+
+        Category: preprocessing
+        Tags: mesh, element, nodes, topology
+        Use when: scripts need element topology metadata for reporting or export.
+
+        Returns:
+            int: node count.
+        """
         return len(self.nodes)
+
     @property
     def edges(self):
+        """Return unique local element edges.
+
+        Category: preprocessing
+        Tags: mesh, element, edges, topology
+        Use when: scripts need element edge connectivity derived from faces.
+
+        Returns:
+            numpy.ndarray: unique sorted edge node pairs.
+        """
         edges_list = []
         for face in self.faces:
             face_edges = self.faces[face].edges
@@ -293,15 +356,28 @@ class BaseElement(BaseAbstractMeshObject):
 
     @cached_property
     def volume(self):
-        """Returns the volume of the element
+        """Compute the convex-hull volume of this element.
 
-        Returns: volume of the element
+        Category: preprocessing
+        Tags: mesh, element, volume, geometry
+        Use when: scripts need element volume for DFN upscaling or mesh diagnostics.
+
+        Returns:
+            float: convex hull volume.
         """
         return ConvexHull(self.coords, qhull_options='QJ').volume
 
 
     def get_json(self):
-        """Returns a json representation of the element"""
+        """Build a JSON-serializable representation of this element.
+
+        Category: writer
+        Tags: mesh, element, json, serialize, fractures
+        Use when: scripts need to persist element ids, topology, and fracture/fault associations.
+
+        Returns:
+            dict: serializable element metadata.
+        """
         serialized_associated_fractures = {key: {
             'area': value['area'],
             'volume': value['volume'],
@@ -324,6 +400,15 @@ class BaseElement(BaseAbstractMeshObject):
 
     @property
     def edge_lines(self):
+        """Return geometric line objects for unique element edges.
+
+        Category: preprocessing
+        Tags: mesh, element, edges, lines, geometry
+        Use when: fracture and plane intersection algorithms need edge-line intersections.
+
+        Returns:
+            list: Line objects for unique element edges.
+        """
         if self._edge_lines is None:
             # Compute the edge lines
             all_edges = []
@@ -340,27 +425,40 @@ class BaseElement(BaseAbstractMeshObject):
 
     @staticmethod
     def arr_in_seq(arr, seq):
-        """
-        arr_in_seq method.
-        
-        Args:
-            arr (Any): Description.
-            seq (Any): Description.
+        """Check whether an array-equivalent item exists in a sequence.
+
+        Category: util
+        Tags: numpy, arrays, equality, geometry
+        Use when: geometry code needs to avoid duplicate edges or vectors.
+
+        Returns:
+            bool: True when an equivalent array is present.
         """
         tp = type(arr)
         return any(isinstance(e, tp) and np.array_equiv(e, arr) for e in seq)
 
     @property
     def local_face_nodes(self) -> dict:
-        """Returns the local node ids for each face"""
+        """Return local node ids for each face.
+
+        Category: preprocessing
+        Tags: mesh, element, faces, nodes, topology
+        Use when: element subclasses expose face-local node ordering for export or lookup.
+
+        Returns:
+            dict: face names mapped to local node ids.
+        """
         return {}
 
     def to_obj(self, filename: str):
-        """
-        Exports the element to an obj file
-        
-        Args:
-            filename (str): Description.
+        """Export this element geometry to a Wavefront OBJ file.
+
+        Category: writer
+        Tags: mesh, element, obj, export, geometry
+        Use when: scripts need a small standalone geometry artifact for visual debugging.
+
+        Returns:
+            None: writes the OBJ file.
         """
         with open(filename, 'w') as f:
             f.write('# OBJ file\n')
@@ -377,11 +475,14 @@ class BaseElement(BaseAbstractMeshObject):
                 f.write('\n')
 
     def compute_centroid(self, centroid_method='mean'):
-        """
-        Computes the centroid of a general polyhedra
-        
-        Args:
-            centroid_method (Any): Description.
+        """Compute the element centroid.
+
+        Category: preprocessing
+        Tags: mesh, element, centroid, geometry
+        Use when: initializing or recomputing element center coordinates.
+
+        Returns:
+            numpy.ndarray: centroid coordinates.
         """
         if centroid_method == 'curl':
             centroid = np.zeros(3)
@@ -401,7 +502,15 @@ class BaseElement(BaseAbstractMeshObject):
             return np.mean(self.coords, axis=0)
 
     def _get_triangular_faces(self) -> List[BaseFace]:
-        """Returns the triangular faces of the element"""
+        """Return triangular faces, splitting quadrilateral faces when needed.
+
+        Category: preprocessing
+        Tags: mesh, element, faces, triangles, geometry
+        Use when: volume or centroid algorithms require triangular face primitives.
+
+        Returns:
+            list: triangular BaseFace instances.
+        """
         from .triangle_face import TriangleFace
         triangular_faces = []
         for face in self.faces:
@@ -432,11 +541,14 @@ class BaseElement(BaseAbstractMeshObject):
 
 
     def detect_face(self, face_ids: List):
-        """
-        Find the face given the local ids of the nodes
-        
-        Args:
-            face_ids (List): Description.
+        """Find a face by its node ids.
+
+        Category: preprocessing
+        Tags: mesh, element, faces, lookup, topology
+        Use when: scripts need the face name associated with a set of local node ids.
+
+        Returns:
+            Any: matching face key, or None when no face matches.
         """
         for face in self.faces:
             sorted_ids = sorted(self.faces[face].nodes)
@@ -447,7 +559,15 @@ class BaseElement(BaseAbstractMeshObject):
 
     @cached_property
     def external_faces(self) -> List[BaseFace]:
-        """Returns the external faces of the element. Cached property"""
+        """Return faces without neighboring element connections.
+
+        Category: preprocessing
+        Tags: mesh, element, faces, boundary, topology
+        Use when: scripts need boundary faces for export, adjacency, or mesh diagnostics.
+
+        Returns:
+            list: external BaseFace instances.
+        """
         external_faces = []
         internal_faces_ids = [face.id for face in self.internal_faces]
         for face in self.faces.values():
@@ -458,20 +578,29 @@ class BaseElement(BaseAbstractMeshObject):
 
     @cached_property
     def internal_faces(self) -> List[BaseFace]:
-        """Returns the internal faces of the element"""
+        """Return faces connected to neighboring elements.
+
+        Category: preprocessing
+        Tags: mesh, element, faces, internal, topology
+        Use when: scripts need adjacency-derived internal faces.
+
+        Returns:
+            list: internal BaseFace instances.
+        """
         internal_faces = []
         for key, val in self.connections.items():
             internal_faces.append(self.faces[val[0]])
         return internal_faces
 
     def plot_normal_vectors(self, point: Point=None, value=None, error_face=None):
-        """
-        Plots the normal vectors of the faces
-        
-        Args:
-            point (Point): Description.
-            value (Any): Description.
-            error_face (Any): Description.
+        """Plot face normal vectors for this element.
+
+        Category: preprocessing
+        Tags: mesh, element, normals, plot, debug
+        Use when: interactively debugging face orientation or point-containment failures.
+
+        Returns:
+            None: shows a matplotlib 3D plot.
         """
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d.art3d import Poly3DCollection

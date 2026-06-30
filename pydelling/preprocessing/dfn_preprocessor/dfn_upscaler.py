@@ -31,6 +31,12 @@ logger = logging.getLogger(__name__)
 
 
 class DfnUpscaler:
+    """Upscale DFN fractures and faults onto an unstructured mesh.
+
+    Category: preprocessing
+    Tags: dfn, upscaling, mesh, porosity, permeability, storativity
+    Use when: scripts need mesh cell properties derived from fracture and fault intersections.
+    """
     def __init__(self, dfn,
                  mesh: MeshPreprocessor,
                  parallel=False,
@@ -146,11 +152,14 @@ class DfnUpscaler:
                     local_id += 1
 
     def find_intersection_points_between_fracture_and_mesh(self, fracture: 'Fracture'):
-        """
-        Finds the intersection points between a fracture and the mesh and returns the results.
-        
-        Args:
-            fracture ('Fracture'): Description.
+        """Compute one fracture's intersections with nearby mesh elements.
+
+        Category: preprocessing
+        Tags: dfn, fracture, mesh, intersection, area
+        Use when: scripts need per-cell fracture intersection areas and associated mesh elements.
+
+        Returns:
+            dict: fracture id, intersection points, areas, and associated element metadata.
         """
         
         intersection_data = {
@@ -190,13 +199,14 @@ class DfnUpscaler:
                          nearest=None,
                          check_nodes=False,
                          ):
-        """
-        Finds the fault cells in the mesh
-        
-        Args:
-            save_fault_cells (Any): Description.
-            nearest (Any): Description.
-            check_nodes (Any): Description.
+        """Associate mesh elements with nearby fault surfaces.
+
+        Category: preprocessing
+        Tags: dfn, faults, mesh, cells, distance
+        Use when: scripts need fault-affected cells before upscaling porosity, storativity, or permeability.
+
+        Returns:
+            None: updates element associated_faults and optionally writes fault_cells.pkl.
         """
         logger.info('Finding fault cells')
         fault_cells = {}
@@ -302,16 +312,14 @@ class DfnUpscaler:
                               truncate=True,
                               ):
         # Compute upscaled porosity for each element.
-        """
-        upscale_mesh_porosity method.
-        
-        Args:
-            matrix_porosity (Any): Description.
-            intensity_correction_factor (Any): Description.
-            existing_fractures_fraction (Any): Description.
-            truncate_to_min_percentile (Any): Description.
-            truncate_to_max_percentile (Any): Description.
-            truncate (Any): Description.
+        """Compute upscaled mesh porosity from fracture volumes and faults.
+
+        Category: preprocessing
+        Tags: dfn, upscaling, porosity, mesh, fractures, faults
+        Use when: scripts need per-cell porosity values derived from DFN intersections.
+
+        Returns:
+            dict: element ids mapped to upscaled porosity values.
         """
         matrix_porosity = 0.0
         self._compute_fracture_volume_in_elements()
@@ -370,14 +378,14 @@ class DfnUpscaler:
                                  truncate=True,
                                  ):
 
-        """
-        upscale_mesh_storativity method.
-        
-        Args:
-            matrix_storativity (Any): Description.
-            truncate_to_min_percentile (Any): Description.
-            truncate_to_max_percentile (Any): Description.
-            truncate (Any): Description.
+        """Compute upscaled mesh storativity from intersecting fractures and faults.
+
+        Category: preprocessing
+        Tags: dfn, upscaling, storativity, mesh, fractures, faults
+        Use when: scripts need per-cell storativity values derived from DFN intersections.
+
+        Returns:
+            dict: element ids mapped to upscaled storativity values.
         """
         upscaled_storativity = {}
 
@@ -434,7 +442,15 @@ class DfnUpscaler:
         return upscaled_storativity
 
     def export_fault_distances(self):
-        """Exports the fault distances"""
+        """Attach accumulated fault-distance values as mesh cell data.
+
+        Category: preprocessing
+        Tags: dfn, faults, distance, mesh, cell-data
+        Use when: scripts need fault distance fields available in VTK or meshio output.
+
+        Returns:
+            None: stores distance values in mesh.cell_data and distance.
+        """
         distance = {}
 
         for elem in tqdm(self.mesh.elements, desc="Computing distances"):
@@ -451,11 +467,14 @@ class DfnUpscaler:
         self.distance = distance
 
     def export_fracture_property(self, property='area'):
-        """
-        export_fracture_property method.
-        
-        Args:
-            property (Any): Description.
+        """Aggregate one fracture intersection property onto mesh cells.
+
+        Category: preprocessing
+        Tags: dfn, fractures, property, mesh, cell-data
+        Use when: scripts need per-cell totals such as fracture area or volume exported as cell data.
+
+        Returns:
+            None: stores the aggregated property in mesh.cell_data.
         """
         property_dict = {}
         for elem in tqdm(self.mesh.elements, desc="Computing fracture properties"):
@@ -483,18 +502,14 @@ class DfnUpscaler:
                                   truncate=True,
                                   ):
 
-        """
-        upscale_mesh_permeability method.
-        
-        Args:
-            matrix_permeability (Any): Description.
-            rho (Any): Description.
-            g (Any): Description.
-            mu (Any): Description.
-            mode (Any): Description.
-            truncate_to_min_percentile (Any): Description.
-            truncate_to_max_percentile (Any): Description.
-            truncate (Any): Description.
+        """Compute upscaled permeability tensors from fractures, faults, and matrix values.
+
+        Category: preprocessing
+        Tags: dfn, upscaling, permeability, tensor, mesh, vtk
+        Use when: scripts need Kxx, Kyy, Kzz, Kxy, Kxz, and Kyz cell data for a fractured mesh.
+
+        Returns:
+            dict: element ids mapped to 3x3 upscaled permeability tensors.
         """
         matrix_permeability = {}
 
@@ -691,20 +706,26 @@ class DfnUpscaler:
         return upscaled_hk
 
     def to_vtk(self, filename):
-        """
-        Exports the mesh and the upscaled variables to VTK
-        
-        Args:
-            filename (Any): Description.
+        """Export the mesh and any upscaled cell variables to VTK.
+
+        Category: writer
+        Tags: dfn, upscaling, vtk, mesh, export
+        Use when: scripts need a VTK visualization file containing upscaled DFN properties.
+
+        Returns:
+            None: writes the VTK file.
         """
         self.mesh.to_vtk(filename)
 
     def porosity_to_csv(self, filename='./porosity.csv'):
-        """
-        Exports porosity values to csv
-        
-        Args:
-            filename (Any): Description.
+        """Export upscaled porosity values with element centroids to CSV.
+
+        Category: writer
+        Tags: dfn, porosity, csv, centroids, export
+        Use when: scripts need tabular x,y,z,porosity values for analysis or reporting.
+
+        Returns:
+            None: writes the CSV file.
         """
         import csv
         logger.info(f"Exporting porosity to {filename}")
@@ -716,11 +737,14 @@ class DfnUpscaler:
                 writer.writerow([centroid[0], centroid[1], centroid[2], porosity])
 
     def plot_porosity_histogram(self, filename='upscaled_porosity_histogram.png'):
-        """
-        Plots the upscaled porosity histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of upscaled porosity values.
+
+        Category: preprocessing
+        Tags: dfn, porosity, histogram, plot, statistics
+        Use when: scripts need to inspect the distribution of upscaled porosity.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting upscaled porosity histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -729,11 +753,14 @@ class DfnUpscaler:
         return fig, ax
 
     def plot_hkx_histogram(self, filename='upscaled_hkx_histogram.png'):
-        """
-        Plots the upscaled hkx histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of upscaled Kxx permeability values.
+
+        Category: preprocessing
+        Tags: dfn, permeability, histogram, Kxx, plot
+        Use when: scripts need to inspect the distribution of upscaled x-direction permeability.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting upscaled hkx histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -742,11 +769,14 @@ class DfnUpscaler:
         return fig, ax
 
     def plot_storativity_histogram(self, filename='upscaled_storativity_histogram.png'):
-        """
-        Plots the upscaled storativity histogram.
-        
-        Args:
-            filename (Any): Description.
+        """Build a histogram of upscaled storativity values.
+
+        Category: preprocessing
+        Tags: dfn, storativity, histogram, plot, statistics
+        Use when: scripts need to inspect the distribution of upscaled storativity.
+
+        Returns:
+            tuple: matplotlib figure and axes.
         """
         logger.info(f'Plotting upscaled storativity histogram to {filename}')
         import matplotlib.pyplot as plt
@@ -756,11 +786,14 @@ class DfnUpscaler:
 
     def export_intersection_stats(self, filename='intersection_stats.txt'):
         # Export the run_stats dictionary to file
-        """
-        export_intersection_stats method.
-        
-        Args:
-            filename (Any): Description.
+        """Export mesh fracture-intersection statistics to JSON.
+
+        Category: writer
+        Tags: dfn, intersection, stats, json, diagnostics
+        Use when: scripts need diagnostics after DFN-mesh intersection.
+
+        Returns:
+            None: writes run_stats.json.
         """
         assert self.mesh.is_intersected, 'The mesh has not been intersected yet.'
         import json
@@ -768,11 +801,14 @@ class DfnUpscaler:
             json.dump(self.mesh.find_intersection_stats, fp)
 
     def save(self, filename='upscaled_model.json'):
-        """
-        Save a copy of the class on a serialized pickle object
-        
-        Args:
-            filename (Any): Description.
+        """Serialize this upscaler object with jsonpickle.
+
+        Category: writer
+        Tags: dfn, upscaler, save, serialize, jsonpickle
+        Use when: scripts need to persist the full upscaling object state.
+
+        Returns:
+            None: writes the serialized file.
         """
         logger.info(f'Saving a copy of the class to {filename}')
         # Create saving dictionary
@@ -784,11 +820,14 @@ class DfnUpscaler:
 
 
     def to_json(self, filename='upscaler.json'):
-        """
-        Save a copy of the class on a serialized json object
-        
-        Args:
-            filename (Any): Description.
+        """Write mesh and DFN state to a JSON upscaler file.
+
+        Category: writer
+        Tags: dfn, upscaler, json, serialize, mesh
+        Use when: scripts need a portable JSON snapshot of the upscaling inputs.
+
+        Returns:
+            None: writes the JSON file.
         """
         logger.info(f'Saving a copy of the class to {filename}')
         # Create saving dictionary
@@ -807,12 +846,14 @@ class DfnUpscaler:
 
     @classmethod
     def from_json(cls, filename):
-        """
-        Load a serialized pickle object
-        
-        Args:
-            cls (Any): Description.
-            filename (Any): Description.
+        """Load a DfnUpscaler from a JSON upscaler file.
+
+        Category: preprocessing
+        Tags: dfn, upscaler, json, load, serialize
+        Use when: scripts need to restore mesh and DFN state for continued upscaling work.
+
+        Returns:
+            DfnUpscaler: restored upscaler instance.
         """
         logger.info(f'Loading the upscaling class from {filename}')
         import json
@@ -825,13 +866,14 @@ class DfnUpscaler:
             return loaded_class
 
     def add_to_class(self, key, value, default=None):
-        """
-        Add an attribute to the class
-        
-        Args:
-            key (Any): Description.
-            value (Any): Description.
-            default (Any): Description.
+        """Set an attribute and log non-default configuration.
+
+        Category: util
+        Tags: dfn, upscaler, configuration, attribute
+        Use when: scripts or initialization need to attach optional runtime settings.
+
+        Returns:
+            None: sets the attribute on this object.
         """
         setattr(self, key, value)
         if value != default:
@@ -842,5 +884,3 @@ class DfnUpscaler:
 
 
         
-
-

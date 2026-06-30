@@ -17,13 +17,22 @@ logger = logging.getLogger(__name__)
 
 
 class AscReader(BaseReader):
+    """Read, transform, and export ASCII raster grids.
+
+    Category: reader
+    Tags: raster, asc, iGP, gridded-data, export
+    Use when: scripts need legacy iGPReader support for .asc raster files and PFLOTRAN gridded datasets.
+    """
 
     def __init__(self, filename):
-        """
-        __init__ method.
-        
-        Args:
-            filename (Any): Description.
+        """Initialize the reader and load an ASC raster file.
+
+        Category: reader
+        Tags: raster, asc, open, header, data
+        Use when: scripts need an ASC raster parsed into metadata and a numpy grid.
+
+        Returns:
+            None: stores file metadata, coordinate meshes, and raster data.
         """
         self.filename = filename
         self.info_dict = {}
@@ -36,23 +45,41 @@ class AscReader(BaseReader):
         logger.debug(f"{self.info_dict}")
 
     def read_header(self, n_header=6):
-        """
-        read_header method.
-        
-        Args:
-            n_header (Any): Description.
+        """Parse ASC header key-value metadata.
+
+        Category: reader
+        Tags: raster, asc, header, metadata
+        Use when: scripts need nrows, ncols, origin, cellsize, and NODATA metadata.
+
+        Returns:
+            None: updates info_dict with parsed header values.
         """
         for i in range(0, n_header):
             line = self.opened_file.readline().split()
             self.info_dict[line[0]] = float(line[1])
 
     def read_data(self):
+        """Read raster grid rows from the opened ASC file.
+
+        Category: reader
+        Tags: raster, asc, data, grid
+        Use when: header metadata is loaded and the remaining file lines contain grid values.
+
+        Returns:
+            None: fills the data array.
+        """
         for id, line in enumerate(self.opened_file.readlines()):
             self.data[id] = line.split()
 
     def build_data_structure(self):
-        """
-        Function that creates the internal data structure of the raster file
+        """Create raster data and coordinate arrays from ASC metadata.
+
+        Category: reader
+        Tags: raster, asc, coordinates, mesh, numpy
+        Use when: scripts need allocated grid storage and x/y coordinate meshes before reading data.
+
+        Returns:
+            None: initializes data, x_mesh, and y_mesh.
         """
         assert self.info_dict is not {}
         self.data = np.zeros(shape=(int(self.info_dict["nrows"]), int(self.info_dict["ncols"])))
@@ -64,6 +91,15 @@ class AscReader(BaseReader):
         self.y_mesh = np.flipud(self.y_mesh)  # To fit into the .asc format criteria
 
     def rebuild_x_y(self):
+        """Rebuild x and y coordinate meshes from current raster metadata.
+
+        Category: preprocessing
+        Tags: raster, coordinates, mesh, downsample
+        Use when: raster dimensions or cellsize change after downsampling or replacement.
+
+        Returns:
+            None: updates x_mesh and y_mesh.
+        """
         x_range = np.arange(self.info_dict["xllcorner"], self.info_dict["nrows"] * self.info_dict["cellsize"],
                             self.info_dict["cellsize"])
         y_range = np.arange(self.info_dict["yllcorner"], self.info_dict["ncols"] * self.info_dict["cellsize"],
@@ -71,6 +107,15 @@ class AscReader(BaseReader):
         self.x_mesh, self.y_mesh = np.meshgrid(x_range, y_range)
 
     def dump_to_xydata(self):
+        """Flatten raster cells into x,y,value rows.
+
+        Category: reader
+        Tags: raster, xydata, flatten, coordinates, values
+        Use when: scripts need point samples for CSV, WSV, interpolation, or analysis.
+
+        Returns:
+            numpy.ndarray: rows containing x, y, and raster value.
+        """
         ndata = int(self.info_dict["nrows"] * self.info_dict["ncols"])
         self.xydata = np.zeros(shape=(ndata, 3))
         x_mesh_flatten = self.x_mesh.flatten()
@@ -81,11 +126,14 @@ class AscReader(BaseReader):
         return self.xydata
 
     def dump_to_csv(self, output_file):
-        """
-        Function that writes the ratser data into a csv file
-        
-        Args:
-            output_file (Any): Description.
+        """Write raster point samples to CSV.
+
+        Category: writer
+        Tags: raster, csv, export, coordinates, values
+        Use when: scripts need comma-separated x,y,value rows excluding NODATA cells.
+
+        Returns:
+            None: writes the CSV file under the configured output path.
         """
         logger.info(f"Writing into {output_file}")
         if not self.xydata_computed:
@@ -100,11 +148,14 @@ class AscReader(BaseReader):
         f.close()
 
     def dump_to_wsv(self, output_file):
-        """
-        dump_to_wsv method.
-        
-        Args:
-            output_file (Any): Description.
+        """Write raster point samples as whitespace-separated values.
+
+        Category: writer
+        Tags: raster, wsv, export, coordinates, values
+        Use when: scripts need plain whitespace-delimited x y value rows.
+
+        Returns:
+            None: writes the WSV file.
         """
         logger.info(f"Writing into {output_file}")
         if not self.xydata_computed:
@@ -117,11 +168,14 @@ class AscReader(BaseReader):
         f.close()
 
     def dump_to_asc(self, output_file):
-        """
-        dump_to_asc method.
-        
-        Args:
-            output_file (Any): Description.
+        """Write the current raster grid to an ASC file.
+
+        Category: writer
+        Tags: raster, asc, export, header, grid
+        Use when: scripts need to persist modified or downsampled raster data in ASC format.
+
+        Returns:
+            None: writes the ASC file.
         """
         logger.info(f"Writing into {output_file}")
         file = open(output_file, "w")
@@ -131,31 +185,39 @@ class AscReader(BaseReader):
 
     def write_asc_header(self, file):
         # assert isinstance(file, type(open)), "is not a correct file"
-        """
-        write_asc_header method.
-        
-        Args:
-            file (Any): Description.
+        """Write ASC header metadata to an open file handle.
+
+        Category: writer
+        Tags: raster, asc, header, metadata
+        Use when: emitting an ASC file before writing numeric grid rows.
+
+        Returns:
+            None: writes header lines to file.
         """
         for head in self.info_dict:
             file.write(f"{head} {self.info_dict[head]}\n")
 
     def write_asc_data(self, file):
-        """
-        write_asc_data method.
-        
-        Args:
-            file (Any): Description.
+        """Write raster grid values to an open ASC file handle.
+
+        Category: writer
+        Tags: raster, asc, data, grid
+        Use when: emitting numeric raster rows after an ASC header.
+
+        Returns:
+            None: writes raster rows to file.
         """
         np.savetxt(file, self.data, fmt="%3.2f")
 
     def export_to_gridded_dataset(self, filename=None, attrs=None):
-        """
-        This method exports the asc data to the PFLOTRAN gridded dataset hdf5 file format
-        
-        Args:
-            filename (Any): Description.
-            attrs (Any): Description.
+        """Export ASC raster data to a PFLOTRAN gridded dataset HDF5 file.
+
+        Category: writer
+        Tags: raster, pflotran, hdf5, gridded-dataset, export
+        Use when: PFLOTRAN inputs need a gridded dataset built from an ASC raster.
+
+        Returns:
+            None: writes the HDF5 gridded dataset.
         """
         filename = get_output_path() / filename if filename else get_output_path() / "gridded_dataset.h5"
         growth_factor = config.general.raster_growth_factor if config.general.raster_growth_factor else 1.0
@@ -173,20 +235,26 @@ class AscReader(BaseReader):
         logger.info(f"Gridded dataset has been exported at {filename}")
 
     def change_data(self, data: np.array):
-        """
-        change_data method.
-        
-        Args:
-            data (np.array): Description.
+        """Replace the raster data array.
+
+        Category: preprocessing
+        Tags: raster, data, numpy, replace
+        Use when: scripts need to assign filtered, transformed, or externally computed raster values.
+
+        Returns:
+            None: updates the data attribute.
         """
         self.data = data
 
     def downsample_data(self, slice_factor=2):
-        """
-        This module downsamples the data based on a constant stride in each direction
-        
-        Args:
-            slice_factor (Any): Description.
+        """Downsample the raster by a constant row and column stride.
+
+        Category: preprocessing
+        Tags: raster, downsample, cellsize, coordinates
+        Use when: scripts need a coarser raster grid with updated dimensions and spacing.
+
+        Returns:
+            None: mutates data, metadata, and coordinate meshes.
         """
         self.data = self.data[0::slice_factor, 0::slice_factor]
         self.info_dict["nrows"] = self.data.shape[0]
