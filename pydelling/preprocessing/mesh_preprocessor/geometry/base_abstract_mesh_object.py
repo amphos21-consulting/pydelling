@@ -4,6 +4,14 @@ import numpy as np
 
 
 class BaseAbstractMeshObject:
+    """Attribute namespace for mesh-preprocessor geometry objects.
+
+    Category: mesh geometry.
+    Tags: mesh, geometry, nodes, coordinates, centroid.
+    Use when: an MCP agent needs the common attribute contract shared by
+        mesh-preprocessor elements and faces.
+    """
+
     nodes: np.ndarray  # Node id set
     coords: np.ndarray   # Coordinates of each node
     local_id = int  # Element id

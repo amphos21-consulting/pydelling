@@ -7,6 +7,13 @@ The base class for all status classes. This class should read a given status fil
 import os
 
 class BaseStatus:
+    """Base status-file reader for simulation progress helpers.
+
+    Category: simulation status.
+    Tags: status-file, progress, simulation, extension-point.
+    Use when: an MCP agent needs to understand the common contract for status
+        parsers such as PFLOTRAN status readers.
+    """
 
     def __init__(self, status_file, ssh_manager=None):
         """

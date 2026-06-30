@@ -23,6 +23,15 @@ from .comsol_manager_objects.comsol_variables_and_parameters import ComsolVariab
 logger = logging.getLogger(__name__)
 
 class ComsolManager:
+    """Top-level manager for COMSOL models through the ``mph`` API.
+
+    Category: COMSOL management.
+    Tags: comsol, mph, manager, model, simulation.
+    Use when: an MCP agent needs to open COMSOL through pydelling and create
+        model wrappers for studies, components, variables, parameters, and
+        results.
+    """
+
     def __init__(self,
                  version: str | None = None,
                  ):

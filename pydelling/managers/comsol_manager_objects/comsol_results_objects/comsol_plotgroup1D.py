@@ -13,6 +13,14 @@ from .comsol_plots_objects.comsol_linegraph import _LineGraph
 from .comsol_plots_objects.comsol_pointgraph import _PointGraph
      
 class _PlotGroup1D:
+    """Wrapper around a COMSOL 1D plot group.
+
+    Category: COMSOL management.
+    Tags: comsol, results, plot-group, 1d, line-graph.
+    Use when: an MCP agent needs to create or modify 1D COMSOL result plot
+        groups and their line/point graph children.
+    """
+
     def __init__(self,
                     results: 'ComsolResults',
                     tag: str | None = None,

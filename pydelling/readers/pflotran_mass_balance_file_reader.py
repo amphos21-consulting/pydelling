@@ -20,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class PflotranMassBalanceFileReader(PflotranObservationPointReader):
+    """Read PFLOTRAN mass-balance observation files.
+
+    Category: PFLOTRAN reader.
+    Tags: pflotran, mass-balance, observation, plot.
+    Use when: an MCP agent needs to load PFLOTRAN mass-balance outputs and
+        generate mass-balance plots.
+    """
+
     observation_point: np.ndarray
     observation_boundary: str
     observation_node: int
@@ -46,4 +54,3 @@ class PflotranMassBalanceFileReader(PflotranObservationPointReader):
         plt.Axes
             The mass balance plot
         """
-

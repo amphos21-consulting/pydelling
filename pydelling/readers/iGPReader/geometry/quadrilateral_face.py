@@ -10,18 +10,40 @@ from pydelling.readers.iGPReader.geometry import BaseFace
 
 
 class QuadrilateralFace(BaseFace):
+    """Quadrilateral iGP face storing node ids and coordinates.
+
+    Category: iGP geometry.
+    Tags: quadrilateral, face, centroid.
+    Use when: an MCP agent needs to identify quadrilateral boundary faces in iGP
+        mesh geometry.
+    """
+
     def __init__(self, nodes, coords):
-        """
-        __init__ method.
-        
+        """Create a quadrilateral face from connectivity and coordinates.
+
+        Category: iGP geometry.
+        Tags: quadrilateral, face, nodes, coordinates.
+        Use when: constructing quadrilateral faces for element topology or
+            region operations.
         Args:
-            nodes (Any): Description.
-            coords (Any): Description.
+            nodes: Node ids defining the face.
+            coords: Coordinate array for the face vertices.
+        Side effects:
+            Initializes base face geometry and sets ``type`` to
+            ``"Quadrilateral"``.
         """
         super().__init__(nodes, coords)
         self.type = "Quadrilateral"
 
     def compute_centroid(self):
+        """Return the arithmetic mean centroid of the face vertices.
+
+        Category: iGP geometry.
+        Tags: quadrilateral, centroid, coordinates.
+        Use when: region and export operations need a representative face point.
+        Returns:
+            np.ndarray: Mean coordinate of the face vertices.
+        """
         return np.mean(self.coords, axis=0)
         # t1 = [0, 1, 3]
         # t2 = [1, 2, 3]

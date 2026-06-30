@@ -11,6 +11,14 @@ if TYPE_CHECKING:
     from .comsol_table import _Table
 
 class _DerivedValue:
+    """Wrapper around a COMSOL derived value result object.
+
+    Category: COMSOL management.
+    Tags: comsol, results, derived-value, table, evaluation.
+    Use when: an MCP agent needs to configure COMSOL evaluations such as
+        averages, integrals, minima, maxima, or point/global evaluations.
+    """
+
     def __init__(self,
                     results: 'ComsolResults',
                     tag: str | None = None,

@@ -7,6 +7,14 @@ from copy import deepcopy
 
 
 class BaseReader:
+    """Base iGP reader interface with copy support.
+
+    Category: iGP reader.
+    Tags: igp, reader, dataframe, copy.
+    Use when: an MCP agent needs the common contract for iGP reader subclasses
+        that populate keyed pandas DataFrames.
+    """
+
     filename: str
     data: Dict[str, pd.DataFrame]
 

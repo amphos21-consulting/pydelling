@@ -12,6 +12,14 @@ except:
 
 
 class ClipFilter(base_filter):
+    """ParaView Clip filter wrapper.
+
+    Category: ParaView filter.
+    Tags: paraview, clip, box, geometry.
+    Use when: an MCP agent needs to clip a ParaView dataset, including
+        box-shaped clipping regions.
+    """
+
     filter_type: str = "Clip"
     counter: int = 0
 

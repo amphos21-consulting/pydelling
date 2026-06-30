@@ -15,6 +15,14 @@ from .point import Point
 
 
 class Vector(np.ndarray, BasePrimitive):
+    """NumPy-backed vector primitive.
+
+    Category: geometry primitive.
+    Tags: vector, numpy, point, geometry.
+    Use when: an MCP agent needs to understand vector creation from coordinates
+        or from the displacement between two points.
+    """
+
     coords: np.ndarray
     def __new__(cls, v: np.ndarray or List=None, p1: Point or List or np.ndarray=None, p2: Point or List or np.ndarray=None, *args, **kwargs):
         """
@@ -48,4 +56,3 @@ class Vector(np.ndarray, BasePrimitive):
 
     def __repr__(self):
         return f"Vector({self})"
-

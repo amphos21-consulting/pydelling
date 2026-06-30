@@ -19,6 +19,14 @@ logger = logging.getLogger(__name__)
 from typing import Union, List
 
 class GidObject(object):
+    """Base container for generating GiD geometry command pipelines.
+
+    Category: GID preprocessing.
+    Tags: gid, geometry, pipeline, batch-commands.
+    Use when: an MCP agent needs to understand how pydelling stores points,
+        lines, surfaces, volumes, and generated GiD batch commands.
+    """
+
     def __init__(self, *args, **kwargs):
         """Initialize in-memory containers for GiD pipeline construction.
 

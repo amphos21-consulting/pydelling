@@ -2,7 +2,24 @@ from pydelling.webapps.web_app_runer import WebAppRunner
 
 
 class TestWebApp(WebAppRunner):
+    """Streamlit/PyVista smoke app for embedded VTK visualization.
+
+    Category: Web application.
+    Tags: streamlit, pyvista, vtk, test-webapp, visualization.
+    Use when: an MCP agent needs to identify the test app that exports a PyVista
+        scene and embeds it in Streamlit.
+    """
+
     def construct(self):
+        """Render a sample PyVista uniform grid as embedded HTML.
+
+        Category: Web application.
+        Tags: streamlit, pyvista, vtk, html, visualization.
+        Use when: smoke-testing PyVista HTML export and Streamlit component
+            embedding.
+        Side effects:
+            Writes ``pyvista.html`` and embeds the generated HTML in the page.
+        """
         import streamlit.components.v1 as components
         import pyvista
         from pyvista import examples

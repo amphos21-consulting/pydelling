@@ -20,16 +20,29 @@ import streamlit as st
 
 
 class SmeshReader(MeshPreprocessor):
+    """Read TetGen-style ``.smesh`` files into the mesh preprocessor.
+
+    Category: mesh reader.
+    Tags: smesh, mesh, tetgen, kd-tree, streamlit.
+    Use when: an MCP agent needs to load SMesh nodes/elements and create
+        pydelling mesh-preprocessor elements.
+    """
+
     has_kd_tree = False
 
     def __init__(self, filename, kd_tree=True, st_file=False):
-        """
-        __init__ method.
-        
+        """Load an SMesh file or cached mesh state.
+
+        Category: mesh reader.
+        Tags: smesh, mesh, kd-tree, initialization.
+        Use when: constructing a mesh reader from an SMesh file for
+            interpolation or preprocessing.
         Args:
-            filename (Any): Description.
-            kd_tree (Any): Description.
-            st_file (Any): Description.
+            filename: Path to ``.smesh`` file or cached mesh object.
+            kd_tree: Whether to create a spatial KD-tree after reading.
+            st_file: Whether to emit Streamlit progress widgets.
+        Side effects:
+            Reads mesh data, may build a KD-tree, and marks ``has_kd_tree``.
         """
         super().__init__()
         self.is_streamlit = st_file
@@ -43,11 +56,16 @@ class SmeshReader(MeshPreprocessor):
             self.load(filename)
 
     def read_file(self, filename):
-        """
-        read_file method.
-        
+        """Parse SMesh nodes and supported element types.
+
+        Category: mesh reader.
+        Tags: smesh, nodes, elements, tetrahedra, pyramid, wedge, hexahedra.
+        Use when: reading SMesh text data into mesh-preprocessor elements.
         Args:
-            filename (Any): Description.
+            filename: SMesh file path.
+        Side effects:
+            Populates ``aux_nodes`` and adds tetrahedra, pyramid, wedge, or
+            hexahedra elements.
         """
         with open(filename, 'r') as f:
             first_line = f.readline()

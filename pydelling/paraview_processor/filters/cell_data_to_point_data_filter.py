@@ -12,6 +12,14 @@ except:
 
 
 class CellDataToPointDataFilter(base_filter):
+    """ParaView CellDataToPointData filter wrapper.
+
+    Category: ParaView filter.
+    Tags: paraview, cell-data, point-data, conversion.
+    Use when: an MCP agent needs to convert cell-centered arrays into point data
+        for visualization or sampling.
+    """
+
     filter_type: str = "Cell_data_to_point_data"
     counter: int = 0
 

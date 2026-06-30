@@ -13,15 +13,30 @@ logger = logging.getLogger(__name__)
 
 
 class UnitConverter:
-    """A class for converting between units of measurement."""
+    """Convert common time units used in pydelling workflows.
+
+    Category: utilities.
+    Tags: units, time, conversion.
+    Use when: an MCP agent needs to convert between seconds, minutes, hours,
+        days, and years.
+    """
+
     def convert_time(self, value, initial_unit, final_unit):
-        """
-        Converts between time units.
-        
+        """Convert one time value between supported units.
+
+        Category: utilities.
+        Tags: units, time, conversion.
+        Use when: normalizing time values for simulation inputs or reports.
         Args:
-            value (Any): Description.
-            initial_unit (Any): Description.
-            final_unit (Any): Description.
+            value: Numeric time value.
+            initial_unit: Source unit, one of ``s``, ``min``, ``h``, ``d``, or
+                ``y``.
+            final_unit: Target unit, one of ``s``, ``min``, ``h``, ``d``, or
+                ``y``.
+        Returns:
+            float: Converted value.
+        Raises:
+            ValueError: If the unit conversion is unsupported.
         """
         value = float(value)
         if initial_unit == 's' and final_unit == 'd':
@@ -338,7 +353,6 @@ class SemistructuredFinder:
         for cluster in self.clusters:
             centers.append(np.mean(cluster, axis=0))
         return centers
-
 
 
 

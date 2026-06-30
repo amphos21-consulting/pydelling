@@ -12,6 +12,14 @@ if TYPE_CHECKING:
 from .comsol_plots_objects.comsol_surface import _Surface    
 
 class _PlotGroup2D:
+    """Wrapper around a COMSOL 2D plot group.
+
+    Category: COMSOL management.
+    Tags: comsol, results, plot-group, 2d, surface.
+    Use when: an MCP agent needs to create or modify 2D COMSOL result plot
+        groups and surface plot children.
+    """
+
     def __init__(self,
                     results: 'ComsolResults',
                     tag: str | None = None,

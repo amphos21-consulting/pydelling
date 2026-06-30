@@ -11,6 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCallback(ABC):
+    """Base callback interface for study manager lifecycle hooks.
+
+    Category: simulation callback.
+    Tags: callback, study, manager, pre-run, post-run.
+    Use when: an MCP agent needs to understand how pydelling attaches custom
+        pre/post behavior to managed studies.
+    """
+
     def __init__(self, manager: BaseManager, study: BaseStudy, kind: str = None, **kwargs):
         """
         Initialize callback context and user-provided options.

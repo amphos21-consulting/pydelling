@@ -6,6 +6,14 @@ from abc import ABC
 import streamlit as st
 from .base_streamlit_utility_class import BaseStreamlitUtilityClass
 class WebAppRunner(ABC, BaseStreamlitUtilityClass):
+    """Base runner for pydelling Streamlit webapps.
+
+    Category: Web application.
+    Tags: streamlit, webapp, runner, lifecycle.
+    Use when: an MCP agent needs to understand how pydelling webapps launch via
+        Streamlit or render directly inside an existing Streamlit runtime.
+    """
+
     def __init__(self):
         self.source_script_name = None
         if 'threading' not in inspect.stack()[-1][1]:

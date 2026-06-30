@@ -19,12 +19,28 @@ logger = logging.getLogger(__name__)
 
 
 class FeflowBaseRader:
+    """Base class for FEFLOW readers.
+
+    Category: FEFLOW reader.
+    Tags: feflow, reader, base-class.
+    Use when: an MCP agent needs the common parent type used by FEFLOW reader
+        implementations before selecting concrete parsing helpers.
+    """
+
     def __init__(self):
         logger.info(f"Feflow reader")
         pass
 
     def read(self):
-        """ Reads method. """
+        """Placeholder entry point for concrete FEFLOW readers.
+
+        Category: FEFLOW reader.
+        Tags: feflow, reader, abstract-method.
+        Use when: checking the base API contract before calling subclass
+            parsing methods such as ``read_field_dat``.
+        Returns:
+            None: Base implementation does not read a file.
+        """
         pass
 
 

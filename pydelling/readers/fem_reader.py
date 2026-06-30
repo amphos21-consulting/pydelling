@@ -17,17 +17,29 @@ from tqdm import tqdm
 
 
 class FemReader(MeshPreprocessor):
+    """Read FEM ASCII meshes into the mesh preprocessor.
+
+    Category: mesh reader.
+    Tags: fem, mesh, ascii, kd-tree, feflow.
+    Use when: an MCP agent needs to load FEM mesh nodes/elements for
+        interpolation or mesh preprocessing.
+    """
+
     upscaled_permeability = {} # dict of upscaled permeability values
     upscaled_porosity = {} # dict of upscaled porosity values
 
     def __init__(self, filename, kd_tree=True, st_file=False):
-        """
-        __init__ method.
-        
+        """Load a FEM mesh file and optionally build a KD-tree.
+
+        Category: mesh reader.
+        Tags: fem, mesh, kd-tree, initialization.
+        Use when: constructing a reader for FEM ASCII mesh data.
         Args:
-            filename (Any): Description.
-            kd_tree (Any): Description.
-            st_file (Any): Description.
+            filename: FEM mesh file path.
+            kd_tree: Whether to create a spatial KD-tree after reading.
+            st_file: Whether this reader is used by Streamlit workflows.
+        Side effects:
+            Parses the file and may create a KD-tree.
         """
         super().__init__(st_file=False)
         self.aux_nodes = []
@@ -37,11 +49,17 @@ class FemReader(MeshPreprocessor):
             self.create_kd_tree()
 
     def open_file(self, filename):
-        """
-        open_file method.
-        
+        """Parse FEM mesh sections.
+
+        Category: mesh reader.
+        Tags: fem, mesh, nodes, elements, ascii.
+        Use when: reading FEM text sections such as dimensions, node
+            connectivity, and coordinates.
         Args:
-            filename (Any): Description.
+            filename: FEM mesh file path.
+        Side effects:
+            Populates auxiliary mesh counts, node arrays, and coordinate lists
+            used by the mesh preprocessor.
         """
         if self.is_streamlit:
             import streamlit as st
@@ -166,7 +184,6 @@ class FemReader(MeshPreprocessor):
 
             else:
                 logger.warning(f"Element type {element_type[e]} not supported")
-
 
 
 

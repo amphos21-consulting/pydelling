@@ -11,6 +11,14 @@ from typing import Union, List, Dict
 logger = logging.getLogger(__name__)
 
 class LineNotFound(Exception):
+    """Raised when a requested PFLOTRAN input-deck line cannot be found.
+
+    Category: PFLOTRAN study.
+    Tags: pflotran, input-file, exception, lookup.
+    Use when: an MCP agent needs to identify errors from PFLOTRAN input-deck
+        editing operations.
+    """
+
     pass
 
 class PflotranStudy(BaseStudy):
@@ -503,5 +511,4 @@ class PflotranStudy(BaseStudy):
             dict: line indexes mapped to region names.
         """
         return {v: k for k, v in self.regions_to_idx.items()}
-
 

@@ -10,6 +10,14 @@ import scipy.special as scsp
 logger = logging.getLogger(__name__)
 
 class SubfishException(Exception):
+    """Exception raised by SubFISH transport helper routines.
+
+    Category: utilities.
+    Tags: subfish, exception, transport.
+    Use when: an MCP agent needs to recognize errors originating from the
+        SubFISH analytical solution module.
+    """
+
     pass
 
 
@@ -28,4 +36,4 @@ def calculate_tang(tang_data):
     l = tang_data["l"]
 
     min_time = float(tang_data["min_time"])
-    max_time = float(tang_data["max_time"]) 
+    max_time = float(tang_data["max_time"])

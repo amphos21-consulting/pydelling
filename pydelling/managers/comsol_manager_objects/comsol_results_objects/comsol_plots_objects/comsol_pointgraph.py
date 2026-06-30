@@ -12,6 +12,14 @@ if TYPE_CHECKING:
     from ..comsol_plotgroup1D import _PlotGroup1D
     
 class _PointGraph:
+    """Wrapper around a COMSOL 1D point graph plot.
+
+    Category: COMSOL management.
+    Tags: comsol, results, point-graph, plot.
+    Use when: an MCP agent needs to configure point graph expressions, styling,
+        legends, or datasets under a 1D plot group.
+    """
+
     def __init__(self,
                     plotgroup: '_PlotGroup1D',
                     tag: str | None = None,

@@ -225,37 +225,79 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
         A dictionary containing the sampled results
     """
     class BaseDistribution:
+        """Base sampler used by ``sample_values_from_dict``.
+
+        Category: utilities.
+        Tags: sampling, distribution, sensitivity-analysis.
+        Use when: an MCP agent needs to understand the local sampler contract
+            used to generate sensitivity-analysis cases.
+        """
+
         def __init__(self):
             pass
         def run(self) -> float:
-            """
-            This method generates a value of the given distribution
-            Returns: a float number containing the value
+            """Generate one sampled value.
+
+            Category: utilities.
+            Tags: sampling, distribution, extension-point.
+            Use when: implementing a local sampler used by
+                ``sample_values_from_dict``.
+            Returns:
+                float: Sampled value.
             """
 
     class ConstantDistribution(BaseDistribution):
+        """Sampler that always returns one constant value.
+
+        Category: utilities.
+        Tags: sampling, constant, sensitivity-analysis.
+        Use when: a sensitivity-analysis material should keep the same value in
+            every generated case.
+        """
+
         def __init__(self, value):
-            """
-            __init__ method.
-            
+            """Store the constant sampled value.
+
+            Category: utilities.
+            Tags: sampling, constant, initialization.
+            Use when: creating a deterministic sampler.
             Args:
-                value (Any): Description.
+                value: Value returned by every call to ``run``.
             """
             super().__init__()
             self.value = value
 
         def run(self):
+            """Return the configured constant value.
+
+            Category: utilities.
+            Tags: sampling, constant.
+            Use when: generating one deterministic sample.
+            Returns:
+                Any: The configured value.
+            """
             return self.value
 
     class NormalDistribution(BaseDistribution):
+        """Sampler for normal or log-normal random values.
+
+        Category: utilities.
+        Tags: sampling, normal, lognormal, sensitivity-analysis.
+        Use when: sensitivity-analysis cases need random values from a normal or
+            log-normal distribution.
+        """
+
         def __init__(self, mean, std, log=False):
-            """
-            __init__ method.
-            
+            """Configure the normal or log-normal sampler.
+
+            Category: utilities.
+            Tags: sampling, normal, lognormal, initialization.
+            Use when: creating a stochastic sampler from mean and standard
+                deviation parameters.
             Args:
-                mean (Any): Description.
-                std (Any): Description.
-                log (Any): Description.
+                mean: Distribution mean.
+                std: Distribution standard deviation.
+                log: If ``True``, sample from a log-normal distribution.
             """
             super().__init__()
             self.mean = float(mean)
@@ -263,6 +305,14 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
             self.log = log
 
         def run(self):
+            """Generate one normal or log-normal random value.
+
+            Category: utilities.
+            Tags: sampling, normal, lognormal.
+            Use when: generating one stochastic sensitivity-analysis value.
+            Returns:
+                float: Random sample.
+            """
             if not self.log:
                 return np.random.normal(self.mean, self.std)
             else:
@@ -555,5 +605,4 @@ def compute_area_of_polygon(points):
         area -= points[j][0] * points[i][1]
     area = abs(area) / 2.0
     return area
-
 

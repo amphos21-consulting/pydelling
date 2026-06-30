@@ -20,6 +20,15 @@ logger = logging.getLogger(__name__)
 
 
 class PflotranSaveResultsCallback(BaseCallback):
+    """Post-run callback that collects PFLOTRAN HDF5 outputs.
+
+    Category: PFLOTRAN callback.
+    Tags: pflotran, results, hdf5, postprocess, callback.
+    Use when: an MCP agent needs to understand how pydelling copies or moves
+        study outputs into a merged results folder and optionally postprocesses
+        them.
+    """
+
     move: bool = False
     postprocess: bool = False
     def __init__(self, manager: PflotranManager,

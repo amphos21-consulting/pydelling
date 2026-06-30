@@ -12,6 +12,14 @@ if TYPE_CHECKING:
     from ..comsol_plotgroup1D import _PlotGroup1D
     
 class _LineGraph:
+    """Wrapper around a COMSOL 1D line graph plot.
+
+    Category: COMSOL management.
+    Tags: comsol, results, line-graph, plot.
+    Use when: an MCP agent needs to configure line graph expressions, styling,
+        legends, or datasets under a 1D plot group.
+    """
+
     def __init__(self,
                     plotgroup: '_PlotGroup1D',
                     tag: str | None = None,

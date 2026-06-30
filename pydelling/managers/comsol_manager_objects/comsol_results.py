@@ -17,6 +17,14 @@ from .comsol_results_objects.comsol_table import _Table
 from .comsol_results_objects.comsol_derived_values import _DerivedValue
 
 class ComsolResults:
+    """Wrapper around COMSOL result, plot, table, and export APIs.
+
+    Category: COMSOL management.
+    Tags: comsol, results, plots, tables, derived-values.
+    Use when: an MCP agent needs to create or inspect COMSOL post-processing
+        result objects through pydelling.
+    """
+
     def __init__(self,
                  comsol: 'ComsolManager.ComsolModel'):
         """
@@ -203,6 +211,14 @@ class ComsolResults:
         return derived_value
 
     class _ExportProperties:
+        """Container for COMSOL plot export display properties.
+
+        Category: COMSOL management.
+        Tags: comsol, export, plot, image-properties.
+        Use when: configuring plot export size, resolution, and visibility
+            options before writing COMSOL result images.
+        """
+
         def __init__(self,
                      width: int | None = None,
                      height: int | None = None,
@@ -523,6 +539,14 @@ class ComsolResults:
         return var_list
 
     class ComsolExportPlot:
+        """Simple COMSOL plot export configuration object.
+
+        Category: COMSOL management.
+        Tags: comsol, export, plot, image-properties.
+        Use when: carrying plot export dimensions, resolution, and font size for
+            COMSOL result export workflows.
+        """
+
         def __init__(self,
                      width: int,
                      height: int,
@@ -541,4 +565,3 @@ class ComsolResults:
             self.height = height
             self.resolution = resolution
             self.font_size = font_size
- 

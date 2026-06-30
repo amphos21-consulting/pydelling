@@ -10,15 +10,31 @@ from matplotlib import pyplot as plt
 
 
 class ImageOperations:
+    """Mixin for image-derived geometry operations.
+
+    Category: image operations.
+    Tags: image, polygons, contours, raster.
+    Use when: an MCP agent needs to identify helper methods that derive polygon
+        geometry from image-like reader data.
+    """
+
     data: np.ndarray
     def get_polygons_from_image(self, min_vertices=4):
         # Finds closed polygons from the image
         # Convert numpy array to grayscale image
-        """
-        get_polygons_from_image method.
-        
+        """Detect polygon contours from the stored image data.
+
+        Category: image operations.
+        Tags: image, polygons, contours, opencv.
+        Use when: extracting approximate polygon outlines from raster/image
+            data.
         Args:
-            min_vertices (Any): Description.
+            min_vertices: Minimum number of approximated contour vertices to
+                keep.
+        Returns:
+            list: OpenCV contour approximations that satisfy ``min_vertices``.
+        Side effects:
+            Prints intermediate image statistics while processing.
         """
         cache_img = self.data.copy()
         print(cache_img.min())

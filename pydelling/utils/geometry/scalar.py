@@ -6,6 +6,14 @@ Module documentation.
 
 
 class Scalar:
+    """Simple scalar geometry value wrapper.
+
+    Category: geometry primitive.
+    Tags: scalar, value, geometry.
+    Use when: an MCP agent needs to recognize scalar primitive wrappers used by
+        pydelling geometry utilities.
+    """
+
     def __init__(self, value=0.0):
         """
         __init__ method.

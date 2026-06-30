@@ -18,6 +18,14 @@ from jpype import JArray, JDouble, JString
 
 
 class _Table:
+    """Wrapper around a COMSOL result table.
+
+    Category: COMSOL management.
+    Tags: comsol, results, table, export, dataframe.
+    Use when: an MCP agent needs to create, read, update, or export COMSOL
+        result tables through pydelling.
+    """
+
     def __init__(self,
                     results: 'ComsolResults',
                     tag: list | None = None,
@@ -204,4 +212,3 @@ class _Table:
         if delim is None: self._api.loadFile(import_path)
         else: self._api.loadFile(import_path, delim)
         logger.info(f"{import_path} imported into {self.tag}")
-  
