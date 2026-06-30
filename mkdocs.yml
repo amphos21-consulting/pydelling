@@ -1,8 +1,8 @@
 site_name: pydelling - Numerical Modeling Toolkit
 site_description: Comprehensive Python library for mesh preprocessing and numerical modeling workflows
 site_url: !ENV [DOCS_SITE_URL, "https://amphos21-consulting.github.io/pydelling/"]
-repo_url: https://github.com/amphos21-consulting/pydelling
-repo_name: GitHub Repository
+repo_url: https://gitlab.amphos21.com/aitirga/pydelling
+repo_name: GitLab Repository
 edit_uri: edit/main/docs/
 
 exclude_docs: |
