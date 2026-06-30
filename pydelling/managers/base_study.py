@@ -34,6 +34,12 @@ logger = logging.getLogger(__name__)
 
 
 class BaseStudy(UnitConverter):
+    """Base class for templated simulation studies and input-file generation.
+
+    Category: manager
+    Tags: study, simulation, jinja, input-files, callbacks
+    Use when: implementing software-specific study managers that render templates, copy inputs, and run hooks.
+    """
     count = 0
     shared_folder_default_name = 'shared_folder'
     results_folder_name = None
@@ -44,14 +50,14 @@ class BaseStudy(UnitConverter):
                  is_independent: bool = False,
                  input_file_name: str = None,
                  ):
-        """
-        This method initializes the manager.
-        
-        Args:
-            input_file (str): Description.
-            study_name (str): Description.
-            is_independent (bool): Description.
-            input_file_name (str): Description.
+        """Initialize a study from a template input file.
+
+        Category: manager
+        Tags: study, template, input-file, initialization
+        Use when: subclasses need common state for rendering input files and managing auxiliary files.
+
+        Returns:
+            None: stores template text, settings, callbacks, and file registries.
         """
         if not is_independent:
             self.idx = self.__class__.count
@@ -77,23 +83,38 @@ class BaseStudy(UnitConverter):
 
 
     def pre_run(self):
-        """This method is executed before the run.
+        """Hook executed before a study run.
+
+        Category: manager
+        Tags: study, hook, pre-run, lifecycle
+        Use when: subclasses need to prepare files or state before execution.
+
+        Returns:
+            None: base implementation does nothing.
         """
         pass
 
     def post_run(self):
-        """This method is executed after the run.
+        """Hook executed after a study run.
+
+        Category: manager
+        Tags: study, hook, post-run, lifecycle
+        Use when: subclasses need to collect outputs or cleanup after execution.
+
+        Returns:
+            None: base implementation does nothing.
         """
         pass
 
     def _replace_with_jinja_variable(self, var, var_name=None, value=None):
-        """
-        This method replaces a variable in the raw text with a jinja variable.
-        
-        Args:
-            var (Any): Description.
-            var_name (Any): Description.
-            value (Any): Description.
+        """Replace text in the template and register a Jinja variable value.
+
+        Category: manager
+        Tags: study, jinja, template, replace
+        Use when: scripts need a raw input token converted into a render-time variable.
+
+        Returns:
+            None: updates raw_text and jinja_settings.
         """
         logger.debug(f"Replacing {var} with jinja variable")
         if var_name is None:
@@ -103,25 +124,28 @@ class BaseStudy(UnitConverter):
 
 
     def replace_variable(self, var, value=None):
-        """
-        This method replaces a variable in the raw defined between {} with a value.
-        
-        Args:
-            var (Any): Description.
-            value (Any): Description.
+        """Register a template variable replacement.
+
+        Category: manager
+        Tags: study, jinja, variable, replace
+        Use when: scripts need to set a value that will be injected during render.
+
+        Returns:
+            None: updates the Jinja settings for the variable.
         """
         logger.info(f"Replacing {var} with value {value}")
         self._replace_with_jinja_variable(var, value=value)
 
 
     def _find_tags(self, tag: str, ignore_case: bool = True, equal: bool = True):
-        """
-        This method finds the line index of the tag in the raw text.
-        
-        Args:
-            tag (str): Description.
-            ignore_case (bool): Description.
-            equal (bool): Description.
+        """Find non-comment lines containing a tag.
+
+        Category: util
+        Tags: study, text, tags, line-index
+        Use when: subclass managers need to locate editable sections in an input template.
+
+        Returns:
+            list: line indexes containing the tag.
         """
         logger.debug(f"Finding tag '{tag}'")
         lines = self.raw_text.splitlines()
@@ -141,13 +165,14 @@ class BaseStudy(UnitConverter):
         return line_idx
 
     def _find_tags_in_subset(self, tags: list, subset: list, ignore_case: bool = True):
-        """
-        This method finds the line index of the tag in the raw text.
-        
-        Args:
-            tags (list): Description.
-            subset (list): Description.
-            ignore_case (bool): Description.
+        """Find lines in a subset that contain any requested tag.
+
+        Category: util
+        Tags: study, text, tags, subset
+        Use when: parsers need tag matching inside a previously extracted block.
+
+        Returns:
+            list: subset-relative line indexes containing any tag.
         """
         logger.debug(f"Finding tags '{tags}' in subset")
         if ignore_case:
@@ -156,22 +181,26 @@ class BaseStudy(UnitConverter):
         return [i for i, line in enumerate(subset) if any(tag in line for tag in tags)]
 
     def _get_line(self, line_index: int):
-        """
-        This method returns the line of the raw text.
-        
-        Args:
-            line_index (int): Description.
+        """Return one line from the raw input text.
+
+        Category: util
+        Tags: study, text, line, lookup
+        Use when: subclass managers need direct access to a template line by index.
+
+        Returns:
+            str: requested raw text line.
         """
         return self.raw_text.splitlines()[line_index]
 
     def _add_line(self, line_index: int, new_line: list, sep: str = ' '):
-        """
-        This method adds a line in the raw text.
-        
-        Args:
-            line_index (int): Description.
-            new_line (list): Description.
-            sep (str): Description.
+        """Insert one line into the raw input text.
+
+        Category: util
+        Tags: study, text, insert, line-edit
+        Use when: subclass managers need to add a generated input-deck line.
+
+        Returns:
+            None: mutates raw_text.
         """
         logger.debug(f"Adding line {line_index} with {new_line}")
         lines = self.raw_text.splitlines()
@@ -181,11 +210,14 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def _delete_line(self, line_index: int):
-        """
-        This method deletes a line in the raw text.
-        
-        Args:
-            line_index (int): Description.
+        """Delete one line from the raw input text.
+
+        Category: util
+        Tags: study, text, delete, line-edit
+        Use when: subclass managers need to remove an input-deck line.
+
+        Returns:
+            None: mutates raw_text.
         """
         logger.debug(f"Deleting line {line_index}")
         lines = self.raw_text.splitlines()
@@ -193,11 +225,14 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def _delete_lines(self, line_indexes: list):
-        """
-        This method deletes a line in the raw text.
-        
-        Args:
-            line_indexes (list): Description.
+        """Delete multiple lines from the raw input text.
+
+        Category: util
+        Tags: study, text, delete, line-edit
+        Use when: subclass managers need to remove several input-deck lines safely.
+
+        Returns:
+            None: mutates raw_text.
         """
         logger.debug(f"Deleting lines {line_indexes}")
         lines = self.raw_text.splitlines()
@@ -206,13 +241,14 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def _add_lines(self, line_index: int, new_lines: list, sep: str = ' '):
-        """
-        This method adds a line in the raw text.
-        
-        Args:
-            line_index (int): Description.
-            new_lines (list): Description.
-            sep (str): Description.
+        """Insert multiple lines into the raw input text.
+
+        Category: util
+        Tags: study, text, insert, line-edit
+        Use when: subclass managers need to add a generated input-deck block.
+
+        Returns:
+            None: mutates raw_text.
         """
         logger.debug(f"Adding lines {line_index} with {new_lines}")
         lines = self.raw_text.splitlines()
@@ -223,33 +259,38 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def _get_nth_previous_line(self, line_index: int, n: int = 1):
-        """
-        This method returns the nth previous line of the raw text.
-        
-        Args:
-            line_index (int): Description.
-            n (int): Description.
+        """Return a line before a given index.
+
+        Category: util
+        Tags: study, text, previous-line, lookup
+        Use when: parsers need context before a matched line.
+
+        Returns:
+            str: line at line_index - n.
         """
         return self.raw_text.splitlines()[line_index - n]
 
     def _get_nth_next_line(self, line_index: int, n: int = 1):
-        """
-        This method returns the nth next line of the raw text.
-        
-        Args:
-            line_index (int): Description.
-            n (int): Description.
+        """Return a line after a given index.
+
+        Category: util
+        Tags: study, text, next-line, lookup
+        Use when: parsers need context after a matched line.
+
+        Returns:
+            str: line at line_index + n.
         """
         return self.raw_text.splitlines()[line_index + n]
 
     def _replace_line(self, line_index: int, new_line: list, sep: str = ' '):
-        """
-        This method replaces a line in the raw text.
-        
-        Args:
-            line_index (int): Description.
-            new_line (list): Description.
-            sep (str): Description.
+        """Replace one line in the raw input text.
+
+        Category: util
+        Tags: study, text, replace, line-edit
+        Use when: subclass managers need to update an input-deck line by index.
+
+        Returns:
+            None: mutates raw_text.
         """
         logger.debug(f"Replacing line {line_index} with {new_line}")
         lines = self.raw_text.splitlines()
@@ -257,11 +298,14 @@ class BaseStudy(UnitConverter):
         self.raw_text = '\n'.join(lines)
 
     def render(self, **kwargs):
-        """
-        This method renders the input file using jinja2.
-        
-        Args:
-            **kwargs (Any): Description.
+        """Render the input template with Jinja settings.
+
+        Category: manager
+        Tags: study, jinja, render, input-file
+        Use when: scripts need the final input text for a study case.
+
+        Returns:
+            str: rendered input text.
         """
         logger.info(f"Rendering input file {self.input_file_name}")
         template = Template(self.raw_text)
@@ -269,25 +313,28 @@ class BaseStudy(UnitConverter):
 
 
     def add_auxiliary_file(self, file_path: str):
-        """
-        This method adds an auxiliary file to the manager.
-        
-        Args:
-            file_path (str): Description.
+        """Register an auxiliary input file for this study.
+
+        Category: manager
+        Tags: study, auxiliary-file, input-file, copy
+        Use when: generated case folders need extra files copied alongside the rendered input.
+
+        Returns:
+            None: stores the file path by basename.
         """
         logger.info(f"Adding auxiliary file {file_path}")
         file_path = Path(file_path)
         self.aux_files[file_path.name] = file_path
 
     def add_input_file(self, file_path: Union[Path, str], shared_file=False):
-        """
-        Adds an input file to the study
-        Args:
-            file_path: Path of the input file
-            shared_file: If True, the file will be added to the common folder and shared among all the studies
+        """Register an input file for the generated study case.
+
+        Category: manager
+        Tags: study, input-file, shared-file, copy
+        Use when: a rendered case needs supporting files copied into its input folder.
 
         Returns:
-
+            None: stores the file and optionally marks it as shared.
         """
         logger.info(f"Adding input file {file_path}" + ("(Shared file)" if shared_file else ""))
         # Check if the file exists
@@ -299,14 +346,14 @@ class BaseStudy(UnitConverter):
             self._shared_files.append(file_path.name)
 
     def add_input_folder(self, folder_path: str, shared_file=False):
-        """
-        Adds an input folder to the study
-        Args:
-            folder_path: Path of the input folder
-            shared_file: If True, the folder will be added to the common folder and shared among all the studies
+        """Register every file in an input folder.
+
+        Category: manager
+        Tags: study, input-folder, shared-file, copy
+        Use when: a case needs a group of support files copied into generated folders.
 
         Returns:
-
+            None: registers each direct child file.
         """
         folder_path = Path(folder_path)
         for file in folder_path.glob('*'):
@@ -314,23 +361,27 @@ class BaseStudy(UnitConverter):
         logger.info(f"Adding input folder {folder_path} with {len(self.aux_files)} files" + ("(Shared files)" if shared_file else ""))
 
     def add_callback(self, callback: Callable, kind: str = 'pre', **kwargs):
-        """
-        This method adds a callback to the manager.
-        
-        Args:
-            callback (Callable): Description.
-            kind (str): Description.
-            **kwargs (Any): Description.
+        """Register a manager callback for this study.
+
+        Category: manager
+        Tags: study, callback, lifecycle, manager
+        Use when: scripts need custom pre-run or post-run behavior attached to a study.
+
+        Returns:
+            None: stores a callback factory for later initialization.
         """
         kwargs['kind'] = kind
         self._callbacks.append(lambda manager: callback(manager, self, **kwargs))
 
     def add_ssh_step(self, step: BaseStep):
-        """
-        This method adds a ssh step to the manager.
-        
-        Args:
-            step (BaseStep): Description.
+        """Register an SSH execution step for this study.
+
+        Category: manager
+        Tags: study, ssh, step, execution
+        Use when: remote execution workflows need ordered setup or run steps.
+
+        Returns:
+            None: appends the validated step to steps.
         """
         from pydelling.managers.ssh.steps import BaseStep
         assert isinstance(step, BaseStep), 'Step must be a subclass of BaseStep'
@@ -338,16 +389,26 @@ class BaseStudy(UnitConverter):
         logger.debug(f"Adding ssh step {step.__class__.__name__}")
 
     def remove_ssh_steps(self):
-        """This method removes all the ssh steps from the manager.
+        """Remove all registered SSH steps.
+
+        Category: manager
+        Tags: study, ssh, steps, reset
+        Use when: scripts need to clear remote execution steps before rebuilding them.
+
+        Returns:
+            None: clears the steps list.
         """
         self.steps = []
 
     def initialize_callbacks(self, manager: BaseManager):
-        """
-        This method initializes the callbacks.
-        
-        Args:
-            manager (BaseManager): Description.
+        """Instantiate callback objects for a manager.
+
+        Category: manager
+        Tags: study, callbacks, manager, lifecycle
+        Use when: a manager is preparing runnable callback instances for a study.
+
+        Returns:
+            None: populates callbacks from registered callback factories.
         """
         temp_callbacks = []
         for callback in self._callbacks:
@@ -358,12 +419,14 @@ class BaseStudy(UnitConverter):
                          shared_folder_name='./shared_folder',
                          results_folder_name=None,
                          ):
-        """
-        This method copies the input files to the shared folder.
-        
-        Args:
-            shared_folder_name (Any): Description.
-            results_folder_name (Any): Description.
+        """Copy shared input files into the shared folder.
+
+        Category: writer
+        Tags: study, shared-files, copy, input-files
+        Use when: multiple generated studies should reference common auxiliary files.
+
+        Returns:
+            None: creates the shared folder and copies missing shared files.
         """
         BaseStudy.shared_folder_default_name = shared_folder_name
         logger.debug(f"Copying input files to shared folder ({shared_folder_name})")
@@ -381,14 +444,14 @@ class BaseStudy(UnitConverter):
                 output_file: str=None,
                 auxiliary_folder: str=None,
                 **kwargs):
-        """
-        This method renders the input file and saves it to a file.
-        
-        Args:
-            output_folder (str): Description.
-            output_file (str): Description.
-            auxiliary_folder (str): Description.
-            **kwargs (Any): Description.
+        """Render the study input and write the generated case folder.
+
+        Category: writer
+        Tags: study, render, input-file, auxiliary-files
+        Use when: scripts need a complete runnable study folder from a template.
+
+        Returns:
+            None: writes the rendered input file and copies auxiliary files.
         """
 
         self.output_folder = output_folder if output_folder is not None else f'case-{BaseStudy.count}'
@@ -419,7 +482,14 @@ class BaseStudy(UnitConverter):
 
     @property
     def shared_path_default(self):
-        """This method returns the path of the shared folder.
+        """Return the default shared-file folder path.
+
+        Category: manager
+        Tags: study, shared-files, path
+        Use when: case generation needs to locate previously copied shared inputs.
+
+        Returns:
+            pathlib.Path: path to the shared folder.
         """
         project_name = 'studies'
         if self.results_folder_name is not None:
@@ -430,7 +500,14 @@ class BaseStudy(UnitConverter):
         return Path() / project_name / self.shared_folder_default_name
 
     def to_tar(self):
-        """This method creates a tar file with the input files. Using the gzip compression.
+        """Create a gzip tarball containing generated input files.
+
+        Category: writer
+        Tags: study, tar, archive, input-files
+        Use when: scripts need a portable archive of a rendered study case.
+
+        Returns:
+            None: writes a .tar file for the study output folder.
         """
         import tarfile
         import os
@@ -446,7 +523,14 @@ class BaseStudy(UnitConverter):
 
     # Properties
     def copy(self):
-        """This method returns a copy of the object.
+        """Return a shallow study copy preserving configurable state.
+
+        Category: manager
+        Tags: study, copy, clone
+        Use when: scripts need a duplicate study object before changing parameters.
+
+        Returns:
+            BaseStudy: copied study instance.
         """
         new_obj = self.__class__(self.input_file)
         for attr in self.__dict__:

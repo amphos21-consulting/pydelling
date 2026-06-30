@@ -14,23 +14,35 @@ class LineNotFound(Exception):
     pass
 
 class PflotranStudy(BaseStudy):
-    """This class extends the BaseStudy class to manage PFLOTRAN related simulations.
+    """Manage and edit PFLOTRAN input decks.
+
+    Category: manager
+    Tags: pflotran, study, input-file, simulation, editing
+    Use when: scripts need to inspect or modify PFLOTRAN regions, datasets, timing, checkpoints, and material blocks.
     """
     def __init__(self, input_file: str, *args, **kwargs):
-        """
-        This method initializes the class.
-        
-        Args:
-            input_file (str): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Initialize a PFLOTRAN study from an input file.
+
+        Category: manager
+        Tags: pflotran, study, input-file, parser
+        Use when: scripts need an editable representation of a PFLOTRAN input deck.
+
+        Returns:
+            None: initializes BaseStudy state and PFLOTRAN index maps.
         """
         super().__init__(input_file, *args, **kwargs)
         self.regions_to_idx = {}
         self.datasets_to_idx = {}
 
     def get_regions(self):
-        """This method returns the regions of the simulation.
+        """Return region names defined in the PFLOTRAN input deck.
+
+        Category: manager
+        Tags: pflotran, regions, input-file, lookup
+        Use when: scripts need to inspect available REGION blocks or map region names to line indexes.
+
+        Returns:
+            list: region names found in top-level REGION blocks.
         """
         region_lines = self._find_tags('region')
         regions = []
@@ -42,11 +54,14 @@ class PflotranStudy(BaseStudy):
         return regions
 
     def get_simulation_time(self, time_unit: str = 'y'):
-        """
-        This method returns the output time series of the simulation
-        
-        Args:
-            time_unit (str): Description.
+        """Return the simulation final time in the requested unit.
+
+        Category: manager
+        Tags: pflotran, simulation-time, final-time, units
+        Use when: scripts need to inspect PFLOTRAN FINAL_TIME as a numeric value.
+
+        Returns:
+            float: final simulation time converted to time_unit.
         """
         time_lines = self._get_line(self._find_tags('FINAL_TIME')[0])
         value = time_lines.split()[1]
@@ -54,7 +69,14 @@ class PflotranStudy(BaseStudy):
         return self.convert_time(value=value, initial_unit=value_unit, final_unit=time_unit)
 
     def get_checkpoint(self):
-        """This method returns the checkpoint times of the simulation.
+        """Return the checkpoint TIMES line if present.
+
+        Category: manager
+        Tags: pflotran, checkpoint, restart, simulation
+        Use when: scripts need to inspect whether checkpoint output is configured.
+
+        Returns:
+            str | None: checkpoint times line, or None when no checkpoint is configured.
         """
         checkpoint_lines = self._find_tags('CHECKPOINT')
         if len(checkpoint_lines) == 0:
@@ -67,26 +89,28 @@ class PflotranStudy(BaseStudy):
         return None
 
     def replace_simulation_time(self, new_time: float, time_unit: str = 'y'):
-        """
-        This method replaces the simulation time of the simulation.
-        
-        Args:
-            new_time (float): Description.
-            time_unit (str): Description.
+        """Replace the PFLOTRAN FINAL_TIME line.
+
+        Category: manager
+        Tags: pflotran, simulation-time, final-time, edit
+        Use when: scripts need to change the total runtime of a PFLOTRAN simulation.
+
+        Returns:
+            None: mutates the in-memory input text.
         """
         time_lines = self._find_tags('FINAL_TIME')
         new_time = self.convert_time(value=new_time, initial_unit=time_unit, final_unit=time_unit)
         self._replace_line(line_index=time_lines[0], new_line=['FINAL_TIME', str(new_time), time_unit])
 
     def replace_parameter(self, label: str, new_value: float, inside: float, time_unit: str = 'y'):
-        """
-        This method replaces the value of a parameter.
-        
-        Args:
-            label (str): Description.
-            new_value (float): Description.
-            inside (float): Description.
-            time_unit (str): Description.
+        """Replace a parameter line relative to a matching tag.
+
+        Category: manager
+        Tags: pflotran, parameter, edit, input-file
+        Use when: scripts need to modify a PFLOTRAN parameter located near a known tag.
+
+        Returns:
+            None: mutates the in-memory input text.
         """
         if inside != 0:
             inside = inside
@@ -97,14 +121,14 @@ class PflotranStudy(BaseStudy):
         self._replace_line(line_index=parameter_lines[0] + inside, new_line=[label[1], str(new_value)])
 
     def replace_material_properties(self, new_perm: float, new_porosity: float, new_vertical_anisotropy: float, material_name: str = ''):
-        """
-        This method replaces the simulation time of the simulation.
-        
-        Args:
-            new_perm (float): Description.
-            new_porosity (float): Description.
-            new_vertical_anisotropy (float): Description.
-            material_name (str): Description.
+        """Replace porosity and permeability values in a MATERIAL_PROPERTY block.
+
+        Category: manager
+        Tags: pflotran, material, porosity, permeability, edit
+        Use when: scripts need to update material hydraulic properties before running PFLOTRAN.
+
+        Returns:
+            None: mutates POROSITY, PERM_HORIZONTAL, and VERTICAL_ANISOTROPY_RATIO lines.
         """
         material_lines = self._find_tags('MATERIAL_PROPERTY ' + material_name)
         self._replace_line(line_index=material_lines[0] + 2, new_line=['POROSITY', str(new_porosity)])
@@ -112,25 +136,14 @@ class PflotranStudy(BaseStudy):
         self._replace_line(line_index=material_lines[0] + 9, new_line=['VERTICAL_ANISOTROPY_RATIO', str(new_vertical_anisotropy)])
 
     def get_line_after_finding(self, given_lines: list, file_lines: list) -> int:
-        """
-        This method first looks at the first string of the ``given_lines`` list and finds the first line of ``file_lines``
-        that starts with that string. Then, continuing from that position in the file, it looks at the second string
-        of ``given_lines`` and finds a line that starts with that string. It keeps doing this until the
-        ``given_lines`` list is exhausted. Afterwards, it returns the line index where it ended (i.e., the line
-        from ``file_lines`` that starts like the last element in ``given_lines``).
+        """Find the line index reached after matching an ordered sequence.
 
-        If the sequence of lines is not found (e.g., because the order is wrong or some line does not exist) it
-        raises a ``LineNotFound`` exception.
-
-        Note:
-            Leading spaces are ignored. That is, ``"    This is a test"`` is considered to start with ``"This is"``.
-
-        Parameters:
-            given_lines: List of strings. Lines that should be found in the file.
-            file_lines: List of strings. Lines of the file that is being scanned.
+        Category: util
+        Tags: pflotran, text, search, line-index
+        Use when: scripts need to locate nested PFLOTRAN text by matching several line prefixes in order.
 
         Returns:
-            Line index where the search ended. That is, line that starts like the last element in ``given lines``.
+            int: index of the line matching the last requested prefix.
         """
         given_line_i = 0
         for line_i, line in enumerate(file_lines):
@@ -149,19 +162,14 @@ class PflotranStudy(BaseStudy):
         raise LineNotFound(message)
 
     def replace_after_finding(self, prev_lines: list, new_line: str, offset: int=0):
-        """
-        This method first scans the file until it has found all the lines in the ``prev_lines`` list, in the specified
-        order but not necessarily consecutive. See ``get_line_after_finding`` for a more detailed explanation
-        of this step. Afterwards, it replaces the line in the ``[current position+offset]`` index by the ``new_line`` string.
+        """Replace a line after finding an ordered sequence of line prefixes.
 
-        Parameters:
-            prev_lines: List of strings. Lines that should first be found in the file before moving down ``offset`` and replacing.
-            new_line: String. The corresponding line will be replaced with this string.
-            offset: After finding the last line from ``prev_lines`` in the file, move down this amount of lines and perform the replacement.
+        Category: manager
+        Tags: pflotran, text, replace, line-edit
+        Use when: scripts need robust edits in PFLOTRAN blocks identified by ordered context lines.
 
-        E.g. ``replace_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2)`` looks for
-        a line starting with ``"REGION fracture"``, then keeps going until the first line that starts with
-        ``"COORDINATES"``, and finally replaces the line 2 positions below by ``"    1. 1. 1."``.
+        Returns:
+            None: updates raw_text with the replacement line.
         """
         file_lines = self.raw_text.splitlines()
 
@@ -171,18 +179,14 @@ class PflotranStudy(BaseStudy):
         self.raw_text = '\n'.join(file_lines)
 
     def add_after_finding(self, prev_lines: list, new_line: str, offset: int=0):
-        """This method first scans the file until it has found all the lines in the ``prev_lines`` list, in the specified
-        order but not necessarily consecutive. See ``get_line_after_finding`` for a more detailed explanation
-        of this step. Afterwards, it inserts the line ``new_line`` in the ``[current position+offset+1]`` index.
+        """Insert a line after finding an ordered sequence of line prefixes.
 
-        Parameters:
-            prev_lines: List of strings. Lines that should first be found in the file before moving down ``offset`` and adding the new line.
-            new_line: String. This will be the added new line.
-            offset: After finding the last line from ``prev_lines`` in the file, move down this amount of lines and add the new line.
+        Category: manager
+        Tags: pflotran, text, insert, line-edit
+        Use when: scripts need to add PFLOTRAN lines relative to nested block context.
 
-        E.g. ``add_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2)`` looks for
-        a line starting with ``"REGION fracture"``, then keeps going until the first line that starts with
-        ``"COORDINATES"``, and finally adds a line 2 positions below that says ``"    1. 1. 1."``.
+        Returns:
+            None: updates raw_text with the inserted line.
         """
         file_lines = self.raw_text.splitlines()
 
@@ -192,18 +196,14 @@ class PflotranStudy(BaseStudy):
         self.raw_text = '\n'.join(file_lines)
 
     def remove_after_finding(self, prev_lines: list, offset: int=0):
-        """
-        This method first scans the file until it has found all the lines in the ``prev_lines`` list, in the specified
-        order but not necessarily consecutive. See ``get_line_after_finding`` for a more detailed explanation
-        of this step. Afterwards, it removes the line in the ``[current position+offset]`` index.
+        """Remove a line after finding an ordered sequence of line prefixes.
 
-        Parameters:
-            prev_lines: List of strings. Lines that should first be found in the file before moving down ``offset`` and removing.
-            offset: After finding the last line from ``prev_lines`` in the file, move down this amount of lines and remove the line.
+        Category: manager
+        Tags: pflotran, text, remove, line-edit
+        Use when: scripts need to delete PFLOTRAN lines relative to nested block context.
 
-        E.g. ``remove_after_finding (["REGION fracture", "COORDINATES"], "    1. 1. 1.", 2)`` looks for
-        a line starting with ``"REGION fracture"``, then keeps going until the first line that starts with
-        ``"COORDINATES"``, and finally removes the line 2 positions below.
+        Returns:
+            None: updates raw_text after removing the targeted line.
         """
         file_lines = self.raw_text.splitlines()
 
@@ -213,11 +213,14 @@ class PflotranStudy(BaseStudy):
         self.raw_text = '\n'.join(file_lines)
 
     def get_region_file(self, region: str) -> Union[str, None]:
-        """
-        This method returns the file of the region.
-        
-        Args:
-            region (str): Description.
+        """Return the FILE value for a REGION block.
+
+        Category: manager
+        Tags: pflotran, region, file, lookup
+        Use when: scripts need to resolve the geometry file referenced by a PFLOTRAN region.
+
+        Returns:
+            str | None: region file path token, or None when not found.
         """
         self.get_regions()
         region_line = self.regions_to_idx[region]
@@ -228,7 +231,14 @@ class PflotranStudy(BaseStudy):
         return None
 
     def get_datasets(self) -> List[str]:
-        """This method returns the datasets of the simulation.
+        """Return DATASET names defined in the input deck.
+
+        Category: manager
+        Tags: pflotran, dataset, hdf5, lookup
+        Use when: scripts need to inspect or update referenced PFLOTRAN datasets.
+
+        Returns:
+            list: dataset names found in top-level DATASET blocks.
         """
         datasets = []
         for line_idx in self._find_tags('DATASET'):
@@ -241,12 +251,14 @@ class PflotranStudy(BaseStudy):
         return datasets
 
     def replace_region_file(self, region: str, new_file: str):
-        """
-        This method replaces the file of the region.
-        
-        Args:
-            region (str): Description.
-            new_file (str): Description.
+        """Replace the FILE entry for a REGION block.
+
+        Category: manager
+        Tags: pflotran, region, file, edit
+        Use when: scripts need to point a PFLOTRAN region to a new geometry file.
+
+        Returns:
+            None: mutates the in-memory input text.
         """
         self.get_regions()
         old_file = self.get_region_file(region)
@@ -259,12 +271,14 @@ class PflotranStudy(BaseStudy):
                 self._replace_line(line_index=line_idx, new_line=['FILE', new_file])
 
     def add_checkpoint(self, times: Union[float, List[float]], time_unit: str = 'y'):
-        """
-        This method adds a checkpoint to the simulation.
-        
-        Args:
-            times (Union[float, List[float]]): Description.
-            time_unit (str): Description.
+        """Add or update CHECKPOINT output times.
+
+        Category: manager
+        Tags: pflotran, checkpoint, hdf5, restart, edit
+        Use when: scripts need PFLOTRAN checkpoint files at selected simulation times.
+
+        Returns:
+            None: adds or updates the CHECKPOINT block.
         """
         logger.info(f"Adding checkpoint at {times} {time_unit}")
         if isinstance(times, float) or isinstance(times, int):
@@ -292,11 +306,14 @@ class PflotranStudy(BaseStudy):
 
     def add_restart(self, filename: str):
         # Find simulation block
-        """
-        add_restart method.
-        
-        Args:
-            filename (str): Description.
+        """Add a RESTART block to the SIMULATION section.
+
+        Category: manager
+        Tags: pflotran, restart, simulation, edit
+        Use when: scripts need a PFLOTRAN simulation to restart from an existing checkpoint file.
+
+        Returns:
+            None: inserts a RESTART block.
         """
         simulation_block_idx = self._get_block_line_idx(self._find_tags('SIMULATION')[0])
         # Find the last line of the simulation block
@@ -307,13 +324,14 @@ class PflotranStudy(BaseStudy):
         self._add_line(line_index=last_line_idx + 2, new_line=['/'])
 
     def add_dataset(self, name: str, filename: str, hdf5_dataset_name: str):
-        """
-        This method adds a dataset to the simulation.
-        
-        Args:
-            name (str): Description.
-            filename (str): Description.
-            hdf5_dataset_name (str): Description.
+        """Add or update a PFLOTRAN DATASET block.
+
+        Category: manager
+        Tags: pflotran, dataset, hdf5, edit
+        Use when: scripts need to connect PFLOTRAN inputs to an HDF5 dataset path and dataset name.
+
+        Returns:
+            None: adds a DATASET block or updates its filename and HDF5 dataset name.
         """
         logger.info(f"Adding dataset {name} to the simulation")
         # Find simulation block
@@ -339,7 +357,14 @@ class PflotranStudy(BaseStudy):
             self._add_line(line_index=last_line_idx + 4, new_line=['END'])
 
     def get_subsurface_idx(self) -> int:
-        """This method returns the index of the subsurface tag.
+        """Return the line index of the top-level SUBSURFACE tag.
+
+        Category: manager
+        Tags: pflotran, subsurface, line-index, lookup
+        Use when: scripts need an insertion point for subsurface dataset edits.
+
+        Returns:
+            int: line index of the top-level SUBSURFACE block.
         """
         subsurface_idx = self._find_tags('SUBSURFACE')
         for idx in subsurface_idx:
@@ -347,20 +372,26 @@ class PflotranStudy(BaseStudy):
                 return idx
 
     def has_tag(self, tag: str):
-        """
-        This method returns True if the tag is in the input file.
-        
-        Args:
-            tag (str): Description.
+        """Check whether a tag appears in the input deck.
+
+        Category: manager
+        Tags: pflotran, tag, lookup, input-file
+        Use when: scripts need to branch depending on whether a PFLOTRAN block exists.
+
+        Returns:
+            bool: True when at least one matching tag is found.
         """
         return len(self._find_tags(tag)) > 0
 
     def _get_parent_tag_name(self, line_index: int):
-        """
-        This method returns the parent tag of the line.
-        
-        Args:
-            line_index (int): Description.
+        """Return the parent block tag name for a line index.
+
+        Category: util
+        Tags: pflotran, block, parent, line-index
+        Use when: parsing needs to distinguish top-level tags from nested tag references.
+
+        Returns:
+            str: parent tag name.
         """
         # Find the previous END tag
         has_end_tag = False
@@ -382,11 +413,14 @@ class PflotranStudy(BaseStudy):
         return temp_list[-2].split()[0]
 
     def _get_block_lines(self, line_index: int):
-        """
-        This method returns the lines of the block.
-        
-        Args:
-            line_index (int): Description.
+        """Return non-comment lines in the block starting at a line index.
+
+        Category: util
+        Tags: pflotran, block, lines, parser
+        Use when: scripts need the text content of a PFLOTRAN block.
+
+        Returns:
+            list: block lines from the start tag through END.
         """
         # Find the previous END tag
         has_end_tag = False
@@ -405,11 +439,14 @@ class PflotranStudy(BaseStudy):
         return temp_list
 
     def _get_block_line_idx(self, line_index: int):
-        """
-        This method returns the lines of the block.
-        
-        Args:
-            line_index (int): Description.
+        """Return line indexes in the block starting at a line index.
+
+        Category: util
+        Tags: pflotran, block, line-index, parser
+        Use when: scripts need editable line indexes inside a PFLOTRAN block.
+
+        Returns:
+            list: line indexes from the start tag through END.
         """
         # Find the previous END tag
         has_end_tag = False
@@ -430,21 +467,41 @@ class PflotranStudy(BaseStudy):
     # Class properties
     @property
     def final_time(self):
-        """This method returns the final time of the simulation.
+        """Return the simulation final time in years.
+
+        Category: manager
+        Tags: pflotran, final-time, simulation-time
+        Use when: callers need property-style access to final simulation time.
+
+        Returns:
+            float: final simulation time in years.
         """
         return self.get_simulation_time()
 
     @property
     def final_time_unit(self):
-        """This method returns the final time unit of the simulation.
+        """Return the unit token used by FINAL_TIME.
+
+        Category: manager
+        Tags: pflotran, final-time, units
+        Use when: scripts need the original time unit from the input deck.
+
+        Returns:
+            str: FINAL_TIME unit token.
         """
         return self._get_line(self._find_tags('FINAL_TIME')[0]).split()[2]
 
     @property
     def idx_to_regions(self):
-        """This method returns the regions of the simulation.
+        """Return the inverse region line-index lookup.
+
+        Category: manager
+        Tags: pflotran, regions, line-index, lookup
+        Use when: scripts need to map stored region indexes back to region names.
+
+        Returns:
+            dict: line indexes mapped to region names.
         """
         return {v: k for k, v in self.regions_to_idx.items()}
-
 
 

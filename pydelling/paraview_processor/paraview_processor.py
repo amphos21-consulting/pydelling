@@ -20,6 +20,12 @@ except:
     logger.warning("Paraview python implementation is not properly set-up")
 
 class ParaviewProcessor:
+    """Build and inspect ParaView processing pipelines from Python.
+
+    Category: postprocessing
+    Tags: paraview, pipeline, vtk, xdmf, filters
+    Use when: scripts need to load simulation outputs and compose ParaView filters programmatically.
+    """
     current_array: None
    # calculator: Calculator
     pipeline: Dict[str, base_filter] = {}
@@ -28,13 +34,14 @@ class ParaviewProcessor:
     csv_data_counter: int = 0
 
     def add_vtk_file(self, path, name=None) -> vtk_filter:
-        """
-        Reads a given vtk file. This is done by adding an instance of the LegacyVTKReader class to the pipeline.
-        Args:
-            filename: The path of the vtk file.
-            name: A custom name to be given in the pipeline.
+        """Add a VTK file reader to the pipeline.
+
+        Category: postprocessing
+        Tags: paraview, vtk, reader, pipeline
+        Use when: scripts need a LegacyVTKReader-backed data source in the processor pipeline.
+
         Returns:
-            The created LegacyVTKReader instance
+            vtk_filter: pipeline wrapper for the VTK reader.
         """
         pipeline_name = name if name else f"vtk_data_{vtk_filter.counter}"
         self.vtk_data_counter += 1
@@ -44,14 +51,14 @@ class ParaviewProcessor:
         return vtk_filter
 
     def add_csv_file(self, path, name=None, coordinate_labels=("x", "y", "z")) -> csv_reader_filter:
-        """
-        Reads a given csv file. A TableToPoints filter is applied to the read csv file
-        Args:
-            filename: The path of the vtk file.
-            name: A custom name to be given in the pipeline.
-            coordinate_labels: The names of the x, y and z variables used on the csv file
+        """Add a CSV reader and point conversion source to the pipeline.
+
+        Category: postprocessing
+        Tags: paraview, csv, points, reader, pipeline
+        Use when: scripts need tabular x/y/z point data available as a ParaView source.
+
         Returns:
-            The TableToPoints filter containing the csv data
+            csv_reader_filter: pipeline wrapper for the CSV point source.
         """
         pipeline_name = name if name else f"vtk_data_{vtk_filter.counter}"
         self.csv_data_counter += 1
@@ -61,13 +68,14 @@ class ParaviewProcessor:
         return csv_reader
 
     def add_xdmf_file(self, path, name=None) -> xdmf_filter:
-        """
-        Reads a given xdmf file.
-        Args:
-            filename: The path of the xdmf file.
-            name: A custom name to be given in the pipeline.
+        """Add an XDMF file reader to the pipeline.
+
+        Category: postprocessing
+        Tags: paraview, xdmf, reader, pipeline
+        Use when: scripts need an XDMF simulation output source in ParaView.
+
         Returns:
-            The created XDMFReader instance
+            xdmf_filter: pipeline wrapper for the XDMF reader.
         """
         pipeline_name = name if name else f"xdmf_data_{xdmf_filter.counter}"
         self.vtk_data_counter += 1
@@ -77,16 +85,14 @@ class ParaviewProcessor:
         return pv_filter
 
     def add_calculator(self, input_filter, function='', name=None, output_array_name='Results', *args, **kwargs) -> calculator_filter:
-        """
-        Adds a calculator filter to a dataset
-        
-        Args:
-            input_filter (Any): Description.
-            function (Any): Description.
-            name (Any): Description.
-            output_array_name (Any): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Add a Calculator filter to an existing pipeline source.
+
+        Category: postprocessing
+        Tags: paraview, calculator, filter, derived-array
+        Use when: scripts need to compute a derived ParaView array from an expression.
+
+        Returns:
+            calculator_filter: pipeline wrapper for the Calculator filter.
         """
         pipeline_name = name if name else f"calculator_{calculator_filter.counter}"
         calculator_filter = calculator_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -98,12 +104,14 @@ class ParaviewProcessor:
         return calculator_filter
 
     def add_cell_data_to_point_data(self, input_filter, name=None) -> cell_data_to_point_data_filter:
-        """
-        Adds a cell data to point data filter to a dataset
-        
-        Args:
-            input_filter (Any): Description.
-            name (Any): Description.
+        """Add a CellDataToPointData filter to an existing source.
+
+        Category: postprocessing
+        Tags: paraview, cell-data, point-data, filter
+        Use when: scripts need cell-centered arrays interpolated to mesh points.
+
+        Returns:
+            cell_data_to_point_data_filter: pipeline wrapper for the conversion filter.
         """
         pipeline_name = name if name else f"cell_data_to_point_data{cell_data_to_point_data_filter.counter}"
         pv_filter = cell_data_to_point_data_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -114,14 +122,14 @@ class ParaviewProcessor:
         return pv_filter
 
     def add_clip(self, input_filter, name=None, *args, **kwargs) -> clip_filter:
-        """
-        Adds a clip filter to a dataset
-        
-        Args:
-            input_filter (Any): Description.
-            name (Any): Description.
-            *args (Any): Description.
-            **kwargs (Any): Description.
+        """Add a Clip filter to an existing source.
+
+        Category: postprocessing
+        Tags: paraview, clip, filter, geometry
+        Use when: scripts need to spatially clip simulation output before analysis or export.
+
+        Returns:
+            clip_filter: pipeline wrapper for the Clip filter.
         """
         pipeline_name = name if name else f"clip_{clip_filter.counter}"
         pv_filter = clip_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -132,12 +140,14 @@ class ParaviewProcessor:
         return pv_filter
 
     def add_table_to_points(self, path, name=None) -> table_to_points_filter:
-        """
-        Adds a table to points filter to a dataset
-        
-        Args:
-            path (Any): Description.
-            name (Any): Description.
+        """Add a TableToPoints source from a tabular file.
+
+        Category: postprocessing
+        Tags: paraview, table-to-points, csv, points
+        Use when: scripts need coordinates from a table converted into a ParaView point set.
+
+        Returns:
+            table_to_points_filter: pipeline wrapper for the TableToPoints output.
         """
         pipeline_name = name if name else f"table_to_points_{table_to_points_filter.counter}"
         pv_filter = table_to_points_filter(filename=str(path), name=pipeline_name)
@@ -147,13 +157,14 @@ class ParaviewProcessor:
 
 
     def add_stream_tracer_with_custom_source(self, input_filter, seed_source, name=None) -> stream_tracer_with_custom_source_filter:
-        """
-        Adds a stream tracer filter to a custom source
-        
-        Args:
-            input_filter (Any): Description.
-            seed_source (Any): Description.
-            name (Any): Description.
+        """Add a StreamTracerWithCustomSource filter.
+
+        Category: postprocessing
+        Tags: paraview, streamlines, tracer, seed-source
+        Use when: scripts need streamlines from a velocity field using custom seed points.
+
+        Returns:
+            stream_tracer_with_custom_source_filter: pipeline wrapper for the stream tracer.
         """
         pipeline_name = name if name else f"stream_tracer_with_custom_source_{stream_tracer_with_custom_source_filter.counter}"
         pv_filter = stream_tracer_with_custom_source_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -165,12 +176,14 @@ class ParaviewProcessor:
         return pv_filter
 
     def add_append_arc_length(self, input_filter, name=None) -> append_arc_length_filter:
-        """
-        Adds an append arc-length filter to a dataset
-        
-        Args:
-            input_filter (Any): Description.
-            name (Any): Description.
+        """Add an AppendArcLength filter to streamline output.
+
+        Category: postprocessing
+        Tags: paraview, streamlines, arc-length, filter
+        Use when: scripts need cumulative distance along streamline polylines.
+
+        Returns:
+            append_arc_length_filter: pipeline wrapper for the arc-length filter.
         """
         pipeline_name = name if name else f"append_arc_length_{append_arc_length_filter.counter}"
         pv_filter = append_arc_length_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -181,13 +194,14 @@ class ParaviewProcessor:
         return pv_filter
 
     def add_save_data(self, path, proxy, PointDataArrays, CellDataArrays, name=None) -> save_data_filter:
-        """
-        Writes a csv file.
-        Args:
-            filename: The path of the xdmf file.
-            name: A custom name to be given in the pipeline.
+        """Add a SaveData operation for a pipeline object.
+
+        Category: writer
+        Tags: paraview, save-data, csv, export
+        Use when: scripts need to export selected point and cell arrays from a ParaView proxy.
+
         Returns:
-            The created SaveDataFilter object
+            save_data_filter: pipeline wrapper for the save operation.
         """
         pipeline_name = name if name else f"save_data_{save_data_filter.counter}"
         pv_filter = save_data_filter(filename=str(path), proxy=self.process_input_filter(filter=proxy),
@@ -199,13 +213,14 @@ class ParaviewProcessor:
 
 
     def add_integrate_variables(self, input_filter, name=None, divide_cell_data_by_volume=False) -> integrate_variable_filter:
-        """
-        Adds the integrate_variables filter to a dataset
-        
-        Args:
-            input_filter (Any): Description.
-            name (Any): Description.
-            divide_cell_data_by_volume (Any): Description.
+        """Add an IntegrateVariables filter to an existing source.
+
+        Category: postprocessing
+        Tags: paraview, integrate, variables, filter
+        Use when: scripts need integrated scalar or vector values over a dataset.
+
+        Returns:
+            integrate_variable_filter: pipeline wrapper for the integration filter.
         """
         pipeline_name = name if name else f"integrate_variables_{integrate_variable_filter.counter}"
         integrate_variables_filter = integrate_variable_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -218,15 +233,14 @@ class ParaviewProcessor:
         return integrate_variables_filter
 
     def add_plot_over_line(self, input_filter, name=None, point_1=None, point_2=None, line_resolution=None) -> plot_over_line_filter:
-        """
-        Adds the plot_over_line filter to a dataset
-        
-        Args:
-            input_filter (Any): Description.
-            name (Any): Description.
-            point_1 (Any): Description.
-            point_2 (Any): Description.
-            line_resolution (Any): Description.
+        """Add a PlotOverLine filter to sample data along a segment.
+
+        Category: postprocessing
+        Tags: paraview, plot-over-line, sampling, filter
+        Use when: scripts need values interpolated along a user-defined line.
+
+        Returns:
+            plot_over_line_filter: pipeline wrapper for the line sampler.
         """
         pipeline_name = name if name else f"plot_over_line_{plot_over_line_filter.counter}"
         plot_over_line_filter = plot_over_line_filter(input_filter=self.process_input_filter(filter=input_filter),
@@ -242,14 +256,13 @@ class ParaviewProcessor:
 
     # Utility methods
     def plot_over_z_given_xy_point(self, dataset: base_filter, x_point, y_point, line_resolution=None) -> plot_over_line_filter:
-        """
-        This method interpolates the dataset over a line going in the z-axis given XY coordinates in space
-        Args:
-            x_point: X coordinate
-            y_point: Y coordinate
+        """Create a vertical PlotOverLine sampler at an x,y coordinate.
+
+        Category: postprocessing
+        Tags: paraview, vertical-profile, plot-over-line, sampling
 
         Returns:
-            A plot_over_line object
+            plot_over_line_filter: line sampler spanning dataset z_min to z_max.
         """
         # Compute z_min and z_max values of the dataset
         point_1 = [x_point, y_point, dataset.z_min]
@@ -263,17 +276,14 @@ class ParaviewProcessor:
         return plot_over_line_filter
 
     def aperture_given_xy_point(self, dataset: base_filter, x_point, y_point, variable=None, target_value=1.0, threshold=0.45, line_resolution=100) -> float:
-        """
-        This method computes the aperture at a given position in the XY plane.
-        Args:
-            x_point: X coordinate
-            y_point: Y coordinate
-            variable: The variable to consider that indicates the aperture
-            target_value: Value of the variable when the fracture is open
-            threshold: Value of the maximum variation from the target_value |line[variable] - target_value| < threshold is assumed
-            line_resolution: Resolution of the line interpolation that is being used
+        """Estimate aperture thickness at an x,y coordinate.
+
+        Category: postprocessing
+        Tags: paraview, aperture, vertical-profile, sampling
+        Use when: scripts need fracture opening thickness inferred from vertical sampled points.
+
         Returns:
-            The value of the aperture at a given point
+            float: estimated aperture thickness at the coordinate.
         """
         line_interpolation = self.plot_over_z_given_xy_point(x_point=x_point,
                                                              y_point=y_point,
@@ -305,10 +315,14 @@ class ParaviewProcessor:
 
 
     def print_pipeline(self) -> str:
-        """
-        Creates a simple representation of the current working filters and objects
+        """Print and return a text representation of the pipeline.
+
+        Category: util
+        Tags: paraview, pipeline, debug, summary
+        Use when: scripts or users need to inspect registered pipeline elements.
+
         Returns:
-            A string containing the pipeline structure
+            str: formatted pipeline summary.
         """
         identation_level: int = 0
         print_string: str = f""
@@ -326,13 +340,14 @@ class ParaviewProcessor:
         return print_string
 
     def print_pipeline_block(self, pipeline_dict: Dict, output_string:str,  starting_identation_level: int = 0) -> str:
-        """
-        print_pipeline_block method.
-        
-        Args:
-            pipeline_dict (Dict): Description.
-            output_string (str): Description.
-            starting_identation_level (int): Description.
+        """Append nested pipeline entries to a text summary.
+
+        Category: util
+        Tags: paraview, pipeline, debug, recursion
+        Use when: pipeline summaries need to include nested dictionary blocks.
+
+        Returns:
+            str: output string with nested pipeline entries appended.
         """
         for pipeline_element in pipeline_dict:
             if type(pipeline_dict[pipeline_element]) == dict:
@@ -345,24 +360,24 @@ class ParaviewProcessor:
         return output_string
 
     def get_object(self, name) -> object:
-        """
-        Get a given object from the pipeline
-        Args:
-            name: The name of the object to obtain
+        """Return a pipeline wrapper by name.
+
+        Category: util
+        Tags: paraview, pipeline, lookup, filter
 
         Returns:
-            The requested object
+            object: registered pipeline object.
         """
         return self.pipeline[name]
 
     def process_input_filter(self, filter) -> object:
-        """
-        Processes the filter object and returns the proper datatype
-        Args:
-            input_filter: an object refering to an existing filter
+        """Resolve a filter wrapper or pipeline name to the ParaView filter object.
+
+        Category: util
+        Tags: paraview, pipeline, filter, proxy
 
         Returns:
-            A proper Paraview object
+            object: underlying ParaView proxy/filter object.
         """
         if type(filter) == str:
             # Assume the filter specifies the name of the pipeline
@@ -372,13 +387,13 @@ class ParaviewProcessor:
 
     @staticmethod
     def get_input_object_name(filter) -> str:
-        """
-        Gets the name of a given filter
-        Args:
-            filter: filter to be processed
+        """Return the name for a filter wrapper or pipeline reference.
+
+        Category: util
+        Tags: paraview, pipeline, name, filter
 
         Returns:
-            String containing the filter's name
+            str: filter name or pipeline key.
         """
         if type(filter) == str:
             return filter
