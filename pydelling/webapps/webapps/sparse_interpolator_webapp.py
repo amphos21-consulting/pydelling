@@ -19,7 +19,7 @@ class SparseInterpolatorWebapp(WebAppRunner):
 
     Category: Web application.
     Tags: streamlit, interpolation, sparse-data, mesh, csv, vtk, fem.
-    Use when: to understand the user-facing workflow that
+    Usage: to understand the user-facing workflow that
         uploads sparse points, uploads a target mesh, interpolates values, and
         downloads CSV output.
     """
@@ -29,7 +29,7 @@ class SparseInterpolatorWebapp(WebAppRunner):
 
         Category: Web application.
         Tags: streamlit, interpolation, upload, download, visualization.
-        Use when: running the interactive sparse-data interpolation app.
+        Usage: running the interactive sparse-data interpolation app.
         Side effects:
             Reads and writes Streamlit session state, invokes input components,
             runs ``SparseDataInterpolator``, writes ``pyvista.html`` when
@@ -190,7 +190,7 @@ class SparseInterpolatorWebapp(WebAppRunner):
 
         Category: Web application.
         Tags: streamlit, csv, download, dataframe.
-        Use when: preparing interpolated results for ``st.download_button``.
+        Usage: preparing interpolated results for ``st.download_button``.
         Args:
             df (Any): Dataframe-like object to convert.
         Returns:

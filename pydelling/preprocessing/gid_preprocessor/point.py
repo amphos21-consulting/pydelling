@@ -18,7 +18,7 @@ class Point(_AbstractGidObject):
 
     Category: GID preprocessing.
     Tags: gid, point, geometry, export, coordinates.
-    Use when: to create or reuse point definitions while
+    Usage: to create or reuse point definitions while
         generating GID geometry scripts.
     """
 
@@ -31,7 +31,7 @@ class Point(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, point, coordinates, initialization.
-        Use when: building GID geometry from coordinate lists or NumPy arrays.
+        Usage: building GID geometry from coordinate lists or NumPy arrays.
         Args:
             coords: Three-dimensional coordinate as a list or NumPy array.
         Raises:
@@ -53,7 +53,7 @@ class Point(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, point, export, duplicate-detection.
-        Use when: emitting GID geometry commands while avoiding duplicate point
+        Usage: emitting GID geometry commands while avoiding duplicate point
             definitions.
         Returns:
             str: GID command text, or an empty string when an identical point was
@@ -82,7 +82,7 @@ class Point(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, point, coordinates, formatting.
-        Use when: constructing GID commands that expect comma-separated
+        Usage: constructing GID commands that expect comma-separated
             coordinate values.
         Returns:
             str: Comma-separated coordinate string.

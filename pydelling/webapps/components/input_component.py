@@ -21,7 +21,7 @@ class InputComponent(BaseComponent):
 
     Category: Web application component.
     Tags: streamlit, upload, csv, vtk, fem, smesh, session-state.
-    Use when: to identify which UI component turns uploaded
+    Usage: to identify which UI component turns uploaded
         files into pandas data frames or pydelling reader objects.
     """
 
@@ -30,7 +30,7 @@ class InputComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, upload, state, initialization.
-        Use when: constructing a file input widget for a pydelling webapp.
+        Usage: constructing a file input widget for a pydelling webapp.
         Args:
             input_type: Input handler to render. Supported values are ``"csv"``,
                 ``"vtk"``, ``"fem"``, and ``"smesh"``.
@@ -58,7 +58,7 @@ class InputComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, upload, dispatch.
-        Use when: a webapp needs to render the upload workflow selected by
+        Usage: a webapp needs to render the upload workflow selected by
             ``input_type``.
         Side effects:
             Delegates to the matching ``run_*_input`` method and may populate
@@ -78,7 +78,7 @@ class InputComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, upload, csv, pandas, session-state.
-        Use when: an MCP-assisted UI workflow needs tabular interpolation data
+        Usage: an MCP-assisted UI workflow needs tabular interpolation data
             loaded through Streamlit.
         Side effects:
             On submit, reads the uploaded CSV with the selected delimiter,
@@ -113,7 +113,7 @@ class InputComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, upload, vtk, mesh-reader, session-state.
-        Use when: a webapp needs uploaded VTK mesh or centroid data available as
+        Usage: a webapp needs uploaded VTK mesh or centroid data available as
             a pydelling reader object.
         Side effects:
             Writes the upload to ``temp.vtk``, constructs ``VTKMeshReader`` with
@@ -150,7 +150,7 @@ class InputComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, upload, fem, mesh-reader, session-state.
-        Use when: a webapp needs FEM ASCII mesh or centroid data available as a
+        Usage: a webapp needs FEM ASCII mesh or centroid data available as a
             pydelling reader object.
         Side effects:
             Writes the upload to ``temp.fem``, constructs ``FemReader`` with
@@ -187,7 +187,7 @@ class InputComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, upload, smesh, mesh-reader, session-state.
-        Use when: a webapp needs SMesh ASCII mesh or centroid data available as
+        Usage: a webapp needs SMesh ASCII mesh or centroid data available as
             a pydelling reader object.
         Side effects:
             Writes the upload to ``temp.smesh``, constructs ``SmeshReader`` with

@@ -18,7 +18,7 @@ class CentroidReader(BaseReader):
 
     Category: centroid reader.
     Tags: centroids, coordinates, variable, csv, dataframe.
-    Use when: to load x/y/z centroid locations and an
+    Usage: to load x/y/z centroid locations and an
         optional scalar value from a text file.
     """
 
@@ -58,7 +58,7 @@ class CentroidReader(BaseReader):
 
         Category: centroid reader.
         Tags: centroids, parse, text-file, variable.
-        Use when: loading centroid rows from an already opened text file.
+        Usage: loading centroid rows from an already opened text file.
         Args:
             opened_file: Open file handle positioned at the centroid rows.
         Side effects:
@@ -86,7 +86,7 @@ class CentroidReader(BaseReader):
 
         Category: centroid reader.
         Tags: centroids, header, extension-point.
-        Use when: implementing support for centroid formats with explicit
+        Usage: implementing support for centroid formats with explicit
             headers.
         Notes:
             The current implementation does not parse header content.
@@ -98,7 +98,7 @@ class CentroidReader(BaseReader):
 
         Category: centroid reader.
         Tags: centroids, data, dataframe, numpy.
-        Use when: downstream processing needs parsed centroid coordinates and,
+        Usage: downstream processing needs parsed centroid coordinates and,
             when configured, the associated variable values.
         Args:
             as_dataframe: If ``True``, return a pandas DataFrame with named
@@ -121,7 +121,7 @@ class CentroidReader(BaseReader):
 
         Category: centroid reader.
         Tags: centroids, metadata, info.
-        Use when: MCP tools need cell count, source filename, and variable
+        Usage: MCP tools need cell count, source filename, and variable
             metadata after parsing.
         Side effects:
             Updates ``self.info["reader"]``.
@@ -136,7 +136,7 @@ class CentroidReader(BaseReader):
 
         Category: centroid reader.
         Tags: centroids, csv, export.
-        Use when: exporting loaded centroid coordinates for another tool.
+        Usage: exporting loaded centroid coordinates for another tool.
         Args:
             output_file: Destination file path.
             delimiter: Output delimiter.
@@ -152,7 +152,7 @@ class CentroidReader(BaseReader):
 
         Category: centroid reader.
         Tags: centroids, coordinates, transform, shift.
-        Use when: converting centroid coordinates between local and translated
+        Usage: converting centroid coordinates between local and translated
             coordinate systems.
         Args:
             direction: 3D offset added to the first three data columns.

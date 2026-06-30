@@ -17,7 +17,7 @@ class _PlotGroup1D:
 
     Category: COMSOL management.
     Tags: comsol, results, plot-group, 1d, line-graph.
-    Use when: to create or modify 1D COMSOL result plot
+    Usage: to create or modify 1D COMSOL result plot
         groups and their line/point graph children.
     """
 

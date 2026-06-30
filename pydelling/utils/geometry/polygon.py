@@ -18,7 +18,7 @@ class Polygon(BasePrimitive):
 
     Category: geometry primitive.
     Tags: polygon, points, segments, csv.
-    Use when: to use polygon boundary geometry for export or
+    Usage: to use polygon boundary geometry for export or
         intersection workflows.
     """
 
@@ -28,7 +28,7 @@ class Polygon(BasePrimitive):
 
         Category: geometry primitive.
         Tags: polygon, points, ordering, segments.
-        Use when: constructing a closed polygon boundary from point coordinates.
+        Usage: constructing a closed polygon boundary from point coordinates.
         Args:
             points: Point objects or coordinate array defining polygon vertices.
         Side effects:
@@ -42,7 +42,7 @@ class Polygon(BasePrimitive):
 
         Category: geometry primitive.
         Tags: polygon, segments, edges.
-        Use when: downstream geometry routines need explicit polygon boundary
+        Usage: downstream geometry routines need explicit polygon boundary
             segments.
         Returns:
             list: ``Segment`` objects connecting each point to the next and
@@ -58,7 +58,7 @@ class Polygon(BasePrimitive):
 
         Category: geometry primitive.
         Tags: polygon, csv, export, points.
-        Use when: exporting polygon coordinates for inspection or external
+        Usage: exporting polygon coordinates for inspection or external
             processing.
         Args:
             filename: Destination CSV filename.

@@ -14,7 +14,7 @@ class BaseWriter:
 
     Category: writer
     Tags: writer, export, numpy, data, file
-    Use when: implementing concrete writers that share data loading, limits, and output-file cleanup.
+    Usage: implementing concrete writers that share data loading, limits, and output-file cleanup.
     """
     info: dict
     def __init__(self, filename=None, var_name=None, data=None, region_name=None, **kwargs):
@@ -22,7 +22,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, data, filename, initialization
-        Use when: concrete writers need shared filename, variable, region, and data state.
+        Usage: concrete writers need shared filename, variable, region, and data state.
 
         Returns:
             None: stores configuration and marks data as loaded when provided.
@@ -45,7 +45,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, data-limits, clipping, export
-        Use when: scripts need to constrain numeric output values before writing.
+        Usage: scripts need to constrain numeric output values before writing.
 
         Returns:
             None: stores min and max clipping limits.
@@ -64,7 +64,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, data-limits, clipping, numpy
-        Use when: data should be constrained before writing an output artifact.
+        Usage: data should be constrained before writing an output artifact.
 
         Returns:
             None: mutates data when clipping is possible.
@@ -83,7 +83,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, data, variable, clipping
-        Use when: scripts need to replace writer data before running an export.
+        Usage: scripts need to replace writer data before running an export.
 
         Returns:
             bool: True when data is loaded.
@@ -102,7 +102,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, data, reset
-        Use when: reusing a writer instance for a different variable or artifact.
+        Usage: reusing a writer instance for a different variable or artifact.
 
         Returns:
             None: clears data, var_name, and data_loaded state.
@@ -116,7 +116,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, data, validation
-        Use when: callers need to verify a writer can run.
+        Usage: callers need to verify a writer can run.
 
         Returns:
             bool: True when data has been loaded.
@@ -128,7 +128,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, numpy, export, file
-        Use when: scripts need the base text-array writer behavior.
+        Usage: scripts need the base text-array writer behavior.
 
         Returns:
             None: writes the output file or reports missing data.
@@ -151,7 +151,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, cleanup, output-file, remove
-        Use when: scripts need to delete a generated writer artifact.
+        Usage: scripts need to delete a generated writer artifact.
 
         Returns:
             None: removes the file when present.
@@ -173,7 +173,7 @@ class BaseWriter:
 
         Category: writer
         Tags: writer, data, state
-        Use when: callers need a semantic check before export.
+        Usage: callers need a semantic check before export.
 
         Returns:
             bool: True when data is loaded.

@@ -14,7 +14,7 @@ class Segment(Line):
 
     Category: geometry primitive.
     Tags: segment, point, length, intersection, containment.
-    Use when: to use bounded line geometry for mesh, polygon, or
+    Usage: to use bounded line geometry for mesh, polygon, or
         plane-intersection workflows.
     """
 
@@ -23,7 +23,7 @@ class Segment(Line):
 
         Category: geometry primitive.
         Tags: segment, endpoints, point, direction-vector.
-        Use when: constructing bounded geometry from two coordinates or points.
+        Usage: constructing bounded geometry from two coordinates or points.
         Args:
             p1: First endpoint coordinate or ``Point``.
             p2: Second endpoint coordinate or ``Point``.
@@ -48,7 +48,7 @@ class Segment(Line):
 
         Category: geometry primitive.
         Tags: segment, length, distance.
-        Use when: geometric workflows need the finite segment length.
+        Usage: geometric workflows need the finite segment length.
         Returns:
             float: Norm of ``p2 - p1``.
         """
@@ -60,7 +60,7 @@ class Segment(Line):
 
         Category: geometry primitive.
         Tags: segment, intersection, plane.
-        Use when: clipping or testing a finite segment against a plane.
+        Usage: clipping or testing a finite segment against a plane.
         Args:
             primitive: Currently only ``Plane`` is supported.
         Returns:
@@ -82,7 +82,7 @@ class Segment(Line):
 
         Category: geometry primitive.
         Tags: segment, containment, point, bounds.
-        Use when: verifying that a candidate intersection lies between segment
+        Usage: verifying that a candidate intersection lies between segment
             endpoints.
         Args:
             point: Point-like coordinate to test.

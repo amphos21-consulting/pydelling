@@ -28,7 +28,7 @@ class PflotranManager(BaseManager):
 
     Category: PFLOTRAN management.
     Tags: pflotran, studies, execution, docker, hpc, jureca, lumi, results.
-    Use when: to understand how pydelling launches
+    Usage: to understand how pydelling launches
         ``PflotranStudy`` objects locally, in Docker, or on remote HPC systems
         and how it gathers results afterward.
     """
@@ -38,7 +38,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, status, study.
-        Use when: extending the manager with study status queries.
+        Usage: extending the manager with study status queries.
         Args:
             study_id: Integer identifier of the study to inspect.
         Notes:
@@ -58,7 +58,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, local-execution, petsc, mpi.
-        Use when: a study should be executed by a local PFLOTRAN binary rather
+        Usage: a study should be executed by a local PFLOTRAN binary rather
             than Docker or a remote HPC backend.
         Args:
             study: ``PflotranStudy`` whose input file has been written to its
@@ -94,7 +94,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, docker, container, execution.
-        Use when: PFLOTRAN should run from a Docker image instead of the host
+        Usage: PFLOTRAN should run from a Docker image instead of the host
             environment.
         Args:
             study: ``PflotranStudy`` whose run folder is copied into the
@@ -173,7 +173,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, jureca, ssh, hpc, job-submission.
-        Use when: dispatching a PFLOTRAN study to the JURECA HPC environment
+        Usage: dispatching a PFLOTRAN study to the JURECA HPC environment
             with a provided submission script.
         Args:
             study: ``PflotranStudy`` to upload and run.
@@ -265,7 +265,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, lumi, ssh, hpc, job-submission.
-        Use when: dispatching a PFLOTRAN study to the LUMI HPC environment with
+        Usage: dispatching a PFLOTRAN study to the LUMI HPC environment with
             a provided submission script.
         Args:
             study: ``PflotranStudy`` to upload and run.
@@ -355,7 +355,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, ssh, upload, shared-files, input-files.
-        Use when: preparing a remote HPC study directory while avoiding repeated
+        Usage: preparing a remote HPC study directory while avoiding repeated
             uploads of shared auxiliary input files.
         Args:
             ssh_manager: Connected SSH/SFTP helper for the target platform.
@@ -400,7 +400,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, shared-files, studies.
-        Use when: deciding whether remote uploads should use the shared-file
+        Usage: deciding whether remote uploads should use the shared-file
             optimization path.
         Returns:
             bool: ``True`` when at least one study has entries in
@@ -417,7 +417,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, ssh, download, results, hdf5.
-        Use when: collecting files produced by a remote PFLOTRAN job after the
+        Usage: collecting files produced by a remote PFLOTRAN job after the
             queue reports completion.
         Args:
             study: Study whose local output folder receives downloaded files.
@@ -450,7 +450,7 @@ class PflotranManager(BaseManager):
 
         Category: PFLOTRAN management.
         Tags: pflotran, results, merge, hdf5, postprocessing.
-        Use when: a batch of PFLOTRAN studies should be consolidated for
+        Usage: a batch of PFLOTRAN studies should be consolidated for
             combined post-processing.
         Args:
             move: If ``True``, move result files instead of copying them.

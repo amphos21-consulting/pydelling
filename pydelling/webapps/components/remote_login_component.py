@@ -22,7 +22,7 @@ class RemoteLoginComponent(BaseComponent):
 
     Category: Web application component.
     Tags: streamlit, ssh, login, cookies, session-state.
-    Use when: to understand the UI flow that stores remote
+    Usage: to understand the UI flow that stores remote
         host credentials for pydelling webapp sessions.
     """
 
@@ -39,7 +39,7 @@ class RemoteLoginComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, ssh, login, initialization.
-        Use when: constructing the remote-login component and initializing the
+        Usage: constructing the remote-login component and initializing the
             session-state keys it depends on.
         Args:
             host: Remote host address.
@@ -84,7 +84,7 @@ class RemoteLoginComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, ssh, login, form.
-        Use when: a Streamlit page needs to collect remote credentials and mark
+        Usage: a Streamlit page needs to collect remote credentials and mark
             the component initialized.
         Args:
             login_node: Whether to show the login form while the component is
@@ -121,7 +121,7 @@ class RemoteLoginComponent(BaseComponent):
 
         Category: Web application component.
         Tags: streamlit, ssh, login, cookies, session-state.
-        Use when: to understand the login form has been submitted and the component should
+        Usage: to understand the login form has been submitted and the component should
             verify SSH access and store credentials for the session.
         Args:
             username: Remote SSH username.
@@ -162,7 +162,7 @@ class RemoteLoginComponent(BaseComponent):
 
         Category: Web application component.
         Tags: ssh, connection-check, paramiko.
-        Use when: a Streamlit workflow needs to verify that the stored remote
+        Usage: a Streamlit workflow needs to verify that the stored remote
             login details still authenticate.
         Returns:
             bool: ``True`` after Paramiko connects successfully.

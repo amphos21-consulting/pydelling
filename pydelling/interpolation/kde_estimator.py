@@ -22,7 +22,7 @@ class KdeEstimator:
 
     Category: interpolation
     Tags: kde, density-estimation, sampling, plotting, scikit-learn
-    Use when: scripts need a fitted KDE model, sampled synthetic values, or distribution comparison plots.
+    Usage: scripts need a fitted KDE model, sampled synthetic values, or distribution comparison plots.
     """
     is_run: bool
     kde_estimator: KernelDensity
@@ -49,7 +49,7 @@ class KdeEstimator:
 
         Category: interpolation
         Tags: kde, fit, density-estimation, scikit-learn
-        Use when: scripts need a trained KernelDensity object before sampling or plotting.
+        Usage: scripts need a trained KernelDensity object before sampling or plotting.
 
         Returns:
             sklearn.neighbors.KernelDensity: fitted KDE estimator.
@@ -73,7 +73,7 @@ class KdeEstimator:
 
         Category: interpolation
         Tags: kde, histogram, sampling, plot
-        Use when: scripts need to visually compare observed values against KDE-generated samples.
+        Usage: scripts need to visually compare observed values against KDE-generated samples.
 
         Returns:
             matplotlib.axes.Axes: histogram axes.
@@ -118,7 +118,7 @@ class KdeEstimator:
 
         Category: interpolation
         Tags: kde, histogram, sampling, multi-variable, plot
-        Use when: scripts need a visual comparison across several KDE variables.
+        Usage: scripts need a visual comparison across several KDE variables.
 
         Returns:
             matplotlib.axes.Axes: histogram axes.
@@ -156,7 +156,7 @@ class KdeEstimator:
 
         Category: interpolation
         Tags: kde, density, plot, diagnostics
-        Use when: scripts need to inspect the fitted density curve against observed values.
+        Usage: scripts need to inspect the fitted density curve against observed values.
 
         Returns:
             matplotlib.axes.Axes: density plot axes.
@@ -207,7 +207,7 @@ class KdeEstimator:
 
         Category: interpolation
         Tags: kde, sampling, synthetic-data
-        Use when: scripts need synthetic values drawn from the fitted density.
+        Usage: scripts need synthetic values drawn from the fitted density.
 
         Returns:
             numpy.ndarray: samples returned by KernelDensity.sample.

@@ -13,7 +13,7 @@ class _Surface:
 
     Category: COMSOL management.
     Tags: comsol, results, surface-plot, 2d.
-    Use when: to configure surface expressions, color tables,
+    Usage: to configure surface expressions, color tables,
         ranges, selections, or datasets under a 2D plot group.
     """
 

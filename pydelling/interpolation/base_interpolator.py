@@ -22,7 +22,7 @@ class BaseInterpolator:
 
     Category: interpolation
     Tags: interpolation, mesh, hdf5, csv, writer
-    Use when: implementing interpolation algorithms that share data loading, mesh setup, and export helpers.
+    Usage: implementing interpolation algorithms that share data loading, mesh setup, and export helpers.
     """
     is_run: bool = False
     has_regular_mesh: bool = False
@@ -52,7 +52,7 @@ class BaseInterpolator:
 
         Category: interpolation
         Tags: interpolation, source-data, numpy
-        Use when: scripts need to append sample points or values before running interpolation.
+        Usage: scripts need to append sample points or values before running interpolation.
 
         Returns:
             None: appends data to the source data array.
@@ -67,7 +67,7 @@ class BaseInterpolator:
 
         Category: interpolation
         Tags: interpolation, mesh, target-points, ids
-        Use when: scripts need to define the coordinates where interpolated values will be evaluated.
+        Usage: scripts need to define the coordinates where interpolated values will be evaluated.
 
         Returns:
             None: appends coordinates and optional id data to the mesh.
@@ -93,7 +93,7 @@ class BaseInterpolator:
 
         Category: interpolation
         Tags: interpolation, run, mesh, placeholder
-        Use when: subclasses need the shared run contract or a simple x-coordinate passthrough.
+        Usage: subclasses need the shared run contract or a simple x-coordinate passthrough.
 
         Returns:
             numpy.ndarray: interpolated values on the mesh.
@@ -106,7 +106,7 @@ class BaseInterpolator:
 
         Category: interpolation
         Tags: interpolation, data, results
-        Use when: scripts need the latest interpolation output for writing or analysis.
+        Usage: scripts need the latest interpolation output for writing or analysis.
 
         Returns:
             numpy.ndarray: interpolated data.
@@ -118,7 +118,7 @@ class BaseInterpolator:
 
         Category: writer
         Tags: interpolation, hdf5, export, dataset
-        Use when: scripts need interpolated values stored in an HDF5 file for downstream models.
+        Usage: scripts need interpolated values stored in an HDF5 file for downstream models.
 
         Returns:
             None: creates or updates the requested HDF5 dataset.
@@ -138,7 +138,7 @@ class BaseInterpolator:
 
         Category: writer
         Tags: interpolation, csv, export, mesh
-        Use when: scripts need a tabular artifact containing target coordinates and interpolated values.
+        Usage: scripts need a tabular artifact containing target coordinates and interpolated values.
 
         Returns:
             None: writes the text file via numpy.savetxt.
@@ -156,7 +156,7 @@ class BaseInterpolator:
 
         Category: interpolation
         Tags: interpolation, reset, data
-        Use when: reusing an interpolator for a new dataset.
+        Usage: reusing an interpolator for a new dataset.
 
         Returns:
             None: resets internal data containers.
@@ -170,7 +170,7 @@ class BaseInterpolator:
 
         Category: writer
         Tags: interpolation, writer, export, data
-        Use when: scripts need writer-specific serialization of interpolation results.
+        Usage: scripts need writer-specific serialization of interpolation results.
 
         Returns:
             None: instantiates writer_class and runs it.
@@ -183,7 +183,7 @@ class BaseInterpolator:
 
         Category: writer
         Tags: interpolation, writer, cleanup, output-file
-        Use when: scripts need to delete a generated interpolation output.
+        Usage: scripts need to delete a generated interpolation output.
 
         Returns:
             None: delegates removal to the writer class.
@@ -196,7 +196,7 @@ class BaseInterpolator:
 
         Category: interpolation
         Tags: interpolation, bounds, coordinates, metadata
-        Use when: regular mesh generation needs source data extents.
+        Usage: regular mesh generation needs source data extents.
 
         Returns:
             None: stores bounds in attributes and info metadata.
@@ -215,7 +215,7 @@ class BaseInterpolator:
 
         Category: interpolation
         Tags: interpolation, regular-mesh, grid, coordinates
-        Use when: scripts need a generated 2D target grid for interpolation.
+        Usage: scripts need a generated 2D target grid for interpolation.
 
         Returns:
             None: populates mesh and interpolation metadata.
@@ -249,7 +249,7 @@ class BaseInterpolator:
 
         Category: interpolation
         Tags: interpolation, statistics, plot, diagnostics
-        Use when: scripts need quick QA statistics for interpolation output.
+        Usage: scripts need quick QA statistics for interpolation output.
 
         Returns:
             None: prints statistics, optionally writes CSV and shows a KDE plot.

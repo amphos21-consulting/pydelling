@@ -10,7 +10,7 @@ class WebAppRunner(ABC, BaseStreamlitUtilityClass):
 
     Category: Web application.
     Tags: streamlit, webapp, runner, lifecycle.
-    Use when: to understand how pydelling webapps launch via
+    Usage: to understand how pydelling webapps launch via
         Streamlit or render directly inside an existing Streamlit runtime.
     """
 

@@ -21,7 +21,7 @@ class HDF5RasterWriter(BaseWriter):
 
     Category: writer
     Tags: hdf5, raster, interpolation, pflotran, gridded-dataset
-    Use when: scripts need regular-grid data serialized with Times, Data, and spatial attributes.
+    Usage: scripts need regular-grid data serialized with Times, Data, and spatial attributes.
     """
     def __init__(self,
                  filename,
@@ -43,7 +43,7 @@ class HDF5RasterWriter(BaseWriter):
 
         Category: writer
         Tags: hdf5, raster, interpolation, regular-mesh
-        Use when: scripts have flattened, centroid, or mesh-shaped data that must become an HDF5 raster.
+        Usage: scripts have flattened, centroid, or mesh-shaped data that must become an HDF5 raster.
 
         Returns:
             None: stores metadata, reshapes data, and marks it ready for writing.
@@ -125,7 +125,7 @@ class HDF5RasterWriter(BaseWriter):
 
         Category: writer
         Tags: hdf5, raster, reshape, regular-mesh
-        Use when: flattened interpolation output needs n_y by n_x grid shape.
+        Usage: flattened interpolation output needs n_y by n_x grid shape.
 
         Returns:
             numpy.ndarray: array of regular mesh layers.
@@ -144,7 +144,7 @@ class HDF5RasterWriter(BaseWriter):
 
         Category: writer
         Tags: hdf5, raster, centroids, reshape
-        Use when: data is stored as centroid rows and needs grid shape.
+        Usage: data is stored as centroid rows and needs grid shape.
 
         Returns:
             numpy.ndarray: reshaped mesh data.
@@ -159,7 +159,7 @@ class HDF5RasterWriter(BaseWriter):
 
         Category: writer
         Tags: hdf5, raster, centroids, reshape
-        Use when: converting one layer of centroid x,y,value data into mesh shape.
+        Usage: converting one layer of centroid x,y,value data into mesh shape.
 
         Returns:
             numpy.ndarray: reshaped mesh layer.
@@ -174,7 +174,7 @@ class HDF5RasterWriter(BaseWriter):
 
         Category: writer
         Tags: hdf5, raster, attributes, pflotran
-        Use when: Data datasets need Dimension, Discretization, Origin, and interpolation metadata.
+        Usage: Data datasets need Dimension, Discretization, Origin, and interpolation metadata.
 
         Returns:
             None: mutates HDF5 group attributes.
@@ -199,7 +199,7 @@ class HDF5RasterWriter(BaseWriter):
 
         Category: writer
         Tags: hdf5, raster, export, dataset
-        Use when: scripts need a complete HDF5 file with Times, Data, and attributes.
+        Usage: scripts need a complete HDF5 file with Times, Data, and attributes.
 
         Returns:
             None: writes or replaces the HDF5 file.
@@ -245,7 +245,7 @@ class HDF5RasterWriter(BaseWriter):
 
         Category: writer
         Tags: hdf5, raster, attributes, dimension
-        Use when: scripts need to override the default XY dimension metadata.
+        Usage: scripts need to override the default XY dimension metadata.
 
         Returns:
             None: updates attributes["Dimension"].

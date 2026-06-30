@@ -16,7 +16,7 @@ class ComsolComponent:
 
     Category: COMSOL management.
     Tags: comsol, component, geometry, variables, model-input.
-    Use when: to discover how pydelling accesses component
+    Usage: to discover how pydelling accesses component
         geometry, variables, and model inputs through the COMSOL Java API.
     """
 
@@ -27,7 +27,7 @@ class ComsolComponent:
 
         Category: COMSOL management.
         Tags: comsol, component, initialization.
-        Use when: attaching pydelling helpers to an existing COMSOL component.
+        Usage: attaching pydelling helpers to an existing COMSOL component.
         Parameters:
             comsol (ComsolModel): The ComsolModel object from ComsolManager
             tag (str): The tag of the component
@@ -57,7 +57,7 @@ class ComsolComponent:
 
         Category: COMSOL management.
         Tags: comsol, component, apply, extension-point.
-        Use when: extending component wrappers with explicit apply behavior.
+        Usage: extending component wrappers with explicit apply behavior.
         """
         pass
 
@@ -66,7 +66,7 @@ class ComsolComponent:
 
         Category: COMSOL management.
         Tags: comsol, component, geometry.
-        Use when: accessing or creating geometry operations under a component.
+        Usage: accessing or creating geometry operations under a component.
         Parameters:
             tag (str): The tag of the component
         Returns:
@@ -80,7 +80,7 @@ class ComsolComponent:
 
         Category: COMSOL management.
         Tags: comsol, variables, component.
-        Use when: reading or setting variables that live inside this component.
+        Usage: reading or setting variables that live inside this component.
         Parameters:
             tag (str): The tag of the variable collection. If None, a new variable collection will be created. Defaults to None.
         Returns:
@@ -95,7 +95,7 @@ class ComsolComponent:
 
         Category: COMSOL management.
         Tags: comsol, model-input, expression, component.
-        Use when: updating a component model input such as ``minput.pA``.
+        Usage: updating a component model input such as ``minput.pA``.
         Parameters:
             model_input_tag (str): The tag of the model input, i.e. minput.pA
             expression (str): The expression to set in the model input.
@@ -109,7 +109,7 @@ class ComsolComponent:
 
         Category: COMSOL management.
         Tags: comsol, component, children.
-        Use when: checking whether geometry or variable wrappers are already
+        Usage: checking whether geometry or variable wrappers are already
             registered under the component.
         Returns:
             list: Child wrapper tags.

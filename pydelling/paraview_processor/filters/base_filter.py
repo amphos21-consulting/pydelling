@@ -26,7 +26,7 @@ class BaseFilter:
 
     Category: postprocessing
     Tags: paraview, filter, dataframe, vtk, export
-    Use when: implementing ParaView filter wrappers with common data access and CSV export behavior.
+    Usage: implementing ParaView filter wrappers with common data access and CSV export behavior.
     """
     filter_type: str = "VTK_reader"
     counter: int = 0
@@ -44,7 +44,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, filter, pipeline, name
-        Use when: concrete filter wrappers need shared naming behavior.
+        Usage: concrete filter wrappers need shared naming behavior.
 
         Returns:
             None: stores the filter name.
@@ -58,7 +58,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, cell-data, arrays, keys
-        Use when: scripts need to inspect cell-centered arrays in a ParaView filter.
+        Usage: scripts need to inspect cell-centered arrays in a ParaView filter.
 
         Returns:
             list: cell-data keys from the fetched VTK object.
@@ -73,7 +73,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, point-data, arrays, keys
-        Use when: scripts need to inspect point-centered arrays in a ParaView filter.
+        Usage: scripts need to inspect point-centered arrays in a ParaView filter.
 
         Returns:
             list: point-data keys from the fetched VTK object.
@@ -88,7 +88,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, field-data, arrays, keys
-        Use when: scripts need to inspect field metadata arrays in a ParaView filter.
+        Usage: scripts need to inspect field metadata arrays in a ParaView filter.
 
         Returns:
             list: field-data keys from the fetched VTK object.
@@ -103,7 +103,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, cell-data, dataframe, arrays
-        Use when: scripts need tabular access to cell-centered ParaView data.
+        Usage: scripts need tabular access to cell-centered ParaView data.
 
         Returns:
             pandas.DataFrame: scalar arrays and expanded vector components.
@@ -128,7 +128,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, point-data, dataframe, arrays
-        Use when: scripts need tabular access to point-centered ParaView data.
+        Usage: scripts need tabular access to point-centered ParaView data.
 
         Returns:
             pandas.DataFrame: scalar arrays and expanded vector components.
@@ -154,7 +154,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, field-data, dataframe, arrays
-        Use when: scripts need tabular access to ParaView field metadata.
+        Usage: scripts need tabular access to ParaView field metadata.
 
         Returns:
             pandas.DataFrame: scalar arrays and expanded vector components.
@@ -179,7 +179,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, mesh-points, coordinates, dataframe
-        Use when: scripts need x,y,z coordinates from a ParaView filter output.
+        Usage: scripts need x,y,z coordinates from a ParaView filter output.
 
         Returns:
             pandas.DataFrame: point coordinates with x, y, z columns.
@@ -192,7 +192,7 @@ class BaseFilter:
 
         Category: postprocessing
         Tags: paraview, filter, attribute, configuration
-        Use when: scripts need to configure a ParaView proxy property dynamically.
+        Usage: scripts need to configure a ParaView proxy property dynamically.
 
         Returns:
             None: sets the proxy attribute.
@@ -206,7 +206,7 @@ class BaseFilter:
 
         Category: writer
         Tags: paraview, csv, export, save-data
-        Use when: scripts need a CSV artifact from the current ParaView filter output.
+        Usage: scripts need a CSV artifact from the current ParaView filter output.
 
         Returns:
             None: writes the CSV file.

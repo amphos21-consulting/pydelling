@@ -19,7 +19,7 @@ class PflotranRestartCallback(BaseCallback):
 
     Category: PFLOTRAN callback.
     Tags: pflotran, restart, callback, local, remote.
-    Use when: to understand how sequential PFLOTRAN studies
+    Usage: to understand how sequential PFLOTRAN studies
         reuse restart HDF5 files.
     """
 
@@ -32,7 +32,7 @@ class PflotranRestartCallback(BaseCallback):
 
         Category: PFLOTRAN callback.
         Tags: pflotran, restart, callback, initialization.
-        Use when: adding restart-file propagation to a study sequence.
+        Usage: adding restart-file propagation to a study sequence.
         Args:
             manager: Manager containing the ordered study collection.
             study: Current study that should receive the previous restart file.
@@ -49,7 +49,7 @@ class PflotranRestartCallback(BaseCallback):
 
         Category: PFLOTRAN callback.
         Tags: pflotran, restart, callback, ssh, hdf5.
-        Use when: running a sequence where each study should start from the
+        Usage: running a sequence where each study should start from the
             prior study's restart output.
         Args:
             on_remote: If ``True``, add a remote copy step through the manager's
@@ -100,7 +100,7 @@ class PflotranRestartCallback(BaseCallback):
 
         Category: PFLOTRAN callback.
         Tags: pflotran, restart, dummy-run.
-        Use when: to understand the manager is writing files without executing simulations.
+        Usage: to understand the manager is writing files without executing simulations.
         Notes:
             This callback intentionally performs no work in dummy mode.
         """

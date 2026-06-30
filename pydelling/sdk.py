@@ -15,7 +15,7 @@ def load_context(context_json):
 
     Category: runtime
     Tags: runtime, context, assets, load, sdk
-    Use when: generated scripts need the compatibility pydelling.sdk entry point to access user assets.
+    Usage: generated scripts need the compatibility pydelling.sdk entry point to access user assets.
 
     Returns:
         RuntimeContext: context object exposing get_asset and list_assets.
@@ -28,7 +28,7 @@ def load_asset_handles_from_context(items):
 
     Category: runtime
     Tags: runtime, context, assets, handles, sdk
-    Use when: generated scripts need all available assets as typed handles.
+    Usage: generated scripts need all available assets as typed handles.
 
     Returns:
         list: typed asset handles built from context entries.
@@ -49,7 +49,7 @@ def make_output_manifest_item(
 
     Category: runtime
     Tags: runtime, output, manifest, artifact, table
-    Use when: scripts need to publish an artifact or table output back to pydelling-cloud.
+    Usage: scripts need to publish an artifact or table output back to pydelling-cloud.
 
     Returns:
         dict: manifest item with path, kind, title, and MIME type.
@@ -69,7 +69,7 @@ def write_outputs_manifest(output_dir, items):
 
     Category: runtime
     Tags: runtime, output, manifest, write, sdk
-    Use when: scripts have finished creating output files and need pydelling-cloud to display them.
+    Usage: scripts have finished creating output files and need pydelling-cloud to display them.
 
     Returns:
         Path: path to the written outputs manifest.

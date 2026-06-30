@@ -12,7 +12,7 @@ class ComsolVariables:
 
     Category: COMSOL management.
     Tags: comsol, variables, component, dataframe.
-    Use when: to set, list, or move COMSOL variable
+    Usage: to set, list, or move COMSOL variable
         collections through pydelling.
     """
 
@@ -24,7 +24,7 @@ class ComsolVariables:
 
         Category: COMSOL management.
         Tags: comsol, variables, initialization.
-        Use when: accessing an existing variable collection or creating a new
+        Usage: accessing an existing variable collection or creating a new
             one globally or under a component.
         Parameters:
             parent (ComsolModel or ComsolComponent): The object where the variable lives.
@@ -75,7 +75,7 @@ class ComsolVariables:
 
         Category: COMSOL management.
         Tags: comsol, variables, expression.
-        Use when: changing a COMSOL variable before running or saving a model.
+        Usage: changing a COMSOL variable before running or saving a model.
         Parameters:
             name (str): The name of the variable.
             expression (str): The expression of the variable.
@@ -92,7 +92,7 @@ class ComsolVariables:
 
         Category: COMSOL management.
         Tags: comsol, variables, dataframe.
-        Use when: inspecting variable names, expressions, and descriptions.
+        Usage: inspecting variable names, expressions, and descriptions.
         Returns:
             pd.DataFrame: Columns ``Name``, ``Expression``, and ``Description``.
         """
@@ -117,7 +117,7 @@ class ComsolVariables:
 
         Category: COMSOL management.
         Tags: comsol, variables, component-scope.
-        Use when: reassigning where a COMSOL variable collection lives.
+        Usage: reassigning where a COMSOL variable collection lives.
         Parameters:
             comp_tag (str): The tag of the component or "" to be global.
         Side effects:
@@ -148,7 +148,7 @@ class ComsolVariables:
 
         Category: COMSOL management.
         Tags: comsol, variables, apply, extension-point.
-        Use when: extending COMSOL variable wrappers with explicit apply
+        Usage: extending COMSOL variable wrappers with explicit apply
             behavior.
         """
         pass
@@ -158,7 +158,7 @@ class ComsolParameters:
 
     Category: COMSOL management.
     Tags: comsol, parameters, dataframe.
-    Use when: to set or inspect global COMSOL parameters.
+    Usage: to set or inspect global COMSOL parameters.
     """
 
     def __init__(self,
@@ -167,7 +167,7 @@ class ComsolParameters:
 
         Category: COMSOL management.
         Tags: comsol, parameters, initialization.
-        Use when: accessing global model parameters.
+        Usage: accessing global model parameters.
         Parameters:
             parent (ComsolModel): The ComsolModel object where the variable lives.
         Side effects:
@@ -191,7 +191,7 @@ class ComsolParameters:
 
         Category: COMSOL management.
         Tags: comsol, parameters, expression.
-        Use when: changing a model parameter before running a study.
+        Usage: changing a model parameter before running a study.
         Parameters:
             name (str): The name of the parameter.
             expression (str): The expression of the parameter.
@@ -207,7 +207,7 @@ class ComsolParameters:
 
         Category: COMSOL management.
         Tags: comsol, parameters, dataframe.
-        Use when: inspecting parameter names, expressions, and descriptions.
+        Usage: inspecting parameter names, expressions, and descriptions.
         Returns:
             pd.DataFrame: Columns ``Name``, ``Expression``, and ``Description``.
         """
@@ -232,7 +232,7 @@ class ComsolParameters:
 
         Category: COMSOL management.
         Tags: comsol, parameters, apply, extension-point.
-        Use when: extending COMSOL parameter wrappers with explicit apply
+        Usage: extending COMSOL parameter wrappers with explicit apply
             behavior.
         """
         pass

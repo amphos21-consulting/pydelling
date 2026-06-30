@@ -21,7 +21,7 @@ class Line(_AbstractGidObject):
 
     Category: GID preprocessing.
     Tags: gid, line, points, export, duplicate-detection.
-    Use when: to create or reuse line definitions while
+    Usage: to create or reuse line definitions while
         generating GID geometry scripts.
     """
 
@@ -34,7 +34,7 @@ class Line(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, line, points, initialization.
-        Use when: building GID geometry from point objects.
+        Usage: building GID geometry from point objects.
         Args:
             point_1: Start point object.
             point_2: End point object.
@@ -58,7 +58,7 @@ class Line(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, line, export, duplicate-detection.
-        Use when: emitting GID line commands while avoiding duplicate edge
+        Usage: emitting GID line commands while avoiding duplicate edge
             definitions.
         Returns:
             str: GID command text, or an empty string when an equivalent line
@@ -89,7 +89,7 @@ class Line(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, line, duplicate-detection, connectivity.
-        Use when: determining whether a line command should be skipped because
+        Usage: determining whether a line command should be skipped because
             the same edge already exists.
         Args:
             line_1: First line to compare.

@@ -24,7 +24,7 @@ class BaseStep(ABC):
 
     Category: Remote execution.
     Tags: ssh, step, callback, deferred-operation.
-    Use when: to understand how pydelling stores remote
+    Usage: to understand how pydelling stores remote
         operations for execution during manager workflows.
     """
 
@@ -37,7 +37,7 @@ class BaseStep(ABC):
 
         Category: Remote execution.
         Tags: ssh, step, initialization.
-        Use when: creating an operation that will later run with a
+        Usage: creating an operation that will later run with a
             ``BaseManager``.
         Args:
             manager: Optional manager used when ``run`` is called without one.
@@ -53,7 +53,7 @@ class BaseStep(ABC):
 
         Category: Remote execution.
         Tags: ssh, step, run.
-        Use when: executing a stored remote operation.
+        Usage: executing a stored remote operation.
         Args:
             manager: Manager that provides SSH access and workflow context.
         Side effects:
@@ -68,7 +68,7 @@ class BaseStep(ABC):
 
         Category: Remote execution.
         Tags: ssh, step, extension-point.
-        Use when: implementing a concrete SSH operation subclass.
+        Usage: implementing a concrete SSH operation subclass.
         Args:
             manager: Manager that provides SSH access and workflow context.
         """

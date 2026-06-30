@@ -11,7 +11,7 @@ class BaseStatus:
 
     Category: simulation status.
     Tags: status-file, progress, simulation, extension-point.
-    Use when: to understand the common contract for status
+    Usage: to understand the common contract for status
         parsers such as PFLOTRAN status readers.
     """
 

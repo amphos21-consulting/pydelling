@@ -24,7 +24,7 @@ class PflotranSaveResultsCallback(BaseCallback):
 
     Category: PFLOTRAN callback.
     Tags: pflotran, results, hdf5, postprocess, callback.
-    Use when: to understand how pydelling copies or moves
+    Usage: to understand how pydelling copies or moves
         study outputs into a merged results folder and optionally postprocesses
         them.
     """

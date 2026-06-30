@@ -24,7 +24,7 @@ class PflotranObservationPointReader(BaseReader):
 
     Category: reader
     Tags: pflotran, observation-points, time-series, geochemistry, plotting
-    Use when: scripts need tabular PFLOTRAN observation results, species keys, or quick plots.
+    Usage: scripts need tabular PFLOTRAN observation results, species keys, or quick plots.
     """
     observation_point: np.ndarray
     observation_boundary: str
@@ -53,7 +53,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, observation-points, csv, dataframe, variables
-        Use when: scripts need parsed observation output with normalized variable names.
+        Usage: scripts need parsed observation output with normalized variable names.
 
         Returns:
             None: populates data and variables mappings.
@@ -95,7 +95,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, minerals, volume-fraction, variables
-        Use when: scripts need to select mineral VF columns from observation results.
+        Usage: scripts need to select mineral VF columns from observation results.
 
         Returns:
             list: variable names containing VF.
@@ -109,7 +109,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, species, total, variables
-        Use when: scripts need total concentration/species columns from observation results.
+        Usage: scripts need total concentration/species columns from observation results.
 
         Returns:
             list: variable names containing Total.
@@ -123,7 +123,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, species, free, variables
-        Use when: scripts need free species columns from observation results.
+        Usage: scripts need free species columns from observation results.
 
         Returns:
             list: variable names containing Free.
@@ -138,7 +138,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, observation-points, plot, time-series
-        Use when: scripts need a quick matplotlib line for one PFLOTRAN observation variable.
+        Usage: scripts need a quick matplotlib line for one PFLOTRAN observation variable.
 
         Returns:
             matplotlib.axes.Axes: plotted line object.
@@ -156,7 +156,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: writer
         Tags: pflotran, observation-points, csv, export
-        Use when: scripts need selected or full observation results as a CSV artifact.
+        Usage: scripts need selected or full observation results as a CSV artifact.
 
         Returns:
             None: writes the CSV file.
@@ -179,7 +179,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, minerals, volume-fraction, key
-        Use when: scripts need to construct the raw mineral VF column name.
+        Usage: scripts need to construct the raw mineral VF column name.
         """
         return f"{mineral}_VF [m^3 mnrl_m^3 bulk]"
 
@@ -191,7 +191,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, minerals, rate, key
-        Use when: scripts need to construct the raw mineral rate column name.
+        Usage: scripts need to construct the raw mineral rate column name.
         """
         return f"{mineral}_Rate [mol_m^3_sec]"
 
@@ -203,7 +203,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, minerals, saturation-index, key
-        Use when: scripts need to construct the mineral SI column name.
+        Usage: scripts need to construct the mineral SI column name.
         """
         return f"{mineral}_SI"
 
@@ -215,7 +215,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, species, primary, key
-        Use when: scripts need to construct the Total_species column name.
+        Usage: scripts need to construct the Total_species column name.
         """
         return f"Total_{species}"
 
@@ -225,7 +225,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, time-series, observation-points
-        Use when: plotting routines need x-axis time values from observation results.
+        Usage: plotting routines need x-axis time values from observation results.
 
         Returns:
             pandas.Series: time values.
@@ -238,7 +238,7 @@ class PflotranObservationPointReader(BaseReader):
 
         Category: reader
         Tags: pflotran, observation-points, columns, variables
-        Use when: scripts need to inspect available result variables.
+        Usage: scripts need to inspect available result variables.
 
         Returns:
             pandas.Index: result column labels.

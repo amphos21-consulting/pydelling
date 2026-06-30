@@ -14,7 +14,7 @@ class TriangleFace(BaseFace):
 
     Category: mesh geometry.
     Tags: triangle, face, edges, centroid, mesh-preprocessor.
-    Use when: to recognize three-node faces produced by the
+    Usage: to recognize three-node faces produced by the
         mesh preprocessor and inspect their edge topology.
     """
 
@@ -23,7 +23,7 @@ class TriangleFace(BaseFace):
 
         Category: mesh geometry.
         Tags: triangle, face, nodes, coordinates.
-        Use when: constructing a mesh-preprocessor face for triangular
+        Usage: constructing a mesh-preprocessor face for triangular
             boundaries or element sides.
         Args:
             node_ids: Connectivity ids for the three face nodes.
@@ -41,7 +41,7 @@ class TriangleFace(BaseFace):
 
         Category: mesh geometry.
         Tags: triangle, centroid, coordinates.
-        Use when: geometric processing needs a representative point for a
+        Usage: geometric processing needs a representative point for a
             triangular face.
         Returns:
             np.ndarray: Mean coordinate of the triangle vertices.
@@ -54,7 +54,7 @@ class TriangleFace(BaseFace):
 
         Category: mesh geometry.
         Tags: triangle, edges, connectivity.
-        Use when: matching, comparing, or exporting triangular face edges.
+        Usage: matching, comparing, or exporting triangular face edges.
         Returns:
             list: Three ``[start_node, end_node]`` edge pairs.
         """
@@ -70,7 +70,7 @@ class TriangleFace(BaseFace):
 
         Category: mesh geometry.
         Tags: triangle, edges, vectors, coordinates.
-        Use when: computing lengths, normals, or geometric checks for a
+        Usage: computing lengths, normals, or geometric checks for a
             triangular face.
         Returns:
             list: Three vectors following the face edge order.

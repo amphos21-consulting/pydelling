@@ -14,7 +14,7 @@ class BaseFace(BaseAbstractMeshObject):
 
     Category: preprocessing
     Tags: mesh, face, geometry, area, plane
-    Use when: implementing triangular or quadrilateral faces used by mesh elements and intersections.
+    Usage: implementing triangular or quadrilateral faces used by mesh elements and intersections.
     """
     _local_id = 0
     __slots__ = ['node_ids', 'node_coords']
@@ -23,7 +23,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, nodes, coordinates
-        Use when: concrete face classes need shared state for geometry operations.
+        Usage: concrete face classes need shared state for geometry operations.
 
         Returns:
             None: stores nodes, coordinates, ids, and face metadata.
@@ -45,7 +45,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, area, geometry
-        Use when: mesh connection and boundary export routines need face areas.
+        Usage: mesh connection and boundary export routines need face areas.
 
         Returns:
             float: computed face area.
@@ -58,7 +58,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, centroid, geometry
-        Use when: intersections or exports need a representative face point.
+        Usage: intersections or exports need a representative face point.
 
         Returns:
             numpy.ndarray: centroid coordinates.
@@ -71,7 +71,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, nodes, topology
-        Use when: exporters need to distinguish triangular and quadrilateral faces.
+        Usage: exporters need to distinguish triangular and quadrilateral faces.
 
         Returns:
             int: node count.
@@ -83,7 +83,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, area, polygon, geometry
-        Use when: mesh connection or boundary condition export needs face area.
+        Usage: mesh connection or boundary condition export needs face area.
 
         Returns:
             float: planar polygon area.
@@ -108,7 +108,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, centroid, geometry
-        Use when: scripts need a simple centroid estimate from face coordinates.
+        Usage: scripts need a simple centroid estimate from face coordinates.
 
         Returns:
             numpy.ndarray: mean coordinate centroid.
@@ -120,7 +120,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, centroid, mean, geometry
-        Use when: callers explicitly want mean-based centroid calculation.
+        Usage: callers explicitly want mean-based centroid calculation.
 
         Returns:
             numpy.ndarray: mean coordinate centroid.
@@ -132,7 +132,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, plot, debug, geometry
-        Use when: interactively debugging face coordinates or centroid placement.
+        Usage: interactively debugging face coordinates or centroid placement.
 
         Returns:
             None: shows a matplotlib 3D plot.
@@ -165,7 +165,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, plane, intersection, geometry
-        Use when: element-plane or fracture-plane workflows need face intersection lines.
+        Usage: element-plane or fracture-plane workflows need face intersection lines.
 
         Returns:
             Any: result returned by Plane.intersect.
@@ -178,7 +178,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, normal, geometry
-        Use when: containment, plane construction, or connection calculations need face orientation.
+        Usage: containment, plane construction, or connection calculations need face orientation.
 
         Returns:
             numpy.ndarray: unit normal vector.
@@ -196,7 +196,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, edges, topology
-        Use when: concrete face subclasses expose local edge node pairs.
+        Usage: concrete face subclasses expose local edge node pairs.
 
         Returns:
             NotImplementedError: base class does not implement edge connectivity.
@@ -209,7 +209,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, edge-vectors, geometry
-        Use when: concrete face subclasses expose directed edge vectors for intersections.
+        Usage: concrete face subclasses expose directed edge vectors for intersections.
 
         Returns:
             NotImplementedError: base class does not implement edge vectors.
@@ -223,7 +223,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, face, plane, normal, geometry
-        Use when: face-plane intersections or containment checks need a Plane object.
+        Usage: face-plane intersections or containment checks need a Plane object.
 
         Returns:
             Plane: plane through the centroid with this face normal.
@@ -238,7 +238,7 @@ class BaseFace(BaseAbstractMeshObject):
 
         Category: util
         Tags: mesh, face, equality, topology
-        Use when: scripts need to test whether two BaseFace instances refer to the same node ordering.
+        Usage: scripts need to test whether two BaseFace instances refer to the same node ordering.
 
         Returns:
             bool: True when other is a BaseFace with identical nodes.

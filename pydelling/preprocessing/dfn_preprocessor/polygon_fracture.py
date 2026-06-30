@@ -17,7 +17,7 @@ class PolygonFracture:
 
     Category: preprocessing
     Tags: dfn, fracture, polygon, geometry, legacy
-    Use when: scripts need the older polygon-fracture geometry helpers for DFN intersection workflows.
+    Usage: scripts need the older polygon-fracture geometry helpers for DFN intersection workflows.
     """
     local_id = 0
     eps = 1e-8
@@ -27,7 +27,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, polygon, dip, aperture
-        Use when: legacy scripts need a rectangular fracture object with geometric helpers.
+        Usage: legacy scripts need a rectangular fracture object with geometric helpers.
 
         Returns:
             None: stores geometry, aperture, and local id.
@@ -49,7 +49,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, corners, dip, geometry
-        Use when: generating side points from dip, dip direction, centroid, and size.
+        Usage: generating side points from dip, dip direction, centroid, and size.
 
         Returns:
             numpy.ndarray: four corner coordinates.
@@ -76,7 +76,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, corners, strike, dip
-        Use when: legacy workflows need the alternate v3 square-fracture construction.
+        Usage: legacy workflows need the alternate v3 square-fracture construction.
 
         Returns:
             numpy.ndarray: four corner coordinates.
@@ -109,7 +109,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, corners, dip, geometry
-        Use when: scripts need the alternate dip/dip-direction corner construction.
+        Usage: scripts need the alternate dip/dip-direction corner construction.
 
         Returns:
             numpy.ndarray: four corner coordinates.
@@ -151,7 +151,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, corners, polygon, geometry
-        Use when: intersection, containment, or export routines need fracture corner coordinates.
+        Usage: intersection, containment, or export routines need fracture corner coordinates.
 
         Returns:
             numpy.ndarray: fracture side point coordinates.
@@ -169,7 +169,7 @@ class PolygonFracture:
 
         Category: writer
         Tags: dfn, fracture, obj, export, geometry
-        Use when: scripts need a simple visual-debug representation of the fracture.
+        Usage: scripts need a simple visual-debug representation of the fracture.
 
         Returns:
             str: OBJ vertex and face records.
@@ -190,7 +190,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, normal, orientation, geometry
-        Use when: plane construction, distance checks, or intersections need fracture orientation.
+        Usage: plane construction, distance checks, or intersections need fracture orientation.
 
         Returns:
             numpy.ndarray: unit normal vector.
@@ -206,7 +206,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, distance, point, plane
-        Use when: scripts need point-to-plane distance for fracture filtering.
+        Usage: scripts need point-to-plane distance for fracture filtering.
 
         Returns:
             float: signed distance projected on the unit normal vector.
@@ -219,7 +219,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, bounding-box, geometry
-        Use when: scripts need quick spatial filtering before exact containment checks.
+        Usage: scripts need quick spatial filtering before exact containment checks.
 
         Returns:
             numpy.ndarray: x_min, x_max, y_min, y_max, z_min, z_max.
@@ -238,7 +238,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, bounding-box, point, filter
-        Use when: scripts need a fast pre-check before polygon containment.
+        Usage: scripts need a fast pre-check before polygon containment.
 
         Returns:
             bool: True when the point is inside the bounding box.
@@ -259,7 +259,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, centroid, geometry
-        Use when: scripts need the fracture center for distance, export, or reporting.
+        Usage: scripts need the fracture center for distance, export, or reporting.
 
         Returns:
             numpy.ndarray: x, y, z centroid.
@@ -272,7 +272,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, polygon, shapely, geometry
-        Use when: scripts need polygon operations on fracture side points.
+        Usage: scripts need polygon operations on fracture side points.
 
         Returns:
             shapely.geometry.Polygon: polygon built from side points.
@@ -288,7 +288,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, plane, normal, geometry
-        Use when: mesh-element intersection routines need the fracture plane.
+        Usage: mesh-element intersection routines need the fracture plane.
 
         Returns:
             Plane: plane defined by centroid and unit normal vector.
@@ -301,7 +301,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, corners, points, geometry
-        Use when: intersection routines need corner objects instead of raw arrays.
+        Usage: intersection routines need corner objects instead of raw arrays.
 
         Returns:
             list: Point objects for each corner.
@@ -314,7 +314,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, segments, boundary, geometry
-        Use when: scripts need finite fracture edges for geometric intersection checks.
+        Usage: scripts need finite fracture edges for geometric intersection checks.
 
         Returns:
             list: Segment objects around the fracture boundary.
@@ -333,7 +333,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, lines, boundary, geometry
-        Use when: element intersection routines need fracture edge-line intersections.
+        Usage: element intersection routines need fracture edge-line intersections.
 
         Returns:
             list: Line objects around the fracture boundary.
@@ -351,7 +351,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, contains, point, polygon
-        Use when: mesh-fracture intersection routines need to filter candidate points.
+        Usage: mesh-fracture intersection routines need to filter candidate points.
 
         Returns:
             bool: True when the projected point is inside the polygon.
@@ -397,7 +397,7 @@ class PolygonFracture:
 
         Category: preprocessing
         Tags: dfn, fracture, normal, projection, geometry
-        Use when: containment routines need a 2D projection plane.
+        Usage: containment routines need a 2D projection plane.
 
         Returns:
             int: index of the largest absolute normal-vector component.

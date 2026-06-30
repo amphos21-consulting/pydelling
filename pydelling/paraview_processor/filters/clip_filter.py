@@ -16,7 +16,7 @@ class ClipFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, clip, box, geometry.
-    Use when: to clip a ParaView dataset, including
+    Usage: to clip a ParaView dataset, including
         box-shaped clipping regions.
     """
 

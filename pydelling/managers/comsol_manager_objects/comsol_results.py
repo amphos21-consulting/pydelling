@@ -21,7 +21,7 @@ class ComsolResults:
 
     Category: COMSOL management.
     Tags: comsol, results, plots, tables, derived-values.
-    Use when: to create or inspect COMSOL post-processing
+    Usage: to create or inspect COMSOL post-processing
         result objects through pydelling.
     """
 
@@ -215,7 +215,7 @@ class ComsolResults:
 
         Category: COMSOL management.
         Tags: comsol, export, plot, image-properties.
-        Use when: configuring plot export size, resolution, and visibility
+        Usage: configuring plot export size, resolution, and visibility
             options before writing COMSOL result images.
         """
 
@@ -543,7 +543,7 @@ class ComsolResults:
 
         Category: COMSOL management.
         Tags: comsol, export, plot, image-properties.
-        Use when: carrying plot export dimensions, resolution, and font size for
+        Usage: carrying plot export dimensions, resolution, and font size for
             COMSOL result export workflows.
         """
 

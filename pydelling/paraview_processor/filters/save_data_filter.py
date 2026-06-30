@@ -16,7 +16,7 @@ class SaveDataFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, save-data, export, cell-data, point-data.
-    Use when: to persist a ParaView proxy with selected point
+    Usage: to persist a ParaView proxy with selected point
         and cell data arrays.
     """
 

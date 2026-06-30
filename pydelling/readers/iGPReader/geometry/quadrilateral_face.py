@@ -14,7 +14,7 @@ class QuadrilateralFace(BaseFace):
 
     Category: iGP geometry.
     Tags: quadrilateral, face, centroid.
-    Use when: to identify quadrilateral boundary faces in iGP
+    Usage: to identify quadrilateral boundary faces in iGP
         mesh geometry.
     """
 
@@ -23,7 +23,7 @@ class QuadrilateralFace(BaseFace):
 
         Category: iGP geometry.
         Tags: quadrilateral, face, nodes, coordinates.
-        Use when: constructing quadrilateral faces for element topology or
+        Usage: constructing quadrilateral faces for element topology or
             region operations.
         Args:
             nodes: Node ids defining the face.
@@ -40,7 +40,7 @@ class QuadrilateralFace(BaseFace):
 
         Category: iGP geometry.
         Tags: quadrilateral, centroid, coordinates.
-        Use when: region and export operations need a representative face point.
+        Usage: region and export operations need a representative face point.
         Returns:
             np.ndarray: Mean coordinate of the face vertices.
         """

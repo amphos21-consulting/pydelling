@@ -12,7 +12,7 @@ class CsvWriter:
 
     Category: iGP export.
     Tags: igp, csv, cells, connections, centroids.
-    Use when: to identify the CSV export helpers available on
+    Usage: to identify the CSV export helpers available on
         iGP reader/writer objects.
     """
 
@@ -21,7 +21,7 @@ class CsvWriter:
 
         Category: iGP export.
         Tags: igp, csv, cells, centroids, volume.
-        Use when: exporting a compact table of mesh cell centers and volumes.
+        Usage: exporting a compact table of mesh cell centers and volumes.
         Side effects:
             Writes ``<project_name>_cell.csv`` either in the current directory or
             under the configured output folder.
@@ -40,7 +40,7 @@ class CsvWriter:
 
         Category: iGP export.
         Tags: igp, csv, connections, face-area, centroids.
-        Use when: exporting cell-to-cell connection geometry for diagnostics or
+        Usage: exporting cell-to-cell connection geometry for diagnostics or
             downstream processing.
         Side effects:
             Writes ``<project_name>_connections.csv`` using connection face

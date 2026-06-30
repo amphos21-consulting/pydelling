@@ -20,7 +20,7 @@ class PflotranPostprocessing:
 
     Category: postprocessing
     Tags: pflotran, hdf5, xmf, vtk, visualization
-    Use when: scripts need PFLOTRAN HDF5/VTK outputs prepared for ParaView or XDMF workflows.
+    Usage: scripts need PFLOTRAN HDF5/VTK outputs prepared for ParaView or XDMF workflows.
     """
     def __init__(self, dt=0.2, unit="y"):
         """
@@ -41,7 +41,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, hdf5, xmf, vtk, workflow
-        Use when: scripts need discovery, optional velocity merging, XMF export, and domain-file handling in one call.
+        Usage: scripts need discovery, optional velocity merging, XMF export, and domain-file handling in one call.
 
         Returns:
             None: writes post-processing artifacts in the output directory.
@@ -61,7 +61,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, hdf5, vtk, output-files, discovery
-        Use when: scripts need sorted result files and project naming before XMF export.
+        Usage: scripts need sorted result files and project naming before XMF export.
 
         Returns:
             None: stores output file lists, directories, and project name.
@@ -115,7 +115,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, directories, discovery, input-files
-        Use when: post-processing is launched from a case root, input_files, or output-hdf5 folder.
+        Usage: post-processing is launched from a case root, input_files, or output-hdf5 folder.
 
         Returns:
             None: stores current_directory, root_directory, and input_directory.
@@ -136,7 +136,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, domain, hdf5, discovery
-        Use when: XMF export needs mesh topology and vertices.
+        Usage: XMF export needs mesh topology and vertices.
 
         Returns:
             pathlib.Path: located domain HDF5 file.
@@ -152,7 +152,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, input-file, discovery
-        Use when: scripts need to associate outputs with the original input deck.
+        Usage: scripts need to associate outputs with the original input deck.
 
         Returns:
             pathlib.Path | None: PFLOTRAN input file path when available.
@@ -169,7 +169,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, vtk, velocity, hdf5, merge
-        Use when: velocity output is stored in VTK files but should be available in HDF5 results.
+        Usage: velocity output is stored in VTK files but should be available in HDF5 results.
 
         Returns:
             None: creates missing velocity datasets in each HDF5 output file.
@@ -191,7 +191,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, hdf5, variables, times, metadata
-        Use when: XMF generation needs cell counts, vertex counts, variables, and output times.
+        Usage: XMF generation needs cell counts, vertex counts, variables, and output times.
 
         Returns:
             None: stores mesh counts, output variables, times, and units.
@@ -221,7 +221,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, domain, hdf5, copy
-        Use when: workflows expect a hook for placing the domain file beside output files.
+        Usage: workflows expect a hook for placing the domain file beside output files.
 
         Returns:
             None: current implementation leaves files unchanged.
@@ -239,7 +239,7 @@ class PflotranPostprocessing:
 
         Category: writer
         Tags: pflotran, xmf, hdf5, visualization, export
-        Use when: scripts need ParaView-readable XMF companions for each PFLOTRAN time step.
+        Usage: scripts need ParaView-readable XMF companions for each PFLOTRAN time step.
 
         Returns:
             None: writes one XMF file per output HDF5 file.
@@ -287,7 +287,7 @@ class PflotranPostprocessing:
 
         Category: writer
         Tags: pflotran, xmf, attribute, hdf5, export
-        Use when: export_xmf needs to reference a cell-centered HDF5 dataset.
+        Usage: export_xmf needs to reference a cell-centered HDF5 dataset.
 
         Returns:
             None: appends XML text to the active XMF file.
@@ -304,7 +304,7 @@ class PflotranPostprocessing:
 
         Category: reader
         Tags: vtk, cell-data, scalar, parser
-        Use when: PFLOTRAN velocity variables need to be merged from VTK into HDF5.
+        Usage: PFLOTRAN velocity variables need to be merged from VTK into HDF5.
 
         Returns:
             dict: variable metadata and numpy arrays keyed by variable name.
@@ -351,7 +351,7 @@ class PflotranPostprocessing:
 
         Category: postprocessing
         Tags: pflotran, hdf5, output-files, count
-        Use when: loops need the current number of discovered output time steps.
+        Usage: loops need the current number of discovered output time steps.
 
         Returns:
             int: number of output HDF5 files.

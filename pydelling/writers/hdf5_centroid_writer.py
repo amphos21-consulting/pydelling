@@ -20,7 +20,7 @@ class HDF5CentroidWriter(BaseWriter):
 
     Category: HDF5 writer.
     Tags: hdf5, centroid, cell-ids, permeability, tensor.
-    Use when: to export cell-wise scalar, anisotropic, or
+    Usage: to export cell-wise scalar, anisotropic, or
         tensor datasets with one-based ``Cell Ids``.
     """
 
@@ -29,7 +29,7 @@ class HDF5CentroidWriter(BaseWriter):
 
         Category: HDF5 writer.
         Tags: hdf5, centroid, dataset, cell-ids.
-        Use when: exporting ``self.data`` under ``self.var_name`` with optional
+        Usage: exporting ``self.data`` under ``self.var_name`` with optional
             PFLOTRAN cell ids.
         Args:
             filename: Optional output filename overriding ``self.filename``.
@@ -71,7 +71,7 @@ class HDF5CentroidWriter(BaseWriter):
 
         Category: HDF5 writer.
         Tags: hdf5, anisotropic, permeability, cell-ids.
-        Use when: exporting anisotropic cell-wise properties for PFLOTRAN-style
+        Usage: exporting anisotropic cell-wise properties for PFLOTRAN-style
             inputs.
         Args:
             filename: name of the file
@@ -112,7 +112,7 @@ class HDF5CentroidWriter(BaseWriter):
 
         Category: HDF5 writer.
         Tags: hdf5, tensor, permeability, cell-ids.
-        Use when: exporting full tensor cell-wise properties with X, XY, XZ, Y,
+        Usage: exporting full tensor cell-wise properties with X, XY, XZ, Y,
             YZ, and Z components.
         Args:
             filename: name of the file
@@ -154,7 +154,7 @@ class HDF5CentroidWriter(BaseWriter):
 
         Category: HDF5 writer.
         Tags: hdf5, isotropic, dataset, cell-ids.
-        Use when: exporting one scalar value per cell with one-based cell ids.
+        Usage: exporting one scalar value per cell with one-based cell ids.
         Args:
             filename: name of the file
             dataset: output dataset

@@ -30,7 +30,7 @@ class MeshPreprocessor(iGPLogic):
 
     Category: mesh
     Tags: mesh, preprocessing, vtk, meshio, elements, boundaries
-    Use when: scripts need to build, inspect, subset, annotate, or export unstructured mesh data.
+    Usage: scripts need to build, inspect, subset, annotate, or export unstructured mesh data.
     """
     elements: List[geometry.base_element]
     external_boundaries: Dict[str, List[geometry.base_face]]
@@ -55,7 +55,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, preprocessing, initialize, elements, boundaries
-        Use when: scripts need a mutable mesh container before adding elements or loading saved geometry.
+        Usage: scripts need a mutable mesh container before adding elements or loading saved geometry.
         """
         self.unordered_nodes = {}
         self.elements = []
@@ -79,7 +79,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, element, add, preprocessing
-        Use when: scripts already have a pydelling geometry element and need it included in the mesh.
+        Usage: scripts already have a pydelling geometry element and need it included in the mesh.
 
         Returns:
             None: mutates the mesh element list.
@@ -91,7 +91,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, tetrahedra, element, nodes, cell
-        Use when: building an unstructured mesh from tetrahedral connectivity and coordinates.
+        Usage: building an unstructured mesh from tetrahedral connectivity and coordinates.
 
         Returns:
             None: appends a tetrahedral element and stores its node coordinates.
@@ -105,7 +105,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, hexahedra, element, nodes, cell
-        Use when: building an unstructured mesh from hexahedral connectivity and coordinates.
+        Usage: building an unstructured mesh from hexahedral connectivity and coordinates.
 
         Returns:
             None: appends a hexahedral element and stores its node coordinates.
@@ -119,7 +119,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, wedge, element, nodes, cell
-        Use when: building an unstructured mesh from wedge connectivity and coordinates.
+        Usage: building an unstructured mesh from wedge connectivity and coordinates.
 
         Returns:
             None: appends a wedge element and stores its node coordinates.
@@ -133,7 +133,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, pyramid, element, nodes, cell
-        Use when: building an unstructured mesh from pyramid connectivity and coordinates.
+        Usage: building an unstructured mesh from pyramid connectivity and coordinates.
 
         Returns:
             None: appends a pyramid element and stores its node coordinates.
@@ -147,7 +147,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, triangular-prism, wedge, element, nodes
-        Use when: source connectivity names triangular prisms instead of wedge cells.
+        Usage: source connectivity names triangular prisms instead of wedge cells.
 
         Returns:
             None: appends a wedge element and stores its node coordinates.
@@ -162,7 +162,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, coordinates, nodes, array
-        Use when: scripts need the mesh point array for export, bounds, or spatial analysis.
+        Usage: scripts need the mesh point array for export, bounds, or spatial analysis.
 
         Returns:
             np.ndarray: ordered node coordinate array.
@@ -180,7 +180,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, nodes, coordinates, array
-        Use when: scripts need the node coordinate array using a common mesh naming convention.
+        Usage: scripts need the node coordinate array using a common mesh naming convention.
 
         Returns:
             np.ndarray: ordered node coordinate array.
@@ -192,7 +192,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, quadrilateral, face, nodes, boundary
-        Use when: building surface or boundary geometry from four-node faces.
+        Usage: building surface or boundary geometry from four-node faces.
 
         Returns:
             None: appends a quadrilateral face and stores its node coordinates.
@@ -206,7 +206,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, triangle, face, nodes, boundary
-        Use when: building surface or boundary geometry from three-node faces.
+        Usage: building surface or boundary geometry from three-node faces.
 
         Returns:
             None: appends a triangular face and stores its node coordinates.
@@ -220,7 +220,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, node, coordinates, deprecated
-        Use when: maintaining older scripts that add nodes directly instead of through elements.
+        Usage: maintaining older scripts that add nodes directly instead of through elements.
 
         Returns:
             None: mutates the coordinate collection.
@@ -233,7 +233,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, nodes, count, metadata
-        Use when: scripts need mesh size metadata.
+        Usage: scripts need mesh size metadata.
 
         Returns:
             int: number of known nodes.
@@ -246,7 +246,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, elements, count, metadata
-        Use when: scripts need mesh size metadata.
+        Usage: scripts need mesh size metadata.
 
         Returns:
             int: number of elements.
@@ -258,7 +258,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, meshio, convert, cells, points
-        Use when: scripts need a meshio object before export or downstream geometry processing.
+        Usage: scripts need a meshio object before export or downstream geometry processing.
 
         Returns:
             meshio.Mesh: converted mesh object stored on meshio_mesh.
@@ -277,7 +277,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, vtk, export, meshio, visualization
-        Use when: the user asks to write a mesh visualization file from MeshPreprocessor data.
+        Usage: the user asks to write a mesh visualization file from MeshPreprocessor data.
 
         Returns:
             None: writes the VTK file to filename.
@@ -291,7 +291,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, subset, vtk, export, elements
-        Use when: the user asks to visualize or download selected mesh elements only.
+        Usage: the user asks to visualize or download selected mesh elements only.
 
         Returns:
             None: writes the subset VTK file to filename.
@@ -354,7 +354,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: writer
         Tags: mesh, nodes, csv, export, coordinates
-        Use when: scripts need a simple coordinate table for mesh nodes.
+        Usage: scripts need a simple coordinate table for mesh nodes.
 
         Returns:
             None: writes the CSV file.
@@ -368,7 +368,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, centroids, elements, coordinates
-        Use when: scripts need cell centers for nearest-neighbor queries, interpolation, or summaries.
+        Usage: scripts need cell centers for nearest-neighbor queries, interpolation, or summaries.
 
         Returns:
             np.ndarray: element centroid coordinate array.
@@ -385,7 +385,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, kd-tree, centroids, nearest, spatial
-        Use when: scripts need fast nearest-element or radius queries.
+        Usage: scripts need fast nearest-element or radius queries.
 
         Returns:
             None: stores the KDTree on kd_tree.
@@ -399,7 +399,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, nearest, kd-tree, point, elements
-        Use when: scripts need nearby cells for interpolation, sampling, or material assignment.
+        Usage: scripts need nearby cells for interpolation, sampling, or material assignment.
 
         Returns:
             list: nearest mesh element objects.
@@ -419,7 +419,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, nearest, radius, kd-tree, elements
-        Use when: scripts need all cells inside a spatial search radius.
+        Usage: scripts need all cells inside a spatial search radius.
 
         Returns:
             list: mesh elements within the radius.
@@ -439,7 +439,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, nearest, kd-tree, point, elements
-        Use when: scripts need a fixed number of nearby cells for a coordinate.
+        Usage: scripts need a fixed number of nearby cells for a coordinate.
 
         Returns:
             list: closest mesh element objects.
@@ -455,7 +455,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, clear, reset, elements
-        Use when: scripts need to reuse a MeshPreprocessor instance with new geometry.
+        Usage: scripts need to reuse a MeshPreprocessor instance with new geometry.
 
         Returns:
             None: clears mesh nodes and elements.
@@ -505,7 +505,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, fracture, intersection, vtk, subset
-        Use when: scripts need a VTK subset of cells cut by a fracture.
+        Usage: scripts need a VTK subset of cells cut by a fracture.
 
         Returns:
             None: writes intersections.vtk.
@@ -521,7 +521,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, fracture, intersection, area, aperture
-        Use when: scripts need fracture-cell intersection metadata for DFN or flow preprocessing.
+        Usage: scripts need fracture-cell intersection metadata for DFN or flow preprocessing.
 
         Returns:
             list: intersection points found for the processed elements.
@@ -560,7 +560,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: writer
         Tags: mesh, fracture, intersection, stats, json
-        Use when: scripts need a diagnostic file after fracture-mesh intersection.
+        Usage: scripts need a diagnostic file after fracture-mesh intersection.
 
         Returns:
             None: writes run_stats.json.
@@ -579,7 +579,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, fracture, plane, edge, intersection
-        Use when: scripts need the geometric intersection point between a mesh edge and fracture plane.
+        Usage: scripts need the geometric intersection point between a mesh edge and fracture plane.
 
         Returns:
             np.ndarray | None: intersection point inside the plane bounds, if present.
@@ -603,7 +603,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, bounds, x, minimum
-        Use when: scripts need mesh spatial bounds.
+        Usage: scripts need mesh spatial bounds.
 
         Returns:
             float: minimum x coordinate.
@@ -616,7 +616,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, bounds, x, maximum
-        Use when: scripts need mesh spatial bounds.
+        Usage: scripts need mesh spatial bounds.
 
         Returns:
             float: maximum x coordinate.
@@ -629,7 +629,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, bounds, y, minimum
-        Use when: scripts need mesh spatial bounds.
+        Usage: scripts need mesh spatial bounds.
 
         Returns:
             float: minimum y coordinate.
@@ -642,7 +642,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, bounds, y, maximum
-        Use when: scripts need mesh spatial bounds.
+        Usage: scripts need mesh spatial bounds.
 
         Returns:
             float: maximum y coordinate.
@@ -655,7 +655,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, bounds, z, minimum
-        Use when: scripts need mesh spatial bounds.
+        Usage: scripts need mesh spatial bounds.
 
         Returns:
             float: minimum z coordinate.
@@ -668,7 +668,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, bounds, z, maximum
-        Use when: scripts need mesh spatial bounds.
+        Usage: scripts need mesh spatial bounds.
 
         Returns:
             float: maximum z coordinate.
@@ -681,7 +681,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: writer
         Tags: mesh, save, pickle, serialize
-        Use when: scripts need to persist a preprocessed mesh for later reuse.
+        Usage: scripts need to persist a preprocessed mesh for later reuse.
 
         Returns:
             None: writes the pickle file.
@@ -702,7 +702,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, load, pickle, serialize
-        Use when: scripts need to restore a previously saved MeshPreprocessor state.
+        Usage: scripts need to restore a previously saved MeshPreprocessor state.
 
         Returns:
             None: mutates this instance with saved mesh data.
@@ -721,7 +721,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, json, serialize, elements, coordinates
-        Use when: scripts need portable mesh metadata or will write the mesh as JSON.
+        Usage: scripts need portable mesh metadata or will write the mesh as JSON.
 
         Returns:
             dict: JSON-ready mesh representation.
@@ -739,7 +739,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: writer
         Tags: mesh, json, export, serialize
-        Use when: scripts need a portable JSON representation of mesh elements and coordinates.
+        Usage: scripts need a portable JSON representation of mesh elements and coordinates.
 
         Returns:
             None: writes the JSON file.
@@ -754,7 +754,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, json, load, serialize
-        Use when: scripts need to restore mesh geometry from a JSON export.
+        Usage: scripts need to restore mesh geometry from a JSON export.
 
         Returns:
             MeshPreprocessor: loaded mesh instance.
@@ -778,7 +778,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, dict, load, serialize
-        Use when: scripts already have parsed mesh JSON and need a MeshPreprocessor instance.
+        Usage: scripts already have parsed mesh JSON and need a MeshPreprocessor instance.
 
         Returns:
             MeshPreprocessor: loaded mesh instance.
@@ -798,7 +798,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, elements, load, serialize
-        Use when: reconstructing a mesh from JSON or dictionary data.
+        Usage: reconstructing a mesh from JSON or dictionary data.
 
         Returns:
             None: appends reconstructed elements to the mesh.
@@ -831,7 +831,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, cell-data, meshio, element-types
-        Use when: attaching cell data to a meshio export that groups cells by type.
+        Usage: attaching cell data to a meshio export that groups cells by type.
 
         Returns:
             list: values grouped by element type.
@@ -860,7 +860,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, cell-data, meshio, variables, export
-        Use when: scripts need VTK or meshio outputs with per-cell variables.
+        Usage: scripts need VTK or meshio outputs with per-cell variables.
 
         Returns:
             None: stores grouped cell data under name.
@@ -872,7 +872,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, point-data, meshio, variables, export
-        Use when: scripts need VTK or meshio outputs with per-node variables.
+        Usage: scripts need VTK or meshio outputs with per-node variables.
 
         Returns:
             None: stores point data under name.
@@ -884,7 +884,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, connections, faces, adjacency, topology
-        Use when: scripts need element adjacency before boundary detection or topology analysis.
+        Usage: scripts need element adjacency before boundary detection or topology analysis.
 
         Returns:
             None: populates element connection maps.
@@ -915,7 +915,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, boundaries, external-faces, topology
-        Use when: scripts need boundary elements after mesh connections have been computed.
+        Usage: scripts need boundary elements after mesh connections have been computed.
 
         Returns:
             None: populates external_boundaries.
@@ -933,7 +933,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, topography, boundaries, faces, normals
-        Use when: scripts need top surface faces for boundary assignment or terrain extraction.
+        Usage: scripts need top surface faces for boundary assignment or terrain extraction.
 
         Returns:
             dict: element ids mapped to topography face objects.
@@ -954,7 +954,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, topography, boundaries, z, groups
-        Use when: scripts need land/sea or upper/lower topography boundary groups.
+        Usage: scripts need land/sea or upper/lower topography boundary groups.
 
         Returns:
             None: populates boundary groups named by keys.
@@ -976,7 +976,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, topography, plot, centroids, diagnostics
-        Use when: scripts need a quick matplotlib diagnostic of assigned topography boundaries.
+        Usage: scripts need a quick matplotlib diagnostic of assigned topography boundaries.
 
         Returns:
             None: displays a matplotlib plot.
@@ -1000,7 +1000,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, boundaries, normals, faces, direction
-        Use when: scripts need top, bottom, north, south, east, or west boundary faces by normal direction.
+        Usage: scripts need top, bottom, north, south, east, or west boundary faces by normal direction.
 
         Returns:
             dict: element ids mapped to matching external face objects.
@@ -1035,7 +1035,7 @@ class MeshPreprocessor(iGPLogic):
 
         Category: mesh
         Tags: mesh, boundaries, normals, top, bottom, sides
-        Use when: scripts need automatic top, bottom, north, south, east, and west boundary groups.
+        Usage: scripts need automatic top, bottom, north, south, east, and west boundary groups.
 
         Returns:
             None: populates the boundaries dictionary.

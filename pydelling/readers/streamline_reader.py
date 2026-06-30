@@ -22,7 +22,7 @@ class StreamlineReader(BaseReader):
 
     Category: reader
     Tags: streamlines, csv, paraview, transport, analysis
-    Use when: scripts need arrival times, path lengths, beta values, or material-wise streamline summaries.
+    Usage: scripts need arrival times, path lengths, beta values, or material-wise streamline summaries.
     """
     data: pd.DataFrame
     raw_data: pd.DataFrame
@@ -34,7 +34,7 @@ class StreamlineReader(BaseReader):
 
         Category: reader
         Tags: streamlines, csv, open, reader
-        Use when: scripts need streamline records grouped by seed id.
+        Usage: scripts need streamline records grouped by seed id.
 
         Returns:
             None: delegates file loading to BaseReader.
@@ -48,7 +48,7 @@ class StreamlineReader(BaseReader):
 
         Category: reader
         Tags: streamlines, csv, pandas, seedids
-        Use when: an opened ParaView streamline CSV should be loaded into grouped pandas data.
+        Usage: an opened ParaView streamline CSV should be loaded into grouped pandas data.
 
         Returns:
             None: populates data, raw_data, and stream_data grouped by SeedIds.
@@ -76,7 +76,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, arrival-time, integration-time, filter
-        Use when: scripts need travel-time estimates from streamline endpoints.
+        Usage: scripts need travel-time estimates from streamline endpoints.
         """
         logger.info("Computing arrival times of the streamlines")
         filtered_streamlines = self.filter_streamlines(reason_of_termination=reason_of_termination, min_x=min_x, min_y=min_y)
@@ -88,7 +88,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, arrival-time, materials, seedids
-        Use when: scripts need travel-time summaries separated by material id.
+        Usage: scripts need travel-time summaries separated by material id.
 
         Returns:
             pandas.DataFrame: rows with Material ID, SeedIds, and IntegrationTime.
@@ -112,7 +112,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, arrival-time, materials, cumulative, legacy
-        Use when: legacy workflows need both per-material rows and grouped IntegrationTime series.
+        Usage: legacy workflows need both per-material rows and grouped IntegrationTime series.
 
         Returns:
             tuple: material summary DataFrame and cumulative group dictionary.
@@ -162,7 +162,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, velocity, initial, normalization
-        Use when: arrival-time or transport summaries need weights from starting streamline velocity.
+        Usage: arrival-time or transport summaries need weights from starting streamline velocity.
 
         Returns:
             pandas.Series: initial U:0 values per SeedIds group, optionally normalized.
@@ -184,7 +184,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, length, arc-length, filter
-        Use when: scripts need total path length per streamline.
+        Usage: scripts need total path length per streamline.
 
         Returns:
             pandas.Series: maximum arc_length per SeedIds group.
@@ -202,7 +202,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, length, materials, arc-length
-        Use when: scripts need material-wise streamline length data.
+        Usage: scripts need material-wise streamline length data.
 
         Returns:
             pandas.DataFrame: grouped material and seed-id streamline summaries.
@@ -239,7 +239,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, beta, aperture, integration, transport
-        Use when: transport workflows need per-streamline beta calculated along path fragments.
+        Usage: transport workflows need per-streamline beta calculated along path fragments.
 
         Returns:
             pandas.Series: maximum beta value per SeedIds group.
@@ -278,7 +278,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, beta, aperture, integration
-        Use when: scripts need the scalar beta contribution for one streamline path.
+        Usage: scripts need the scalar beta contribution for one streamline path.
 
         Returns:
             float: integrated beta value.
@@ -325,7 +325,7 @@ class StreamlineReader(BaseReader):
 
         Category: reader
         Tags: streamlines, data, numpy, export
-        Use when: callers need raw numeric values from the loaded streamline table.
+        Usage: callers need raw numeric values from the loaded streamline table.
 
         Returns:
             numpy.ndarray: dataframe values.
@@ -337,7 +337,7 @@ class StreamlineReader(BaseReader):
 
         Category: writer
         Tags: streamlines, csv, export, pandas
-        Use when: scripts need to persist processed streamline columns.
+        Usage: scripts need to persist processed streamline columns.
 
         Returns:
             None: writes a CSV file.
@@ -352,7 +352,7 @@ class StreamlineReader(BaseReader):
 
         Category: writer
         Tags: streamlines, csv, export, pandas
-        Use when: scripts prefer the to_csv naming convention for exporting processed streamlines.
+        Usage: scripts prefer the to_csv naming convention for exporting processed streamlines.
 
         Returns:
             None: writes a CSV file.
@@ -373,7 +373,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, filter, termination, coordinates
-        Use when: analyses should include only streamlines that reached a target condition or region.
+        Usage: analyses should include only streamlines that reached a target condition or region.
 
         Returns:
             pandas.core.groupby.DataFrameGroupBy: filtered data grouped by SeedIds.
@@ -405,7 +405,7 @@ class StreamlineReader(BaseReader):
 
         Category: preprocessing
         Tags: aperture, matrix, boundary, streamlines
-        Use when: beta integration needs a usable aperture value at field boundaries.
+        Usage: beta integration needs a usable aperture value at field boundaries.
 
         Returns:
             numpy.ndarray: aperture matrix with boundary rows and columns replaced.
@@ -427,7 +427,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, materials, integration, variables
-        Use when: scripts need material-wise totals such as time or length per streamline.
+        Usage: scripts need material-wise totals such as time or length per streamline.
 
         Returns:
             pandas.DataFrame: integrated variable values by streamline and material.
@@ -466,7 +466,7 @@ class StreamlineReader(BaseReader):
 
         Category: postprocessing
         Tags: streamlines, materials, integration, variable
-        Use when: material-wise integration is needed for a single streamline group.
+        Usage: material-wise integration is needed for a single streamline group.
         """
         streamline = streamline.reset_index()
         if categorize_materials:

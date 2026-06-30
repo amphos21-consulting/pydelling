@@ -18,7 +18,7 @@ class ClosedStlGenerator(object):
 
     Category: preprocessing.
     Tags: stl, raster, surface, aperture, mesh-export.
-    Use when: to turn regular raster surfaces into a closed
+    Usage: to turn regular raster surfaces into a closed
         triangulated STL shell for meshing or visualization.
     """
 
@@ -31,7 +31,7 @@ class ClosedStlGenerator(object):
 
         Category: preprocessing.
         Tags: stl, raster, top-surface, bottom-surface, aperture.
-        Use when: preparing an STL shell from a bottom raster and either a top
+        Usage: preparing an STL shell from a bottom raster and either a top
             raster or an aperture raster.
         Args:
             bottom_surface: Raster defining the lower surface.
@@ -59,7 +59,7 @@ class ClosedStlGenerator(object):
 
         Category: preprocessing.
         Tags: stl, raster, triangulation, export.
-        Use when: generating the complete STL shell and optional per-side STL
+        Usage: generating the complete STL shell and optional per-side STL
             files from the configured rasters.
         Args:
             output_filename: Name of the combined STL output file.
@@ -229,7 +229,7 @@ class ClosedStlGenerator(object):
 
         Category: preprocessing.
         Tags: stl, export, results-folder.
-        Use when: persisting a generated closed STL and optional individual face
+        Usage: persisting a generated closed STL and optional individual face
             meshes.
         Args:
             output_filename: Combined STL output filename.
@@ -257,7 +257,7 @@ class ClosedStlGenerator(object):
 
         Category: preprocessing.
         Tags: aperture, raster, plot.
-        Use when: visually checking the surface separation before or after STL
+        Usage: visually checking the surface separation before or after STL
             generation.
         Side effects:
             Delegates plotting to ``self.aperture.plot``.

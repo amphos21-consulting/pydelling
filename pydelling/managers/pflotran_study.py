@@ -15,7 +15,7 @@ class LineNotFound(Exception):
 
     Category: PFLOTRAN study.
     Tags: pflotran, input-file, exception, lookup.
-    Use when: to identify errors from PFLOTRAN input-deck
+    Usage: to identify errors from PFLOTRAN input-deck
         editing operations.
     """
 
@@ -26,14 +26,14 @@ class PflotranStudy(BaseStudy):
 
     Category: manager
     Tags: pflotran, study, input-file, simulation, editing
-    Use when: scripts need to inspect or modify PFLOTRAN regions, datasets, timing, checkpoints, and material blocks.
+    Usage: scripts need to inspect or modify PFLOTRAN regions, datasets, timing, checkpoints, and material blocks.
     """
     def __init__(self, input_file: str, *args, **kwargs):
         """Initialize a PFLOTRAN study from an input file.
 
         Category: manager
         Tags: pflotran, study, input-file, parser
-        Use when: scripts need an editable representation of a PFLOTRAN input deck.
+        Usage: scripts need an editable representation of a PFLOTRAN input deck.
 
         Returns:
             None: initializes BaseStudy state and PFLOTRAN index maps.
@@ -47,7 +47,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, regions, input-file, lookup
-        Use when: scripts need to inspect available REGION blocks or map region names to line indexes.
+        Usage: scripts need to inspect available REGION blocks or map region names to line indexes.
 
         Returns:
             list: region names found in top-level REGION blocks.
@@ -66,7 +66,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, simulation-time, final-time, units
-        Use when: scripts need to inspect PFLOTRAN FINAL_TIME as a numeric value.
+        Usage: scripts need to inspect PFLOTRAN FINAL_TIME as a numeric value.
 
         Returns:
             float: final simulation time converted to time_unit.
@@ -81,7 +81,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, checkpoint, restart, simulation
-        Use when: scripts need to inspect whether checkpoint output is configured.
+        Usage: scripts need to inspect whether checkpoint output is configured.
 
         Returns:
             str | None: checkpoint times line, or None when no checkpoint is configured.
@@ -101,7 +101,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, simulation-time, final-time, edit
-        Use when: scripts need to change the total runtime of a PFLOTRAN simulation.
+        Usage: scripts need to change the total runtime of a PFLOTRAN simulation.
 
         Returns:
             None: mutates the in-memory input text.
@@ -115,7 +115,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, parameter, edit, input-file
-        Use when: scripts need to modify a PFLOTRAN parameter located near a known tag.
+        Usage: scripts need to modify a PFLOTRAN parameter located near a known tag.
 
         Returns:
             None: mutates the in-memory input text.
@@ -133,7 +133,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, material, porosity, permeability, edit
-        Use when: scripts need to update material hydraulic properties before running PFLOTRAN.
+        Usage: scripts need to update material hydraulic properties before running PFLOTRAN.
 
         Returns:
             None: mutates POROSITY, PERM_HORIZONTAL, and VERTICAL_ANISOTROPY_RATIO lines.
@@ -148,7 +148,7 @@ class PflotranStudy(BaseStudy):
 
         Category: util
         Tags: pflotran, text, search, line-index
-        Use when: scripts need to locate nested PFLOTRAN text by matching several line prefixes in order.
+        Usage: scripts need to locate nested PFLOTRAN text by matching several line prefixes in order.
 
         Returns:
             int: index of the line matching the last requested prefix.
@@ -174,7 +174,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, text, replace, line-edit
-        Use when: scripts need robust edits in PFLOTRAN blocks identified by ordered context lines.
+        Usage: scripts need robust edits in PFLOTRAN blocks identified by ordered context lines.
 
         Returns:
             None: updates raw_text with the replacement line.
@@ -191,7 +191,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, text, insert, line-edit
-        Use when: scripts need to add PFLOTRAN lines relative to nested block context.
+        Usage: scripts need to add PFLOTRAN lines relative to nested block context.
 
         Returns:
             None: updates raw_text with the inserted line.
@@ -208,7 +208,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, text, remove, line-edit
-        Use when: scripts need to delete PFLOTRAN lines relative to nested block context.
+        Usage: scripts need to delete PFLOTRAN lines relative to nested block context.
 
         Returns:
             None: updates raw_text after removing the targeted line.
@@ -225,7 +225,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, region, file, lookup
-        Use when: scripts need to resolve the geometry file referenced by a PFLOTRAN region.
+        Usage: scripts need to resolve the geometry file referenced by a PFLOTRAN region.
 
         Returns:
             str | None: region file path token, or None when not found.
@@ -243,7 +243,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, dataset, hdf5, lookup
-        Use when: scripts need to inspect or update referenced PFLOTRAN datasets.
+        Usage: scripts need to inspect or update referenced PFLOTRAN datasets.
 
         Returns:
             list: dataset names found in top-level DATASET blocks.
@@ -263,7 +263,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, region, file, edit
-        Use when: scripts need to point a PFLOTRAN region to a new geometry file.
+        Usage: scripts need to point a PFLOTRAN region to a new geometry file.
 
         Returns:
             None: mutates the in-memory input text.
@@ -283,7 +283,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, checkpoint, hdf5, restart, edit
-        Use when: scripts need PFLOTRAN checkpoint files at selected simulation times.
+        Usage: scripts need PFLOTRAN checkpoint files at selected simulation times.
 
         Returns:
             None: adds or updates the CHECKPOINT block.
@@ -318,7 +318,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, restart, simulation, edit
-        Use when: scripts need a PFLOTRAN simulation to restart from an existing checkpoint file.
+        Usage: scripts need a PFLOTRAN simulation to restart from an existing checkpoint file.
 
         Returns:
             None: inserts a RESTART block.
@@ -336,7 +336,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, dataset, hdf5, edit
-        Use when: scripts need to connect PFLOTRAN inputs to an HDF5 dataset path and dataset name.
+        Usage: scripts need to connect PFLOTRAN inputs to an HDF5 dataset path and dataset name.
 
         Returns:
             None: adds a DATASET block or updates its filename and HDF5 dataset name.
@@ -369,7 +369,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, subsurface, line-index, lookup
-        Use when: scripts need an insertion point for subsurface dataset edits.
+        Usage: scripts need an insertion point for subsurface dataset edits.
 
         Returns:
             int: line index of the top-level SUBSURFACE block.
@@ -384,7 +384,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, tag, lookup, input-file
-        Use when: scripts need to branch depending on whether a PFLOTRAN block exists.
+        Usage: scripts need to branch depending on whether a PFLOTRAN block exists.
 
         Returns:
             bool: True when at least one matching tag is found.
@@ -396,7 +396,7 @@ class PflotranStudy(BaseStudy):
 
         Category: util
         Tags: pflotran, block, parent, line-index
-        Use when: parsing needs to distinguish top-level tags from nested tag references.
+        Usage: parsing needs to distinguish top-level tags from nested tag references.
 
         Returns:
             str: parent tag name.
@@ -425,7 +425,7 @@ class PflotranStudy(BaseStudy):
 
         Category: util
         Tags: pflotran, block, lines, parser
-        Use when: scripts need the text content of a PFLOTRAN block.
+        Usage: scripts need the text content of a PFLOTRAN block.
 
         Returns:
             list: block lines from the start tag through END.
@@ -451,7 +451,7 @@ class PflotranStudy(BaseStudy):
 
         Category: util
         Tags: pflotran, block, line-index, parser
-        Use when: scripts need editable line indexes inside a PFLOTRAN block.
+        Usage: scripts need editable line indexes inside a PFLOTRAN block.
 
         Returns:
             list: line indexes from the start tag through END.
@@ -479,7 +479,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, final-time, simulation-time
-        Use when: callers need property-style access to final simulation time.
+        Usage: callers need property-style access to final simulation time.
 
         Returns:
             float: final simulation time in years.
@@ -492,7 +492,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, final-time, units
-        Use when: scripts need the original time unit from the input deck.
+        Usage: scripts need the original time unit from the input deck.
 
         Returns:
             str: FINAL_TIME unit token.
@@ -505,7 +505,7 @@ class PflotranStudy(BaseStudy):
 
         Category: manager
         Tags: pflotran, regions, line-index, lookup
-        Use when: scripts need to map stored region indexes back to region names.
+        Usage: scripts need to map stored region indexes back to region names.
 
         Returns:
             dict: line indexes mapped to region names.

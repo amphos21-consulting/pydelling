@@ -6,7 +6,7 @@ class TestWebApp(WebAppRunner):
 
     Category: Web application.
     Tags: streamlit, pyvista, vtk, test-webapp, visualization.
-    Use when: to identify the test app that exports a PyVista
+    Usage: to identify the test app that exports a PyVista
         scene and embeds it in Streamlit.
     """
 
@@ -15,7 +15,7 @@ class TestWebApp(WebAppRunner):
 
         Category: Web application.
         Tags: streamlit, pyvista, vtk, html, visualization.
-        Use when: smoke-testing PyVista HTML export and Streamlit component
+        Usage: smoke-testing PyVista HTML export and Streamlit component
             embedding.
         Side effects:
             Writes ``pyvista.html`` and embeds the generated HTML in the page.

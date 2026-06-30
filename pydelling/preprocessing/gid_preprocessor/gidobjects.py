@@ -16,7 +16,7 @@ class Polyline(GidObject):
 
     Category: GID preprocessing.
     Tags: gid, polyline, points, lines, geometry.
-    Use when: to generate a chain or closed loop of GID line
+    Usage: to generate a chain or closed loop of GID line
         entities from point objects.
     """
 
@@ -27,7 +27,7 @@ class Polyline(GidObject):
 
         Category: GID preprocessing.
         Tags: gid, polyline, points, initialization.
-        Use when: preparing a set of GID line objects from a point sequence.
+        Usage: preparing a set of GID line objects from a point sequence.
         Args:
             points: Ordered points in the polyline.
             connect: If ``True``, add a closing line from the last point to the
@@ -46,7 +46,7 @@ class Polyline(GidObject):
 
         Category: GID preprocessing.
         Tags: gid, polyline, lines, setup.
-        Use when: rebuilding the internal line list after point assignment.
+        Usage: rebuilding the internal line list after point assignment.
         Side effects:
             Populates ``self.lines`` and optionally adds a closing line.
         """
@@ -64,7 +64,7 @@ class Polyline(GidObject):
 
         Category: GID preprocessing.
         Tags: gid, polyline, construct, export.
-        Use when: emitting or registering every object needed by the polyline.
+        Usage: emitting or registering every object needed by the polyline.
         Args:
             *args: Accepted for ``GidObject`` API compatibility.
             **kwargs: Accepted for ``GidObject`` API compatibility.

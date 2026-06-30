@@ -14,7 +14,7 @@ class LumiSsh(BaseSsh):
 
     Category: Remote execution.
     Tags: ssh, sftp, lumi, slurm, hpc.
-    Use when: to understand the LUMI-specific remote paths,
+    Usage: to understand the LUMI-specific remote paths,
         queue commands, and job submission helpers used by pydelling managers.
     """
 
@@ -30,7 +30,7 @@ class LumiSsh(BaseSsh):
 
         Category: Remote execution.
         Tags: ssh, lumi, hpc, project-paths, initialization.
-        Use when: creating a LUMI connector for remote PFLOTRAN study execution.
+        Usage: creating a LUMI connector for remote PFLOTRAN study execution.
         Args:
             user: LUMI username.
             pkey_path: Path to the private key file.
@@ -58,7 +58,7 @@ class LumiSsh(BaseSsh):
 
         Category: Remote execution.
         Tags: ssh, sftp, lumi, paramiko.
-        Use when: establishing or refreshing the LUMI connection.
+        Usage: establishing or refreshing the LUMI connection.
         Side effects:
             Prompts for a password when missing, loads the Ed25519 private key,
             creates ``self.client``, and opens ``self.sftp``.

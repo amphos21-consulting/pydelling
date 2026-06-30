@@ -14,7 +14,7 @@ class BasePreprocessing:
 
     Category: preprocessing.
     Tags: preprocessing, dataframe, csv, extension-point.
-    Use when: to understand the minimal contract for pydelling
+    Usage: to understand the minimal contract for pydelling
         preprocessing classes that load data and expose a ``run`` hook.
     """
 

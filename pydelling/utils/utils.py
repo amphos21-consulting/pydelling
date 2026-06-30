@@ -229,7 +229,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
         Category: utilities.
         Tags: sampling, distribution, sensitivity-analysis.
-        Use when: to understand the local sampler contract
+        Usage: to understand the local sampler contract
             used to generate sensitivity-analysis cases.
         """
 
@@ -240,7 +240,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
             Category: utilities.
             Tags: sampling, distribution, extension-point.
-            Use when: implementing a local sampler used by
+            Usage: implementing a local sampler used by
                 ``sample_values_from_dict``.
             Returns:
                 float: Sampled value.
@@ -251,7 +251,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
         Category: utilities.
         Tags: sampling, constant, sensitivity-analysis.
-        Use when: a sensitivity-analysis material should keep the same value in
+        Usage: a sensitivity-analysis material should keep the same value in
             every generated case.
         """
 
@@ -260,7 +260,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
             Category: utilities.
             Tags: sampling, constant, initialization.
-            Use when: creating a deterministic sampler.
+            Usage: creating a deterministic sampler.
             Args:
                 value: Value returned by every call to ``run``.
             """
@@ -272,7 +272,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
             Category: utilities.
             Tags: sampling, constant.
-            Use when: generating one deterministic sample.
+            Usage: generating one deterministic sample.
             Returns:
                 Any: The configured value.
             """
@@ -283,7 +283,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
         Category: utilities.
         Tags: sampling, normal, lognormal, sensitivity-analysis.
-        Use when: sensitivity-analysis cases need random values from a normal or
+        Usage: sensitivity-analysis cases need random values from a normal or
             log-normal distribution.
         """
 
@@ -292,7 +292,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
             Category: utilities.
             Tags: sampling, normal, lognormal, initialization.
-            Use when: creating a stochastic sampler from mean and standard
+            Usage: creating a stochastic sampler from mean and standard
                 deviation parameters.
             Args:
                 mean: Distribution mean.
@@ -309,7 +309,7 @@ def sample_values_from_dict(input_dict: dict, n: int, write_to_file: bool = True
 
             Category: utilities.
             Tags: sampling, normal, lognormal.
-            Use when: generating one stochastic sensitivity-analysis value.
+            Usage: generating one stochastic sensitivity-analysis value.
             Returns:
                 float: Random sample.
             """

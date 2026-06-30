@@ -28,7 +28,7 @@ class DfnPreprocessor(object):
 
     Category: preprocessing
     Tags: dfn, fractures, faults, vtk, obj, dfnworks
-    Use when: scripts need to load fracture geometry, add faults, summarize DFNs, or export fracture networks.
+    Usage: scripts need to load fracture geometry, add faults, summarize DFNs, or export fracture networks.
     """
     dfn: List[Fracture] = []
     faults: List[Fault] = []
@@ -50,7 +50,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, reset, fractures, faults
-        Use when: scripts need to reuse a DfnPreprocessor instance for a new network.
+        Usage: scripts need to reuse a DfnPreprocessor instance for a new network.
 
         Returns:
             None: clears the fracture and fault lists.
@@ -77,7 +77,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, fractures, dataframe, load, aperture
-        Use when: scripts have tabular fracture parameters and need to build a DFN.
+        Usage: scripts have tabular fracture parameters and need to build a DFN.
 
         Returns:
             None: appends fractures to the DFN.
@@ -111,7 +111,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, fractures, polygons, apertures, load
-        Use when: scripts already have fracture polygons from segmentation, raster contours, or external geometry.
+        Usage: scripts already have fracture polygons from segmentation, raster contours, or external geometry.
 
         Returns:
             None: appends polygon-backed fractures to the DFN.
@@ -150,7 +150,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, fracture, add, aperture, polygon
-        Use when: scripts need to construct a DFN incrementally from one fracture definition.
+        Usage: scripts need to construct a DFN incrementally from one fracture definition.
 
         Returns:
             None: appends a Fracture object to dfn.
@@ -184,7 +184,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, fault, add, mesh, aperture
-        Use when: scripts need to include fault surfaces alongside fractures in a DFN export.
+        Usage: scripts need to include fault surfaces alongside fractures in a DFN export.
 
         Returns:
             None: appends a Fault object to faults.
@@ -213,7 +213,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, summary, fractures, size
-        Use when: scripts need a quick textual report of fracture count and size range.
+        Usage: scripts need a quick textual report of fracture count and size range.
 
         Returns:
             None: prints the summary table.
@@ -237,7 +237,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, visualize, plotly, fractures, centroids
-        Use when: scripts need to show an interactive 3D fracture network.
+        Usage: scripts need to show an interactive 3D fracture network.
 
         Returns:
             None: displays the Plotly figure.
@@ -250,7 +250,7 @@ class DfnPreprocessor(object):
 
         Category: writer
         Tags: dfn, image, plotly, export, visualization
-        Use when: scripts need a PNG or other static image of the fracture network.
+        Usage: scripts need a PNG or other static image of the fracture network.
 
         Returns:
             None: writes the image file.
@@ -264,7 +264,7 @@ class DfnPreprocessor(object):
 
         Category: writer
         Tags: dfn, obj, export, fractures, faults
-        Use when: scripts need a portable surface mesh representation of the DFN.
+        Usage: scripts need a portable surface mesh representation of the DFN.
 
         Returns:
             None: writes the OBJ file.
@@ -287,7 +287,7 @@ class DfnPreprocessor(object):
 
         Category: writer
         Tags: dfn, vtk, export, aperture, visualization
-        Use when: scripts need to visualize a DFN in VTK-compatible tools.
+        Usage: scripts need to visualize a DFN in VTK-compatible tools.
 
         Returns:
             None: writes the VTK file.
@@ -308,7 +308,7 @@ class DfnPreprocessor(object):
 
         Category: writer
         Tags: dfn, dfnworks, export, fractures, polygons
-        Use when: scripts need a DFNWorks-compatible input file from pydelling fractures.
+        Usage: scripts need a DFNWorks-compatible input file from pydelling fractures.
 
         Returns:
             None: writes the DFNWorks file.
@@ -329,7 +329,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, shift, translate, coordinates
-        Use when: scripts need to align a fracture network with a mesh or coordinate origin.
+        Usage: scripts need to align a fracture network with a mesh or coordinate origin.
 
         Returns:
             None: mutates fracture coordinates.
@@ -344,7 +344,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, plotly, visualize, fractures, centroids
-        Use when: scripts need a figure object for display, export, or further customization.
+        Usage: scripts need a figure object for display, export, or further customization.
 
         Returns:
             plotly.graph_objects.Figure: 3D DFN figure.
@@ -390,7 +390,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, size, maximum, statistics
-        Use when: scripts need DFN size statistics or size-based color scales.
+        Usage: scripts need DFN size statistics or size-based color scales.
 
         Returns:
             float: maximum fracture size.
@@ -403,7 +403,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, size, minimum, statistics
-        Use when: scripts need DFN size statistics or size-based color scales.
+        Usage: scripts need DFN size statistics or size-based color scales.
 
         Returns:
             float: minimum fracture size.
@@ -415,7 +415,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, histogram, radii, plot, statistics
-        Use when: scripts need the fracture radius distribution.
+        Usage: scripts need the fracture radius distribution.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -431,7 +431,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, histogram, aperture, plot, statistics
-        Use when: scripts need the aperture distribution.
+        Usage: scripts need the aperture distribution.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -447,7 +447,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, histogram, hydraulic-aperture, plot, statistics
-        Use when: scripts need the hydraulic aperture distribution.
+        Usage: scripts need the hydraulic aperture distribution.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -463,7 +463,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, histogram, transmissivity, plot, statistics
-        Use when: scripts need the transmissivity distribution.
+        Usage: scripts need the transmissivity distribution.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -479,7 +479,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, histogram, hydraulic-conductivity, plot, statistics
-        Use when: scripts need transmissivity divided by aperture as an hk_x distribution.
+        Usage: scripts need transmissivity divided by aperture as an hk_x distribution.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -496,7 +496,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, histogram, storativity, plot, statistics
-        Use when: scripts need the storativity distribution.
+        Usage: scripts need the storativity distribution.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -513,7 +513,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, aperture, faults, fractures, cell-data
-        Use when: scripts need aperture values for VTK cell data or DFN statistics.
+        Usage: scripts need aperture values for VTK cell data or DFN statistics.
 
         Returns:
             np.ndarray: aperture values for all exported DFN cells.
@@ -550,7 +550,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, bounds, x, minimum
-        Use when: scripts need DFN spatial bounds.
+        Usage: scripts need DFN spatial bounds.
 
         Returns:
             float: minimum x centroid.
@@ -563,7 +563,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, bounds, x, maximum
-        Use when: scripts need DFN spatial bounds.
+        Usage: scripts need DFN spatial bounds.
 
         Returns:
             float: maximum x centroid.
@@ -576,7 +576,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, bounds, y, minimum
-        Use when: scripts need DFN spatial bounds.
+        Usage: scripts need DFN spatial bounds.
 
         Returns:
             float: minimum y centroid.
@@ -589,7 +589,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, bounds, y, maximum
-        Use when: scripts need DFN spatial bounds.
+        Usage: scripts need DFN spatial bounds.
 
         Returns:
             float: maximum y centroid.
@@ -602,7 +602,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, bounds, z, minimum
-        Use when: scripts need DFN spatial bounds.
+        Usage: scripts need DFN spatial bounds.
 
         Returns:
             float: minimum z centroid.
@@ -615,7 +615,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, bounds, z, maximum
-        Use when: scripts need DFN spatial bounds.
+        Usage: scripts need DFN spatial bounds.
 
         Returns:
             float: maximum z centroid.
@@ -627,7 +627,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, json, serialize, fractures, faults
-        Use when: scripts need portable fracture and fault metadata.
+        Usage: scripts need portable fracture and fault metadata.
 
         Returns:
             dict: DFN representation with fractures and faults.
@@ -642,7 +642,7 @@ class DfnPreprocessor(object):
 
         Category: writer
         Tags: dfn, json, export, serialize
-        Use when: scripts need to persist fracture and fault metadata.
+        Usage: scripts need to persist fracture and fault metadata.
 
         Returns:
             None: writes the JSON file.
@@ -657,7 +657,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, json, load, serialize
-        Use when: scripts need to restore a saved fracture network from disk.
+        Usage: scripts need to restore a saved fracture network from disk.
 
         Returns:
             DfnPreprocessor: loaded DFN instance.
@@ -679,7 +679,7 @@ class DfnPreprocessor(object):
 
         Category: preprocessing
         Tags: dfn, dict, load, serialize
-        Use when: scripts already have parsed DFN JSON and need a DfnPreprocessor instance.
+        Usage: scripts already have parsed DFN JSON and need a DfnPreprocessor instance.
 
         Returns:
             DfnPreprocessor: loaded DFN instance.

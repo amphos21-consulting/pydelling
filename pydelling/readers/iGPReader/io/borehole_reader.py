@@ -27,14 +27,14 @@ class BoreholeReader(BaseReader):
 
     Category: reader
     Tags: boreholes, excel, materials, permeability, porosity
-    Use when: scripts need borehole-derived material ids, permeability, porosity, or diagnostic plots.
+    Usage: scripts need borehole-derived material ids, permeability, porosity, or diagnostic plots.
     """
     def __init__(self, igp_reader=None, filename=None):
         """Initialize borehole processing with an optional iGP reader.
 
         Category: reader
         Tags: boreholes, excel, igp, setup
-        Use when: scripts need borehole property data connected to an iGP mesh reader.
+        Usage: scripts need borehole property data connected to an iGP mesh reader.
 
         Returns:
             None: stores filename, reader reference, and borehole metadata container.
@@ -48,7 +48,7 @@ class BoreholeReader(BaseReader):
 
         Category: preprocessing
         Tags: boreholes, materials, permeability, porosity, plots
-        Use when: scripts need to read boreholes, assign materials, update properties, and optionally plot.
+        Usage: scripts need to read boreholes, assign materials, update properties, and optionally plot.
 
         Returns:
             None: mutates borehole data and igp_reader material information.
@@ -67,7 +67,7 @@ class BoreholeReader(BaseReader):
 
         Category: reader
         Tags: boreholes, excel, dataframe, metadata
-        Use when: scripts need borehole sheets and collar coordinates loaded into memory.
+        Usage: scripts need borehole sheets and collar coordinates loaded into memory.
 
         Returns:
             None: populates data and boreholes_info.
@@ -105,7 +105,7 @@ class BoreholeReader(BaseReader):
 
         Category: preprocessing
         Tags: boreholes, permeability, materials, igp
-        Use when: material permeability should be estimated from borehole sheet values.
+        Usage: material permeability should be estimated from borehole sheet values.
 
         Returns:
             None: updates igp_reader.material_info permeability values.
@@ -128,7 +128,7 @@ class BoreholeReader(BaseReader):
 
         Category: preprocessing
         Tags: boreholes, porosity, materials, igp
-        Use when: material porosity should be estimated from borehole sheet values.
+        Usage: material porosity should be estimated from borehole sheet values.
 
         Returns:
             None: updates igp_reader.material_info porosity values.
@@ -148,7 +148,7 @@ class BoreholeReader(BaseReader):
 
         Category: preprocessing
         Tags: boreholes, materials, igp, coordinates
-        Use when: borehole intervals need to be matched to iGP mesh materials by coordinate.
+        Usage: borehole intervals need to be matched to iGP mesh materials by coordinate.
 
         Returns:
             None: adds Material_ID and Material_name columns to borehole data.
@@ -173,7 +173,7 @@ class BoreholeReader(BaseReader):
 
         Category: preprocessing
         Tags: boreholes, materials, plot, permeability, porosity
-        Use when: configuration requests diagnostic plots for borehole-derived properties.
+        Usage: configuration requests diagnostic plots for borehole-derived properties.
 
         Returns:
             None: writes configured plot images.
@@ -195,7 +195,7 @@ class BoreholeReader(BaseReader):
 
         Category: preprocessing
         Tags: boreholes, plot, materials, permeability, porosity
-        Use when: scripts need a material-colored diagnostic plot versus depth or cross-correlation variable.
+        Usage: scripts need a material-colored diagnostic plot versus depth or cross-correlation variable.
 
         Returns:
             tuple: matplotlib figure and axes.

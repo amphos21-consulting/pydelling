@@ -16,7 +16,7 @@ class VtkFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, vtk, reader, bounds.
-    Use when: to load a legacy VTK dataset into a ParaView
+    Usage: to load a legacy VTK dataset into a ParaView
         pipeline and inspect its spatial extents.
     """
 
@@ -34,7 +34,7 @@ class VtkFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, vtk, initialization.
-        Use when: reading VTK files into a pydelling ParaView processor.
+        Usage: reading VTK files into a pydelling ParaView processor.
         Args:
             filename: VTK file path.
             name: Logical filter name passed to the base filter wrapper.
@@ -52,7 +52,7 @@ class VtkFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, vtk, bounds, coordinates.
-        Use when: downstream filters or reports need VTK spatial extents.
+        Usage: downstream filters or reports need VTK spatial extents.
         Side effects:
             Sets ``x_min``, ``x_max``, ``y_min``, ``y_max``, ``z_min``, and
             ``z_max``.

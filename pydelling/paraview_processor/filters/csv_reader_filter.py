@@ -25,7 +25,7 @@ class CsvReaderFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, csv, table-to-points, coordinates, bounds.
-    Use when: to load CSV point data into a ParaView pipeline
+    Usage: to load CSV point data into a ParaView pipeline
         and expose x/y/z ranges.
     """
 
@@ -43,7 +43,7 @@ class CsvReaderFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, csv, table-to-points, initialization.
-        Use when: constructing a ParaView point source from a CSV file.
+        Usage: constructing a ParaView point source from a CSV file.
         Args:
             filename: CSV file path passed to ParaView ``CSVReader``.
             name: Logical filter name passed to the base filter wrapper.
@@ -64,7 +64,7 @@ class CsvReaderFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, csv, bounds, coordinates.
-        Use when: a workflow needs quick spatial extents for CSV point data.
+        Usage: a workflow needs quick spatial extents for CSV point data.
         Side effects:
             Sets ``x_min``, ``x_max``, ``y_min``, ``y_max``, ``z_min``, and
             ``z_max`` from ``mesh_points``.
@@ -81,7 +81,7 @@ class CsvReaderFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, csv, table-to-points, coordinates.
-        Use when: ParaView filters need CSV rows represented as geometric
+        Usage: ParaView filters need CSV rows represented as geometric
             points.
         Returns:
             ParaView proxy returned by ``TableToPoints``.

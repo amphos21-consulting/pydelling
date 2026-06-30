@@ -18,7 +18,7 @@ class IntegrateVariablesFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, integrate-variables, cell-data, volume.
-    Use when: to integrate field variables over a ParaView
+    Usage: to integrate field variables over a ParaView
         dataset.
     """
 
@@ -30,7 +30,7 @@ class IntegrateVariablesFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, integrate-variables, initialization.
-        Use when: adding an integration step to a ParaView processing pipeline.
+        Usage: adding an integration step to a ParaView processing pipeline.
         Args:
             input_filter: Upstream ParaView proxy to integrate.
             name: Logical filter name passed to the base filter wrapper.
@@ -50,7 +50,7 @@ class IntegrateVariablesFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, integrate-variables, volume-normalization.
-        Use when: toggling volume-normalized integrated results.
+        Usage: toggling volume-normalized integrated results.
         Args:
             value: Boolean-like value assigned to the ParaView property.
         Side effects:

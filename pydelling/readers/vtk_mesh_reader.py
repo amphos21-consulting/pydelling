@@ -20,7 +20,7 @@ class VTKMeshReader(MeshPreprocessor):
 
     Category: mesh reader
     Tags: vtk, vtu, meshio, mesh-preprocessor, kd-tree, streamlit.
-    Use when: to load VTK mesh files, inspect point/cell
+    Usage: to load VTK mesh files, inspect point/cell
         variables, or convert supported cell blocks into pydelling mesh
         elements.
     """
@@ -36,7 +36,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: vtk, vtu, meshio, pickle, kd-tree.
-        Use when: creating a reader from a mesh file for interpolation,
+        Usage: creating a reader from a mesh file for interpolation,
             pre-processing, or UI upload workflows.
         Args:
             filename: Path to a ``.vtk``/``.vtu`` mesh file or to a previously
@@ -71,7 +71,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: meshio, mesh-preprocessor, wedge, hexahedron, tetra, pyramid.
-        Use when: mesh data loaded by meshio must be available through
+        Usage: mesh data loaded by meshio must be available through
             ``MeshPreprocessor`` element collections and spatial utilities.
         Side effects:
             Adds wedge, hexahedron, tetrahedron, and pyramid elements to the
@@ -141,7 +141,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: pickle, cache, mesh, kd-tree.
-        Use when: a workflow needs to cache a converted VTK mesh for faster
+        Usage: a workflow needs to cache a converted VTK mesh for faster
             reloads without reparsing the original mesh file.
         Args:
             filename: Destination pickle path.
@@ -165,7 +165,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: pickle, cache, mesh, kd-tree.
-        Use when: loading a previously saved ``VTKMeshReader`` state instead of
+        Usage: loading a previously saved ``VTKMeshReader`` state instead of
             reading a VTK/VTU file again.
         Args:
             filename: Source pickle path produced by ``save``.
@@ -188,7 +188,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: meshio, cell-data, variables.
-        Use when: scripts need per-cell variables while preserving the meshio
+        Usage: scripts need per-cell variables while preserving the meshio
             cell-block structure.
         Returns:
             dict: ``meshio_mesh.cell_data_dict``.
@@ -201,7 +201,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: meshio, point-data, variables.
-        Use when: scripts need variables attached to mesh points.
+        Usage: scripts need variables attached to mesh points.
         Returns:
             dict: ``meshio_mesh.point_data``.
         """
@@ -213,7 +213,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: meshio, cell-data, variables.
-        Use when: an MCP tool needs to discover selectable cell variables.
+        Usage: an MCP tool needs to discover selectable cell variables.
         Returns:
             list: Names of variables in ``meshio_mesh.cell_data``.
         """
@@ -225,7 +225,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: meshio, point-data, variables.
-        Use when: an MCP tool needs to discover selectable point variables.
+        Usage: an MCP tool needs to discover selectable point variables.
         Returns:
             list: Names of variables in ``meshio_mesh.point_data``.
         """
@@ -237,7 +237,7 @@ class VTKMeshReader(MeshPreprocessor):
 
         Category: mesh reader
         Tags: meshio, cell-data, flatten, variables.
-        Use when: downstream processing expects one NumPy array per cell
+        Usage: downstream processing expects one NumPy array per cell
             variable instead of meshio's per-cell-type grouping.
         Returns:
             dict: Mapping of cell variable name to flattened NumPy array.

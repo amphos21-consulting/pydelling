@@ -28,7 +28,7 @@ class BaseElement(BaseAbstractMeshObject):
 
     Category: preprocessing
     Tags: mesh, element, geometry, faces, intersections
-    Use when: scripts need shared geometry behavior for hexahedra, tetrahedra, prisms, or other element subclasses.
+    Usage: scripts need shared geometry behavior for hexahedra, tetrahedra, prisms, or other element subclasses.
     """
     local_id = 0
     eps = 1e-2
@@ -47,7 +47,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, nodes, centroid, faces
-        Use when: subclasses need the common element state before defining faces and topology.
+        Usage: subclasses need the common element state before defining faces and topology.
 
         Returns:
             None: initializes geometry, association, and connection fields.
@@ -83,7 +83,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, faces, subclass
-        Use when: implementing a concrete element type with known local face topology.
+        Usage: implementing a concrete element type with known local face topology.
 
         Returns:
             None: subclasses populate the faces dictionary.
@@ -95,7 +95,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: util
         Tags: mesh, element, debug, stdout
-        Use when: interactively inspecting an element's id, node count, type, and node ids.
+        Usage: interactively inspecting an element's id, node count, type, and node ids.
 
         Returns:
             None: writes diagnostic text to stdout.
@@ -112,7 +112,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: util
         Tags: mesh, element, faces, debug, stdout
-        Use when: interactively inspecting face topology for one element.
+        Usage: interactively inspecting face topology for one element.
 
         Returns:
             None: writes diagnostic text to stdout.
@@ -127,7 +127,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, plane, intersection, faces
-        Use when: scripts need the points where a plane cuts through an element.
+        Usage: scripts need the points where a plane cuts through an element.
 
         Returns:
             list: unique intersection points contained inside the element.
@@ -160,7 +160,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, fracture, dfn, intersection
-        Use when: DFN upscaling needs fracture-element intersection points for area or volume estimates.
+        Usage: DFN upscaling needs fracture-element intersection points for area or volume estimates.
 
         Returns:
             list: intersection points that lie in both the element and fracture.
@@ -250,7 +250,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, geometry, lines, intersection
-        Use when: plane cuts are represented as lines and need candidate intersection points.
+        Usage: plane cuts are represented as lines and need candidate intersection points.
 
         Returns:
             list: points produced by pairwise line intersections.
@@ -270,7 +270,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, point, containment, geometry
-        Use when: filtering candidate fracture or plane intersection points to element-local points.
+        Usage: filtering candidate fracture or plane intersection points to element-local points.
 
         Returns:
             bool: True when the point is inside the element bounds.
@@ -306,7 +306,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, point, face, geometry
-        Use when: intersection logic needs to identify points on element boundaries.
+        Usage: intersection logic needs to identify points on element boundaries.
 
         Returns:
             bool: True when the point is within face-plane tolerance.
@@ -326,7 +326,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, nodes, topology
-        Use when: scripts need element topology metadata for reporting or export.
+        Usage: scripts need element topology metadata for reporting or export.
 
         Returns:
             int: node count.
@@ -339,7 +339,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, edges, topology
-        Use when: scripts need element edge connectivity derived from faces.
+        Usage: scripts need element edge connectivity derived from faces.
 
         Returns:
             numpy.ndarray: unique sorted edge node pairs.
@@ -360,7 +360,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, volume, geometry
-        Use when: scripts need element volume for DFN upscaling or mesh diagnostics.
+        Usage: scripts need element volume for DFN upscaling or mesh diagnostics.
 
         Returns:
             float: convex hull volume.
@@ -373,7 +373,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: writer
         Tags: mesh, element, json, serialize, fractures
-        Use when: scripts need to persist element ids, topology, and fracture/fault associations.
+        Usage: scripts need to persist element ids, topology, and fracture/fault associations.
 
         Returns:
             dict: serializable element metadata.
@@ -404,7 +404,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, edges, lines, geometry
-        Use when: fracture and plane intersection algorithms need edge-line intersections.
+        Usage: fracture and plane intersection algorithms need edge-line intersections.
 
         Returns:
             list: Line objects for unique element edges.
@@ -429,7 +429,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: util
         Tags: numpy, arrays, equality, geometry
-        Use when: geometry code needs to avoid duplicate edges or vectors.
+        Usage: geometry code needs to avoid duplicate edges or vectors.
 
         Returns:
             bool: True when an equivalent array is present.
@@ -443,7 +443,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, faces, nodes, topology
-        Use when: element subclasses expose face-local node ordering for export or lookup.
+        Usage: element subclasses expose face-local node ordering for export or lookup.
 
         Returns:
             dict: face names mapped to local node ids.
@@ -455,7 +455,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: writer
         Tags: mesh, element, obj, export, geometry
-        Use when: scripts need a small standalone geometry artifact for visual debugging.
+        Usage: scripts need a small standalone geometry artifact for visual debugging.
 
         Returns:
             None: writes the OBJ file.
@@ -479,7 +479,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, centroid, geometry
-        Use when: initializing or recomputing element center coordinates.
+        Usage: initializing or recomputing element center coordinates.
 
         Returns:
             numpy.ndarray: centroid coordinates.
@@ -506,7 +506,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, faces, triangles, geometry
-        Use when: volume or centroid algorithms require triangular face primitives.
+        Usage: volume or centroid algorithms require triangular face primitives.
 
         Returns:
             list: triangular BaseFace instances.
@@ -545,7 +545,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, faces, lookup, topology
-        Use when: scripts need the face name associated with a set of local node ids.
+        Usage: scripts need the face name associated with a set of local node ids.
 
         Returns:
             Any: matching face key, or None when no face matches.
@@ -563,7 +563,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, faces, boundary, topology
-        Use when: scripts need boundary faces for export, adjacency, or mesh diagnostics.
+        Usage: scripts need boundary faces for export, adjacency, or mesh diagnostics.
 
         Returns:
             list: external BaseFace instances.
@@ -582,7 +582,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, faces, internal, topology
-        Use when: scripts need adjacency-derived internal faces.
+        Usage: scripts need adjacency-derived internal faces.
 
         Returns:
             list: internal BaseFace instances.
@@ -597,7 +597,7 @@ class BaseElement(BaseAbstractMeshObject):
 
         Category: preprocessing
         Tags: mesh, element, normals, plot, debug
-        Use when: interactively debugging face orientation or point-containment failures.
+        Usage: interactively debugging face orientation or point-containment failures.
 
         Returns:
             None: shows a matplotlib 3D plot.

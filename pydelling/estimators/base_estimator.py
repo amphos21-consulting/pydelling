@@ -17,7 +17,7 @@ class BaseEstimator(ABC):
 
     Category: estimator
     Tags: estimator, data, prediction, smoothing, serialization
-    Use when: implementing estimators that load data, preprocess it, plot it, predict from it, and persist state.
+    Usage: implementing estimators that load data, preprocess it, plot it, predict from it, and persist state.
     """
 
     def __init__(self, file_path: str | Path, *args, **kwargs):
@@ -42,7 +42,7 @@ class BaseEstimator(ABC):
 
         Category: estimator
         Tags: estimator, input-data, dataframe, abstract
-        Use when: subclasses need to define how source data is loaded.
+        Usage: subclasses need to define how source data is loaded.
 
         Returns:
             pandas.DataFrame: loaded estimator data.
@@ -55,7 +55,7 @@ class BaseEstimator(ABC):
 
         Category: estimator
         Tags: estimator, preprocessing, abstract
-        Use when: subclasses need to normalize or derive fields before prediction.
+        Usage: subclasses need to normalize or derive fields before prediction.
 
         Returns:
             None: subclasses mutate estimator data.
@@ -68,7 +68,7 @@ class BaseEstimator(ABC):
 
         Category: estimator
         Tags: estimator, smoothing, abstract
-        Use when: subclasses expose a public smoothing operation for noisy input data.
+        Usage: subclasses expose a public smoothing operation for noisy input data.
 
         Returns:
             None: subclasses mutate estimator data.
@@ -80,7 +80,7 @@ class BaseEstimator(ABC):
 
         Category: estimator
         Tags: estimator, smoothing, dataframe, preprocessing
-        Use when: subclasses need a shared column-level smoothing helper.
+        Usage: subclasses need a shared column-level smoothing helper.
 
         Returns:
             None: mutates the selected data column.
@@ -104,7 +104,7 @@ class BaseEstimator(ABC):
 
         Category: estimator
         Tags: estimator, plot, abstract, diagnostics
-        Use when: subclasses need to expose basic diagnostic plots.
+        Usage: subclasses need to expose basic diagnostic plots.
 
         Returns:
             None: subclasses show or save plots.
@@ -121,7 +121,7 @@ class BaseEstimator(ABC):
 
         Category: estimator
         Tags: estimator, plot, prediction, diagnostics
-        Use when: subclasses need a shared matplotlib plot helper.
+        Usage: subclasses need a shared matplotlib plot helper.
 
         Returns:
             None: shows or saves the plot.
@@ -146,7 +146,7 @@ class BaseEstimator(ABC):
 
         Category: estimator
         Tags: estimator, prediction, abstract
-        Use when: subclasses define forecasting or classification behavior.
+        Usage: subclasses define forecasting or classification behavior.
 
         Returns:
             Any: subclass-specific prediction output.
@@ -158,7 +158,7 @@ class BaseEstimator(ABC):
 
         Category: writer
         Tags: estimator, serialize, dill, save
-        Use when: scripts need to persist a fitted or configured estimator.
+        Usage: scripts need to persist a fitted or configured estimator.
 
         Returns:
             None: writes the serialized estimator file.
@@ -173,7 +173,7 @@ class BaseEstimator(ABC):
 
         Category: reader
         Tags: estimator, serialize, dill, load
-        Use when: scripts need to restore a saved estimator object.
+        Usage: scripts need to restore a saved estimator object.
 
         Returns:
             BaseEstimator: deserialized estimator instance.

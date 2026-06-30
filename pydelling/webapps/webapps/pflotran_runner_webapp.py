@@ -8,7 +8,7 @@ class PflotranRunnerWebapp(WebAppRunner):
 
     Category: Web application.
     Tags: streamlit, pflotran, runner, prototype.
-    Use when: to identify the current PFLOTRAN runner webapp
+    Usage: to identify the current PFLOTRAN runner webapp
         prototype and understand that it does not yet launch simulations.
     """
 
@@ -17,7 +17,7 @@ class PflotranRunnerWebapp(WebAppRunner):
 
         Category: Web application.
         Tags: streamlit, pflotran, prototype, text-area.
-        Use when: smoke-testing that the PFLOTRAN runner webapp route renders.
+        Usage: smoke-testing that the PFLOTRAN runner webapp route renders.
         Side effects:
             Writes a disabled text area to the Streamlit page.
         """

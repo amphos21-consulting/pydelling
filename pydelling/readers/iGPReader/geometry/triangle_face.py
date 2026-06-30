@@ -14,7 +14,7 @@ class TriangleFace(BaseFace):
 
     Category: iGP geometry.
     Tags: triangle, face, centroid.
-    Use when: to identify triangular boundary faces in iGP
+    Usage: to identify triangular boundary faces in iGP
         mesh geometry.
     """
 
@@ -23,7 +23,7 @@ class TriangleFace(BaseFace):
 
         Category: iGP geometry.
         Tags: triangle, face, nodes, coordinates.
-        Use when: constructing triangular faces for element topology or region
+        Usage: constructing triangular faces for element topology or region
             operations.
         Args:
             nodes: Node ids defining the face.
@@ -39,7 +39,7 @@ class TriangleFace(BaseFace):
 
         Category: iGP geometry.
         Tags: triangle, centroid, coordinates.
-        Use when: region and export operations need a representative face point.
+        Usage: region and export operations need a representative face point.
         Returns:
             np.ndarray: Mean coordinate of the face vertices.
         """

@@ -15,7 +15,7 @@ class TetrahedraElement(BaseElement):
 
     Category: iGP geometry.
     Tags: tetrahedra, element, faces, volume, centroid.
-    Use when: to understand tetrahedral element topology and
+    Usage: to understand tetrahedral element topology and
         derived geometry used by iGP exports.
     """
 
@@ -24,7 +24,7 @@ class TetrahedraElement(BaseElement):
 
         Category: iGP geometry.
         Tags: tetrahedra, element, nodes, centroid, faces.
-        Use when: constructing a tetrahedral element from mesh connectivity and
+        Usage: constructing a tetrahedral element from mesh connectivity and
             coordinates.
         Args:
             node_ids: Four node ids defining the element.
@@ -55,7 +55,7 @@ class TetrahedraElement(BaseElement):
 
         Category: iGP geometry.
         Tags: tetrahedra, faces, triangle.
-        Use when: rebuilding face topology for connection or region operations.
+        Usage: rebuilding face topology for connection or region operations.
         Side effects:
             Adds four triangular faces to ``self.faces``.
         """

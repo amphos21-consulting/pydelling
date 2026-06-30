@@ -17,7 +17,7 @@ class UnitConverter:
 
     Category: utilities.
     Tags: units, time, conversion.
-    Use when: to convert between seconds, minutes, hours,
+    Usage: to convert between seconds, minutes, hours,
         days, and years.
     """
 
@@ -26,7 +26,7 @@ class UnitConverter:
 
         Category: utilities.
         Tags: units, time, conversion.
-        Use when: normalizing time values for simulation inputs or reports.
+        Usage: normalizing time values for simulation inputs or reports.
         Args:
             value: Numeric time value.
             initial_unit: Source unit, one of ``s``, ``min``, ``h``, ``d``, or
@@ -91,7 +91,7 @@ class SemistructuredFinder:
 
     Category: util
     Tags: points, clustering, semistructured, dbscan, kmeans
-    Use when: scripts need to group 3D points by their projected 2D layout and query nearby clusters.
+    Usage: scripts need to group 3D points by their projected 2D layout and query nearby clusters.
     """
     engine = None  # The clustering engine used to generate the clusters
     is_run = False
@@ -137,7 +137,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, dbscan, semistructured
-        Use when: scripts need automatic cluster count discovery from projected point coordinates.
+        Usage: scripts need automatic cluster count discovery from projected point coordinates.
 
         Returns:
             list: clusters containing original 3D points.
@@ -174,7 +174,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, kmeans, semistructured
-        Use when: scripts know the expected number of semi-structured point groups.
+        Usage: scripts know the expected number of semi-structured point groups.
 
         Returns:
             list: clusters containing original 3D points.
@@ -196,7 +196,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, count, metadata
-        Use when: scripts need cluster count after DBSCAN or KMeans generation.
+        Usage: scripts need cluster count after DBSCAN or KMeans generation.
 
         Returns:
             int: number of non-noise clusters.
@@ -209,7 +209,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, indexes, metadata
-        Use when: scripts need original point ids corresponding to each cluster.
+        Usage: scripts need original point ids corresponding to each cluster.
 
         Returns:
             list: cluster-indexed lists of original point indexes.
@@ -227,7 +227,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, indexes, lookup
-        Use when: scripts need source point ids for a selected cluster.
+        Usage: scripts need source point ids for a selected cluster.
 
         Returns:
             list: original point indexes in the cluster.
@@ -239,7 +239,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, nearest, lookup
-        Use when: scripts need the nearest semi-structured group for a 3D query point.
+        Usage: scripts need the nearest semi-structured group for a 3D query point.
 
         Returns:
             list: points in the nearest cluster.
@@ -260,7 +260,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, nearest, xy
-        Use when: scripts need the nearest semi-structured group from plan-view coordinates.
+        Usage: scripts need the nearest semi-structured group from plan-view coordinates.
 
         Returns:
             list: points in the nearest cluster.
@@ -272,7 +272,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, kdtree, nearest, indexes
-        Use when: scripts need fast nearest-cluster lookup and original point ids.
+        Usage: scripts need fast nearest-cluster lookup and original point ids.
 
         Returns:
             list: original point indexes in the nearest cluster.
@@ -292,7 +292,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, nearest, xy, indexes
-        Use when: scripts need original point ids for the nearest plan-view cluster.
+        Usage: scripts need original point ids for the nearest plan-view cluster.
 
         Returns:
             list: original point indexes in the nearest cluster.
@@ -305,7 +305,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, centers, projection
-        Use when: scripts need plan-view or projected cluster centers for nearest lookup.
+        Usage: scripts need plan-view or projected cluster centers for nearest lookup.
 
         Returns:
             list: projected cluster center coordinates.
@@ -329,7 +329,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, kdtree, centers
-        Use when: scripts need fast nearest-center lookup.
+        Usage: scripts need fast nearest-center lookup.
 
         Returns:
             scipy.spatial.KDTree: tree built from projected cluster centers.
@@ -344,7 +344,7 @@ class SemistructuredFinder:
 
         Category: util
         Tags: points, clustering, centers, geometry
-        Use when: scripts need representative 3D locations for each cluster.
+        Usage: scripts need representative 3D locations for each cluster.
 
         Returns:
             list: mean 3D coordinates for each cluster.

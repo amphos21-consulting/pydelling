@@ -14,7 +14,7 @@ class SubfishException(Exception):
 
     Category: utilities.
     Tags: subfish, exception, transport.
-    Use when: to recognize errors originating from the
+    Usage: to recognize errors originating from the
         SubFISH analytical solution module.
     """
 

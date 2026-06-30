@@ -18,14 +18,14 @@ class PostProcessingEngine:
 
     Category: postprocessing
     Tags: pflotran, hdf5, xmf, vtk, postprocessing
-    Use when: scripts need to prepare PFLOTRAN output folders for visualization.
+    Usage: scripts need to prepare PFLOTRAN output folders for visualization.
     """
     def __init__(self, dt=0.2, unit="y"):
         """Initialize post-processing settings.
 
         Category: postprocessing
         Tags: pflotran, postprocessing, time-step, xmf
-        Use when: scripts need a post-processing engine with output time spacing metadata.
+        Usage: scripts need a post-processing engine with output time spacing metadata.
 
         Returns:
             None: stores time-step settings and output metadata containers.
@@ -40,7 +40,7 @@ class PostProcessingEngine:
 
         Category: postprocessing
         Tags: pflotran, hdf5, xmf, vtk, workflow
-        Use when: scripts need directory discovery, velocity merging, XMF export, and domain-file copying in one call.
+        Usage: scripts need directory discovery, velocity merging, XMF export, and domain-file copying in one call.
 
         Returns:
             None: writes post-processing artifacts into the output directory.
@@ -60,7 +60,7 @@ class PostProcessingEngine:
 
         Category: postprocessing
         Tags: pflotran, hdf5, vtk, output-files, discovery
-        Use when: scripts need to locate model outputs before XMF generation.
+        Usage: scripts need to locate model outputs before XMF generation.
 
         Returns:
             None: stores sorted output file lists and directories.
@@ -106,7 +106,7 @@ class PostProcessingEngine:
 
         Category: postprocessing
         Tags: pflotran, directories, discovery, input-files
-        Use when: post-processing is launched from a case folder, input_files folder, or output folder.
+        Usage: post-processing is launched from a case folder, input_files folder, or output folder.
 
         Returns:
             None: stores root_directory and input_directory.
@@ -127,7 +127,7 @@ class PostProcessingEngine:
 
         Category: postprocessing
         Tags: pflotran, domain, hdf5, discovery
-        Use when: XMF export needs mesh topology and vertices from the domain file.
+        Usage: XMF export needs mesh topology and vertices from the domain file.
 
         Returns:
             pathlib.Path: path to the domain HDF5 file.
@@ -140,7 +140,7 @@ class PostProcessingEngine:
 
         Category: postprocessing
         Tags: pflotran, input-file, discovery
-        Use when: output filenames need the input deck stem.
+        Usage: output filenames need the input deck stem.
 
         Returns:
             pathlib.Path: path to the PFLOTRAN .in file.
@@ -153,7 +153,7 @@ class PostProcessingEngine:
 
         Category: postprocessing
         Tags: pflotran, vtk, velocity, hdf5, merge
-        Use when: velocity variables are written separately as VTK and should appear in HDF5 outputs.
+        Usage: velocity variables are written separately as VTK and should appear in HDF5 outputs.
 
         Returns:
             None: adds missing VTK variables as HDF5 datasets.
@@ -175,7 +175,7 @@ class PostProcessingEngine:
 
         Category: postprocessing
         Tags: pflotran, hdf5, attributes, output-variables
-        Use when: XMF generation needs cell count, vertex count, variables, and output times.
+        Usage: XMF generation needs cell count, vertex count, variables, and output times.
 
         Returns:
             None: stores mesh counts, output variables, times, and units.
@@ -200,7 +200,7 @@ class PostProcessingEngine:
 
         Category: postprocessing
         Tags: pflotran, domain, hdf5, copy
-        Use when: XMF files should reference a domain file collocated with result HDF5 files.
+        Usage: XMF files should reference a domain file collocated with result HDF5 files.
 
         Returns:
             None: replaces any existing output domain file and copies the current one.
@@ -215,7 +215,7 @@ class PostProcessingEngine:
 
         Category: writer
         Tags: pflotran, xmf, hdf5, visualization, export
-        Use when: scripts need ParaView-readable XMF companions for PFLOTRAN HDF5 time steps.
+        Usage: scripts need ParaView-readable XMF companions for PFLOTRAN HDF5 time steps.
 
         Returns:
             None: writes one XMF file per output time step.
@@ -262,7 +262,7 @@ class PostProcessingEngine:
 
         Category: writer
         Tags: pflotran, xmf, attribute, hdf5, export
-        Use when: export_xmf needs to reference one cell-centered variable for a time step.
+        Usage: export_xmf needs to reference one cell-centered variable for a time step.
 
         Returns:
             None: appends XML text to the active XMF file handle.
@@ -279,7 +279,7 @@ class PostProcessingEngine:
 
         Category: reader
         Tags: vtk, cell-data, scalar, parser
-        Use when: post-processing needs VTK variables merged into HDF5 output files.
+        Usage: post-processing needs VTK variables merged into HDF5 output files.
 
         Returns:
             dict: variable metadata and numpy arrays keyed by variable name.

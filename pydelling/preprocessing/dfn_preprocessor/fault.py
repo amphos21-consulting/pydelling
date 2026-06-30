@@ -17,7 +17,7 @@ class Fault:
 
     Category: preprocessing
     Tags: dfn, fault, mesh, trimesh, hydrogeology
-    Use when: scripts need fault geometry, distance queries, or fault properties during DFN upscaling.
+    Usage: scripts need fault geometry, distance queries, or fault properties during DFN upscaling.
     """
     local_id = 0
     def __init__(self, filename=None,
@@ -34,7 +34,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, mesh, properties, trimesh
-        Use when: scripts need to load a fault surface from disk or wrap an existing mesh object.
+        Usage: scripts need to load a fault surface from disk or wrap an existing mesh object.
 
         Returns:
             None: stores geometry, local id, and hydraulic properties.
@@ -61,7 +61,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, distance, points, trimesh
-        Use when: upscaling needs to identify mesh cells near or intersecting a fault.
+        Usage: upscaling needs to identify mesh cells near or intersecting a fault.
 
         Returns:
             numpy.ndarray: signed distance for each input point.
@@ -82,7 +82,7 @@ class Fault:
 
         Category: writer
         Tags: dfn, fault, obj, export, mesh
-        Use when: scripts need fault geometry as OBJ text before writing or combining surfaces.
+        Usage: scripts need fault geometry as OBJ text before writing or combining surfaces.
 
         Returns:
             str: OBJ vertex and face records.
@@ -103,7 +103,7 @@ class Fault:
 
         Category: writer
         Tags: dfn, fault, obj, export, geometry
-        Use when: scripts need a visual-debug geometry file or OBJ string for a fault.
+        Usage: scripts need a visual-debug geometry file or OBJ string for a fault.
 
         Returns:
             str: OBJ text for the fault surface.
@@ -121,7 +121,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, points, mesh, geometry
-        Use when: scripts need raw fault vertices for geometry processing or export.
+        Usage: scripts need raw fault vertices for geometry processing or export.
 
         Returns:
             numpy.ndarray: mesh point coordinates.
@@ -134,7 +134,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, cells, mesh, connectivity
-        Use when: scripts need triangle indices for fault geometry processing.
+        Usage: scripts need triangle indices for fault geometry processing.
 
         Returns:
             numpy.ndarray: first mesh cell block connectivity.
@@ -147,7 +147,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, points, count
-        Use when: scripts need fault mesh size metadata.
+        Usage: scripts need fault mesh size metadata.
 
         Returns:
             int: number of mesh points.
@@ -160,7 +160,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, cells, count
-        Use when: scripts need fault surface triangle count metadata.
+        Usage: scripts need fault surface triangle count metadata.
 
         Returns:
             int: number of cells in the first mesh cell block.
@@ -173,7 +173,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, centroid, geometry
-        Use when: scripts need a representative fault location.
+        Usage: scripts need a representative fault location.
 
         Returns:
             numpy.ndarray: centroid coordinates.
@@ -186,7 +186,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, size, area
-        Use when: scripts need a scalar fault length scale for reporting or heuristics.
+        Usage: scripts need a scalar fault length scale for reporting or heuristics.
 
         Returns:
             float: square root of fault surface area.
@@ -199,7 +199,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, normal, orientation
-        Use when: scripts need the dominant orientation of a triangulated fault.
+        Usage: scripts need the dominant orientation of a triangulated fault.
 
         Returns:
             numpy.ndarray: mean face-normal vector.
@@ -211,7 +211,7 @@ class Fault:
 
         Category: writer
         Tags: dfn, fault, json, serialize, properties
-        Use when: scripts need to persist fault hydraulic properties and source filename.
+        Usage: scripts need to persist fault hydraulic properties and source filename.
 
         Returns:
             dict: serializable fault metadata.
@@ -232,7 +232,7 @@ class Fault:
 
         Category: preprocessing
         Tags: dfn, fault, area, geometry
-        Use when: scripts need fault area for reporting, filtering, or upscaling calculations.
+        Usage: scripts need fault area for reporting, filtering, or upscaling calculations.
 
         Returns:
             float: fault surface area.

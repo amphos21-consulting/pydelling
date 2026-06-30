@@ -14,7 +14,7 @@ class TetrahedraElement(BaseElement):
 
     Category: mesh geometry.
     Tags: tetrahedra, element, meshio, faces, centroid.
-    Use when: to understand the mesh-preprocessor representation of
+    Usage: to understand the mesh-preprocessor representation of
         tetrahedral cells.
     """
 
@@ -23,7 +23,7 @@ class TetrahedraElement(BaseElement):
 
         Category: mesh geometry.
         Tags: tetrahedra, element, nodes, centroid.
-        Use when: storing tetrahedral topology in the mesh preprocessor.
+        Usage: storing tetrahedral topology in the mesh preprocessor.
         Args:
             node_ids: Four node ids defining the element.
             node_coords: Coordinates for each node.
@@ -49,7 +49,7 @@ class TetrahedraElement(BaseElement):
 
         Category: mesh geometry.
         Tags: tetrahedra, faces, triangle.
-        Use when: face topology is needed for connection or boundary
+        Usage: face topology is needed for connection or boundary
             operations.
         Side effects:
             Adds four triangular faces to ``self.faces``.
@@ -97,7 +97,7 @@ class TetrahedraElement(BaseElement):
 
         Category: mesh geometry.
         Tags: tetrahedra, faces, local-nodes.
-        Use when: exporting or comparing tetrahedral face topology.
+        Usage: exporting or comparing tetrahedral face topology.
         Returns:
             dict: Face id to local node index list.
         """

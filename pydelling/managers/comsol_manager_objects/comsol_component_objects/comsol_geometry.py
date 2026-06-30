@@ -11,7 +11,7 @@ class ComsolGeometry:
 
     Category: COMSOL management.
     Tags: comsol, geometry, component, children.
-    Use when: to access geometry operations under a COMSOL
+    Usage: to access geometry operations under a COMSOL
         component through pydelling.
     """
 
@@ -22,7 +22,7 @@ class ComsolGeometry:
 
         Category: COMSOL management.
         Tags: comsol, geometry, initialization.
-        Use when: attaching pydelling helpers to a component geometry.
+        Usage: attaching pydelling helpers to a component geometry.
         Parameters:
             comp (ComsolComponent): The ComsolComponent object where the geometry lives.
             tag (str): The tag of the geometry. Defaults to 'geom1'.
@@ -51,7 +51,7 @@ class ComsolGeometry:
 
         Category: COMSOL management.
         Tags: comsol, geometry, apply, extension-point.
-        Use when: extending geometry wrappers with explicit apply behavior.
+        Usage: extending geometry wrappers with explicit apply behavior.
         """
         pass
 
@@ -60,7 +60,7 @@ class ComsolGeometry:
 
         Category: COMSOL management.
         Tags: comsol, geometry, children.
-        Use when: checking whether geometry child wrappers are already
+        Usage: checking whether geometry child wrappers are already
             registered.
         Returns:
             list: Child wrapper tags.

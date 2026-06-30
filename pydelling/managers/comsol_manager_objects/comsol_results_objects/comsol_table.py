@@ -22,7 +22,7 @@ class _Table:
 
     Category: COMSOL management.
     Tags: comsol, results, table, export, dataframe.
-    Use when: to create, read, update, or export COMSOL
+    Usage: to create, read, update, or export COMSOL
         result tables through pydelling.
     """
 

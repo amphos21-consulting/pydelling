@@ -18,7 +18,7 @@ class TiffReader(BaseReader, ImageOperations):
 
     Category: raster reader.
     Tags: tiff, raster, rasterio, image, bounds.
-    Use when: to load TIFF raster values and spatial bounds
+    Usage: to load TIFF raster values and spatial bounds
         through pydelling's reader interface.
     """
 
@@ -27,7 +27,7 @@ class TiffReader(BaseReader, ImageOperations):
 
         Category: raster reader.
         Tags: tiff, rasterio, image, initialization.
-        Use when: constructing a TIFF-backed raster reader from a file path.
+        Usage: constructing a TIFF-backed raster reader from a file path.
         Args:
             filename: TIFF file path.
         Side effects:
@@ -52,7 +52,7 @@ class TiffReader(BaseReader, ImageOperations):
 
         Category: raster reader.
         Tags: tiff, rasterio, bounds, band.
-        Use when: loading the raw rasterio dataset and first data band.
+        Usage: loading the raw rasterio dataset and first data band.
         Args:
             filename: TIFF file path.
         Side effects:
@@ -67,7 +67,7 @@ class TiffReader(BaseReader, ImageOperations):
 
         Category: raster reader.
         Tags: tiff, image, plot, matplotlib.
-        Use when: visually inspecting the loaded TIFF data.
+        Usage: visually inspecting the loaded TIFF data.
         Side effects:
             Calls the rasterio plot method and opens a Matplotlib image figure.
         """

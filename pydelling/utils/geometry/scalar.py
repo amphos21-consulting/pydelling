@@ -10,7 +10,7 @@ class Scalar:
 
     Category: geometry primitive.
     Tags: scalar, value, geometry.
-    Use when: to recognize scalar primitive wrappers used by
+    Usage: to recognize scalar primitive wrappers used by
         pydelling geometry utilities.
     """
 

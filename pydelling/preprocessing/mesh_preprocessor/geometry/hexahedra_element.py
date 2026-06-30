@@ -15,7 +15,7 @@ class HexahedraElement(BaseElement):
 
     Category: mesh geometry.
     Tags: hexahedra, element, meshio, faces, centroid.
-    Use when: to understand the mesh-preprocessor representation of
+    Usage: to understand the mesh-preprocessor representation of
         hexahedral cells.
     """
 
@@ -24,7 +24,7 @@ class HexahedraElement(BaseElement):
 
         Category: mesh geometry.
         Tags: hexahedra, element, nodes, centroid.
-        Use when: storing hexahedral topology in the mesh preprocessor.
+        Usage: storing hexahedral topology in the mesh preprocessor.
         Args:
             node_ids: Eight node ids defining the element.
             node_coords: Coordinates for each node.
@@ -50,7 +50,7 @@ class HexahedraElement(BaseElement):
 
         Category: mesh geometry.
         Tags: hexahedra, faces, quadrilateral.
-        Use when: face topology is needed for connection or boundary
+        Usage: face topology is needed for connection or boundary
             operations.
         Side effects:
             Adds six quadrilateral faces to ``self.faces``.
@@ -128,7 +128,7 @@ class HexahedraElement(BaseElement):
 
         Category: mesh geometry.
         Tags: hexahedra, faces, local-nodes.
-        Use when: exporting or comparing hexahedral face topology.
+        Usage: exporting or comparing hexahedral face topology.
         Returns:
             dict: Face id to local node index list.
         """

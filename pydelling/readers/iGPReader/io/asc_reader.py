@@ -21,7 +21,7 @@ class AscReader(BaseReader):
 
     Category: reader
     Tags: raster, asc, iGP, gridded-data, export
-    Use when: scripts need legacy iGPReader support for .asc raster files and PFLOTRAN gridded datasets.
+    Usage: scripts need legacy iGPReader support for .asc raster files and PFLOTRAN gridded datasets.
     """
 
     def __init__(self, filename):
@@ -29,7 +29,7 @@ class AscReader(BaseReader):
 
         Category: reader
         Tags: raster, asc, open, header, data
-        Use when: scripts need an ASC raster parsed into metadata and a numpy grid.
+        Usage: scripts need an ASC raster parsed into metadata and a numpy grid.
 
         Returns:
             None: stores file metadata, coordinate meshes, and raster data.
@@ -49,7 +49,7 @@ class AscReader(BaseReader):
 
         Category: reader
         Tags: raster, asc, header, metadata
-        Use when: scripts need nrows, ncols, origin, cellsize, and NODATA metadata.
+        Usage: scripts need nrows, ncols, origin, cellsize, and NODATA metadata.
 
         Returns:
             None: updates info_dict with parsed header values.
@@ -63,7 +63,7 @@ class AscReader(BaseReader):
 
         Category: reader
         Tags: raster, asc, data, grid
-        Use when: header metadata is loaded and the remaining file lines contain grid values.
+        Usage: header metadata is loaded and the remaining file lines contain grid values.
 
         Returns:
             None: fills the data array.
@@ -76,7 +76,7 @@ class AscReader(BaseReader):
 
         Category: reader
         Tags: raster, asc, coordinates, mesh, numpy
-        Use when: scripts need allocated grid storage and x/y coordinate meshes before reading data.
+        Usage: scripts need allocated grid storage and x/y coordinate meshes before reading data.
 
         Returns:
             None: initializes data, x_mesh, and y_mesh.
@@ -95,7 +95,7 @@ class AscReader(BaseReader):
 
         Category: preprocessing
         Tags: raster, coordinates, mesh, downsample
-        Use when: raster dimensions or cellsize change after downsampling or replacement.
+        Usage: raster dimensions or cellsize change after downsampling or replacement.
 
         Returns:
             None: updates x_mesh and y_mesh.
@@ -111,7 +111,7 @@ class AscReader(BaseReader):
 
         Category: reader
         Tags: raster, xydata, flatten, coordinates, values
-        Use when: scripts need point samples for CSV, WSV, interpolation, or analysis.
+        Usage: scripts need point samples for CSV, WSV, interpolation, or analysis.
 
         Returns:
             numpy.ndarray: rows containing x, y, and raster value.
@@ -130,7 +130,7 @@ class AscReader(BaseReader):
 
         Category: writer
         Tags: raster, csv, export, coordinates, values
-        Use when: scripts need comma-separated x,y,value rows excluding NODATA cells.
+        Usage: scripts need comma-separated x,y,value rows excluding NODATA cells.
 
         Returns:
             None: writes the CSV file under the configured output path.
@@ -152,7 +152,7 @@ class AscReader(BaseReader):
 
         Category: writer
         Tags: raster, wsv, export, coordinates, values
-        Use when: scripts need plain whitespace-delimited x y value rows.
+        Usage: scripts need plain whitespace-delimited x y value rows.
 
         Returns:
             None: writes the WSV file.
@@ -172,7 +172,7 @@ class AscReader(BaseReader):
 
         Category: writer
         Tags: raster, asc, export, header, grid
-        Use when: scripts need to persist modified or downsampled raster data in ASC format.
+        Usage: scripts need to persist modified or downsampled raster data in ASC format.
 
         Returns:
             None: writes the ASC file.
@@ -189,7 +189,7 @@ class AscReader(BaseReader):
 
         Category: writer
         Tags: raster, asc, header, metadata
-        Use when: emitting an ASC file before writing numeric grid rows.
+        Usage: emitting an ASC file before writing numeric grid rows.
 
         Returns:
             None: writes header lines to file.
@@ -202,7 +202,7 @@ class AscReader(BaseReader):
 
         Category: writer
         Tags: raster, asc, data, grid
-        Use when: emitting numeric raster rows after an ASC header.
+        Usage: emitting numeric raster rows after an ASC header.
 
         Returns:
             None: writes raster rows to file.
@@ -214,7 +214,7 @@ class AscReader(BaseReader):
 
         Category: writer
         Tags: raster, pflotran, hdf5, gridded-dataset, export
-        Use when: PFLOTRAN inputs need a gridded dataset built from an ASC raster.
+        Usage: PFLOTRAN inputs need a gridded dataset built from an ASC raster.
 
         Returns:
             None: writes the HDF5 gridded dataset.
@@ -239,7 +239,7 @@ class AscReader(BaseReader):
 
         Category: preprocessing
         Tags: raster, data, numpy, replace
-        Use when: scripts need to assign filtered, transformed, or externally computed raster values.
+        Usage: scripts need to assign filtered, transformed, or externally computed raster values.
 
         Returns:
             None: updates the data attribute.
@@ -251,7 +251,7 @@ class AscReader(BaseReader):
 
         Category: preprocessing
         Tags: raster, downsample, cellsize, coordinates
-        Use when: scripts need a coarser raster grid with updated dimensions and spacing.
+        Usage: scripts need a coarser raster grid with updated dimensions and spacing.
 
         Returns:
             None: mutates data, metadata, and coordinate meshes.

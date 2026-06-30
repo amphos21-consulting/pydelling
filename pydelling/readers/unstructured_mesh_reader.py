@@ -12,7 +12,7 @@ class UnstructuredMeshReader(MeshPreprocessor):
 
     Category: mesh reader.
     Tags: unstructured-mesh, nodes, vertices, mesh-preprocessor.
-    Use when: to represent already-loaded unstructured mesh
+    Usage: to represent already-loaded unstructured mesh
         arrays through pydelling's mesh preprocessor interface.
     """
 

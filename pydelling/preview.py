@@ -47,7 +47,7 @@ def normalize_extension(value: str | None) -> str:
 
     Category: util
     Tags: extension, mime, detection, asset
-    Use when: code needs to compare uploaded asset extensions independent of dot prefix or case.
+    Usage: code needs to compare uploaded asset extensions independent of dot prefix or case.
 
     Returns:
         str: lower-case extension without a leading dot.
@@ -62,7 +62,7 @@ def read_asset_header(path: Path, limit: int = HEADER_READ_BYTES) -> bytes:
 
     Category: util
     Tags: header, bytes, detection, asset
-    Use when: asset detection needs a bounded binary sample without loading the full file.
+    Usage: asset detection needs a bounded binary sample without loading the full file.
 
     Returns:
         bytes: at most limit bytes from the file, or empty bytes for directories.
@@ -84,7 +84,7 @@ def is_probably_text(payload: bytes) -> bool:
 
     Category: util
     Tags: text, binary, detection, encoding
-    Use when: choosing between text and binary asset handling from a header sample.
+    Usage: choosing between text and binary asset handling from a header sample.
 
     Returns:
         bool: True when the sample can be treated as text.
@@ -250,7 +250,7 @@ class AssetSource:
 
     Category: asset-handle
     Tags: asset, source, metadata, file, context
-    Use when: constructing typed handles from runtime context asset entries.
+    Usage: constructing typed handles from runtime context asset entries.
     """
     file_name: str
     path: Path
@@ -266,7 +266,7 @@ class AssetSource:
 
         Category: asset-handle
         Tags: asset, extension, detection
-        Use when: matching an asset source to a tabular, mesh, image, JSON, text, or binary handle.
+        Usage: matching an asset source to a tabular, mesh, image, JSON, text, or binary handle.
 
         Returns:
             str: lower-case extension without a leading dot.
@@ -281,7 +281,7 @@ class AssetSource:
 
         Category: asset-handle
         Tags: asset, mime, metadata
-        Use when: previews and output manifests need a MIME type for an asset.
+        Usage: previews and output manifests need a MIME type for an asset.
 
         Returns:
             str: MIME type, defaulting to application/octet-stream.
@@ -298,7 +298,7 @@ class BaseAssetHandle:
 
     Category: asset-handle
     Tags: asset, preview, schema, dataframe, records, text, mesh
-    Use when: scripts need a uniform interface before calling format-specific handle methods.
+    Usage: scripts need a uniform interface before calling format-specific handle methods.
     """
     kind = "binary"
     strategy_name = "binary"
@@ -313,7 +313,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: asset, header, detection
-        Use when: code needs a bounded byte sample for binary/text checks or preview metadata.
+        Usage: code needs a bounded byte sample for binary/text checks or preview metadata.
 
         Returns:
             bytes: header bytes for the source path.
@@ -326,7 +326,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: binary, text, detection, header
-        Use when: scripts need to decide whether text-oriented parsing is safe.
+        Usage: scripts need to decide whether text-oriented parsing is safe.
 
         Returns:
             bool: True when the header sample is not probably text.
@@ -338,7 +338,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: schema, metadata, asset
-        Use when: scripts need a lightweight description of asset structure.
+        Usage: scripts need a lightweight description of asset structure.
 
         Returns:
             dict[str, Any]: schema metadata for the handle.
@@ -350,7 +350,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: preview, data, rows, metadata
-        Use when: scripts need the smallest available preview payload for an asset.
+        Usage: scripts need the smallest available preview payload for an asset.
 
         Returns:
             dict[str, Any]: preview metadata or sample rows.
@@ -362,7 +362,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: preview, sections, table, binary, ui
-        Use when: pydelling-cloud needs bounded preview sections for display or MCP context.
+        Usage: pydelling-cloud needs bounded preview sections for display or MCP context.
 
         Returns:
             list[dict[str, Any]]: preview sections with table, text, mesh, image, or binary content.
@@ -389,7 +389,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: tabular, dataframe, csv, json, records
-        Use when: the user needs asset data in DataFrame form for analysis or transformation.
+        Usage: the user needs asset data in DataFrame form for analysis or transformation.
 
         Returns:
             pd.DataFrame: parsed tabular data.
@@ -401,7 +401,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: records, rows, json, tabular
-        Use when: scripts need simple Python dictionaries instead of a pandas DataFrame.
+        Usage: scripts need simple Python dictionaries instead of a pandas DataFrame.
 
         Returns:
             list[dict[str, Any]]: parsed record rows.
@@ -413,7 +413,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: text, json, markdown, log
-        Use when: the user asks to read, summarize, transform, or inspect textual asset contents.
+        Usage: the user asks to read, summarize, transform, or inspect textual asset contents.
 
         Returns:
             str: decoded asset text.
@@ -425,7 +425,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: igp, gid, mesh, reader, regions, materials
-        Use when: scripts need pydelling iGP mesh operations, region access, or VTK export.
+        Usage: scripts need pydelling iGP mesh operations, region access, or VTK export.
 
         Returns:
             iGPReader: reader configured for the asset directory.
@@ -437,7 +437,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: vtk, mesh, export, igp, visualization
-        Use when: the user asks to convert an iGP/GiD or mesh asset into VTK for visualization.
+        Usage: the user asks to convert an iGP/GiD or mesh asset into VTK for visualization.
 
         Returns:
             Any: value returned by the concrete exporter.
@@ -449,7 +449,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: summary, inventory, asset
-        Use when: building asset inventories or compact loader descriptions.
+        Usage: building asset inventories or compact loader descriptions.
 
         Returns:
             str: one-line summary of the asset.
@@ -464,7 +464,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: describe, metadata, schema, preview, inventory
-        Use when: scripts or MCP tools need a machine-readable summary before selecting an operation.
+        Usage: scripts or MCP tools need a machine-readable summary before selecting an operation.
 
         Returns:
             dict[str, Any]: structured description of the typed asset.
@@ -500,7 +500,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: preview, document, sections, limits, metadata
-        Use when: pydelling-cloud needs the standard preview contract for an asset.
+        Usage: pydelling-cloud needs the standard preview contract for an asset.
 
         Returns:
             dict[str, Any]: versioned preview document with sections and limits.
@@ -523,7 +523,7 @@ class BaseAssetHandle:
 
         Category: asset-handle
         Tags: runtime, metadata, context, asset
-        Use when: exposing available assets and their typed preview metadata to generated scripts.
+        Usage: exposing available assets and their typed preview metadata to generated scripts.
 
         Returns:
             dict[str, Any]: runtime-safe asset descriptor.
@@ -545,7 +545,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: tabular, csv, tsv, dataframe, records, columns
-    Use when: the asset should be read as rows and columns for analysis or transformation.
+    Usage: the asset should be read as rows and columns for analysis or transformation.
     """
     kind = "tabular"
     strategy_name = "tabular"
@@ -556,7 +556,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, delimiter, csv, tsv
-        Use when: parsing a delimited table with the correct separator.
+        Usage: parsing a delimited table with the correct separator.
 
         Returns:
             str: detected delimiter character.
@@ -569,7 +569,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, dataframe, csv, tsv
-        Use when: repeated tabular operations should avoid reparsing the file.
+        Usage: repeated tabular operations should avoid reparsing the file.
 
         Returns:
             pd.DataFrame: parsed tabular data.
@@ -582,7 +582,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, performance, metadata, limit
-        Use when: deciding whether to load the full table or only a sample for metadata.
+        Usage: deciding whether to load the full table or only a sample for metadata.
 
         Returns:
             int: configured or default eager-loading byte threshold.
@@ -599,7 +599,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, performance, metadata, eager
-        Use when: scripts need row counts and dtypes without overloading large files.
+        Usage: scripts need row counts and dtypes without overloading large files.
 
         Returns:
             bool: True when full-table metadata loading is allowed.
@@ -615,7 +615,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, sample, dataframe, preview
-        Use when: previewing a large table without loading every row.
+        Usage: previewing a large table without loading every row.
 
         Returns:
             pd.DataFrame: sample rows from the table.
@@ -628,7 +628,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, rows, count, metadata
-        Use when: summaries or schema output need a row count.
+        Usage: summaries or schema output need a row count.
 
         Returns:
             int: number of table rows.
@@ -648,7 +648,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, csv, tsv, dataframe, columns
-        Use when: the user needs the asset's rows and columns as a DataFrame.
+        Usage: the user needs the asset's rows and columns as a DataFrame.
 
         Returns:
             pd.DataFrame: parsed table with original column names.
@@ -660,7 +660,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, records, rows, csv, tsv
-        Use when: the user needs serializable rows from a delimited table.
+        Usage: the user needs serializable rows from a delimited table.
 
         Returns:
             list[dict[str, Any]]: table rows keyed by column name.
@@ -672,7 +672,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, schema, columns, dtype, delimiter
-        Use when: scripts need table structure before selecting columns or transformations.
+        Usage: scripts need table structure before selecting columns or transformations.
 
         Returns:
             dict[str, Any]: tabular schema metadata.
@@ -695,7 +695,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, preview, rows, columns
-        Use when: the user asks to inspect sample rows from a table.
+        Usage: the user asks to inspect sample rows from a table.
 
         Returns:
             dict[str, Any]: table preview with columns and rows.
@@ -716,7 +716,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, preview, section, rows, columns
-        Use when: the UI or MCP context needs sample rows plus truncation metadata.
+        Usage: the UI or MCP context needs sample rows plus truncation metadata.
 
         Returns:
             list[dict[str, Any]]: one table preview section.
@@ -742,7 +742,7 @@ class TabularAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: tabular, summary, rows, columns
-        Use when: inventory output needs a compact table summary.
+        Usage: inventory output needs a compact table summary.
 
         Returns:
             str: table dimensions.
@@ -767,7 +767,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: json, records, dataframe, text, object, list
-    Use when: the asset is JSON and the script needs structured data or formatted text.
+    Usage: the asset is JSON and the script needs structured data or formatted text.
     """
     kind = "json"
     strategy_name = "json"
@@ -778,7 +778,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: json, payload, load, cache
-        Use when: scripts need the parsed JSON object, list, or scalar.
+        Usage: scripts need the parsed JSON object, list, or scalar.
 
         Returns:
             Any: parsed JSON payload.
@@ -790,7 +790,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: json, records, rows, list
-        Use when: a JSON payload is a list of objects that should behave like table rows.
+        Usage: a JSON payload is a list of objects that should behave like table rows.
 
         Returns:
             list[dict[str, Any]]: JSON objects from the top-level list.
@@ -804,7 +804,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: json, dataframe, records, table
-        Use when: the user wants to analyze or transform JSON records with pandas.
+        Usage: the user wants to analyze or transform JSON records with pandas.
 
         Returns:
             pd.DataFrame: DataFrame built from top-level JSON objects.
@@ -816,7 +816,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: json, text, pretty-print, serialize
-        Use when: the user asks to inspect, summarize, or write the JSON as readable text.
+        Usage: the user asks to inspect, summarize, or write the JSON as readable text.
 
         Returns:
             str: indented JSON string.
@@ -828,7 +828,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: json, schema, records, object, fields
-        Use when: scripts need to know whether JSON is records, object, list, or scalar.
+        Usage: scripts need to know whether JSON is records, object, list, or scalar.
 
         Returns:
             dict[str, Any]: JSON schema metadata.
@@ -873,7 +873,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: json, preview, records, object, list
-        Use when: the user asks to inspect JSON contents in table or key-value form.
+        Usage: the user asks to inspect JSON contents in table or key-value form.
 
         Returns:
             dict[str, Any]: JSON preview payload.
@@ -913,7 +913,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: json, preview, section, records, table
-        Use when: pydelling-cloud needs both raw JSON context and tabular record samples.
+        Usage: pydelling-cloud needs both raw JSON context and tabular record samples.
 
         Returns:
             list[dict[str, Any]]: JSON preview sections.
@@ -946,7 +946,7 @@ class JsonAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: json, summary, records, keys
-        Use when: inventory output needs compact JSON metadata.
+        Usage: inventory output needs compact JSON metadata.
 
         Returns:
             str: one-line JSON summary.
@@ -981,7 +981,7 @@ class TextAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: text, markdown, log, yaml, lines
-    Use when: the asset should be read as decoded UTF-8 text.
+    Usage: the asset should be read as decoded UTF-8 text.
     """
     kind = "text"
     strategy_name = "text"
@@ -992,7 +992,7 @@ class TextAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: text, load, utf-8, cache
-        Use when: scripts need the full decoded text content.
+        Usage: scripts need the full decoded text content.
 
         Returns:
             str: decoded text.
@@ -1005,7 +1005,7 @@ class TextAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: text, lines, split
-        Use when: previews or scripts need line-oriented text processing.
+        Usage: previews or scripts need line-oriented text processing.
 
         Returns:
             list[str]: decoded text lines.
@@ -1017,7 +1017,7 @@ class TextAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: text, lines, markdown, log, yaml
-        Use when: the user asks to read, summarize, transform, or extract text content.
+        Usage: the user asks to read, summarize, transform, or extract text content.
 
         Returns:
             str: decoded asset contents.
@@ -1029,7 +1029,7 @@ class TextAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: text, schema, rows, encoding
-        Use when: scripts need text size metadata before processing.
+        Usage: scripts need text size metadata before processing.
 
         Returns:
             dict[str, Any]: text schema metadata.
@@ -1045,7 +1045,7 @@ class TextAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: text, preview, lines, table
-        Use when: the user asks to inspect a text file without reading all lines in the UI.
+        Usage: the user asks to inspect a text file without reading all lines in the UI.
 
         Returns:
             dict[str, Any]: line-numbered text preview.
@@ -1062,7 +1062,7 @@ class TextAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: text, preview, section, lines
-        Use when: pydelling-cloud needs display-ready text lines with truncation status.
+        Usage: pydelling-cloud needs display-ready text lines with truncation status.
 
         Returns:
             list[dict[str, Any]]: one text preview section.
@@ -1080,7 +1080,7 @@ class TextAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: text, summary, lines
-        Use when: inventory output needs compact text metadata.
+        Usage: inventory output needs compact text metadata.
 
         Returns:
             str: line-count summary.
@@ -1097,7 +1097,7 @@ class ImageAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: image, png, jpg, jpeg, gif, dimensions, mime
-    Use when: the asset is an image and scripts need MIME type, size, or preview metadata.
+    Usage: the asset is an image and scripts need MIME type, size, or preview metadata.
     """
     kind = "image"
     strategy_name = "image"
@@ -1107,7 +1107,7 @@ class ImageAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: image, schema, dimensions, mime
-        Use when: scripts need image metadata without decoding the full image.
+        Usage: scripts need image metadata without decoding the full image.
 
         Returns:
             dict[str, Any]: image schema metadata.
@@ -1125,7 +1125,7 @@ class ImageAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: image, preview, mime, dimensions
-        Use when: pydelling-cloud needs to identify the asset as an image preview.
+        Usage: pydelling-cloud needs to identify the asset as an image preview.
 
         Returns:
             dict[str, Any]: image preview metadata.
@@ -1141,7 +1141,7 @@ class ImageAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: image, preview, section, mime
-        Use when: the UI needs display metadata for an image asset.
+        Usage: the UI needs display metadata for an image asset.
 
         Returns:
             list[dict[str, Any]]: one image preview section.
@@ -1158,7 +1158,7 @@ class ImageAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: image, summary, dimensions
-        Use when: inventory output needs compact image metadata.
+        Usage: inventory output needs compact image metadata.
 
         Returns:
             str: image dimension summary or generic image text.
@@ -1174,7 +1174,7 @@ class IgpAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: igp, gid, mesh, vtk, regions, boundaries, materials
-    Use when: the user asks to inspect, summarize, convert, or visualize an iGP/GiD mesh asset.
+    Usage: the user asks to inspect, summarize, convert, or visualize an iGP/GiD mesh asset.
     """
     kind = "igp_reader"
     strategy_name = "igp_gid"
@@ -1185,7 +1185,7 @@ class IgpAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: igp, gid, directory, binary
-        Use when: preview logic needs text/binary behavior for directory-backed meshes.
+        Usage: preview logic needs text/binary behavior for directory-backed meshes.
 
         Returns:
             bool: always False.
@@ -1198,7 +1198,7 @@ class IgpAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: igp, gid, reader, cache
-        Use when: multiple schema, preview, or export operations need the same iGPReader.
+        Usage: multiple schema, preview, or export operations need the same iGPReader.
 
         Returns:
             iGPReader: cached reader for the iGP/GiD project.
@@ -1210,7 +1210,7 @@ class IgpAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: igp, gid, reader, mesh, regions, materials
-        Use when: scripts need direct iGPReader methods for mesh conversion, regions, or material access.
+        Usage: scripts need direct iGPReader methods for mesh conversion, regions, or material access.
 
         Returns:
             iGPReader: initialized pydelling iGP reader.
@@ -1229,7 +1229,7 @@ class IgpAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: igp, gid, vtk, mesh, export, visualization
-        Use when: the user asks to convert an iGP/GiD project into VTK for visualization or download.
+        Usage: the user asks to convert an iGP/GiD project into VTK for visualization or download.
 
         Returns:
             Any: value returned by iGPReader.to_vtk.
@@ -1280,7 +1280,7 @@ class IgpAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: igp, gid, mesh, schema, regions, materials
-        Use when: scripts need to understand iGP mesh structure before export or visualization.
+        Usage: scripts need to understand iGP mesh structure before export or visualization.
 
         Returns:
             dict[str, Any]: iGP mesh schema metadata.
@@ -1425,7 +1425,7 @@ class IgpAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: igp, gid, mesh, preview, regions, boundaries
-        Use when: pydelling-cloud needs display-ready mesh geometry and region tables.
+        Usage: pydelling-cloud needs display-ready mesh geometry and region tables.
 
         Returns:
             list[dict[str, Any]]: mesh and table preview sections.
@@ -1453,7 +1453,7 @@ class IgpAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: igp, gid, mesh, summary, nodes, elements
-        Use when: inventory output needs compact iGP mesh dimensions.
+        Usage: inventory output needs compact iGP mesh dimensions.
 
         Returns:
             str: element-by-node summary.
@@ -1477,7 +1477,7 @@ class VtkAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: vtk, vtu, vtp, mesh, visualization, cells, points
-    Use when: the asset is already a VTK mesh and scripts need mesh metadata or previews.
+    Usage: the asset is already a VTK mesh and scripts need mesh metadata or previews.
     """
     kind = "mesh"
     strategy_name = "vtk_mesh"
@@ -1488,7 +1488,7 @@ class VtkAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: vtk, mesh, reader, cache
-        Use when: scripts need pydelling reader access to a VTK-family mesh file.
+        Usage: scripts need pydelling reader access to a VTK-family mesh file.
 
         Returns:
             VTKMeshReader: pydelling VTK mesh reader.
@@ -1507,7 +1507,7 @@ class VtkAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: vtk, meshio, mesh, load
-        Use when: scripts need points, cells, or mesh data arrays from a VTK-family file.
+        Usage: scripts need points, cells, or mesh data arrays from a VTK-family file.
 
         Returns:
             Any: meshio-compatible mesh object.
@@ -1524,7 +1524,7 @@ class VtkAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: vtk, mesh, schema, points, cells, variables
-        Use when: scripts need VTK mesh structure before selecting fields or visualization paths.
+        Usage: scripts need VTK mesh structure before selecting fields or visualization paths.
 
         Returns:
             dict[str, Any]: VTK mesh schema metadata.
@@ -1544,7 +1544,7 @@ class VtkAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: vtk, mesh, preview, section
-        Use when: pydelling-cloud needs display-ready metadata for an existing VTK mesh.
+        Usage: pydelling-cloud needs display-ready metadata for an existing VTK mesh.
 
         Returns:
             list[dict[str, Any]]: one mesh preview section.
@@ -1560,7 +1560,7 @@ class VtkAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: vtk, mesh, summary, points, cells
-        Use when: inventory output needs compact VTK mesh dimensions.
+        Usage: inventory output needs compact VTK mesh dimensions.
 
         Returns:
             str: point-by-cell summary.
@@ -1577,7 +1577,7 @@ class StlAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: stl, mesh, geometry, vertices, faces
-    Use when: the asset is an STL mesh and scripts need face, vertex, or bounds metadata.
+    Usage: the asset is an STL mesh and scripts need face, vertex, or bounds metadata.
     """
     kind = "mesh"
     strategy_name = "stl_mesh"
@@ -1588,7 +1588,7 @@ class StlAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: stl, mesh, trimesh, load
-        Use when: scripts need vertices, faces, or bounds from an STL file.
+        Usage: scripts need vertices, faces, or bounds from an STL file.
 
         Returns:
             Any: trimesh mesh object.
@@ -1600,7 +1600,7 @@ class StlAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: stl, mesh, schema, vertices, faces, bounds
-        Use when: scripts need STL geometry metadata.
+        Usage: scripts need STL geometry metadata.
 
         Returns:
             dict[str, Any]: STL mesh schema metadata.
@@ -1631,7 +1631,7 @@ class StlAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: stl, mesh, preview, geometry, section
-        Use when: pydelling-cloud needs decimated STL geometry for visualization.
+        Usage: pydelling-cloud needs decimated STL geometry for visualization.
 
         Returns:
             list[dict[str, Any]]: one mesh preview section.
@@ -1651,7 +1651,7 @@ class StlAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: stl, mesh, summary, vertices, faces
-        Use when: inventory output needs compact STL mesh dimensions.
+        Usage: inventory output needs compact STL mesh dimensions.
 
         Returns:
             str: vertex-by-face summary.
@@ -1668,7 +1668,7 @@ class Hdf5AssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: hdf5, h5, datasets, arrays, schema
-    Use when: the asset is an HDF5 file and scripts need dataset names, shapes, or samples.
+    Usage: the asset is an HDF5 file and scripts need dataset names, shapes, or samples.
     """
     kind = "hdf5"
     strategy_name = "hdf5"
@@ -1679,7 +1679,7 @@ class Hdf5AssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: hdf5, datasets, schema, shape, dtype
-        Use when: scripts need dataset names, shapes, and dtypes before reading HDF5 content.
+        Usage: scripts need dataset names, shapes, and dtypes before reading HDF5 content.
 
         Returns:
             list[dict[str, Any]]: dataset metadata entries.
@@ -1704,7 +1704,7 @@ class Hdf5AssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: hdf5, schema, datasets, fields
-        Use when: scripts need an overview of HDF5 structure.
+        Usage: scripts need an overview of HDF5 structure.
 
         Returns:
             dict[str, Any]: HDF5 schema metadata.
@@ -1720,7 +1720,7 @@ class Hdf5AssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: hdf5, preview, datasets, table
-        Use when: the user asks to inspect available datasets in an HDF5 file.
+        Usage: the user asks to inspect available datasets in an HDF5 file.
 
         Returns:
             dict[str, Any]: dataset table preview.
@@ -1766,7 +1766,7 @@ class Hdf5AssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: hdf5, preview, sections, datasets, samples
-        Use when: pydelling-cloud needs dataset listings and small array samples.
+        Usage: pydelling-cloud needs dataset listings and small array samples.
 
         Returns:
             list[dict[str, Any]]: HDF5 preview sections.
@@ -1793,7 +1793,7 @@ class Hdf5AssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: hdf5, summary, datasets
-        Use when: inventory output needs compact HDF5 metadata.
+        Usage: inventory output needs compact HDF5 metadata.
 
         Returns:
             str: dataset-count summary.
@@ -1812,7 +1812,7 @@ class BinaryAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: binary, bytes, mime, unknown, header
-    Use when: no richer asset handle matches and scripts should avoid assuming a text or tabular format.
+    Usage: no richer asset handle matches and scripts should avoid assuming a text or tabular format.
     """
     kind = "binary"
     strategy_name = "binary"
@@ -1822,7 +1822,7 @@ class BinaryAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: binary, schema, bytes, mime
-        Use when: scripts need safe metadata for an otherwise unknown binary file.
+        Usage: scripts need safe metadata for an otherwise unknown binary file.
 
         Returns:
             dict[str, Any]: binary schema metadata.
@@ -1838,7 +1838,7 @@ class BinaryAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: binary, preview, bytes, mime, header
-        Use when: the user needs to inspect binary file metadata without decoding file contents.
+        Usage: the user needs to inspect binary file metadata without decoding file contents.
 
         Returns:
             dict[str, Any]: binary preview table payload.
@@ -1858,7 +1858,7 @@ class BinaryAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: binary, preview, section, header
-        Use when: pydelling-cloud needs display-ready metadata for an unknown binary asset.
+        Usage: pydelling-cloud needs display-ready metadata for an unknown binary asset.
 
         Returns:
             list[dict[str, Any]]: one binary preview section.
@@ -1875,7 +1875,7 @@ class BinaryAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: binary, summary, bytes
-        Use when: inventory output needs compact binary metadata.
+        Usage: inventory output needs compact binary metadata.
 
         Returns:
             str: binary byte-size summary.
@@ -1889,7 +1889,7 @@ class ErrorAssetHandle(BaseAssetHandle):
 
     Category: asset-handle
     Tags: error, preview, failure, diagnostics
-    Use when: surfacing asset inspection failures without crashing the whole asset inventory.
+    Usage: surfacing asset inspection failures without crashing the whole asset inventory.
     """
     kind = "error"
     strategy_name = "error"
@@ -1903,7 +1903,7 @@ class ErrorAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: error, preview, diagnostics, section
-        Use when: pydelling-cloud needs to show why an asset preview failed.
+        Usage: pydelling-cloud needs to show why an asset preview failed.
 
         Returns:
             list[dict[str, Any]]: one error preview section.
@@ -1919,7 +1919,7 @@ class ErrorAssetHandle(BaseAssetHandle):
 
         Category: asset-handle
         Tags: error, summary, preview
-        Use when: inventory output needs a compact failure status.
+        Usage: inventory output needs a compact failure status.
 
         Returns:
             str: preview failure summary.
@@ -1932,7 +1932,7 @@ def detect_asset_handle_class(source: AssetSource, header: bytes | None = None) 
 
     Category: asset-handle
     Tags: detection, asset, handle, mime, extension
-    Use when: code needs to choose the best pydelling handle for a runtime asset before loading it.
+    Usage: code needs to choose the best pydelling handle for a runtime asset before loading it.
 
     Returns:
         type[BaseAssetHandle]: concrete handle class for the source.
@@ -1973,7 +1973,7 @@ def load_asset_handle(source: AssetSource, header: bytes | None = None) -> BaseA
 
     Category: asset-handle
     Tags: load, asset, handle, runtime, context
-    Use when: scripts need a typed object exposing to_dataframe, to_text, to_vtk, or describe.
+    Usage: scripts need a typed object exposing to_dataframe, to_text, to_vtk, or describe.
 
     Returns:
         BaseAssetHandle: concrete asset handle for the source.
@@ -1989,7 +1989,7 @@ def load_asset_handles_from_context(
 
     Category: asset-handle
     Tags: runtime, context, assets, handles, load
-    Use when: generated scripts receive the execution context JSON and need all available assets.
+    Usage: generated scripts receive the execution context JSON and need all available assets.
 
     Returns:
         list[BaseAssetHandle]: typed handles for valid context assets.
@@ -2026,7 +2026,7 @@ def inspect_asset_source(source: AssetSource, header: bytes | None = None) -> di
 
     Category: asset-handle
     Tags: inspect, asset, metadata, preview, loader
-    Use when: code needs quick type, MIME, binary, loader, and text-line metadata for one source.
+    Usage: code needs quick type, MIME, binary, loader, and text-line metadata for one source.
 
     Returns:
         dict[str, Any]: compact inspection payload.
@@ -2066,7 +2066,7 @@ def build_asset_preview(
 
     Category: asset-handle
     Tags: preview, asset, document, table, mesh, image
-    Use when: the UI or MCP needs a bounded preview document for a user-uploaded asset.
+    Usage: the UI or MCP needs a bounded preview document for a user-uploaded asset.
 
     Returns:
         dict[str, Any]: preview document with sections, limits, and warnings.
@@ -2106,7 +2106,7 @@ def build_asset_inventory_output(handles: list[BaseAssetHandle]) -> dict[str, An
 
     Category: asset-handle
     Tags: inventory, assets, table, summary, output
-    Use when: the user asks what assets are available or needs a compact asset catalog.
+    Usage: the user asks what assets are available or needs a compact asset catalog.
 
     Returns:
         dict[str, Any]: table output payload for available assets.
@@ -2134,7 +2134,7 @@ def build_asset_schema_output(handle: BaseAssetHandle) -> dict[str, Any]:
 
     Category: asset-handle
     Tags: schema, fields, columns, datasets, table, output
-    Use when: the user asks for column names, field types, dataset shapes, or other asset structure.
+    Usage: the user asks for column names, field types, dataset shapes, or other asset structure.
 
     Returns:
         dict[str, Any]: table output payload for schema metadata.
@@ -2173,7 +2173,7 @@ def build_asset_data_output(handle: BaseAssetHandle) -> dict[str, Any]:
 
     Category: asset-handle
     Tags: data, preview, rows, columns, table, output
-    Use when: the user asks to view sample rows or extracted asset data inline.
+    Usage: the user asks to view sample rows or extracted asset data inline.
 
     Returns:
         dict[str, Any]: table output payload for preview data.
@@ -2203,7 +2203,7 @@ def build_asset_mesh_output(handle: BaseAssetHandle) -> dict[str, Any]:
 
     Category: asset-handle
     Tags: mesh, vtk, igp, visualization, output
-    Use when: the user asks to visualize or inspect geometry from an iGP, VTK, or STL-like asset.
+    Usage: the user asks to visualize or inspect geometry from an iGP, VTK, or STL-like asset.
 
     Returns:
         dict[str, Any]: mesh output payload with geometry and metadata.

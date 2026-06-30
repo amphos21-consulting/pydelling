@@ -22,7 +22,7 @@ class Surface(_AbstractGidObject):
 
     Category: GID preprocessing.
     Tags: gid, surface, nurbs, lines, extrusion.
-    Use when: to create GID surface commands from previously
+    Usage: to create GID surface commands from previously
         defined line objects.
     """
 
@@ -35,7 +35,7 @@ class Surface(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, surface, lines, initialization.
-        Use when: grouping GID line objects into a surface definition.
+        Usage: grouping GID line objects into a surface definition.
         Args:
             lines: Boundary ``Line`` objects that define the surface.
         Side effects:
@@ -51,7 +51,7 @@ class Surface(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, surface, export, nurbs.
-        Use when: emitting GID commands for surface creation.
+        Usage: emitting GID commands for surface creation.
         Returns:
             str: GID command text for creating the NURBS surface.
         Side effects:
@@ -73,7 +73,7 @@ class Surface(_AbstractGidObject):
 
         Category: GID preprocessing.
         Tags: gid, surface, extrusion, translation.
-        Use when: generating GID commands to extrude a surface between two
+        Usage: generating GID commands to extrude a surface between two
             points.
         Args:
             start_point: Start point for the extrusion vector.

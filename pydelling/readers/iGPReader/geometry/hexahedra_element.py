@@ -15,7 +15,7 @@ class HexahedraElement(BaseElement):
 
     Category: iGP geometry.
     Tags: hexahedra, element, faces, volume, centroid.
-    Use when: to understand hexahedral element topology and
+    Usage: to understand hexahedral element topology and
         derived geometry used by iGP exports.
     """
 
@@ -24,7 +24,7 @@ class HexahedraElement(BaseElement):
 
         Category: iGP geometry.
         Tags: hexahedra, element, nodes, centroid, faces.
-        Use when: constructing a hexahedral element from mesh connectivity and
+        Usage: constructing a hexahedral element from mesh connectivity and
             coordinates.
         Args:
             node_ids: Eight node ids defining the element.
@@ -55,7 +55,7 @@ class HexahedraElement(BaseElement):
 
         Category: iGP geometry.
         Tags: hexahedra, faces, quadrilateral.
-        Use when: rebuilding face topology for connection or region operations.
+        Usage: rebuilding face topology for connection or region operations.
         Side effects:
             Adds six quadrilateral faces to ``self.faces``.
         """

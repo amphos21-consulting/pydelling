@@ -11,7 +11,7 @@ class CopyStep(BaseStep):
 
     Category: Remote execution.
     Tags: ssh, sftp, copy, step.
-    Use when: to understand how pydelling schedules local or
+    Usage: to understand how pydelling schedules local or
         remote file copies during SSH-backed manager workflows.
     """
 
@@ -20,7 +20,7 @@ class CopyStep(BaseStep):
 
         Category: Remote execution.
         Tags: ssh, copy, initialization.
-        Use when: storing a copy operation for later execution by a manager.
+        Usage: storing a copy operation for later execution by a manager.
         Args:
             src: Source path.
             dst: Destination path.
@@ -37,7 +37,7 @@ class CopyStep(BaseStep):
 
         Category: Remote execution.
         Tags: ssh, copy, sftp, run.
-        Use when: applying a deferred copy operation during a remote workflow.
+        Usage: applying a deferred copy operation during a remote workflow.
         Args:
             manager: Manager with an initialized ``ssh`` helper.
         Side effects:

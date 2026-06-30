@@ -35,7 +35,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
     Category: reader
     Tags: pflotran, hdf5, results, geochemistry, plotting
-    Use when: scripts need time-indexed PFLOTRAN variables, observation extraction, or built-in plot helpers.
+    Usage: scripts need time-indexed PFLOTRAN variables, observation extraction, or built-in plot helpers.
     """
     def __init__(self,
                  filename=None,
@@ -73,7 +73,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, hdf5, time-series, results
-        Use when: scripts need time-step keys and raw HDF5 data available for result extraction.
+        Usage: scripts need time-step keys and raw HDF5 data available for result extraction.
 
         Returns:
             None: sets data, time_dict_keys, and time_keys.
@@ -90,7 +90,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, time-series, hdf5, metadata
-        Use when: scripts need available output times for lookup or plotting.
+        Usage: scripts need available output times for lookup or plotting.
 
         Returns:
             list: sorted time values.
@@ -103,7 +103,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, coordinates, hdf5, mesh
-        Use when: scripts need x, y, and z coordinate arrays from the results file.
+        Usage: scripts need x, y, and z coordinate arrays from the results file.
 
         Returns:
             dict: coordinate arrays keyed by x[m], y[m], and z[m].
@@ -120,7 +120,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, data, compatibility
-        Use when: generic reader code expects get_data but PFLOTRAN results are accessed by time and variable.
+        Usage: generic reader code expects get_data but PFLOTRAN results are accessed by time and variable.
 
         Returns:
             numpy.ndarray: placeholder zero array.
@@ -132,7 +132,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, metadata, info
-        Use when: generic reader code expects an info dictionary.
+        Usage: generic reader code expects an info dictionary.
 
         Returns:
             None: sets info to an empty dictionary.
@@ -147,7 +147,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, observation-point, time-series, variable
-        Use when: scripts need a temporal series at one i,j,k mesh index.
+        Usage: scripts need a temporal series at one i,j,k mesh index.
         """
         temp_array = []
         for time in self.time_values:
@@ -161,7 +161,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, minerals, variables, metadata
-        Use when: plotting or analysis needs mineral labels from PFLOTRAN outputs.
+        Usage: plotting or analysis needs mineral labels from PFLOTRAN outputs.
 
         Returns:
             list: mineral names.
@@ -175,7 +175,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, species, variables, metadata
-        Use when: plotting or analysis needs primary species labels from PFLOTRAN outputs.
+        Usage: plotting or analysis needs primary species labels from PFLOTRAN outputs.
 
         Returns:
             list: species names.
@@ -192,7 +192,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, variable, time-index, hdf5
-        Use when: scripts need a PFLOTRAN variable using positional time selection.
+        Usage: scripts need a PFLOTRAN variable using positional time selection.
         """
         return self.results[self.time_values[time_index]].results[variable]
 
@@ -204,7 +204,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, variable, time, hdf5
-        Use when: scripts need a PFLOTRAN variable using an explicit time value.
+        Usage: scripts need a PFLOTRAN variable using an explicit time value.
         """
         return self.results[time].results[variable]
 
@@ -216,7 +216,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, results, time, hdf5
-        Use when: scripts need the full result snapshot for one time.
+        Usage: scripts need the full result snapshot for one time.
         """
         return self.results[time].results
 
@@ -228,7 +228,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, results, time-index, hdf5
-        Use when: scripts need the full result snapshot by index.
+        Usage: scripts need the full result snapshot by index.
         """
         return self.results[self.time_values[time_index]].results
 
@@ -241,7 +241,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, minerals, volume-fraction, key
-        Use when: scripts need to construct a mineral VF variable name.
+        Usage: scripts need to construct a mineral VF variable name.
         """
         return f"{mineral}_VF [m^3 mnrl_m^3 bulk]"
 
@@ -253,7 +253,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, minerals, rate, key
-        Use when: scripts need to construct a mineral rate variable name.
+        Usage: scripts need to construct a mineral rate variable name.
         """
         return f"{mineral}_Rate [mol_m^3_sec]"
 
@@ -265,7 +265,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, minerals, saturation-index, key
-        Use when: scripts need to construct a mineral SI variable name.
+        Usage: scripts need to construct a mineral SI variable name.
         """
         return f"{mineral}_SI"
 
@@ -277,7 +277,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, species, primary, key
-        Use when: scripts need to construct a primary species total variable name.
+        Usage: scripts need to construct a primary species total variable name.
         """
         return f"Total_{species}"
 
@@ -286,7 +286,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, species, plot, time-series, 1d
-        Use when: scripts need PNG plots of Total_species values over space and time.
+        Usage: scripts need PNG plots of Total_species values over space and time.
 
         Returns:
             None: saves individual species plots.
@@ -316,7 +316,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, minerals, volume-fraction, plot, 1d
-        Use when: scripts need PNG plots of mineral precipitation or dissolution changes.
+        Usage: scripts need PNG plots of mineral precipitation or dissolution changes.
 
         Returns:
             None: saves individual mineral variation plots.
@@ -354,7 +354,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, porosity, minerals, plot, 1d
-        Use when: scripts need porosity-change plots derived from mineral volume-fraction changes.
+        Usage: scripts need porosity-change plots derived from mineral volume-fraction changes.
 
         Returns:
             None: saves a porosity variation plot.
@@ -401,7 +401,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, slice, plot, variable, 1d
-        Use when: scripts need spatial profiles through a 3D variable along one axis.
+        Usage: scripts need spatial profiles through a 3D variable along one axis.
 
         Returns:
             matplotlib.axes.Axes: axes containing plotted slice lines.
@@ -449,7 +449,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
 
         Category: reader
         Tags: pflotran, ridgeline, plot, variable, time-series
-        Use when: scripts need stacked spatial profiles for multiple PFLOTRAN times.
+        Usage: scripts need stacked spatial profiles for multiple PFLOTRAN times.
 
         Returns:
             None: builds a seaborn FacetGrid plot.
@@ -528,7 +528,7 @@ class PflotranResults:
 
     Category: PFLOTRAN reader.
     Tags: pflotran, results, time-step, variables.
-    Use when: to inspect available result arrays for a single
+    Usage: to inspect available result arrays for a single
         PFLOTRAN output time.
     """
     def __init__(self, time, data) -> None:
@@ -536,7 +536,7 @@ class PflotranResults:
 
         Category: PFLOTRAN reader.
         Tags: pflotran, results, time-step, arrays.
-        Use when: wrapping HDF5 datasets from one output time into NumPy arrays.
+        Usage: wrapping HDF5 datasets from one output time into NumPy arrays.
         Args:
             time (float): Simulation time value for this results snapshot.
             data (dict): Dictionary mapping variable names to their data arrays.
@@ -558,7 +558,7 @@ class PflotranResults:
 
         Category: PFLOTRAN reader.
         Tags: pflotran, minerals, volume-fraction, variables.
-        Use when: listing mineral variables present in a result snapshot.
+        Usage: listing mineral variables present in a result snapshot.
         Returns:
             list[str]: Prefixes of variable keys containing ``VF``.
         """
@@ -571,7 +571,7 @@ class PflotranResults:
 
         Category: PFLOTRAN reader.
         Tags: pflotran, species, total-concentration, variables.
-        Use when: listing primary species variables present in a result snapshot.
+        Usage: listing primary species variables present in a result snapshot.
         Returns:
             list[str]: Species components of variable keys containing ``Total``.
         """

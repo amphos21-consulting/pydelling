@@ -5,7 +5,7 @@ class BasePrimitive:
 
     Category: geometry primitive.
     Tags: geometry, primitive, tolerance.
-    Use when: to understand the shared base type for points, lines, planes,
+    Usage: to understand the shared base type for points, lines, planes,
         vectors, segments, and polygons.
     """
 

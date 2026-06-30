@@ -22,7 +22,7 @@ class RasterFileReader(BaseReader):
 
     Category: reader
     Tags: raster, asc, grid, coordinates, interpolation
-    Use when: scripts need raster values, coordinate grids, contours, or ASC/CSV exports.
+    Usage: scripts need raster values, coordinate grids, contours, or ASC/CSV exports.
     """
     def __init__(self,
                  filename=None,
@@ -45,7 +45,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, asc, open, header, grid
-        Use when: scripts need to initialize RasterFileReader from an ASCII raster path.
+        Usage: scripts need to initialize RasterFileReader from an ASCII raster path.
 
         Returns:
             None: populates reader metadata and data arrays.
@@ -61,7 +61,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, asc, read, header, values
-        Use when: an opened ASC file handle should be parsed into raster metadata and data.
+        Usage: an opened ASC file handle should be parsed into raster metadata and data.
 
         Returns:
             None: updates header metadata, coordinate meshes, and raster data.
@@ -76,7 +76,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, asc, header, metadata, cellsize
-        Use when: scripts need nrows, ncols, origin, spacing, and NODATA metadata from an ASC file.
+        Usage: scripts need nrows, ncols, origin, spacing, and NODATA metadata from an ASC file.
 
         Returns:
             None: stores parsed header values in info["reader"].
@@ -100,7 +100,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, data, grid, values
-        Use when: the ASC header has been parsed and the remaining lines contain numeric grid rows.
+        Usage: the ASC header has been parsed and the remaining lines contain numeric grid rows.
 
         Returns:
             None: fills the raster data array.
@@ -113,7 +113,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, grid, coordinates, mesh, metadata
-        Use when: a raster header has been read and data arrays need consistent dimensions.
+        Usage: a raster header has been read and data arrays need consistent dimensions.
 
         Returns:
             None: initializes data, x_mesh, and y_mesh.
@@ -140,7 +140,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, metadata, filename
-        Use when: scripts need the source filename available in reader_info.
+        Usage: scripts need the source filename available in reader_info.
 
         Returns:
             None: updates info["reader"].
@@ -152,7 +152,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, z, layer, coordinates
-        Use when: exporting a 2D raster as x, y, z, value samples.
+        Usage: exporting a 2D raster as x, y, z, value samples.
 
         Returns:
             None: stores z_coord on the reader.
@@ -164,7 +164,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, data, coordinates, xyz, xy
-        Use when: scripts need flattened raster samples for interpolation, export, or analysis.
+        Usage: scripts need flattened raster samples for interpolation, export, or analysis.
 
         Returns:
             np.ndarray: columns of x, y, value or x, y, z, value.
@@ -180,7 +180,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, coordinates, mesh, rebuild
-        Use when: downsampling, flipping, or metadata changes alter raster grid coordinates.
+        Usage: downsampling, flipping, or metadata changes alter raster grid coordinates.
 
         Returns:
             None: updates x_mesh and y_mesh.
@@ -208,7 +208,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, xy, flatten, coordinates, values
-        Use when: exporting a 2D raster grid to point samples.
+        Usage: exporting a 2D raster grid to point samples.
 
         Returns:
             np.ndarray: array with x, y, value columns.
@@ -227,7 +227,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, xyz, flatten, coordinates, values
-        Use when: exporting a raster layer at a fixed z coordinate.
+        Usage: exporting a raster layer at a fixed z coordinate.
 
         Returns:
             np.ndarray: array with x, y, z, value columns.
@@ -247,7 +247,7 @@ class RasterFileReader(BaseReader):
 
         Category: writer
         Tags: raster, csv, export, coordinates, values
-        Use when: scripts need x,y,value or x,y,z,value rows from an ASC raster.
+        Usage: scripts need x,y,value or x,y,z,value rows from an ASC raster.
 
         Returns:
             None: writes the CSV file.
@@ -272,7 +272,7 @@ class RasterFileReader(BaseReader):
 
         Category: writer
         Tags: raster, wsv, export, coordinates, values
-        Use when: scripts need plain whitespace-delimited x y value raster samples.
+        Usage: scripts need plain whitespace-delimited x y value raster samples.
 
         Returns:
             None: writes the output file.
@@ -293,7 +293,7 @@ class RasterFileReader(BaseReader):
 
         Category: writer
         Tags: raster, asc, export, header, grid
-        Use when: scripts need an ASCII grid file after modifying or downsampling raster data.
+        Usage: scripts need an ASCII grid file after modifying or downsampling raster data.
 
         Returns:
             None: writes the ASC file.
@@ -310,7 +310,7 @@ class RasterFileReader(BaseReader):
 
         Category: writer
         Tags: raster, asc, header, metadata
-        Use when: scripts need to emit a valid ASC raster header before grid values.
+        Usage: scripts need to emit a valid ASC raster header before grid values.
 
         Returns:
             None: writes header lines to file.
@@ -332,7 +332,7 @@ class RasterFileReader(BaseReader):
 
         Category: writer
         Tags: raster, asc, data, grid, values
-        Use when: scripts need to emit numeric raster rows after an ASC header.
+        Usage: scripts need to emit numeric raster rows after an ASC header.
 
         Returns:
             None: writes raster values to file.
@@ -344,7 +344,7 @@ class RasterFileReader(BaseReader):
 
         Category: preprocessing
         Tags: raster, downsample, grid, spacing
-        Use when: scripts need a coarser raster and updated grid spacing.
+        Usage: scripts need a coarser raster and updated grid spacing.
 
         Returns:
             None: mutates raster data, metadata, and coordinate meshes.
@@ -365,7 +365,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, sample, coordinates, nearest, value
-        Use when: scripts need a raster elevation or property value at one coordinate.
+        Usage: scripts need a raster elevation or property value at one coordinate.
 
         Returns:
             float: nearest raster value.
@@ -393,7 +393,7 @@ class RasterFileReader(BaseReader):
 
         Category: preprocessing
         Tags: raster, polygons, contours, regions, coordinates
-        Use when: scripts need polygon outlines for classified raster regions.
+        Usage: scripts need polygon outlines for classified raster regions.
 
         Returns:
             list: polygons in raster coordinates or pixel coordinates.
@@ -480,7 +480,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, pixel, coordinates, conversion
-        Use when: scripts need world coordinates for raster pixel indices.
+        Usage: scripts need world coordinates for raster pixel indices.
 
         Returns:
             tuple: x and y coordinates.
@@ -494,7 +494,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, pixel, coordinates, conversion
-        Use when: scripts need coordinates for polygon vertices or raster indices.
+        Usage: scripts need coordinates for polygon vertices or raster indices.
 
         Returns:
             tuple: x and y coordinates.
@@ -508,7 +508,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, coordinates, sample, value
-        Use when: scripts need the value associated with an x,y coordinate.
+        Usage: scripts need the value associated with an x,y coordinate.
 
         Returns:
             float: nearest raster value.
@@ -520,7 +520,7 @@ class RasterFileReader(BaseReader):
 
         Category: preprocessing
         Tags: raster, flip, y, origin, coordinates
-        Use when: adapting ASC raster orientation to another coordinate convention.
+        Usage: adapting ASC raster orientation to another coordinate convention.
 
         Returns:
             None: updates y origin and coordinate mesh.
@@ -533,7 +533,7 @@ class RasterFileReader(BaseReader):
 
         Category: preprocessing
         Tags: raster, flip, x, origin, coordinates
-        Use when: adapting ASC raster orientation to another coordinate convention.
+        Usage: adapting ASC raster orientation to another coordinate convention.
 
         Returns:
             None: updates x origin and coordinate mesh.
@@ -550,7 +550,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, plot, matplotlib, image, colorbar
-        Use when: scripts need a reusable axes image for raster visualization.
+        Usage: scripts need a reusable axes image for raster visualization.
 
         Returns:
             Any: matplotlib axes containing the raster image.
@@ -570,7 +570,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, plot, matplotlib, display
-        Use when: scripts need an immediate visual inspection of raster values.
+        Usage: scripts need an immediate visual inspection of raster values.
 
         Returns:
             None: shows a matplotlib plot.
@@ -589,7 +589,7 @@ class RasterFileReader(BaseReader):
 
         Category: writer
         Tags: raster, plot, image, export, matplotlib
-        Use when: scripts need a PNG or other image artifact showing raster values.
+        Usage: scripts need a PNG or other image artifact showing raster values.
 
         Returns:
             None: writes the plot image.
@@ -610,7 +610,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, columns, count, nx
-        Use when: scripts need the x-direction grid size.
+        Usage: scripts need the x-direction grid size.
 
         Returns:
             int: number of columns.
@@ -623,7 +623,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, rows, count, ny
-        Use when: scripts need the y-direction grid size.
+        Usage: scripts need the y-direction grid size.
 
         Returns:
             int: number of rows.
@@ -636,7 +636,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, rows, count
-        Use when: scripts need raster row count metadata.
+        Usage: scripts need raster row count metadata.
 
         Returns:
             int: number of rows.
@@ -649,7 +649,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, columns, count
-        Use when: scripts need raster column count metadata.
+        Usage: scripts need raster column count metadata.
 
         Returns:
             int: number of columns.
@@ -662,7 +662,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, spacing, dx, cellsize
-        Use when: scripts need horizontal grid spacing.
+        Usage: scripts need horizontal grid spacing.
 
         Returns:
             float: x-direction cell spacing.
@@ -678,7 +678,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, spacing, dy, cellsize
-        Use when: scripts need vertical grid spacing.
+        Usage: scripts need vertical grid spacing.
 
         Returns:
             float: y-direction cell spacing.
@@ -695,7 +695,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, csv, xyz, load, grid
-        Use when: scripts need to reconstruct a raster grid from point-sample CSV data.
+        Usage: scripts need to reconstruct a raster grid from point-sample CSV data.
 
         Returns:
             RasterFileReader: raster reader initialized from CSV data.
@@ -755,7 +755,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, sample, coordinates, nearest, value
-        Use when: scripts need to query raster values by real-world coordinates.
+        Usage: scripts need to query raster values by real-world coordinates.
 
         Returns:
             float: nearest raster data value.
@@ -770,7 +770,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, x, coordinates, columns
-        Use when: scripts need the coordinate vector for raster columns.
+        Usage: scripts need the coordinate vector for raster columns.
 
         Returns:
             np.ndarray: x coordinate vector.
@@ -783,7 +783,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, y, coordinates, rows
-        Use when: scripts need the coordinate vector for raster rows.
+        Usage: scripts need the coordinate vector for raster rows.
 
         Returns:
             np.ndarray: y coordinate vector.
@@ -922,7 +922,7 @@ class RasterFileReader(BaseReader):
 
         Category: reader
         Tags: raster, header, metadata, info
-        Use when: scripts need nrows, ncols, origin, spacing, or NODATA metadata.
+        Usage: scripts need nrows, ncols, origin, spacing, or NODATA metadata.
 
         Returns:
             dict: raster reader metadata.

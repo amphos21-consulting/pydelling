@@ -19,7 +19,7 @@ class Vector(np.ndarray, BasePrimitive):
 
     Category: geometry primitive.
     Tags: vector, numpy, point, geometry.
-    Use when: to understand vector creation from coordinates
+    Usage: to understand vector creation from coordinates
         or from the displacement between two points.
     """
 

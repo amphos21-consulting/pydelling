@@ -17,7 +17,7 @@ class BaseReader:
 
     Category: reader
     Tags: reader, file, data, csv, coordinates
-    Use when: scripts need the base contract shared by concrete pydelling file readers.
+    Usage: scripts need the base contract shared by concrete pydelling file readers.
     """
 
     data: np.ndarray  # Hint of self.data array
@@ -35,7 +35,7 @@ class BaseReader:
 
         Category: reader
         Tags: reader, initialization, file, data
-        Use when: constructing a pydelling reader from a file path or from data
+        Usage: constructing a pydelling reader from a file path or from data
             that has already been loaded by another workflow.
         Args:
             filename: Path to the source file. Stored as ``Path(filename)``.
@@ -69,7 +69,7 @@ class BaseReader:
 
         Category: reader
         Tags: reader, extension-point, file, data
-        Use when: implementing a concrete reader subclass that must parse its
+        Usage: implementing a concrete reader subclass that must parse its
             specific file format.
         Args:
             opened_file: Open text file handle positioned at the data payload.
@@ -84,7 +84,7 @@ class BaseReader:
 
         Category: reader
         Tags: reader, file, open, data, metadata
-        Use when: a concrete reader should load data from disk using its read_file implementation.
+        Usage: a concrete reader should load data from disk using its read_file implementation.
 
         Returns:
             None: updates reader data and info.
@@ -100,7 +100,7 @@ class BaseReader:
 
         Category: reader
         Tags: reader, extension-point, header, metadata
-        Use when: implementing a reader whose file format has a reusable header
+        Usage: implementing a reader whose file format has a reusable header
             section separate from the data payload.
         Args:
             opened_file: Open file handle positioned at the header.
@@ -115,7 +115,7 @@ class BaseReader:
 
         Category: reader
         Tags: reader, data, numpy, array
-        Use when: scripts need the numeric payload from a pydelling reader.
+        Usage: scripts need the numeric payload from a pydelling reader.
 
         Returns:
             np.ndarray: loaded reader data.
@@ -127,7 +127,7 @@ class BaseReader:
 
         Category: reader
         Tags: reader, metadata, info, extension-point
-        Use when: a concrete reader has finished parsing and needs to expose
+        Usage: a concrete reader has finished parsing and needs to expose
             shape, field, or source metadata through ``self.info``.
         Side effects:
             Replaces ``self.info`` with a metadata dictionary.
@@ -139,7 +139,7 @@ class BaseReader:
 
         Category: reader
         Tags: coordinates, transform, local, global
-        Use when: loaded point data needs to be shifted into a model-local
+        Usage: loaded point data needs to be shifted into a model-local
             coordinate reference before interpolation or export.
         Args:
             x_local_to_global: X offset to subtract from the first data column.
@@ -159,7 +159,7 @@ class BaseReader:
 
         Category: reader
         Tags: coordinates, transform, local, global
-        Use when: loaded point data needs to be shifted back to the global
+        Usage: loaded point data needs to be shifted back to the global
             coordinate reference for export or comparison.
         Args:
             x_local_to_global: X offset to add to the first data column.
@@ -179,7 +179,7 @@ class BaseReader:
 
         Category: writer
         Tags: reader, writer, csv, export, data
-        Use when: scripts need to export loaded reader data as delimited text.
+        Usage: scripts need to export loaded reader data as delimited text.
 
         Returns:
             None: writes output_file.
@@ -193,7 +193,7 @@ class BaseReader:
 
         Category: reader
         Tags: postprocess, folder, artifacts
-        Use when: reader workflows need a predictable local directory for
+        Usage: reader workflows need a predictable local directory for
             generated post-processing files.
         Side effects:
             Creates ``postprocess`` under the current working directory and
@@ -207,7 +207,7 @@ class BaseReader:
 
         Category: reader
         Tags: subfish, dataframe, transport, calculation
-        Use when: scripts need tabular SUBFISH output from pydelling reader utilities.
+        Usage: scripts need tabular SUBFISH output from pydelling reader utilities.
 
         Returns:
             pd.DataFrame: time and result columns.
@@ -228,7 +228,7 @@ class BaseReader:
 
         Category: reader
         Tags: reader, values, data, array
-        Use when: scripts need reader data through a property-style accessor.
+        Usage: scripts need reader data through a property-style accessor.
 
         Returns:
             Any: value returned by get_data.

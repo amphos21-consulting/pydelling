@@ -18,7 +18,7 @@ class PflotranImplicitWriter(BaseWriter):
 
     Category: Mesh export.
     Tags: pflotran, implicit-grid, hdf5, vertices, elements, regions.
-    Use when: to identify the writer that serializes iGP
+    Usage: to identify the writer that serializes iGP
         mesh data into PFLOTRAN implicit mesh text or HDF5 domain/region
         structures.
     """
@@ -28,7 +28,7 @@ class PflotranImplicitWriter(BaseWriter):
 
         Category: Mesh export.
         Tags: pflotran, elements, implicit-grid, connectivity.
-        Use when: exporting element connectivity for a PFLOTRAN unstructured
+        Usage: exporting element connectivity for a PFLOTRAN unstructured
             implicit grid file.
         Args:
             export_file: Writable text stream receiving the element section.
@@ -45,7 +45,7 @@ class PflotranImplicitWriter(BaseWriter):
 
         Category: Mesh export.
         Tags: pflotran, vertices, implicit-grid, coordinates.
-        Use when: exporting node coordinates for a PFLOTRAN unstructured
+        Usage: exporting node coordinates for a PFLOTRAN unstructured
             implicit grid file.
         Args:
             export_file: Writable text stream receiving the vertex section.
@@ -61,7 +61,7 @@ class PflotranImplicitWriter(BaseWriter):
 
         Category: Mesh export.
         Tags: pflotran, hdf5, domain, cells, vertices.
-        Use when: creating a PFLOTRAN HDF5 mesh file from an unbuilt iGP mesh.
+        Usage: creating a PFLOTRAN HDF5 mesh file from an unbuilt iGP mesh.
         Args:
             export_file: Open HDF5 file handle that receives a ``Domain`` group.
         Raises:
@@ -90,7 +90,7 @@ class PflotranImplicitWriter(BaseWriter):
 
         Category: Mesh export.
         Tags: pflotran, hdf5, regions, materials, boundary-faces.
-        Use when: exporting cell material ids and named region face vertices for
+        Usage: exporting cell material ids and named region face vertices for
             a PFLOTRAN HDF5 mesh file.
         Args:
             export_file: Open HDF5 file handle that receives a ``Regions`` group.

@@ -18,7 +18,7 @@ class SparseDataInterpolator(BaseInterpolator):
 
     Category: interpolation.
     Tags: sparse-data, griddata, mesh, pointwise, scipy.
-    Use when: to map sparse xyz/value observations onto a
+    Usage: to map sparse xyz/value observations onto a
         target mesh using SciPy interpolation.
     """
 
@@ -29,7 +29,7 @@ class SparseDataInterpolator(BaseInterpolator):
 
         Category: interpolation.
         Tags: sparse-data, griddata, mesh, scipy.
-        Use when: generating mesh-aligned values from sparse observations.
+        Usage: generating mesh-aligned values from sparse observations.
         Args:
             method: SciPy ``griddata`` interpolation method.
             divide_over_direction: If truthy, split source and target data into
@@ -66,7 +66,7 @@ class SparseDataInterpolator(BaseInterpolator):
 
         Category: interpolation.
         Tags: sparse-data, mesh, interpolated-values.
-        Use when: downstream writers need x/y/z coordinates plus the
+        Usage: downstream writers need x/y/z coordinates plus the
             interpolated value column.
         Returns:
             np.ndarray: ``self.mesh`` with interpolated values appended.
@@ -79,7 +79,7 @@ class SparseDataInterpolator(BaseInterpolator):
 
         Category: interpolation.
         Tags: sparse-data, clamp, minimum, postprocess.
-        Use when: enforcing a lower bound on interpolated physical properties.
+        Usage: enforcing a lower bound on interpolated physical properties.
         Args:
             min_value: Lower bound assigned to all smaller interpolated values.
         Returns:
@@ -97,7 +97,7 @@ class SparseDataInterpolator(BaseInterpolator):
 
         Category: interpolation.
         Tags: sparse-data, plot, regular-mesh.
-        Use when: visualizing interpolated data on a regular target mesh.
+        Usage: visualizing interpolated data on a regular target mesh.
         Raises:
             AssertionError: If interpolation has not run or no regular mesh is
                 available.
@@ -114,7 +114,7 @@ class SparseDataInterpolator(BaseInterpolator):
 
         Category: interpolation.
         Tags: sparse-data, pointwise, export.
-        Use when: preparing interpolated data for CSV or pointwise downstream
+        Usage: preparing interpolated data for CSV or pointwise downstream
             tools.
         Returns:
             np.ndarray: Mesh rows plus one interpolated value column.
@@ -133,7 +133,7 @@ class SparseDataInterpolator(BaseInterpolator):
 
         Category: interpolation.
         Tags: sparse-data, pointwise, csv, export.
-        Use when: writing interpolated mesh values for external tools.
+        Usage: writing interpolated mesh values for external tools.
         Args:
             output_file: Destination CSV filename.
         Side effects:

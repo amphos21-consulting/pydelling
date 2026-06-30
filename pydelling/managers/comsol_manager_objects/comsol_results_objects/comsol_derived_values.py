@@ -15,7 +15,7 @@ class _DerivedValue:
 
     Category: COMSOL management.
     Tags: comsol, results, derived-value, table, evaluation.
-    Use when: to configure COMSOL evaluations such as
+    Usage: to configure COMSOL evaluations such as
         averages, integrals, minima, maxima, or point/global evaluations.
     """
 

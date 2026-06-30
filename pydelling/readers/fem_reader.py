@@ -21,7 +21,7 @@ class FemReader(MeshPreprocessor):
 
     Category: mesh reader.
     Tags: fem, mesh, ascii, kd-tree, feflow.
-    Use when: to load FEM mesh nodes/elements for
+    Usage: to load FEM mesh nodes/elements for
         interpolation or mesh preprocessing.
     """
 
@@ -33,7 +33,7 @@ class FemReader(MeshPreprocessor):
 
         Category: mesh reader.
         Tags: fem, mesh, kd-tree, initialization.
-        Use when: constructing a reader for FEM ASCII mesh data.
+        Usage: constructing a reader for FEM ASCII mesh data.
         Args:
             filename: FEM mesh file path.
             kd_tree: Whether to create a spatial KD-tree after reading.
@@ -53,7 +53,7 @@ class FemReader(MeshPreprocessor):
 
         Category: mesh reader.
         Tags: fem, mesh, nodes, elements, ascii.
-        Use when: reading FEM text sections such as dimensions, node
+        Usage: reading FEM text sections such as dimensions, node
             connectivity, and coordinates.
         Args:
             filename: FEM mesh file path.

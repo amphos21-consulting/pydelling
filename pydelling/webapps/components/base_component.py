@@ -17,7 +17,7 @@ class BaseComponent(ABC, BaseStreamlitUtilityClass):
 
     Category: Web application component.
     Tags: streamlit, component, session-state, translation.
-    Use when: to understand the common lifecycle for
+    Usage: to understand the common lifecycle for
         pydelling Streamlit components.
     """
 
@@ -34,7 +34,7 @@ class BaseComponent(ABC, BaseStreamlitUtilityClass):
 
         Category: Web application component.
         Tags: streamlit, component, initialization, translation.
-        Use when: constructing reusable pydelling UI components.
+        Usage: constructing reusable pydelling UI components.
         Args:
             webapp: Optional owning webapp runner.
             lang: Optional target language for ``translate.Translator``.
@@ -69,7 +69,7 @@ class BaseComponent(ABC, BaseStreamlitUtilityClass):
 
         Category: Web application component.
         Tags: streamlit, component, lifecycle, extension-point.
-        Use when: implementing a concrete component subclass.
+        Usage: implementing a concrete component subclass.
         Args:
             *args: Component-specific positional arguments.
             **kwargs: Component-specific keyword arguments.
@@ -81,7 +81,7 @@ class BaseComponent(ABC, BaseStreamlitUtilityClass):
 
         Category: Web application component.
         Tags: streamlit, component, value.
-        Use when: callers need the object produced by a component interaction.
+        Usage: callers need the object produced by a component interaction.
         Returns:
             Any: Value stored in ``self._value``.
         """

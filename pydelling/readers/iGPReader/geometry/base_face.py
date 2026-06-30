@@ -12,7 +12,7 @@ class BaseFace:
 
     Category: iGP geometry.
     Tags: face, polygon, area, centroid, mesh.
-    Use when: to understand the common geometry stored by
+    Usage: to understand the common geometry stored by
         iGP face classes before export or mesh processing.
     """
 
@@ -21,7 +21,7 @@ class BaseFace:
 
         Category: iGP geometry.
         Tags: face, nodes, coordinates, area, centroid.
-        Use when: constructing a mesh face from node ids and 3D coordinates.
+        Usage: constructing a mesh face from node ids and 3D coordinates.
         Args:
             nodes: Node identifiers that define the face connectivity.
             coords: Coordinate array for the face vertices.
@@ -45,7 +45,7 @@ class BaseFace:
 
         Category: iGP geometry.
         Tags: face, area, polygon, normal-vector.
-        Use when: deriving geometric measures for mesh faces used by iGP export
+        Usage: deriving geometric measures for mesh faces used by iGP export
             or preprocessing workflows.
         Returns:
             float: Projected polygon area based on the face normal.
@@ -70,7 +70,7 @@ class BaseFace:
 
         Category: iGP geometry.
         Tags: face, centroid, coordinates.
-        Use when: a face needs a representative center point for geometric
+        Usage: a face needs a representative center point for geometric
             checks or plotting.
         Returns:
             np.ndarray: Mean coordinate of the face vertices.
@@ -82,7 +82,7 @@ class BaseFace:
 
         Category: iGP geometry.
         Tags: face, centroid, coordinates, compatibility.
-        Use when: legacy code calls the explicit mean-centroid helper.
+        Usage: legacy code calls the explicit mean-centroid helper.
         Returns:
             np.ndarray: Mean coordinate of the face vertices.
         """
@@ -93,7 +93,7 @@ class BaseFace:
 
         Category: iGP geometry.
         Tags: face, plot, matplotlib, debug.
-        Use when: visually debugging face geometry or centroid calculations.
+        Usage: visually debugging face geometry or centroid calculations.
         Side effects:
             Creates and shows a Matplotlib 3D plot.
         """

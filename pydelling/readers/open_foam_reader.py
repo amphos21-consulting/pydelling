@@ -23,7 +23,7 @@ class OpenFoamReader(BaseReader):
 
     Category: OpenFOAM reader.
     Tags: openfoam, mesh, cell-centers, cell-volumes, Ofpp.
-    Use when: to locate OpenFOAM mesh geometry data such as
+    Usage: to locate OpenFOAM mesh geometry data such as
         cell centers and cell volumes for interpolation or export workflows.
     """
 
@@ -32,7 +32,7 @@ class OpenFoamReader(BaseReader):
 
         Category: OpenFOAM reader.
         Tags: openfoam, case-directory, initialization.
-        Use when: loading an OpenFOAM case from an explicit path or from
+        Usage: loading an OpenFOAM case from an explicit path or from
             ``config.open_foam_reader.filename``.
         Args:
             filename: OpenFOAM case directory. If omitted, the configured
@@ -50,7 +50,7 @@ class OpenFoamReader(BaseReader):
 
         Category: OpenFOAM reader.
         Tags: openfoam, Ofpp, mesh.
-        Use when: reinitializing the reader's mesh object from a case path.
+        Usage: reinitializing the reader's mesh object from a case path.
         Args:
             filename: OpenFOAM case directory. The method uses ``self.filename``
                 for the actual ``FoamMesh`` construction.
@@ -65,7 +65,7 @@ class OpenFoamReader(BaseReader):
 
         Category: OpenFOAM reader.
         Tags: openfoam, cell-centers, coordinates.
-        Use when: an MCP workflow needs spatial locations for OpenFOAM cells.
+        Usage: an MCP workflow needs spatial locations for OpenFOAM cells.
         Returns:
             np.ndarray: Cell center coordinates from the OpenFOAM case.
         Side effects:
@@ -90,7 +90,7 @@ class OpenFoamReader(BaseReader):
 
         Category: OpenFOAM reader.
         Tags: openfoam, cell-volumes, mesh.
-        Use when: an MCP workflow needs OpenFOAM cell volumes for weighted
+        Usage: an MCP workflow needs OpenFOAM cell volumes for weighted
             calculations or export.
         Returns:
             np.ndarray: Cell volumes from the OpenFOAM case.
@@ -115,7 +115,7 @@ class OpenFoamReader(BaseReader):
 
         Category: OpenFOAM reader.
         Tags: openfoam, base-reader, data.
-        Use when: code expects the ``BaseReader`` data accessor; use
+        Usage: code expects the ``BaseReader`` data accessor; use
             ``cell_centers`` or ``cell_volumes`` for actual OpenFOAM geometry
             arrays.
         Returns:
@@ -128,7 +128,7 @@ class OpenFoamReader(BaseReader):
 
         Category: OpenFOAM reader.
         Tags: openfoam, metadata, info.
-        Use when: satisfying the ``BaseReader`` metadata hook for OpenFOAM mesh
+        Usage: satisfying the ``BaseReader`` metadata hook for OpenFOAM mesh
             cases.
         Side effects:
             Sets ``self.info`` to an empty dictionary.

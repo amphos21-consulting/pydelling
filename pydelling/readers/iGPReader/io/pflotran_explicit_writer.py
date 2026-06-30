@@ -19,14 +19,14 @@ class PflotranExplicitWriter:
 
     Category: writer
     Tags: pflotran, explicit-mesh, cells, connections, hdf5
-    Use when: iGP readers need to export mesh cells, connections, regions, materials, and domain HDF5 data.
+    Usage: iGP readers need to export mesh cells, connections, regions, materials, and domain HDF5 data.
     """
     def write_cells(self, export_file):
         """Write PFLOTRAN CELLS records.
 
         Category: writer
         Tags: pflotran, explicit-mesh, cells, centroids, volume
-        Use when: exporting element centroids and volumes to an explicit mesh file.
+        Usage: exporting element centroids and volumes to an explicit mesh file.
 
         Returns:
             None: writes cell records to export_file.
@@ -42,7 +42,7 @@ class PflotranExplicitWriter:
 
         Category: writer
         Tags: pflotran, explicit-mesh, connections, faces, area
-        Use when: exporting adjacent element connection geometry and face areas.
+        Usage: exporting adjacent element connection geometry and face areas.
 
         Returns:
             None: writes connection records and stores n_conn.
@@ -75,7 +75,7 @@ class PflotranExplicitWriter:
 
         Category: writer
         Tags: pflotran, explicit-mesh, regions, boundary-conditions
-        Use when: region dictionaries should be exported as .ex condition files.
+        Usage: region dictionaries should be exported as .ex condition files.
 
         Returns:
             None: writes one condition file per region.
@@ -111,7 +111,7 @@ class PflotranExplicitWriter:
 
         Category: writer
         Tags: pflotran, hdf5, domain, cells, vertices
-        Use when: post-processing needs PFLOTRAN mesh topology in HDF5 format.
+        Usage: post-processing needs PFLOTRAN mesh topology in HDF5 format.
 
         Returns:
             None: creates Domain/Cells and Domain/Vertices datasets.
@@ -133,7 +133,7 @@ class PflotranExplicitWriter:
 
         Category: writer
         Tags: pflotran, materials, explicit-mesh, export
-        Use when: material element groups should be exported as .mat files.
+        Usage: material element groups should be exported as .mat files.
 
         Returns:
             None: writes one material file per material name.

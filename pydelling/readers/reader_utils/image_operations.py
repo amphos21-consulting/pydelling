@@ -14,7 +14,7 @@ class ImageOperations:
 
     Category: image operations.
     Tags: image, polygons, contours, raster.
-    Use when: to identify helper methods that derive polygon
+    Usage: to identify helper methods that derive polygon
         geometry from image-like reader data.
     """
 
@@ -26,7 +26,7 @@ class ImageOperations:
 
         Category: image operations.
         Tags: image, polygons, contours, opencv.
-        Use when: extracting approximate polygon outlines from raster/image
+        Usage: extracting approximate polygon outlines from raster/image
             data.
         Args:
             min_vertices: Minimum number of approximated contour vertices to

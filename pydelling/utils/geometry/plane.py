@@ -20,7 +20,7 @@ class Plane(BasePrimitive):
 
     Category: geometry primitive.
     Tags: plane, point, normal, intersection, parallel.
-    Use when: to use plane geometry for intersections with planes,
+    Usage: to use plane geometry for intersections with planes,
         lines, or segments.
     """
 
@@ -29,7 +29,7 @@ class Plane(BasePrimitive):
 
         Category: geometry primitive.
         Tags: plane, point, normal, initialization.
-        Use when: constructing a geometric plane for intersection or parallel
+        Usage: constructing a geometric plane for intersection or parallel
             checks.
         Args:
             point: Point-like anchor coordinate.
@@ -51,7 +51,7 @@ class Plane(BasePrimitive):
 
         Category: geometry primitive.
         Tags: plane, intersection, line, segment.
-        Use when: computing plane-plane, plane-line, or plane-segment
+        Usage: computing plane-plane, plane-line, or plane-segment
             intersections using pydelling helpers.
         Args:
             primitive: ``Plane``, ``Line``, or ``Segment`` instance.
@@ -76,7 +76,7 @@ class Plane(BasePrimitive):
 
         Category: geometry primitive.
         Tags: plane, parallel, normal.
-        Use when: checking plane orientation before intersection operations.
+        Usage: checking plane orientation before intersection operations.
         Args:
             plane: Other plane to compare against.
         Returns:

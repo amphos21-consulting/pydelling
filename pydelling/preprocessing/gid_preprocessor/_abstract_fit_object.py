@@ -7,7 +7,7 @@ class _AbstractGidObject(object):
 
     Category: GID preprocessing.
     Tags: gid, geometry, batch-command, extension-point.
-    Use when: to understand the shared contract for point, line, surface,
+    Usage: to understand the shared contract for point, line, surface,
         and other GiD objects that can generate command text.
     """
 

@@ -15,7 +15,7 @@ class WedgeElement(BaseElement):
 
     Category: iGP geometry.
     Tags: wedge, element, faces, volume, centroid.
-    Use when: to understand wedge element topology and
+    Usage: to understand wedge element topology and
         derived geometry used by iGP exports.
     """
 
@@ -24,7 +24,7 @@ class WedgeElement(BaseElement):
 
         Category: iGP geometry.
         Tags: wedge, element, nodes, centroid, faces.
-        Use when: constructing a wedge from mesh connectivity and coordinates.
+        Usage: constructing a wedge from mesh connectivity and coordinates.
         Args:
             node_ids: Six node ids defining the wedge.
             node_coords: Coordinates for each node.
@@ -54,7 +54,7 @@ class WedgeElement(BaseElement):
 
         Category: iGP geometry.
         Tags: wedge, faces, quadrilateral, triangle.
-        Use when: rebuilding face topology for connection or region operations.
+        Usage: rebuilding face topology for connection or region operations.
         Side effects:
             Adds three quadrilateral and two triangular faces to ``self.faces``.
         """

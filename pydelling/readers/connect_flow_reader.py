@@ -23,7 +23,7 @@ class ConnectFlowReader(BaseReader):
 
     Category: ConnectFlow reader.
     Tags: connectflow, mesh, nodes, bounds, span.
-    Use when: to parse ConnectFlow mesh node coordinates and
+    Usage: to parse ConnectFlow mesh node coordinates and
         reason about their spatial extent.
     """
 
@@ -32,7 +32,7 @@ class ConnectFlowReader(BaseReader):
 
         Category: ConnectFlow reader.
         Tags: connectflow, mesh, initialization.
-        Use when: loading a ConnectFlow mesh from an explicit path or from the
+        Usage: loading a ConnectFlow mesh from an explicit path or from the
             configured default path.
         Args:
             filename: Path to the ConnectFlow mesh file. If omitted, the
@@ -49,7 +49,7 @@ class ConnectFlowReader(BaseReader):
 
         Category: ConnectFlow reader.
         Tags: connectflow, mesh, nodes, pandas.
-        Use when: loading mesh-node data from a ConnectFlow text file.
+        Usage: loading mesh-node data from a ConnectFlow text file.
         Args:
             filename: ConnectFlow mesh file path.
         Side effects:
@@ -73,7 +73,7 @@ class ConnectFlowReader(BaseReader):
 
         Category: ConnectFlow reader.
         Tags: connectflow, mesh, nodes, dataframe.
-        Use when: workflows need node ids and x/y/z coordinates as a
+        Usage: workflows need node ids and x/y/z coordinates as a
             DataFrame.
         Returns:
             pd.DataFrame: Node table indexed by node id.
@@ -89,7 +89,7 @@ class ConnectFlowReader(BaseReader):
 
         Category: ConnectFlow reader.
         Tags: connectflow, base-reader, data.
-        Use when: code expects the ``BaseReader`` data accessor; use
+        Usage: code expects the ``BaseReader`` data accessor; use
             ``mesh_nodes`` for actual parsed node coordinates.
         Returns:
             np.ndarray: Current placeholder zero array.
@@ -102,7 +102,7 @@ class ConnectFlowReader(BaseReader):
 
         Category: ConnectFlow reader.
         Tags: connectflow, bounds, span, metadata.
-        Use when: an MCP workflow needs the spatial extent of the ConnectFlow
+        Usage: an MCP workflow needs the spatial extent of the ConnectFlow
             mesh after parsing.
         Side effects:
             Sets ``self.info["bounds"]`` and ``self.info["span"]`` for x/y/z.
@@ -133,7 +133,7 @@ class ConnectFlowReader(BaseReader):
 
         Category: ConnectFlow reader.
         Tags: connectflow, bounds, metadata.
-        Use when: downstream workflows need minimum and maximum coordinates.
+        Usage: downstream workflows need minimum and maximum coordinates.
         Returns:
             dict: Bounds dictionary with ``x``, ``y``, and ``z`` entries.
         """
@@ -145,7 +145,7 @@ class ConnectFlowReader(BaseReader):
 
         Category: ConnectFlow reader.
         Tags: connectflow, span, metadata.
-        Use when: downstream workflows need total mesh extents by axis.
+        Usage: downstream workflows need total mesh extents by axis.
         Returns:
             dict: Span dictionary with ``x``, ``y``, and ``z`` entries.
         """

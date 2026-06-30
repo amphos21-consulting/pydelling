@@ -18,7 +18,7 @@ class VtkReader(BaseReader):
 
     Category: reader
     Tags: vtk, paraview, point-data, calculator, postprocessing
-    Use when: scripts need ParaView-backed access to VTK point arrays or calculator filters.
+    Usage: scripts need ParaView-backed access to VTK point arrays or calculator filters.
     """
     current_array: None
     calculator: None
@@ -28,7 +28,7 @@ class VtkReader(BaseReader):
 
         Category: reader
         Tags: vtk, paraview, reader, legacy
-        Use when: scripts need a VTK file registered as the current ParaView pipeline source.
+        Usage: scripts need a VTK file registered as the current ParaView pipeline source.
 
         Returns:
             None: stores vtk_file and current_array.
@@ -42,7 +42,7 @@ class VtkReader(BaseReader):
 
         Category: reader
         Tags: vtk, paraview, point-data, values
-        Use when: scripts need point-data arrays after optional filter processing.
+        Usage: scripts need point-data arrays after optional filter processing.
 
         Returns:
             Any: wrapped VTK PointData object.
@@ -57,7 +57,7 @@ class VtkReader(BaseReader):
 
         Category: reader
         Tags: vtk, paraview, current-array, metadata
-        Use when: scripts need access to the active pipeline object.
+        Usage: scripts need access to the active pipeline object.
 
         Returns:
             object: current ParaView array or filter proxy.
@@ -70,7 +70,7 @@ class VtkReader(BaseReader):
 
         Category: reader
         Tags: vtk, paraview, point-data, keys
-        Use when: scripts need to inspect available arrays in the loaded VTK file.
+        Usage: scripts need to inspect available arrays in the loaded VTK file.
 
         Returns:
             list: point-data keys from the VTK source.
@@ -84,7 +84,7 @@ class VtkReader(BaseReader):
 
         Category: reader
         Tags: vtk, paraview, point-data, values
-        Use when: scripts need raw VTK point data before calculator filters.
+        Usage: scripts need raw VTK point data before calculator filters.
 
         Returns:
             Any: wrapped VTK PointData object.
@@ -98,7 +98,7 @@ class VtkReader(BaseReader):
 
         Category: postprocessing
         Tags: vtk, paraview, calculator, filter
-        Use when: scripts need a derived array expression evaluated on a VTK dataset.
+        Usage: scripts need a derived array expression evaluated on a VTK dataset.
 
         Returns:
             object: calculator filter proxy now set as current_array.

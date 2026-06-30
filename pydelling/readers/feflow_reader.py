@@ -23,7 +23,7 @@ class FeflowBaseRader:
 
     Category: FEFLOW reader.
     Tags: feflow, reader, base-class.
-    Use when: to understand the common parent type used by FEFLOW reader
+    Usage: to understand the common parent type used by FEFLOW reader
         implementations before selecting concrete parsing helpers.
     """
 
@@ -36,7 +36,7 @@ class FeflowBaseRader:
 
         Category: FEFLOW reader.
         Tags: feflow, reader, abstract-method.
-        Use when: checking the base API contract before calling subclass
+        Usage: checking the base API contract before calling subclass
             parsing methods such as ``read_field_dat``.
         Returns:
             None: Base implementation does not read a file.
@@ -49,7 +49,7 @@ class FeflowReader(FeflowBaseRader):
 
     Category: FEFLOW reader.
     Tags: feflow, dat, point-data, concentration, plotting.
-    Use when: to parse FEFLOW ``.dat`` exports, compare two
+    Usage: to parse FEFLOW ``.dat`` exports, compare two
         fields, or plot node values.
 
     Examples:
@@ -68,7 +68,7 @@ class FeflowReader(FeflowBaseRader):
 
         Category: FEFLOW reader.
         Tags: feflow, dat, pandas, point-data.
-        Use when: converting a FEFLOW text export into a dictionary of NumPy
+        Usage: converting a FEFLOW text export into a dictionary of NumPy
             arrays keyed by pydelling-friendly labels.
         Args:
             path_dat: Path to the whitespace-delimited FEFLOW ``.dat`` file.
@@ -89,7 +89,7 @@ class FeflowReader(FeflowBaseRader):
 
         Category: FEFLOW reader.
         Tags: feflow, difference, concentration, point-data.
-        Use when: comparing baseline and scenario FEFLOW outputs.
+        Usage: comparing baseline and scenario FEFLOW outputs.
         Args:
             field1: First field dictionary, usually from ``read_field_dat``.
             field2: Second field dictionary with the same ``key`` array.
@@ -108,7 +108,7 @@ class FeflowReader(FeflowBaseRader):
 
         Category: FEFLOW reader.
         Tags: feflow, plot, scatter, concentration, matplotlib.
-        Use when: an MCP workflow needs a quick visual diagnostic of field
+        Usage: an MCP workflow needs a quick visual diagnostic of field
             values in x/y space.
         Args:
             field: Field dictionary containing ``"x"``, ``"y"``, and ``key``.
@@ -126,7 +126,7 @@ class FeflowReader(FeflowBaseRader):
 
         Category: FEFLOW reader.
         Tags: feflow, boundary-condition, head, density, seawater.
-        Use when: setting sea-level head values for density-driven FEFLOW
+        Usage: setting sea-level head values for density-driven FEFLOW
             simulations.
         Args:
             sea_rise: Sea-level rise or imposed sea head value.

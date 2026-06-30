@@ -16,7 +16,7 @@ class TableToPointsFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, table-to-points, coordinates, csv.
-    Use when: to configure a ParaView table source as point
+    Usage: to configure a ParaView table source as point
         geometry.
     """
 
@@ -28,7 +28,7 @@ class TableToPointsFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, table-to-points, initialization.
-        Use when: converting a table-like source into a point source.
+        Usage: converting a table-like source into a point source.
         Args:
             filename: Input table source or filename passed to ParaView.
             name: Logical filter name passed to the base filter wrapper.
@@ -48,7 +48,7 @@ class TableToPointsFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, table-to-points, coordinates.
-        Use when: selecting coordinate columns for point conversion.
+        Usage: selecting coordinate columns for point conversion.
         Args:
             x_column: Column name for x coordinates.
             y_column: Column name for y coordinates.

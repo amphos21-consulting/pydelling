@@ -14,7 +14,7 @@ class JurecaSsh(BaseSsh):
 
     Category: Remote execution.
     Tags: ssh, sftp, jureca, slurm, hpc.
-    Use when: to understand the JURECA-specific remote paths,
+    Usage: to understand the JURECA-specific remote paths,
         queue commands, and job submission helpers used by pydelling managers.
     """
 
@@ -29,7 +29,7 @@ class JurecaSsh(BaseSsh):
 
         Category: Remote execution.
         Tags: ssh, jureca, hpc, initialization.
-        Use when: creating a JURECA connector for remote PFLOTRAN study
+        Usage: creating a JURECA connector for remote PFLOTRAN study
             execution.
         Args:
             user: JURECA username.
@@ -49,7 +49,7 @@ class JurecaSsh(BaseSsh):
 
         Category: Remote execution.
         Tags: ssh, sftp, jureca, paramiko.
-        Use when: establishing or refreshing the JURECA connection.
+        Usage: establishing or refreshing the JURECA connection.
         Side effects:
             Prompts for a password when missing, loads the Ed25519 private key,
             creates ``self.client``, and opens ``self.sftp``.

@@ -12,7 +12,7 @@ class BaseElement:
 
     Category: iGP geometry.
     Tags: element, mesh, nodes, faces, centroid.
-    Use when: to understand the common attributes shared by iGP element
+    Usage: to understand the common attributes shared by iGP element
         types before export or region operations.
     """
 
@@ -21,7 +21,7 @@ class BaseElement:
 
         Category: iGP geometry.
         Tags: element, nodes, coordinates, centroid, faces.
-        Use when: constructing element subclasses that share connectivity and
+        Usage: constructing element subclasses that share connectivity and
             face-storage behavior.
         Args:
             node_ids: Node ids defining the element connectivity.
@@ -61,7 +61,7 @@ class BaseElement:
 
         Category: iGP geometry.
         Tags: element, debug, connectivity.
-        Use when: interactively inspecting an iGP element during debugging.
+        Usage: interactively inspecting an iGP element during debugging.
         Side effects:
             Writes element information to stdout.
         """
@@ -77,7 +77,7 @@ class BaseElement:
 
         Category: iGP geometry.
         Tags: element, faces, debug.
-        Use when: interactively inspecting face geometry attached to an iGP
+        Usage: interactively inspecting face geometry attached to an iGP
             element.
         Side effects:
             Writes face information to stdout.

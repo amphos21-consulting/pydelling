@@ -19,7 +19,7 @@ class OpenFoamVariableWriter(BaseWriter):
 
     Category: OpenFOAM writer.
     Tags: openfoam, variable, field-file, boundary-field, export.
-    Use when: to create an OpenFOAM scalar field file from
+    Usage: to create an OpenFOAM scalar field file from
         computed pydelling values.
     """
 
@@ -28,7 +28,7 @@ class OpenFoamVariableWriter(BaseWriter):
 
         Category: OpenFOAM writer.
         Tags: openfoam, initialization, header, boundary-field, data.
-        Use when: preparing a writer from explicit arguments or from the
+        Usage: preparing a writer from explicit arguments or from the
             ``open_foam_variable_writer`` configuration block.
 
         A correct set of header/outer needs to be provided to the class.
@@ -61,7 +61,7 @@ class OpenFoamVariableWriter(BaseWriter):
 
         Category: OpenFOAM writer.
         Tags: openfoam, field-file, export, run.
-        Use when: exporting computed scalar values to a complete OpenFOAM field
+        Usage: exporting computed scalar values to a complete OpenFOAM field
             file.
         Args:
             *args: Accepted for writer API compatibility.
@@ -81,7 +81,7 @@ class OpenFoamVariableWriter(BaseWriter):
 
         Category: OpenFOAM writer.
         Tags: openfoam, header, FoamFile, internalField.
-        Use when: composing the leading metadata section of an OpenFOAM field
+        Usage: composing the leading metadata section of an OpenFOAM field
             file.
         Side effects:
             Writes to ``self.output_file``.
@@ -111,7 +111,7 @@ internalField   {self.header.data_type} {self.header.data_structure}\n""")
 
         Category: OpenFOAM writer.
         Tags: openfoam, data, scalar-field, internalField.
-        Use when: appending the data block for an OpenFOAM scalar variable file.
+        Usage: appending the data block for an OpenFOAM scalar variable file.
         Raises:
             ValueError: If a data element is neither a scalar float nor a vector
                 with a fourth scalar value.
@@ -137,7 +137,7 @@ internalField   {self.header.data_type} {self.header.data_structure}\n""")
 
         Category: OpenFOAM writer.
         Tags: openfoam, boundary-field, footer.
-        Use when: completing an OpenFOAM field file with configured boundary
+        Usage: completing an OpenFOAM field file with configured boundary
             condition types.
         Side effects:
             Writes boundary-field entries and the OpenFOAM footer marker.

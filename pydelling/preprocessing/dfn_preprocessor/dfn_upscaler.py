@@ -35,7 +35,7 @@ class DfnUpscaler:
 
     Category: preprocessing
     Tags: dfn, upscaling, mesh, porosity, permeability, storativity
-    Use when: scripts need mesh cell properties derived from fracture and fault intersections.
+    Usage: scripts need mesh cell properties derived from fracture and fault intersections.
     """
     def __init__(self, dfn,
                  mesh: MeshPreprocessor,
@@ -156,7 +156,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, fracture, mesh, intersection, area
-        Use when: scripts need per-cell fracture intersection areas and associated mesh elements.
+        Usage: scripts need per-cell fracture intersection areas and associated mesh elements.
 
         Returns:
             dict: fracture id, intersection points, areas, and associated element metadata.
@@ -203,7 +203,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, faults, mesh, cells, distance
-        Use when: scripts need fault-affected cells before upscaling porosity, storativity, or permeability.
+        Usage: scripts need fault-affected cells before upscaling porosity, storativity, or permeability.
 
         Returns:
             None: updates element associated_faults and optionally writes fault_cells.pkl.
@@ -316,7 +316,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, upscaling, porosity, mesh, fractures, faults
-        Use when: scripts need per-cell porosity values derived from DFN intersections.
+        Usage: scripts need per-cell porosity values derived from DFN intersections.
 
         Returns:
             dict: element ids mapped to upscaled porosity values.
@@ -382,7 +382,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, upscaling, storativity, mesh, fractures, faults
-        Use when: scripts need per-cell storativity values derived from DFN intersections.
+        Usage: scripts need per-cell storativity values derived from DFN intersections.
 
         Returns:
             dict: element ids mapped to upscaled storativity values.
@@ -446,7 +446,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, faults, distance, mesh, cell-data
-        Use when: scripts need fault distance fields available in VTK or meshio output.
+        Usage: scripts need fault distance fields available in VTK or meshio output.
 
         Returns:
             None: stores distance values in mesh.cell_data and distance.
@@ -471,7 +471,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, fractures, property, mesh, cell-data
-        Use when: scripts need per-cell totals such as fracture area or volume exported as cell data.
+        Usage: scripts need per-cell totals such as fracture area or volume exported as cell data.
 
         Returns:
             None: stores the aggregated property in mesh.cell_data.
@@ -506,7 +506,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, upscaling, permeability, tensor, mesh, vtk
-        Use when: scripts need Kxx, Kyy, Kzz, Kxy, Kxz, and Kyz cell data for a fractured mesh.
+        Usage: scripts need Kxx, Kyy, Kzz, Kxy, Kxz, and Kyz cell data for a fractured mesh.
 
         Returns:
             dict: element ids mapped to 3x3 upscaled permeability tensors.
@@ -710,7 +710,7 @@ class DfnUpscaler:
 
         Category: writer
         Tags: dfn, upscaling, vtk, mesh, export
-        Use when: scripts need a VTK visualization file containing upscaled DFN properties.
+        Usage: scripts need a VTK visualization file containing upscaled DFN properties.
 
         Returns:
             None: writes the VTK file.
@@ -722,7 +722,7 @@ class DfnUpscaler:
 
         Category: writer
         Tags: dfn, porosity, csv, centroids, export
-        Use when: scripts need tabular x,y,z,porosity values for analysis or reporting.
+        Usage: scripts need tabular x,y,z,porosity values for analysis or reporting.
 
         Returns:
             None: writes the CSV file.
@@ -741,7 +741,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, porosity, histogram, plot, statistics
-        Use when: scripts need to inspect the distribution of upscaled porosity.
+        Usage: scripts need to inspect the distribution of upscaled porosity.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -757,7 +757,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, permeability, histogram, Kxx, plot
-        Use when: scripts need to inspect the distribution of upscaled x-direction permeability.
+        Usage: scripts need to inspect the distribution of upscaled x-direction permeability.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -773,7 +773,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, storativity, histogram, plot, statistics
-        Use when: scripts need to inspect the distribution of upscaled storativity.
+        Usage: scripts need to inspect the distribution of upscaled storativity.
 
         Returns:
             tuple: matplotlib figure and axes.
@@ -790,7 +790,7 @@ class DfnUpscaler:
 
         Category: writer
         Tags: dfn, intersection, stats, json, diagnostics
-        Use when: scripts need diagnostics after DFN-mesh intersection.
+        Usage: scripts need diagnostics after DFN-mesh intersection.
 
         Returns:
             None: writes run_stats.json.
@@ -805,7 +805,7 @@ class DfnUpscaler:
 
         Category: writer
         Tags: dfn, upscaler, save, serialize, jsonpickle
-        Use when: scripts need to persist the full upscaling object state.
+        Usage: scripts need to persist the full upscaling object state.
 
         Returns:
             None: writes the serialized file.
@@ -824,7 +824,7 @@ class DfnUpscaler:
 
         Category: writer
         Tags: dfn, upscaler, json, serialize, mesh
-        Use when: scripts need a portable JSON snapshot of the upscaling inputs.
+        Usage: scripts need a portable JSON snapshot of the upscaling inputs.
 
         Returns:
             None: writes the JSON file.
@@ -850,7 +850,7 @@ class DfnUpscaler:
 
         Category: preprocessing
         Tags: dfn, upscaler, json, load, serialize
-        Use when: scripts need to restore mesh and DFN state for continued upscaling work.
+        Usage: scripts need to restore mesh and DFN state for continued upscaling work.
 
         Returns:
             DfnUpscaler: restored upscaler instance.
@@ -870,7 +870,7 @@ class DfnUpscaler:
 
         Category: util
         Tags: dfn, upscaler, configuration, attribute
-        Use when: scripts or initialization need to attach optional runtime settings.
+        Usage: scripts or initialization need to attach optional runtime settings.
 
         Returns:
             None: sets the attribute on this object.

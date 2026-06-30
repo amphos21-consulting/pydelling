@@ -23,7 +23,7 @@ class PlotOverLineFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, plot-over-line, sampling, point-data.
-    Use when: to configure line sampling in a ParaView
+    Usage: to configure line sampling in a ParaView
         processing pipeline and retrieve sampled point data.
     """
 
@@ -35,7 +35,7 @@ class PlotOverLineFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, plot-over-line, initialization, sampling.
-        Use when: adding a line-sampling filter to an existing ParaView source.
+        Usage: adding a line-sampling filter to an existing ParaView source.
         Args:
             input_filter: Upstream ParaView proxy to sample.
             name: Logical filter name passed to the base filter wrapper.
@@ -66,7 +66,7 @@ class PlotOverLineFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, plot-over-line, endpoints.
-        Use when: changing the line segment sampled by the filter.
+        Usage: changing the line segment sampled by the filter.
         Args:
             point_1: First point of the line
             point_2: Second point of the line
@@ -81,7 +81,7 @@ class PlotOverLineFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, plot-over-line, resolution.
-        Use when: changing how many divisions are sampled along the line.
+        Usage: changing how many divisions are sampled along the line.
         Args:
             n: Number specifying the number of divisions of the line used to interpolate the data on.
         Side effects:
@@ -95,7 +95,7 @@ class PlotOverLineFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, plot-over-line, point-data, dataframe.
-        Use when: extracting line-sampled scalar or vector arrays for analysis.
+        Usage: extracting line-sampled scalar or vector arrays for analysis.
         Returns:
             pd.DataFrame: Sampled point arrays, with vector components expanded
             using ``vector_keys``.

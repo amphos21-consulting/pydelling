@@ -14,7 +14,7 @@ class Point(np.ndarray):
 
     Category: util
     Tags: geometry, point, numpy, distance, serialization
-    Use when: scripts need a lightweight point object compatible with numpy operations.
+    Usage: scripts need a lightweight point object compatible with numpy operations.
     """
     def __new__(cls, input_array):
         # Input array is an already formed ndarray instance
@@ -23,7 +23,7 @@ class Point(np.ndarray):
 
         Category: util
         Tags: geometry, point, numpy, coordinates
-        Use when: converting coordinate arrays into Point instances for geometry routines.
+        Usage: converting coordinate arrays into Point instances for geometry routines.
 
         Returns:
             Point: numpy ndarray view with point helpers.
@@ -43,7 +43,7 @@ class Point(np.ndarray):
 
         Category: util
         Tags: geometry, point, distance
-        Use when: geometry routines need scalar distance between two points.
+        Usage: geometry routines need scalar distance between two points.
 
         Returns:
             float: Euclidean distance.
@@ -61,7 +61,7 @@ class Point(np.ndarray):
 
         Category: util
         Tags: geometry, point, coordinate, x
-        Use when: callers need named access to coordinate 0.
+        Usage: callers need named access to coordinate 0.
 
         Returns:
             float: x coordinate value.
@@ -74,7 +74,7 @@ class Point(np.ndarray):
 
         Category: util
         Tags: geometry, point, coordinate, y
-        Use when: callers need named access to coordinate 1.
+        Usage: callers need named access to coordinate 1.
 
         Returns:
             float: y coordinate value.
@@ -87,7 +87,7 @@ class Point(np.ndarray):
 
         Category: util
         Tags: geometry, point, coordinate, z
-        Use when: callers need named access to coordinate 2.
+        Usage: callers need named access to coordinate 2.
 
         Returns:
             float: z coordinate value.
@@ -99,7 +99,7 @@ class Point(np.ndarray):
 
         Category: writer
         Tags: geometry, point, json, serialize
-        Use when: scripts need to persist point coordinates.
+        Usage: scripts need to persist point coordinates.
 
         Returns:
             list: x, y, z coordinate values.

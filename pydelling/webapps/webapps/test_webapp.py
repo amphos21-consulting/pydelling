@@ -8,7 +8,7 @@ class TestWebApp(WebAppRunner):
 
     Category: Web application.
     Tags: streamlit, test-webapp, runner, smoke-test.
-    Use when: to identify the simplest pydelling webapp
+    Usage: to identify the simplest pydelling webapp
         implementation and its render hook.
     """
 
@@ -17,7 +17,7 @@ class TestWebApp(WebAppRunner):
 
         Category: Web application.
         Tags: streamlit, test-webapp, construct.
-        Use when: smoke-testing that ``WebAppRunner`` can render a concrete
+        Usage: smoke-testing that ``WebAppRunner`` can render a concrete
             subclass.
         Side effects:
             Writes a header to the Streamlit page.

@@ -38,7 +38,7 @@ class BaseStudy(UnitConverter):
 
     Category: manager
     Tags: study, simulation, jinja, input-files, callbacks
-    Use when: implementing software-specific study managers that render templates, copy inputs, and run hooks.
+    Usage: implementing software-specific study managers that render templates, copy inputs, and run hooks.
     """
     count = 0
     shared_folder_default_name = 'shared_folder'
@@ -54,7 +54,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, template, input-file, initialization
-        Use when: subclasses need common state for rendering input files and managing auxiliary files.
+        Usage: subclasses need common state for rendering input files and managing auxiliary files.
 
         Returns:
             None: stores template text, settings, callbacks, and file registries.
@@ -87,7 +87,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, hook, pre-run, lifecycle
-        Use when: subclasses need to prepare files or state before execution.
+        Usage: subclasses need to prepare files or state before execution.
 
         Returns:
             None: base implementation does nothing.
@@ -99,7 +99,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, hook, post-run, lifecycle
-        Use when: subclasses need to collect outputs or cleanup after execution.
+        Usage: subclasses need to collect outputs or cleanup after execution.
 
         Returns:
             None: base implementation does nothing.
@@ -111,7 +111,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, jinja, template, replace
-        Use when: scripts need a raw input token converted into a render-time variable.
+        Usage: scripts need a raw input token converted into a render-time variable.
 
         Returns:
             None: updates raw_text and jinja_settings.
@@ -128,7 +128,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, jinja, variable, replace
-        Use when: scripts need to set a value that will be injected during render.
+        Usage: scripts need to set a value that will be injected during render.
 
         Returns:
             None: updates the Jinja settings for the variable.
@@ -142,7 +142,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, tags, line-index
-        Use when: subclass managers need to locate editable sections in an input template.
+        Usage: subclass managers need to locate editable sections in an input template.
 
         Returns:
             list: line indexes containing the tag.
@@ -169,7 +169,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, tags, subset
-        Use when: parsers need tag matching inside a previously extracted block.
+        Usage: parsers need tag matching inside a previously extracted block.
 
         Returns:
             list: subset-relative line indexes containing any tag.
@@ -185,7 +185,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, line, lookup
-        Use when: subclass managers need direct access to a template line by index.
+        Usage: subclass managers need direct access to a template line by index.
 
         Returns:
             str: requested raw text line.
@@ -197,7 +197,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, insert, line-edit
-        Use when: subclass managers need to add a generated input-deck line.
+        Usage: subclass managers need to add a generated input-deck line.
 
         Returns:
             None: mutates raw_text.
@@ -214,7 +214,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, delete, line-edit
-        Use when: subclass managers need to remove an input-deck line.
+        Usage: subclass managers need to remove an input-deck line.
 
         Returns:
             None: mutates raw_text.
@@ -229,7 +229,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, delete, line-edit
-        Use when: subclass managers need to remove several input-deck lines safely.
+        Usage: subclass managers need to remove several input-deck lines safely.
 
         Returns:
             None: mutates raw_text.
@@ -245,7 +245,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, insert, line-edit
-        Use when: subclass managers need to add a generated input-deck block.
+        Usage: subclass managers need to add a generated input-deck block.
 
         Returns:
             None: mutates raw_text.
@@ -263,7 +263,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, previous-line, lookup
-        Use when: parsers need context before a matched line.
+        Usage: parsers need context before a matched line.
 
         Returns:
             str: line at line_index - n.
@@ -275,7 +275,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, next-line, lookup
-        Use when: parsers need context after a matched line.
+        Usage: parsers need context after a matched line.
 
         Returns:
             str: line at line_index + n.
@@ -287,7 +287,7 @@ class BaseStudy(UnitConverter):
 
         Category: util
         Tags: study, text, replace, line-edit
-        Use when: subclass managers need to update an input-deck line by index.
+        Usage: subclass managers need to update an input-deck line by index.
 
         Returns:
             None: mutates raw_text.
@@ -302,7 +302,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, jinja, render, input-file
-        Use when: scripts need the final input text for a study case.
+        Usage: scripts need the final input text for a study case.
 
         Returns:
             str: rendered input text.
@@ -317,7 +317,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, auxiliary-file, input-file, copy
-        Use when: generated case folders need extra files copied alongside the rendered input.
+        Usage: generated case folders need extra files copied alongside the rendered input.
 
         Returns:
             None: stores the file path by basename.
@@ -331,7 +331,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, input-file, shared-file, copy
-        Use when: a rendered case needs supporting files copied into its input folder.
+        Usage: a rendered case needs supporting files copied into its input folder.
 
         Returns:
             None: stores the file and optionally marks it as shared.
@@ -350,7 +350,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, input-folder, shared-file, copy
-        Use when: a case needs a group of support files copied into generated folders.
+        Usage: a case needs a group of support files copied into generated folders.
 
         Returns:
             None: registers each direct child file.
@@ -365,7 +365,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, callback, lifecycle, manager
-        Use when: scripts need custom pre-run or post-run behavior attached to a study.
+        Usage: scripts need custom pre-run or post-run behavior attached to a study.
 
         Returns:
             None: stores a callback factory for later initialization.
@@ -378,7 +378,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, ssh, step, execution
-        Use when: remote execution workflows need ordered setup or run steps.
+        Usage: remote execution workflows need ordered setup or run steps.
 
         Returns:
             None: appends the validated step to steps.
@@ -393,7 +393,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, ssh, steps, reset
-        Use when: scripts need to clear remote execution steps before rebuilding them.
+        Usage: scripts need to clear remote execution steps before rebuilding them.
 
         Returns:
             None: clears the steps list.
@@ -405,7 +405,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, callbacks, manager, lifecycle
-        Use when: a manager is preparing runnable callback instances for a study.
+        Usage: a manager is preparing runnable callback instances for a study.
 
         Returns:
             None: populates callbacks from registered callback factories.
@@ -423,7 +423,7 @@ class BaseStudy(UnitConverter):
 
         Category: writer
         Tags: study, shared-files, copy, input-files
-        Use when: multiple generated studies should reference common auxiliary files.
+        Usage: multiple generated studies should reference common auxiliary files.
 
         Returns:
             None: creates the shared folder and copies missing shared files.
@@ -448,7 +448,7 @@ class BaseStudy(UnitConverter):
 
         Category: writer
         Tags: study, render, input-file, auxiliary-files
-        Use when: scripts need a complete runnable study folder from a template.
+        Usage: scripts need a complete runnable study folder from a template.
 
         Returns:
             None: writes the rendered input file and copies auxiliary files.
@@ -486,7 +486,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, shared-files, path
-        Use when: case generation needs to locate previously copied shared inputs.
+        Usage: case generation needs to locate previously copied shared inputs.
 
         Returns:
             pathlib.Path: path to the shared folder.
@@ -504,7 +504,7 @@ class BaseStudy(UnitConverter):
 
         Category: writer
         Tags: study, tar, archive, input-files
-        Use when: scripts need a portable archive of a rendered study case.
+        Usage: scripts need a portable archive of a rendered study case.
 
         Returns:
             None: writes a .tar file for the study output folder.
@@ -527,7 +527,7 @@ class BaseStudy(UnitConverter):
 
         Category: manager
         Tags: study, copy, clone
-        Use when: scripts need a duplicate study object before changing parameters.
+        Usage: scripts need a duplicate study object before changing parameters.
 
         Returns:
             BaseStudy: copied study instance.

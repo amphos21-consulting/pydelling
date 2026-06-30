@@ -25,7 +25,7 @@ class RegionOperations:
 
     Category: iGP region operations.
     Tags: igp, regions, boundaries, kd-tree, clustering, nodes.
-    Use when: to understand how iGP regions can be split,
+    Usage: to understand how iGP regions can be split,
         queried by x/y location, or linked to element centroids.
     """
 
@@ -44,7 +44,7 @@ class RegionOperations:
 
         Category: iGP region operations.
         Tags: igp, regions, topography, z-split, boundaries.
-        Use when: separating a topographic boundary into two named regions for
+        Usage: separating a topographic boundary into two named regions for
             material assignment, export, or boundary-condition workflows.
         Args:
             z: The z coordinate to divide the topography by.
@@ -111,7 +111,7 @@ class RegionOperations:
 
         Category: iGP region operations.
         Tags: igp, nodes, clustering, nearest, xy.
-        Use when: locating mesh nodes by surface x/y coordinates, optionally
+        Usage: locating mesh nodes by surface x/y coordinates, optionally
             constrained by material or top-region context.
         Args:
             self: The iGPReader object that calls this method.
@@ -198,7 +198,7 @@ class RegionOperations:
 
         Category: iGP region operations.
         Tags: igp, regions, nearest, kd-tree, xy.
-        Use when: projecting an x/y location onto the nearest node of a named
+        Usage: projecting an x/y location onto the nearest node of a named
             region.
         Args:
             region_name: Region whose nodes should be searched.
@@ -226,7 +226,7 @@ class RegionOperations:
 
         Category: iGP region operations.
         Tags: igp, regions, elements, nearest, kd-tree.
-        Use when: mapping element centroids onto their nearest node in a named
+        Usage: mapping element centroids onto their nearest node in a named
             region.
         Args:
             region_name: Region whose nodes should be searched.
@@ -262,7 +262,7 @@ class RegionOperations:
 
         Category: iGP region operations.
         Tags: igp, regions, kd-tree, xy.
-        Use when: nearest-node region queries need a spatial index.
+        Usage: nearest-node region queries need a spatial index.
         Args:
             region_name: Region whose nodes should be indexed.
         Returns:

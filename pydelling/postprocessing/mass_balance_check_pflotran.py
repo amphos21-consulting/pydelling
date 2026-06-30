@@ -31,7 +31,7 @@ class MassBalanceCheckPflotran:
 
     Category: postprocessing
     Tags: pflotran, mass-balance, residuals, species, heatmap
-    Use when: scripts need to QA PFLOTRAN mass-balance files across one or more simulations.
+    Usage: scripts need to QA PFLOTRAN mass-balance files across one or more simulations.
     """
 
     def __init__(
@@ -44,7 +44,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: pflotran, mass-balance, files, setup
-        Use when: scripts need to configure file patterns and output folders for balance summaries.
+        Usage: scripts need to configure file patterns and output folders for balance summaries.
 
         Returns:
             None: stores input patterns, output directory, and base-folder label root.
@@ -83,7 +83,7 @@ class MassBalanceCheckPflotran:
 
         Category: reader
         Tags: pflotran, mass-balance, dataframe, parser
-        Use when: scripts need quoted CSV headers with whitespace-delimited numeric rows parsed.
+        Usage: scripts need quoted CSV headers with whitespace-delimited numeric rows parsed.
 
         Returns:
             pandas.DataFrame: parsed mass-balance table with normalized column spacing.
@@ -102,7 +102,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: pflotran, mass-balance, time, dataframe
-        Use when: balance calculations need the timestep column regardless of unit.
+        Usage: balance calculations need the timestep column regardless of unit.
 
         Returns:
             str: column name beginning with Time.
@@ -118,7 +118,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: pflotran, mass-balance, species, columns
-        Use when: residual calculations need to pair Global species amounts with flux columns.
+        Usage: residual calculations need to pair Global species amounts with flux columns.
 
         Returns:
             dict: species mapped to global column and flux column list.
@@ -143,7 +143,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: pflotran, mass-balance, residuals, species
-        Use when: scripts need ΔGlobal, ΔFlux, absolute residual, and relative residual by timestep.
+        Usage: scripts need ΔGlobal, ΔFlux, absolute residual, and relative residual by timestep.
 
         Returns:
             dict: species mapped to residual DataFrames.
@@ -206,7 +206,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: files, glob, pflotran, mass-balance
-        Use when: batch processing needs the concrete mass-balance files to read.
+        Usage: batch processing needs the concrete mass-balance files to read.
 
         Returns:
             list: matched file paths.
@@ -225,7 +225,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: pflotran, mass-balance, summary, residuals
-        Use when: scripts need both detailed per-species residuals and a summary table for one file.
+        Usage: scripts need both detailed per-species residuals and a summary table for one file.
 
         Returns:
             tuple: per-species residual DataFrames and summary DataFrame.
@@ -248,7 +248,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: pflotran, mass-balance, summary, percent-error
-        Use when: scripts need final residual and percent error per species.
+        Usage: scripts need final residual and percent error per species.
 
         Returns:
             pandas.DataFrame: summary rows sorted by species.
@@ -277,7 +277,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: pflotran, mass-balance, batch, heatmap, csv
-        Use when: scripts need a cross-file mass-balance summary and percent-error heatmap.
+        Usage: scripts need a cross-file mass-balance summary and percent-error heatmap.
 
         Returns:
             pandas.DataFrame: combined summary across all processed files.
@@ -321,7 +321,7 @@ class MassBalanceCheckPflotran:
 
         Category: postprocessing
         Tags: pflotran, mass-balance, matrix, percent-error
-        Use when: heatmap plotting needs a pivoted percent-error table.
+        Usage: heatmap plotting needs a pivoted percent-error table.
 
         Returns:
             None: builds the matrix and delegates plotting.
@@ -389,7 +389,7 @@ class MassBalanceCheckPflotran:
 
         Category: writer
         Tags: pflotran, mass-balance, heatmap, percent-error, plot
-        Use when: scripts need a visual QA artifact for mass-balance errors by file and species.
+        Usage: scripts need a visual QA artifact for mass-balance errors by file and species.
 
         Returns:
             None: writes the heatmap PNG.

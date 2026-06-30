@@ -24,7 +24,7 @@ class ParaviewProcessor:
 
     Category: postprocessing
     Tags: paraview, pipeline, vtk, xdmf, filters
-    Use when: scripts need to load simulation outputs and compose ParaView filters programmatically.
+    Usage: scripts need to load simulation outputs and compose ParaView filters programmatically.
     """
     current_array: None
    # calculator: Calculator
@@ -38,7 +38,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, vtk, reader, pipeline
-        Use when: scripts need a LegacyVTKReader-backed data source in the processor pipeline.
+        Usage: scripts need a LegacyVTKReader-backed data source in the processor pipeline.
 
         Returns:
             vtk_filter: pipeline wrapper for the VTK reader.
@@ -55,7 +55,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, csv, points, reader, pipeline
-        Use when: scripts need tabular x/y/z point data available as a ParaView source.
+        Usage: scripts need tabular x/y/z point data available as a ParaView source.
 
         Returns:
             csv_reader_filter: pipeline wrapper for the CSV point source.
@@ -72,7 +72,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, xdmf, reader, pipeline
-        Use when: scripts need an XDMF simulation output source in ParaView.
+        Usage: scripts need an XDMF simulation output source in ParaView.
 
         Returns:
             xdmf_filter: pipeline wrapper for the XDMF reader.
@@ -89,7 +89,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, calculator, filter, derived-array
-        Use when: scripts need to compute a derived ParaView array from an expression.
+        Usage: scripts need to compute a derived ParaView array from an expression.
 
         Returns:
             calculator_filter: pipeline wrapper for the Calculator filter.
@@ -108,7 +108,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, cell-data, point-data, filter
-        Use when: scripts need cell-centered arrays interpolated to mesh points.
+        Usage: scripts need cell-centered arrays interpolated to mesh points.
 
         Returns:
             cell_data_to_point_data_filter: pipeline wrapper for the conversion filter.
@@ -126,7 +126,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, clip, filter, geometry
-        Use when: scripts need to spatially clip simulation output before analysis or export.
+        Usage: scripts need to spatially clip simulation output before analysis or export.
 
         Returns:
             clip_filter: pipeline wrapper for the Clip filter.
@@ -144,7 +144,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, table-to-points, csv, points
-        Use when: scripts need coordinates from a table converted into a ParaView point set.
+        Usage: scripts need coordinates from a table converted into a ParaView point set.
 
         Returns:
             table_to_points_filter: pipeline wrapper for the TableToPoints output.
@@ -161,7 +161,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, streamlines, tracer, seed-source
-        Use when: scripts need streamlines from a velocity field using custom seed points.
+        Usage: scripts need streamlines from a velocity field using custom seed points.
 
         Returns:
             stream_tracer_with_custom_source_filter: pipeline wrapper for the stream tracer.
@@ -180,7 +180,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, streamlines, arc-length, filter
-        Use when: scripts need cumulative distance along streamline polylines.
+        Usage: scripts need cumulative distance along streamline polylines.
 
         Returns:
             append_arc_length_filter: pipeline wrapper for the arc-length filter.
@@ -198,7 +198,7 @@ class ParaviewProcessor:
 
         Category: writer
         Tags: paraview, save-data, csv, export
-        Use when: scripts need to export selected point and cell arrays from a ParaView proxy.
+        Usage: scripts need to export selected point and cell arrays from a ParaView proxy.
 
         Returns:
             save_data_filter: pipeline wrapper for the save operation.
@@ -217,7 +217,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, integrate, variables, filter
-        Use when: scripts need integrated scalar or vector values over a dataset.
+        Usage: scripts need integrated scalar or vector values over a dataset.
 
         Returns:
             integrate_variable_filter: pipeline wrapper for the integration filter.
@@ -237,7 +237,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, plot-over-line, sampling, filter
-        Use when: scripts need values interpolated along a user-defined line.
+        Usage: scripts need values interpolated along a user-defined line.
 
         Returns:
             plot_over_line_filter: pipeline wrapper for the line sampler.
@@ -280,7 +280,7 @@ class ParaviewProcessor:
 
         Category: postprocessing
         Tags: paraview, aperture, vertical-profile, sampling
-        Use when: scripts need fracture opening thickness inferred from vertical sampled points.
+        Usage: scripts need fracture opening thickness inferred from vertical sampled points.
 
         Returns:
             float: estimated aperture thickness at the coordinate.
@@ -319,7 +319,7 @@ class ParaviewProcessor:
 
         Category: util
         Tags: paraview, pipeline, debug, summary
-        Use when: scripts or users need to inspect registered pipeline elements.
+        Usage: scripts or users need to inspect registered pipeline elements.
 
         Returns:
             str: formatted pipeline summary.
@@ -344,7 +344,7 @@ class ParaviewProcessor:
 
         Category: util
         Tags: paraview, pipeline, debug, recursion
-        Use when: pipeline summaries need to include nested dictionary blocks.
+        Usage: pipeline summaries need to include nested dictionary blocks.
 
         Returns:
             str: output string with nested pipeline entries appended.

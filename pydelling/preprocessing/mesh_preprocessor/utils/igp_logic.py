@@ -24,7 +24,7 @@ class iGPLogic:
 
     Category: preprocessing
     Tags: mesh, iGP, explicit, hdf5, export
-    Use when: mesh preprocessors need iGP-compatible mesh, region, material, and post-processing files.
+    Usage: mesh preprocessors need iGP-compatible mesh, region, material, and post-processing files.
     """
     elements: List[BaseElement]
     boundaries: Dict[str, List[BaseFace]]
@@ -44,7 +44,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, iGP, explicit, cells, regions
-        Use when: scripts need .mesh, .ex, .mat, and domain HDF5 files for iGP-style workflows.
+        Usage: scripts need .mesh, .ex, .mat, and domain HDF5 files for iGP-style workflows.
 
         Returns:
             None: writes mesh and optional region/material artifacts.
@@ -81,7 +81,7 @@ class iGPLogic:
 
         Category: preprocessing
         Tags: mesh, connectivity, faces, adjacency, iGP
-        Use when: explicit mesh export needs cell-to-cell connection records.
+        Usage: explicit mesh export needs cell-to-cell connection records.
 
         Returns:
             None: stores ordered connectivity data in connections.
@@ -125,7 +125,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, hdf5, domain, postprocessing, iGP
-        Use when: explicit mesh export should include an HDF5 domain artifact.
+        Usage: explicit mesh export should include an HDF5 domain artifact.
 
         Returns:
             None: writes the project domain HDF5 file.
@@ -146,7 +146,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, iGP, cells, centroids, volume
-        Use when: creating an explicit mesh file from element centroids and volumes.
+        Usage: creating an explicit mesh file from element centroids and volumes.
 
         Returns:
             None: writes cell records to export_file.
@@ -165,7 +165,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, iGP, connections, faces, area
-        Use when: explicit mesh export needs cell-to-cell connection centroids and areas.
+        Usage: explicit mesh export needs cell-to-cell connection centroids and areas.
 
         Returns:
             None: writes connection records and stores n_conn.
@@ -219,7 +219,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, iGP, boundaries, conditions, export
-        Use when: region boundary faces should become .ex files for iGP input.
+        Usage: region boundary faces should become .ex files for iGP input.
 
         Returns:
             None: writes one condition file per boundary.
@@ -258,7 +258,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, hdf5, domain, cells, vertices
-        Use when: scripts need mesh connectivity and vertices in HDF5 format.
+        Usage: scripts need mesh connectivity and vertices in HDF5 format.
 
         Returns:
             None: creates Domain/Cells and Domain/Vertices datasets.
@@ -281,7 +281,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, materials, iGP, export
-        Use when: material groups should be exported as .mat files.
+        Usage: material groups should be exported as .mat files.
 
         Returns:
             None: writes one material file per material name.
@@ -302,7 +302,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, elements, connectivity, visualization, iGP
-        Use when: the explicit mesh file should include element topology for diagnostics.
+        Usage: the explicit mesh file should include element topology for diagnostics.
 
         Returns:
             None: writes ELEMENTS records to export_file.
@@ -318,7 +318,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, nodes, vertices, coordinates, iGP
-        Use when: the explicit mesh file should include node coordinates for diagnostics.
+        Usage: the explicit mesh file should include node coordinates for diagnostics.
 
         Returns:
             None: writes VERTICES records to export_file.
@@ -333,7 +333,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, hdf5, domain, cells, vertices
-        Use when: scripts need domain grid data in HDF5 format.
+        Usage: scripts need domain grid data in HDF5 format.
 
         Returns:
             None: creates Domain datasets in export_file.
@@ -356,7 +356,7 @@ class iGPLogic:
 
         Category: writer
         Tags: mesh, hdf5, regions, materials, boundaries
-        Use when: scripts need PFLOTRAN-style region and material groups in HDF5 output.
+        Usage: scripts need PFLOTRAN-style region and material groups in HDF5 output.
 
         Returns:
             None: creates Regions datasets in export_file.

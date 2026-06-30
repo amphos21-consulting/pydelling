@@ -20,7 +20,7 @@ class StructuredListReader(BaseReader):
 
     Category: reader
     Tags: structured-list, grid, coordinates, values, csv
-    Use when: scripts need a config-defined structured grid list converted to tabular point data.
+    Usage: scripts need a config-defined structured grid list converted to tabular point data.
     """
     data: pd.DataFrame
     def __init__(self, filename=None, var_pos=3, var_name="var", var_type=np.float32, centroid_pos=(0, 3), header=False):
@@ -54,7 +54,7 @@ class StructuredListReader(BaseReader):
 
         Category: reader
         Tags: structured-list, open, grid, values
-        Use when: BaseReader calls open_file and the reader should populate data from config.
+        Usage: BaseReader calls open_file and the reader should populate data from config.
 
         Returns:
             None: delegates to read_file.
@@ -66,7 +66,7 @@ class StructuredListReader(BaseReader):
 
         Category: reader
         Tags: structured-list, grid, coordinates, values
-        Use when: scripts need x,y,z coordinates generated from configured origin, spacing, and dimensions.
+        Usage: scripts need x,y,z coordinates generated from configured origin, spacing, and dimensions.
 
         Returns:
             None: populates data with x, y, z, and v columns.
@@ -96,7 +96,7 @@ class StructuredListReader(BaseReader):
 
         Category: reader
         Tags: structured-list, header, placeholder
-        Use when: subclasses or future readers need to implement header extraction.
+        Usage: subclasses or future readers need to implement header extraction.
 
         Returns:
             None: current implementation does nothing.
@@ -109,7 +109,7 @@ class StructuredListReader(BaseReader):
 
         Category: reader
         Tags: structured-list, data, numpy, coordinates
-        Use when: scripts need x,y,z,value rows for downstream interpolation or export.
+        Usage: scripts need x,y,z,value rows for downstream interpolation or export.
 
         Returns:
             numpy.ndarray: data values as float array.
@@ -122,7 +122,7 @@ class StructuredListReader(BaseReader):
 
         Category: reader
         Tags: structured-list, coordinates, numpy
-        Use when: scripts need point coordinates from the structured list.
+        Usage: scripts need point coordinates from the structured list.
 
         Returns:
             numpy.ndarray: coordinate values.
@@ -135,7 +135,7 @@ class StructuredListReader(BaseReader):
 
         Category: reader
         Tags: structured-list, values, numpy
-        Use when: scripts need the scalar value column only.
+        Usage: scripts need the scalar value column only.
 
         Returns:
             numpy.ndarray: value column.
@@ -147,7 +147,7 @@ class StructuredListReader(BaseReader):
 
         Category: reader
         Tags: structured-list, metadata, info
-        Use when: downstream writers or tools need source filename and variable-position metadata.
+        Usage: downstream writers or tools need source filename and variable-position metadata.
 
         Returns:
             None: updates info["reader"].
@@ -162,7 +162,7 @@ class StructuredListReader(BaseReader):
 
         Category: writer
         Tags: structured-list, csv, export, coordinates
-        Use when: scripts need a plain text artifact with x,y,z,value rows.
+        Usage: scripts need a plain text artifact with x,y,z,value rows.
 
         Returns:
             None: writes the CSV file.

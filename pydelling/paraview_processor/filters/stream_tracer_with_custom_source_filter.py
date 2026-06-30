@@ -16,7 +16,7 @@ class StreamTracerWithCustomSourceFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, stream-tracer, seed-source, vectors, filter.
-    Use when: to configure streamline generation from a
+    Usage: to configure streamline generation from a
         custom source object in a ParaView processing pipeline.
     """
 
@@ -28,7 +28,7 @@ class StreamTracerWithCustomSourceFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, stream-tracer, initialization, seed-source.
-        Use when: adding a custom-seeded stream tracer to an existing ParaView
+        Usage: adding a custom-seeded stream tracer to an existing ParaView
             pipeline.
         Args:
             input_filter: Upstream ParaView proxy used as tracer input.
@@ -48,7 +48,7 @@ class StreamTracerWithCustomSourceFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, stream-tracer, seed-source.
-        Use when: changing streamline seed geometry after filter creation.
+        Usage: changing streamline seed geometry after filter creation.
         Args:
             seed_source: ParaView source proxy to assign to ``SeedSource``.
         Side effects:
@@ -61,7 +61,7 @@ class StreamTracerWithCustomSourceFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, stream-tracer, vectors, point-data.
-        Use when: configuring which vector variable drives the stream tracer.
+        Usage: configuring which vector variable drives the stream tracer.
         Args:
             vector_name: Name of the point-data vector array.
         Side effects:
@@ -74,7 +74,7 @@ class StreamTracerWithCustomSourceFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, stream-tracer, integration, step-length.
-        Use when: tuning streamline integration resolution.
+        Usage: tuning streamline integration resolution.
         Args:
             minimum_step_length: Minimum step length assigned to the ParaView
                 filter.

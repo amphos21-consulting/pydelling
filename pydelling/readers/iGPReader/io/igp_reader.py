@@ -40,7 +40,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
     Category: reader
     Tags: igp, gid, mesh, reader, vtk, regions, boundaries, materials
-    Use when: scripts need to inspect, preprocess, export, or convert an iGP/GiD mesh project.
+    Usage: scripts need to inspect, preprocess, export, or convert an iGP/GiD mesh project.
     """
     element_dict = {"4": "T", "5": "P", "6": "W", "8": "H"}
     face_dict = {'T': 3, 'Q': 4}
@@ -122,7 +122,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, mesh, nodes, elements, connectivity
-        Use when: the reader must load raw mesh topology before export or inspection.
+        Usage: the reader must load raw mesh topology before export or inspection.
 
         Returns:
             None: updates mesh_info, element_nodes, nodes, and nodes_output.
@@ -153,7 +153,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, materials, metadata, initialize
-        Use when: scripts need material metadata containers before assigning material properties.
+        Usage: scripts need material metadata containers before assigning material properties.
 
         Returns:
             None: resets material_info and material name mappings.
@@ -170,7 +170,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, centroids, mesh, cells
-        Use when: scripts need iGP element centroid coordinates for summaries, interpolation, or material assignment.
+        Usage: scripts need iGP element centroid coordinates for summaries, interpolation, or material assignment.
 
         Returns:
             None: populates centroids.
@@ -186,7 +186,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, regions, boundaries, materials, source
-        Use when: scripts need iGP region faces, boundary names, or material cell assignments.
+        Usage: scripts need iGP region faces, boundary names, or material cell assignments.
 
         Returns:
             None: populates region_dict, material_dict, and region metadata.
@@ -265,7 +265,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, pflotran, implicit, explicit, mesh, export
-        Use when: scripts need PFLOTRAN explicit mesh, connection, region, or material files from an iGP project.
+        Usage: scripts need PFLOTRAN explicit mesh, connection, region, or material files from an iGP project.
 
         Returns:
             None: writes explicit mesh artifacts to output_folder.
@@ -301,7 +301,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, mesh, csv, centroids, connections
-        Use when: scripts need tabular explicit mesh geometry for inspection or external processing.
+        Usage: scripts need tabular explicit mesh geometry for inspection or external processing.
 
         Returns:
             None: writes CSV files using the configured CsvWriter.
@@ -315,7 +315,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, mesh, hdf5, domain, postprocessing
-        Use when: scripts need a PFLOTRAN-style HDF5 domain file for postprocessing.
+        Usage: scripts need a PFLOTRAN-style HDF5 domain file for postprocessing.
 
         Returns:
             None: writes the domain HDF5 file.
@@ -334,7 +334,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, mesh, connectivity, faces, cells
-        Use when: scripts need explicit mesh connections before PFLOTRAN export.
+        Usage: scripts need explicit mesh connections before PFLOTRAN export.
 
         Returns:
             None: populates connections.
@@ -388,7 +388,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: interpolation
         Tags: igp, raster, interpolation, layers, regions
-        Use when: scripts need to move mesh nodes to raster-defined stratigraphic layers.
+        Usage: scripts need to move mesh nodes to raster-defined stratigraphic layers.
 
         Returns:
             None: mutates mesh node coordinates for selected regions.
@@ -454,7 +454,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: interpolation
         Tags: igp, raster, interpolation, semi-structured, topography
-        Use when: scripts need to move layered mesh nodes proportionally below a raster surface.
+        Usage: scripts need to move layered mesh nodes proportionally below a raster surface.
 
         Returns:
             None: mutates mesh node coordinates for selected regions.
@@ -512,7 +512,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: util
         Tags: growth, spacing, interpolation, mesh
-        Use when: scripts need nonuniform vertical interpolation weights for layered meshes.
+        Usage: scripts need nonuniform vertical interpolation weights for layered meshes.
 
         Returns:
             list: normalized spacing values.
@@ -528,7 +528,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, pflotran, ascii, mesh, export
-        Use when: scripts need an implicit PFLOTRAN mesh file from iGP mesh data.
+        Usage: scripts need an implicit PFLOTRAN mesh file from iGP mesh data.
 
         Returns:
             None: writes the ASCII mesh file.
@@ -568,7 +568,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, pflotran, hdf5, mesh, regions
-        Use when: scripts need PFLOTRAN implicit HDF5 domain and region datasets.
+        Usage: scripts need PFLOTRAN implicit HDF5 domain and region datasets.
 
         Returns:
             None: writes the HDF5 mesh file.
@@ -587,7 +587,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: preprocessing
         Tags: igp, materials, borehole, properties
-        Use when: scripts need to populate iGP material properties from borehole inputs.
+        Usage: scripts need to populate iGP material properties from borehole inputs.
 
         Returns:
             None: mutates material information from borehole reader output.
@@ -602,7 +602,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: preprocessing
         Tags: igp, materials, cells, assignment
-        Use when: scripts need to override or create iGP material assignments from selected cells.
+        Usage: scripts need to override or create iGP material assignments from selected cells.
 
         Returns:
             None: updates material_dict.
@@ -615,7 +615,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: preprocessing
         Tags: igp, materials, heterogeneous, permeability, porosity
-        Use when: scripts need configured material property distributions written into material_info.
+        Usage: scripts need configured material property distributions written into material_info.
 
         Returns:
             None: populates heterogeneous material arrays.
@@ -778,7 +778,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: util
         Tags: interpolation, linear, materials, distribution
-        Use when: scripts need depth-based material values between two endpoints.
+        Usage: scripts need depth-based material values between two endpoints.
 
         Returns:
             Any: interpolated value at x.
@@ -791,7 +791,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: util
         Tags: interpolation, logarithmic, materials, distribution
-        Use when: scripts need depth-based material values that vary logarithmically.
+        Usage: scripts need depth-based material values that vary logarithmically.
 
         Returns:
             Any: interpolated positive value at x.
@@ -805,7 +805,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, materials, hdf5, permeability, porosity
-        Use when: scripts need heterogeneous permeability or porosity files from material_info.
+        Usage: scripts need heterogeneous permeability or porosity files from material_info.
 
         Returns:
             None: writes one HDF5 file per exported material property.
@@ -853,7 +853,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, mesh, csv, nodes, coordinates
-        Use when: scripts need a simple CSV export of adjusted iGP mesh node coordinates.
+        Usage: scripts need a simple CSV export of adjusted iGP mesh node coordinates.
 
         Returns:
             None: writes the CSV file.
@@ -874,7 +874,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, gid, mesh, vtk, export, visualization
-        Use when: the user asks to convert an iGP/GiD project into a VTK mesh file.
+        Usage: the user asks to convert an iGP/GiD project into a VTK mesh file.
 
         Returns:
             None: writes the VTK file to filename.
@@ -904,7 +904,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: util
         Tags: chunks, multiprocessing, mesh, helper
-        Use when: mesh building or classification needs work split across processes.
+        Usage: mesh building or classification needs work split across processes.
 
         Returns:
             list: chunked sequence slices.
@@ -919,7 +919,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, mesh, elements, boundaries, preprocessing
-        Use when: scripts need explicit mesh objects, boundary objects, or downstream mesh preprocessing.
+        Usage: scripts need explicit mesh objects, boundary objects, or downstream mesh preprocessing.
 
         Returns:
             None: populates elements, boundaries, and mesh-built state.
@@ -1008,7 +1008,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: preprocessing
         Tags: igp, materials, z-range, centroids
-        Use when: scripts need vertical material extents for summaries or property assignment.
+        Usage: scripts need vertical material extents for summaries or property assignment.
 
         Returns:
             None: stores z ranges in material_info.
@@ -1026,7 +1026,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, raster, export, asc, csv
-        Use when: scripts need copies or downsampled versions of configured raster refinement inputs.
+        Usage: scripts need copies or downsampled versions of configured raster refinement inputs.
 
         Returns:
             None: writes raster files to the output path.
@@ -1047,7 +1047,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, recharge, raster, hdf5, csv
-        Use when: scripts need a recharge gridded dataset for PFLOTRAN input.
+        Usage: scripts need a recharge gridded dataset for PFLOTRAN input.
 
         Returns:
             None: writes recharge.h5 and optionally recharge.csv.
@@ -1070,7 +1070,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: writer
         Tags: igp, regions, nodes, csv, export
-        Use when: scripts need coordinate tables for boundary or region nodes.
+        Usage: scripts need coordinate tables for boundary or region nodes.
 
         Returns:
             None: writes one CSV file per region.
@@ -1086,7 +1086,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, mesh, centroids, cells
-        Use when: scripts need the mesh centroid array from an iGP project.
+        Usage: scripts need the mesh centroid array from an iGP project.
 
         Returns:
             Any: centroids loaded from centroid.dat.
@@ -1099,7 +1099,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, materials, cells, metadata
-        Use when: scripts need material names or cell assignments for an iGP project.
+        Usage: scripts need material names or cell assignments for an iGP project.
 
         Returns:
             dict: material assignment mapping.
@@ -1112,7 +1112,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, mesh, elements, count
-        Use when: scripts need mesh size metadata for summaries or validation.
+        Usage: scripts need mesh size metadata for summaries or validation.
 
         Returns:
             int: total number of mesh elements.
@@ -1125,7 +1125,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, mesh, nodes, count
-        Use when: scripts need mesh size metadata for summaries or validation.
+        Usage: scripts need mesh size metadata for summaries or validation.
 
         Returns:
             int: total number of mesh nodes.
@@ -1137,7 +1137,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, materials, summary, metadata
-        Use when: scripts need a human-readable material property report.
+        Usage: scripts need a human-readable material property report.
 
         Returns:
             None: prints material information.
@@ -1154,7 +1154,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, regions, centroids, cells
-        Use when: scripts need spatial samples for one iGP region or boundary.
+        Usage: scripts need spatial samples for one iGP region or boundary.
 
         Returns:
             np.ndarray: centroid coordinates for the region.
@@ -1166,7 +1166,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, regions, nodes, coordinates
-        Use when: scripts need boundary or region node coordinates for export or analysis.
+        Usage: scripts need boundary or region node coordinates for export or analysis.
 
         Returns:
             np.ndarray: node coordinates for the region.
@@ -1181,7 +1181,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, boundaries, faces, mesh, regions
-        Use when: scripts need explicit boundary face geometry after build_mesh_data.
+        Usage: scripts need explicit boundary face geometry after build_mesh_data.
 
         Returns:
             list[BaseFace]: boundary faces for the region.
@@ -1194,7 +1194,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, materials, elements, mesh
-        Use when: scripts need element objects for a named material.
+        Usage: scripts need element objects for a named material.
 
         Returns:
             list[BaseElement]: material element objects.
@@ -1206,7 +1206,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, materials, centroids, cells
-        Use when: scripts need spatial summaries or exports for one material.
+        Usage: scripts need spatial summaries or exports for one material.
 
         Returns:
             np.ndarray: material centroid coordinates.
@@ -1218,7 +1218,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: preprocessing
         Tags: igp, materials, stl, centroids, classification
-        Use when: scripts need to classify mesh cells into materials from STL geometry.
+        Usage: scripts need to classify mesh cells into materials from STL geometry.
 
         Returns:
             None: updates material assignments in material_dict.
@@ -1345,7 +1345,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, centroids, bounds, x
-        Use when: scripts need iGP cell-centroid spatial bounds.
+        Usage: scripts need iGP cell-centroid spatial bounds.
 
         Returns:
             float: minimum centroid x coordinate.
@@ -1358,7 +1358,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, centroids, bounds, x
-        Use when: scripts need iGP cell-centroid spatial bounds.
+        Usage: scripts need iGP cell-centroid spatial bounds.
 
         Returns:
             float: maximum centroid x coordinate.
@@ -1371,7 +1371,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, centroids, bounds, y
-        Use when: scripts need iGP cell-centroid spatial bounds.
+        Usage: scripts need iGP cell-centroid spatial bounds.
 
         Returns:
             float: minimum centroid y coordinate.
@@ -1384,7 +1384,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, centroids, bounds, y
-        Use when: scripts need iGP cell-centroid spatial bounds.
+        Usage: scripts need iGP cell-centroid spatial bounds.
 
         Returns:
             float: maximum centroid y coordinate.
@@ -1397,7 +1397,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, centroids, bounds, z
-        Use when: scripts need iGP cell-centroid spatial bounds.
+        Usage: scripts need iGP cell-centroid spatial bounds.
 
         Returns:
             float: minimum centroid z coordinate.
@@ -1410,7 +1410,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, centroids, bounds, z
-        Use when: scripts need iGP cell-centroid spatial bounds.
+        Usage: scripts need iGP cell-centroid spatial bounds.
 
         Returns:
             float: maximum centroid z coordinate.
@@ -1423,7 +1423,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, nodes, bounds, x
-        Use when: scripts need iGP node-coordinate spatial bounds.
+        Usage: scripts need iGP node-coordinate spatial bounds.
 
         Returns:
             float: minimum node x coordinate.
@@ -1436,7 +1436,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, nodes, bounds, x
-        Use when: scripts need iGP node-coordinate spatial bounds.
+        Usage: scripts need iGP node-coordinate spatial bounds.
 
         Returns:
             float: maximum node x coordinate.
@@ -1449,7 +1449,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, nodes, bounds, y
-        Use when: scripts need iGP node-coordinate spatial bounds.
+        Usage: scripts need iGP node-coordinate spatial bounds.
 
         Returns:
             float: minimum node y coordinate.
@@ -1462,7 +1462,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, nodes, bounds, y
-        Use when: scripts need iGP node-coordinate spatial bounds.
+        Usage: scripts need iGP node-coordinate spatial bounds.
 
         Returns:
             float: maximum node y coordinate.
@@ -1475,7 +1475,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, nodes, bounds, z
-        Use when: scripts need iGP node-coordinate spatial bounds.
+        Usage: scripts need iGP node-coordinate spatial bounds.
 
         Returns:
             float: minimum node z coordinate.
@@ -1488,7 +1488,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: mesh
         Tags: igp, nodes, bounds, z
-        Use when: scripts need iGP node-coordinate spatial bounds.
+        Usage: scripts need iGP node-coordinate spatial bounds.
 
         Returns:
             float: maximum node z coordinate.
@@ -1501,7 +1501,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, regions, names, metadata
-        Use when: scripts need to list available regions or boundaries.
+        Usage: scripts need to list available regions or boundaries.
 
         Returns:
             list: region names.
@@ -1514,7 +1514,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, boundaries, names, metadata
-        Use when: scripts need to list named boundaries from the iGP project.
+        Usage: scripts need to list named boundaries from the iGP project.
 
         Returns:
             list: boundary names.
@@ -1527,7 +1527,7 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
 
         Category: reader
         Tags: igp, materials, names, metadata
-        Use when: scripts need to list available material assignments.
+        Usage: scripts need to list available material assignments.
 
         Returns:
             list: material names.
@@ -1556,7 +1556,7 @@ def parallel_build_mesh_data(elements, nodes, shared_list, chunk_index, chunk_si
 
     Category: mesh
     Tags: igp, mesh, multiprocessing, elements, helper
-    Use when: iGPReader.build_mesh_data splits element construction across processes.
+    Usage: iGPReader.build_mesh_data splits element construction across processes.
 
     Returns:
         None: appends built elements to shared_list.

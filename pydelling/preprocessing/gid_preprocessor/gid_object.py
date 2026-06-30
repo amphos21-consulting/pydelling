@@ -23,7 +23,7 @@ class GidObject(object):
 
     Category: GID preprocessing.
     Tags: gid, geometry, pipeline, batch-commands.
-    Use when: to understand how pydelling stores points,
+    Usage: to understand how pydelling stores points,
         lines, surfaces, volumes, and generated GiD batch commands.
     """
 

@@ -15,7 +15,7 @@ class PflotranStatus(BaseStatus):
 
     Category: PFLOTRAN status.
     Tags: pflotran, status, progress, wall-clock, timestep.
-    Use when: to inspect PFLOTRAN run status files and infer
+    Usage: to inspect PFLOTRAN run status files and infer
         current simulation time, timestep history, or completion.
     """
 
@@ -26,7 +26,7 @@ class PflotranStatus(BaseStatus):
 
         Category: PFLOTRAN status.
         Tags: pflotran, status-file, initialization.
-        Use when: creating a status object for an existing PFLOTRAN run log.
+        Usage: creating a status object for an existing PFLOTRAN run log.
         Args:
             status_file: Path to the PFLOTRAN status file.
             total_time: Optional expected final simulation time used to compute
@@ -47,7 +47,7 @@ class PflotranStatus(BaseStatus):
 
         Category: PFLOTRAN status.
         Tags: pflotran, regex, timestep, wall-clock.
-        Use when: refreshing derived PFLOTRAN progress metrics after reading a
+        Usage: refreshing derived PFLOTRAN progress metrics after reading a
             status file.
         Side effects:
             Appends parsed simulation times and timesteps and sets
@@ -74,7 +74,7 @@ class PflotranStatus(BaseStatus):
 
         Category: PFLOTRAN status.
         Tags: pflotran, progress, total-time.
-        Use when: reporting status as a fraction of configured total simulation
+        Usage: reporting status as a fraction of configured total simulation
             time.
         Returns:
             float | None: Last parsed time divided by ``total_time``, or
@@ -90,7 +90,7 @@ class PflotranStatus(BaseStatus):
 
         Category: PFLOTRAN status.
         Tags: pflotran, completion, wall-clock.
-        Use when: checking whether a PFLOTRAN run has reached a completed status
+        Usage: checking whether a PFLOTRAN run has reached a completed status
             marker.
         Returns:
             bool: ``True`` when ``wall_clock_time`` has been parsed.
@@ -105,7 +105,7 @@ class PflotranStatus(BaseStatus):
 
         Category: PFLOTRAN status.
         Tags: pflotran, progress, total-time.
-        Use when: progress should be computed after construction.
+        Usage: progress should be computed after construction.
         Args:
             total_time: Final simulation time used as the denominator for
                 ``progress``.
@@ -119,7 +119,7 @@ class PflotranStatus(BaseStatus):
 
         Category: PFLOTRAN status.
         Tags: pflotran, status-file, refresh.
-        Use when: polling a running PFLOTRAN simulation for updated status.
+        Usage: polling a running PFLOTRAN simulation for updated status.
         Args:
             status_file: Optional replacement status-file path.
         Side effects:

@@ -25,7 +25,7 @@ class BaseManager(ABC):
 
     Category: Simulation management.
     Tags: studies, execution, docker, hpc, ssh, callbacks.
-    Use when: to understand how pydelling batches
+    Usage: to understand how pydelling batches
         ``BaseStudy`` instances, writes run files, and dispatches simulations to
         local, Docker, or remote HPC backends.
     """
@@ -50,7 +50,7 @@ class BaseManager(ABC):
 
         Category: Simulation management.
         Tags: studies, registry, base-study.
-        Use when: building a batch of simulations before calling ``run`` or
+        Usage: building a batch of simulations before calling ``run`` or
             ``generate_run_files``.
         Args:
             study: ``BaseStudy`` instance to add to the manager.
@@ -87,7 +87,7 @@ class BaseManager(ABC):
 
         Category: Simulation management.
         Tags: studies, execution, docker, jureca, lumi, callbacks.
-        Use when: an MCP workflow has a populated manager and needs to create
+        Usage: an MCP workflow has a populated manager and needs to create
             result folders, initialize study callbacks, run optional setup
             commands, and dispatch each study.
         Args:
@@ -190,7 +190,7 @@ class BaseManager(ABC):
 
         Category: Simulation management.
         Tags: studies, file-generation, dry-run.
-        Use when: to write reproducible solver input decks on disk but
+        Usage: to write reproducible solver input decks on disk but
             should not launch the solver.
         Args:
             studies_folder: Kept for API compatibility; run files are written
@@ -309,7 +309,7 @@ class BaseManager(ABC):
 
         Category: Simulation management.
         Tags: study, execution, callbacks, docker, hpc.
-        Use when: to understand the per-study execution path used by
+        Usage: to understand the per-study execution path used by
             ``run`` or wants to understand how manager backends are selected.
         Args:
             study: Study instance to write and execute.
@@ -390,7 +390,7 @@ class BaseManager(ABC):
 
         Category: Simulation management.
         Tags: ssh, hpc, jureca, lumi, remote-execution.
-        Use when: a manager is preparing to run studies on a configured HPC
+        Usage: a manager is preparing to run studies on a configured HPC
             backend rather than locally or in Docker.
         Args:
             platform: Remote platform key. Supported values are ``"jureca"`` and

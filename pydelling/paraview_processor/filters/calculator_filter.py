@@ -16,7 +16,7 @@ class CalculatorFilter(base_filter):
 
     Category: ParaView filter.
     Tags: paraview, calculator, expression, cell-data, point-data.
-    Use when: to add a calculated field to a ParaView
+    Usage: to add a calculated field to a ParaView
         processing pipeline.
     """
 
@@ -28,7 +28,7 @@ class CalculatorFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, calculator, initialization, expression.
-        Use when: adding a derived array calculation to an existing pipeline.
+        Usage: adding a derived array calculation to an existing pipeline.
         Args:
             input_filter: Upstream ParaView proxy used as calculator input.
             function: Calculator expression string.
@@ -53,7 +53,7 @@ class CalculatorFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, calculator, cell-data, point-data.
-        Use when: switching whether the expression acts on cell or point data.
+        Usage: switching whether the expression acts on cell or point data.
         Args:
             attribute_type: ParaView attribute type string.
         Side effects:
@@ -66,7 +66,7 @@ class CalculatorFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, calculator, expression.
-        Use when: changing the derived array formula after filter creation.
+        Usage: changing the derived array formula after filter creation.
         Args:
             function: ParaView Calculator expression string.
         Side effects:
@@ -80,7 +80,7 @@ class CalculatorFilter(base_filter):
 
         Category: ParaView filter.
         Tags: paraview, calculator, result-array.
-        Use when: retrieving the output of a Calculator expression from the
+        Usage: retrieving the output of a Calculator expression from the
             wrapper's data dictionaries.
         Returns:
             Array selected by ``self.filter.ResultArrayName`` from cell or point

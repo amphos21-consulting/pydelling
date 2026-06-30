@@ -12,7 +12,7 @@ class BaseStreamlitUtilityClass:
 
     Category: Web application utility.
     Tags: streamlit, session-state, cookie-manager, ui-state.
-    Use when: to identify the common helper API used by
+    Usage: to identify the common helper API used by
         Streamlit components to persist values across reruns.
     """
 
@@ -21,7 +21,7 @@ class BaseStreamlitUtilityClass:
 
         Category: Web application utility.
         Tags: streamlit, session-state, state-write.
-        Use when: a component needs to persist a computed object, uploaded
+        Usage: a component needs to persist a computed object, uploaded
             reader, or UI setting for later Streamlit reruns.
         Args:
             key: Session-state key to write.
@@ -36,7 +36,7 @@ class BaseStreamlitUtilityClass:
 
         Category: Web application utility.
         Tags: streamlit, session-state, default-value.
-        Use when: a component must define a stable default without overwriting
+        Usage: a component must define a stable default without overwriting
             user-provided state from a previous rerun.
         Args:
             key: Session-state key to initialize.
@@ -52,7 +52,7 @@ class BaseStreamlitUtilityClass:
 
         Category: Web application utility.
         Tags: streamlit, session-state, state-read.
-        Use when: a Streamlit component or MCP tool needs the current value
+        Usage: a Streamlit component or MCP tool needs the current value
             stored by an earlier UI action.
         Args:
             key: Session-state key to retrieve.
@@ -66,7 +66,7 @@ class BaseStreamlitUtilityClass:
 
         Category: Web application utility.
         Tags: streamlit, lifecycle, extension-point.
-        Use when: documenting or implementing a web utility subclass that needs
+        Usage: documenting or implementing a web utility subclass that needs
             to prepare state before rendering controls.
         """
         pass
@@ -76,7 +76,7 @@ class BaseStreamlitUtilityClass:
 
         Category: Web application utility.
         Tags: streamlit, session-state, state-write, compatibility.
-        Use when: legacy component code uses the older setter name but should
+        Usage: legacy component code uses the older setter name but should
             still be understood as a direct session-state write.
         Args:
             key: Session-state key to write.
@@ -93,7 +93,7 @@ class BaseStreamlitUtilityClass:
 
         Category: Web application utility.
         Tags: streamlit, cookies, cache, session.
-        Use when: a Streamlit view needs persistent browser-cookie access
+        Usage: a Streamlit view needs persistent browser-cookie access
             without recreating the manager on every rerun.
         Returns:
             ``extra_streamlit_components.CookieManager`` instance cached by

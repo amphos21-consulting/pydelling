@@ -13,7 +13,7 @@ class PflotranProcessingUtils:
 
     Category: reader
     Tags: pflotran, hdf5, coordinates, slices, centroids
-    Use when: scripts need spatial extents, spacing, centroids, or slices from PFLOTRAN grids.
+    Usage: scripts need spatial extents, spacing, centroids, or slices from PFLOTRAN grids.
     """
     variables: list
     coordinates: np.ndarray
@@ -30,7 +30,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, slice, array, x, y, z
-        Use when: scripts need a plane from a full 3D PFLOTRAN result array.
+        Usage: scripts need a plane from a full 3D PFLOTRAN result array.
         Args:
             data: Three-dimensional array ordered as ``x, y, z``.
             axis: Axis to slice, one of ``"x"``, ``"y"``, or ``"z"``.
@@ -55,7 +55,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, slice, coordinates, nearest-neighbor
-        Use when: scripts need to request a PFLOTRAN slice by physical
+        Usage: scripts need to request a PFLOTRAN slice by physical
             coordinate instead of array index.
         Args:
             data: Three-dimensional array ordered as ``x, y, z``.
@@ -98,7 +98,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, dimensions, shape, cartesian-grid
-        Use when: scripts need to infer whether an array represents a 1D, 2D, or
+        Usage: scripts need to infer whether an array represents a 1D, 2D, or
             3D PFLOTRAN result.
         Args:
             data: Array with dimensions ordered as ``x, y, z``.
@@ -121,7 +121,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, coordinates, centroids, axis
-        Use when: scripts need cell-center coordinates for plotting, sampling,
+        Usage: scripts need cell-center coordinates for plotting, sampling,
             or interpolation along a named axis.
         Args:
             axis: Axis selector, one of ``"x"``, ``"y"``, or ``"z"``.
@@ -139,7 +139,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, x, centroids, coordinates
-        Use when: scripts need cell-center x coordinates for plotting or sampling.
+        Usage: scripts need cell-center x coordinates for plotting or sampling.
 
         Returns:
             np.ndarray: x-axis centroid coordinates.
@@ -152,7 +152,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, y, centroids, coordinates
-        Use when: scripts need cell-center y coordinates for plotting or sampling.
+        Usage: scripts need cell-center y coordinates for plotting or sampling.
 
         Returns:
             np.ndarray: y-axis centroid coordinates.
@@ -165,7 +165,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, z, centroids, coordinates
-        Use when: scripts need cell-center z coordinates for plotting or sampling.
+        Usage: scripts need cell-center z coordinates for plotting or sampling.
 
         Returns:
             np.ndarray: z-axis centroid coordinates.
@@ -178,7 +178,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, x, bounds, minimum
-        Use when: scripts need the lower x bound for spatial filtering or summaries.
+        Usage: scripts need the lower x bound for spatial filtering or summaries.
 
         Returns:
             float: minimum x coordinate.
@@ -191,7 +191,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, x, bounds, maximum
-        Use when: scripts need the upper x bound for spatial filtering or summaries.
+        Usage: scripts need the upper x bound for spatial filtering or summaries.
 
         Returns:
             float: maximum x coordinate.
@@ -204,7 +204,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, y, bounds, minimum
-        Use when: scripts need the lower y bound for spatial filtering or summaries.
+        Usage: scripts need the lower y bound for spatial filtering or summaries.
 
         Returns:
             float: minimum y coordinate.
@@ -217,7 +217,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, y, bounds, maximum
-        Use when: scripts need the upper y bound for spatial filtering or summaries.
+        Usage: scripts need the upper y bound for spatial filtering or summaries.
 
         Returns:
             float: maximum y coordinate.
@@ -230,7 +230,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, z, bounds, minimum
-        Use when: scripts need the lower z bound for spatial filtering or summaries.
+        Usage: scripts need the lower z bound for spatial filtering or summaries.
 
         Returns:
             float: minimum z coordinate.
@@ -243,7 +243,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, z, bounds, maximum
-        Use when: scripts need the upper z bound for spatial filtering or summaries.
+        Usage: scripts need the upper z bound for spatial filtering or summaries.
 
         Returns:
             float: maximum z coordinate.
@@ -256,7 +256,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, x, extent, bounds
-        Use when: scripts need total grid width along x.
+        Usage: scripts need total grid width along x.
 
         Returns:
             float: x_max minus x_min.
@@ -269,7 +269,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, y, extent, bounds
-        Use when: scripts need total grid width along y.
+        Usage: scripts need total grid width along y.
 
         Returns:
             float: y_max minus y_min.
@@ -282,7 +282,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, z, extent, bounds
-        Use when: scripts need total grid width along z.
+        Usage: scripts need total grid width along z.
 
         Returns:
             float: z_max minus z_min.
@@ -295,7 +295,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, x, spacing, coordinates
-        Use when: scripts need grid spacing along x.
+        Usage: scripts need grid spacing along x.
 
         Returns:
             np.ndarray: adjacent x-coordinate differences.
@@ -308,7 +308,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, y, spacing, coordinates
-        Use when: scripts need grid spacing along y.
+        Usage: scripts need grid spacing along y.
 
         Returns:
             np.ndarray: adjacent y-coordinate differences.
@@ -321,7 +321,7 @@ class PflotranProcessingUtils:
 
         Category: reader
         Tags: pflotran, z, spacing, coordinates
-        Use when: scripts need grid spacing along z.
+        Usage: scripts need grid spacing along z.
 
         Returns:
             np.ndarray: adjacent z-coordinate differences.

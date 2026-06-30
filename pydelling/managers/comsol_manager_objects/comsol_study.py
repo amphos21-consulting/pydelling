@@ -17,7 +17,7 @@ class ComsolStudy:
 
     Category: COMSOL management.
     Tags: comsol, study, run, parametric-sweep, progress.
-    Use when: to run COMSOL studies, watch progress logs, or
+    Usage: to run COMSOL studies, watch progress logs, or
         perform parameter sweeps through pydelling.
     """
 
@@ -28,7 +28,7 @@ class ComsolStudy:
 
         Category: COMSOL management.
         Tags: comsol, study, initialization.
-        Use when: attaching pydelling helpers to an existing COMSOL study.
+        Usage: attaching pydelling helpers to an existing COMSOL study.
         Parameters:
             comsol (ComsolModel): The ComsolModel object from ComsolManager
             tag (str): The tag of the study
@@ -52,7 +52,7 @@ class ComsolStudy:
 
         Category: COMSOL management.
         Tags: comsol, study, apply, extension-point.
-        Use when: extending study wrappers with explicit apply behavior.
+        Usage: extending study wrappers with explicit apply behavior.
         """
         pass
         
@@ -61,7 +61,7 @@ class ComsolStudy:
 
         Category: COMSOL management.
         Tags: comsol, study, run, progress, convergence.
-        Use when: executing a COMSOL study from pydelling while optionally
+        Usage: executing a COMSOL study from pydelling while optionally
             saving the model and plotting convergence.
         Parameters:
             save (bool): If True, saves the COMSOL model after running the study. Default is True.
@@ -161,7 +161,7 @@ class ComsolStudy:
 
         Category: COMSOL management.
         Tags: comsol, study, parametric-sweep, parameters, variables.
-        Use when: an MCP workflow needs a separate COMSOL output file for each
+        Usage: an MCP workflow needs a separate COMSOL output file for each
             value in a sweep.
         Parameters:
             param_type (str): Valid values are "parameter" or "variable".

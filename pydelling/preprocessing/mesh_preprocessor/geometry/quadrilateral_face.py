@@ -14,7 +14,7 @@ class QuadrilateralFace(BaseFace):
 
     Category: mesh geometry.
     Tags: quadrilateral, face, edges, centroid, mesh-preprocessor.
-    Use when: to recognize four-node faces produced by the
+    Usage: to recognize four-node faces produced by the
         mesh preprocessor and inspect their edge topology.
     """
 
@@ -23,7 +23,7 @@ class QuadrilateralFace(BaseFace):
 
         Category: mesh geometry.
         Tags: quadrilateral, face, nodes, coordinates.
-        Use when: constructing a mesh-preprocessor face for quadrilateral
+        Usage: constructing a mesh-preprocessor face for quadrilateral
             boundaries or element sides.
         Args:
             node_ids: Connectivity ids for the four face nodes.
@@ -42,7 +42,7 @@ class QuadrilateralFace(BaseFace):
 
         Category: mesh geometry.
         Tags: quadrilateral, centroid, coordinates.
-        Use when: geometric processing needs a representative point for a
+        Usage: geometric processing needs a representative point for a
             quadrilateral face.
         Returns:
             np.ndarray: Mean coordinate of the quadrilateral vertices.
@@ -76,7 +76,7 @@ class QuadrilateralFace(BaseFace):
 
         Category: mesh geometry.
         Tags: quadrilateral, edges, connectivity.
-        Use when: matching, comparing, or exporting quadrilateral face edges.
+        Usage: matching, comparing, or exporting quadrilateral face edges.
         Returns:
             list: Four ``[start_node, end_node]`` edge pairs.
         """
@@ -93,7 +93,7 @@ class QuadrilateralFace(BaseFace):
 
         Category: mesh geometry.
         Tags: quadrilateral, edges, vectors, coordinates.
-        Use when: computing lengths, normals, or geometric checks for a
+        Usage: computing lengths, normals, or geometric checks for a
             quadrilateral face.
         Returns:
             list: Four vectors following the face edge order.

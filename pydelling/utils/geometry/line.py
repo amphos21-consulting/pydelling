@@ -19,7 +19,7 @@ class Line(BasePrimitive):
 
     Category: geometry primitive.
     Tags: line, point, direction-vector, intersection, angle.
-    Use when: to use geometric line operations for intersections or
+    Usage: to use geometric line operations for intersections or
         angular comparisons.
     """
 
@@ -29,7 +29,7 @@ class Line(BasePrimitive):
 
         Category: geometry primitive.
         Tags: line, point, direction-vector, initialization.
-        Use when: constructing an infinite line for geometric intersection
+        Usage: constructing an infinite line for geometric intersection
             routines.
         Args:
             p1: First point, or the anchor point when ``direction_vector`` is
@@ -69,7 +69,7 @@ class Line(BasePrimitive):
 
         Category: geometry primitive.
         Tags: line, parallel, direction-vector.
-        Use when: checking geometric relationships before attempting line-line
+        Usage: checking geometric relationships before attempting line-line
             intersections.
         Args:
             line: Other ``Line`` instance to compare against.
@@ -87,7 +87,7 @@ class Line(BasePrimitive):
 
         Category: geometry primitive.
         Tags: line, angle, direction-vector.
-        Use when: measuring angular relationships between two geometric lines.
+        Usage: measuring angular relationships between two geometric lines.
         Args:
             line: Other ``Line`` instance.
         Returns:
@@ -101,7 +101,7 @@ class Line(BasePrimitive):
 
         Category: geometry primitive.
         Tags: line, intersection, plane.
-        Use when: an MCP workflow needs the library's built-in line-line or
+        Usage: an MCP workflow needs the library's built-in line-line or
             line-plane intersection routines.
         Args:
             primitive: ``Line`` or ``Plane`` instance.

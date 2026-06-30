@@ -15,7 +15,7 @@ class PyramidElement(BaseElement):
 
     Category: mesh geometry.
     Tags: pyramid, element, meshio, faces, centroid.
-    Use when: to understand the mesh-preprocessor representation of pyramid
+    Usage: to understand the mesh-preprocessor representation of pyramid
         cells.
     """
 
@@ -24,7 +24,7 @@ class PyramidElement(BaseElement):
 
         Category: mesh geometry.
         Tags: pyramid, element, nodes, centroid.
-        Use when: storing pyramid topology in the mesh preprocessor.
+        Usage: storing pyramid topology in the mesh preprocessor.
         Args:
             node_ids: Five node ids defining the pyramid.
             node_coords: Coordinates for each node.
@@ -50,7 +50,7 @@ class PyramidElement(BaseElement):
 
         Category: mesh geometry.
         Tags: pyramid, faces, quadrilateral, triangle.
-        Use when: face topology is needed for connection or boundary
+        Usage: face topology is needed for connection or boundary
             operations.
         Side effects:
             Adds one quadrilateral and three triangular faces to ``self.faces``.
@@ -102,7 +102,7 @@ class PyramidElement(BaseElement):
 
         Category: mesh geometry.
         Tags: pyramid, faces, local-nodes.
-        Use when: exporting or comparing pyramid face topology.
+        Usage: exporting or comparing pyramid face topology.
         Returns:
             dict: Face id to local node index list.
         """

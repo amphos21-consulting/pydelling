@@ -15,7 +15,7 @@ class WedgeElement(BaseElement):
 
     Category: mesh geometry.
     Tags: wedge, element, meshio, faces, centroid.
-    Use when: to understand the mesh-preprocessor representation of wedge
+    Usage: to understand the mesh-preprocessor representation of wedge
         cells imported from meshio or generated internally.
     """
 
@@ -24,7 +24,7 @@ class WedgeElement(BaseElement):
 
         Category: mesh geometry.
         Tags: wedge, element, nodes, centroid.
-        Use when: storing wedge topology in the mesh preprocessor.
+        Usage: storing wedge topology in the mesh preprocessor.
         Args:
             node_ids: Six node ids defining the wedge.
             node_coords: Coordinates for each node.
@@ -50,7 +50,7 @@ class WedgeElement(BaseElement):
 
         Category: mesh geometry.
         Tags: wedge, faces, quadrilateral, triangle.
-        Use when: face topology is needed for connection or boundary
+        Usage: face topology is needed for connection or boundary
             operations.
         Side effects:
             Adds three quadrilateral and two triangular faces to ``self.faces``.
@@ -114,7 +114,7 @@ class WedgeElement(BaseElement):
 
         Category: mesh geometry.
         Tags: wedge, faces, local-nodes.
-        Use when: exporting or comparing wedge face topology.
+        Usage: exporting or comparing wedge face topology.
         Returns:
             dict: Face id to local node index list.
         """

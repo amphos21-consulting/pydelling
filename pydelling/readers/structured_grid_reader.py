@@ -17,7 +17,7 @@ class StructuredGridReader(BaseReader):
 
     Category: structured-grid reader.
     Tags: structured-grid, centroids, variable, csv.
-    Use when: to load structured-grid coordinate rows and
+    Usage: to load structured-grid coordinate rows and
         combine them with a scalar variable column.
     """
 
@@ -26,7 +26,7 @@ class StructuredGridReader(BaseReader):
 
         Category: structured-grid reader.
         Tags: structured-grid, initialization, centroids, variable.
-        Use when: constructing a reader for text rows containing centroid
+        Usage: constructing a reader for text rows containing centroid
             coordinates and a variable value.
         Args:
             filename: Source text file.
@@ -53,7 +53,7 @@ class StructuredGridReader(BaseReader):
 
         Category: structured-grid reader.
         Tags: structured-grid, parse, centroids, variable.
-        Use when: reading structured-grid text rows into NumPy arrays.
+        Usage: reading structured-grid text rows into NumPy arrays.
         Args:
             opened_file: Open file handle positioned at data rows.
         Side effects:
@@ -74,7 +74,7 @@ class StructuredGridReader(BaseReader):
 
         Category: structured-grid reader.
         Tags: structured-grid, header, extension-point.
-        Use when: implementing support for structured-grid formats with
+        Usage: implementing support for structured-grid formats with
             explicit headers.
         Notes:
             The current implementation does not parse header content.
@@ -86,7 +86,7 @@ class StructuredGridReader(BaseReader):
 
         Category: structured-grid reader.
         Tags: structured-grid, data, numpy, variable.
-        Use when: downstream workflows need one array containing coordinates and
+        Usage: downstream workflows need one array containing coordinates and
             the parsed variable.
         Returns:
             np.ndarray: ``self.data`` horizontally stacked with ``self.var``.
@@ -98,7 +98,7 @@ class StructuredGridReader(BaseReader):
 
         Category: structured-grid reader.
         Tags: structured-grid, metadata, info.
-        Use when: MCP tools need cell count, source filename, and variable
+        Usage: MCP tools need cell count, source filename, and variable
             metadata after parsing.
         Side effects:
             Updates ``self.info["reader"]``.
@@ -113,7 +113,7 @@ class StructuredGridReader(BaseReader):
 
         Category: structured-grid reader.
         Tags: structured-grid, csv, export.
-        Use when: exporting loaded structured-grid coordinates and values.
+        Usage: exporting loaded structured-grid coordinates and values.
         Args:
             output_file: Destination file path.
             delimiter: Output delimiter.

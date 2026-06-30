@@ -24,7 +24,7 @@ class SmeshReader(MeshPreprocessor):
 
     Category: mesh reader.
     Tags: smesh, mesh, tetgen, kd-tree, streamlit.
-    Use when: to load SMesh nodes/elements and create
+    Usage: to load SMesh nodes/elements and create
         pydelling mesh-preprocessor elements.
     """
 
@@ -35,7 +35,7 @@ class SmeshReader(MeshPreprocessor):
 
         Category: mesh reader.
         Tags: smesh, mesh, kd-tree, initialization.
-        Use when: constructing a mesh reader from an SMesh file for
+        Usage: constructing a mesh reader from an SMesh file for
             interpolation or preprocessing.
         Args:
             filename: Path to ``.smesh`` file or cached mesh object.
@@ -60,7 +60,7 @@ class SmeshReader(MeshPreprocessor):
 
         Category: mesh reader.
         Tags: smesh, nodes, elements, tetrahedra, pyramid, wedge, hexahedra.
-        Use when: reading SMesh text data into mesh-preprocessor elements.
+        Usage: reading SMesh text data into mesh-preprocessor elements.
         Args:
             filename: SMesh file path.
         Side effects:
