@@ -869,12 +869,12 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
         file.close()
         logger.info(f"Mesh data has been properly exported to csv format into the '{filename}' file")
 
-    def to_vtk(self, filename='mesh.vtk'):
-        """Export the iGP/GiD mesh to a VTK file using meshio.
+    def to_vtk(self, filename='mesh.vtk', cell_data=None):
+        """Export the iGP/GiD mesh to a VTK file using meshio, optionally attaching per-cell data arrays.
 
         Category: reader
-        Tags: igp, gid, mesh, vtk, export, visualization
-        Usage: the user asks to convert an iGP/GiD project into a VTK mesh file.
+        Tags: igp, gid, mesh, vtk, export, visualization, cell data, interpolation
+        Usage: the user asks to convert an iGP/GiD project into a VTK mesh file, optionally colored by per-element values (e.g. interpolated fields). cell_data maps array names to per-element values in original element order (same order as centroids), e.g. cell_data={'value': values}.
 
         Returns:
             None: writes the VTK file to filename.
@@ -888,13 +888,31 @@ class iGPReader(BaseReader, RegionOperations, CsvWriter, PflotranExplicitWriter,
             8: "hexahedron",
         }
         cells = {}
-        for element in self.element_nodes:
+        # (cell_type, original element index) for every non-skipped element,
+        # in the same order the cells are appended to each block
+        kept = []
+        for index, element in enumerate(self.element_nodes):
             cell_type = cell_type_by_node_count.get(len(element))
             if cell_type is None:
                 logger.warning(f"Skipping unsupported VTK cell with {len(element)} nodes")
                 continue
             cells.setdefault(cell_type, []).append(element)
-        mesh = msh.Mesh(points=self.nodes, cells=cells)
+            kept.append((cell_type, index))
+        meshio_cell_data = None
+        if cell_data:
+            meshio_cell_data = {}
+            for name, values in cell_data.items():
+                values = np.asarray(values)
+                if len(values) != len(self.element_nodes):
+                    raise ValueError(
+                        f"cell_data array '{name}' has {len(values)} values but the mesh has "
+                        f"{len(self.element_nodes)} elements; provide one value per element in original element order"
+                    )
+                per_block = {cell_type: [] for cell_type in cells}
+                for cell_type, original_index in kept:
+                    per_block[cell_type].append(values[original_index])
+                meshio_cell_data[name] = [np.asarray(per_block[cell_type]) for cell_type in cells]
+        mesh = msh.Mesh(points=self.nodes, cells=cells, cell_data=meshio_cell_data)
         mesh.write(filename)
         logger.info(f"Mesh data has been properly exported to VTK into the '{filename}' file")
 

@@ -19,6 +19,25 @@ class iGPReaderCase(unittest.TestCase):
     def test_implicit_to_explicit(self):
         self.igp_reader.implicit_to_explicit()
 
+    def test_to_vtk_cell_data(self):
+        import tempfile
+        from pathlib import Path
+
+        import meshio
+
+        n_elements = len(self.igp_reader.element_nodes)
+        values = np.arange(n_elements, dtype=float)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vtk_path = Path(tmpdir) / "mesh_with_data.vtk"
+            self.igp_reader.to_vtk(str(vtk_path), cell_data={"value": values})
+            mesh = meshio.read(vtk_path)
+            round_trip = np.concatenate([np.asarray(block) for block in mesh.cell_data["value"]])
+            np.testing.assert_allclose(np.sort(round_trip), np.sort(values))
+
+    def test_to_vtk_cell_data_length_mismatch(self):
+        with self.assertRaises(ValueError):
+            self.igp_reader.to_vtk("unused.vtk", cell_data={"value": np.zeros(3)})
+
     def test_limits(self):
         min_x = self.igp_reader.min_x
         min_nodes_x = self.igp_reader.coords_min_x

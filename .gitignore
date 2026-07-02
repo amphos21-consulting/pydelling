@@ -1,6 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
 release_project.sh
 .idea
+.DS_Store
+results/
 *.csv*
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -6,11 +6,13 @@ explicit reader modules. Keep package import side effects minimal so
 legacy configuration stack.
 """
 
+from pydelling.readers.centroid_reader import CentroidReader
 from pydelling.readers.iGPReader import iGPReader
 
 __all__ = [
     "base_reader",
     "centroid_reader",
+    "CentroidReader",
     "connect_flow_mesh_reader",
     "connect_flow_reader",
     "fem_reader",

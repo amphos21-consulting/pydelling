@@ -23,7 +23,7 @@ PREVIEW_ROW_LIMIT = 10
 PREVIEW_LINE_LIMIT = 10
 TABULAR_EAGER_BYTES = 8_388_608
 HDF5_MAGIC = b"\x89HDF\r\n\x1a\n"
-PREVIEW_CONTRACT_VERSION = 1
+PREVIEW_CONTRACT_VERSION = 2
 MESH_PREVIEW_CELL_LIMIT = 5_000
 MESH_PREVIEW_FACE_LIMIT = 30_000
 
@@ -384,6 +384,18 @@ class BaseAssetHandle:
             "rows": _stringify_mapping(self.schema()),
         }]
 
+    def preview_metadata(self) -> dict[str, Any]:
+        """Return metadata to include in the versioned preview document.
+
+        Category: asset-handle
+        Tags: preview, metadata
+        Usage: specialized handles can expose UI-facing metadata alongside preview sections.
+
+        Returns:
+            dict[str, Any]: preview metadata.
+        """
+        return {}
+
     def to_dataframe(self) -> pd.DataFrame:
         """Load this asset as a pandas DataFrame when the format supports rows and columns.
 
@@ -507,7 +519,7 @@ class BaseAssetHandle:
         """
         warnings: list[str] = []
         sections = self.preview_sections(max_rows=max_rows, max_bytes=max_bytes)
-        return {
+        document = {
             "version": PREVIEW_CONTRACT_VERSION,
             "asset_kind": self.kind,
             "format": self.source.normalized_extension or "bin",
@@ -517,6 +529,10 @@ class BaseAssetHandle:
             "limits": {"max_rows": max_rows, "max_bytes": max_bytes},
             "computed_at": _utc_now_iso(),
         }
+        metadata = self.preview_metadata()
+        if metadata:
+            document["metadata"] = metadata
+        return document
 
     def to_runtime_dict(self) -> dict[str, Any]:
         """Serialize this handle into the runtime asset metadata contract.
@@ -643,6 +659,12 @@ class TabularAssetHandle(BaseAssetHandle):
             return self.dataframe
         return self.sample_dataframe
 
+    @cached_property
+    def spatial_csv_metadata(self) -> dict[str, Any] | None:
+        metadata = self.source.metadata or {}
+        spatial = metadata.get("spatial_csv")
+        return spatial if isinstance(spatial, dict) else None
+
     def to_dataframe(self) -> pd.DataFrame:
         """Load this tabular asset as a pandas DataFrame.
 
@@ -711,6 +733,105 @@ class TabularAssetHandle(BaseAssetHandle):
             "rows": preview.fillna("").astype(str).values.tolist(),
         }
 
+    def preview_metadata(self) -> dict[str, Any]:
+        if self.spatial_csv_metadata is None:
+            return {}
+        return {"spatial_csv": self.spatial_csv_metadata}
+
+    def _numeric_values(self, frame: pd.DataFrame, column: str) -> pd.Series | None:
+        if column not in frame.columns:
+            return None
+        values = pd.to_numeric(frame[column], errors="coerce")
+        return values if values.notna().any() else None
+
+    @staticmethod
+    def _float_list(values: pd.Series) -> list[float | None]:
+        return [float(value) if pd.notna(value) else None for value in values.tolist()]
+
+    def _scatter_section(self, frame: pd.DataFrame, *, total_rows: int) -> dict[str, Any] | None:
+        spatial = self.spatial_csv_metadata
+        if not spatial or spatial.get("status") != "completed" or not spatial.get("is_spatial"):
+            return None
+
+        x_column = spatial.get("x_column")
+        y_column = spatial.get("y_column")
+        z_column = spatial.get("z_column")
+        if not isinstance(x_column, str):
+            return None
+
+        x_values = self._numeric_values(frame, x_column)
+        if x_values is None:
+            return None
+
+        y_values = self._numeric_values(frame, y_column) if isinstance(y_column, str) else None
+        z_values = self._numeric_values(frame, z_column) if isinstance(z_column, str) else None
+        dimensions = 3 if y_values is not None and z_values is not None else 2 if y_values is not None else 1
+
+        valid_mask = x_values.notna()
+        if dimensions >= 2:
+            valid_mask &= y_values.notna()
+        if dimensions == 3:
+            valid_mask &= z_values.notna()
+        if not valid_mask.any():
+            return None
+
+        coordinate_columns = {
+            column
+            for column in (x_column, y_column if dimensions >= 2 else None, z_column if dimensions == 3 else None)
+            if isinstance(column, str)
+        }
+        coordinates: dict[str, dict[str, Any]] = {
+            "x": {"column": x_column, "values": self._float_list(x_values[valid_mask])},
+        }
+        if dimensions >= 2 and isinstance(y_column, str) and y_values is not None:
+            coordinates["y"] = {"column": y_column, "values": self._float_list(y_values[valid_mask])}
+        if dimensions == 3 and isinstance(z_column, str) and z_values is not None:
+            coordinates["z"] = {"column": z_column, "values": self._float_list(z_values[valid_mask])}
+
+        numeric_value_columns: list[str] = []
+        numeric_value_map: dict[str, pd.Series] = {}
+        for column in frame.columns.tolist():
+            column_name = str(column)
+            if column_name in coordinate_columns:
+                continue
+            values = self._numeric_values(frame, column_name)
+            if values is not None:
+                numeric_value_columns.append(column_name)
+                numeric_value_map[column_name] = values
+
+        ai_order = [
+            column
+            for column in spatial.get("value_columns", [])
+            if isinstance(column, str) and column in numeric_value_map
+        ]
+        ordered_value_columns = [
+            *dict.fromkeys([*ai_order, *numeric_value_columns]).keys()
+        ]
+        value_columns = [
+            {
+                "name": column,
+                "values": self._float_list(numeric_value_map[column][valid_mask]),
+            }
+            for column in ordered_value_columns
+        ]
+
+        default_value_column = spatial.get("default_value_column")
+        if default_value_column not in ordered_value_columns:
+            default_value_column = ordered_value_columns[0] if ordered_value_columns else None
+
+        return {
+            "kind": "scatter",
+            "title": f"{dimensions}D scatter preview",
+            "dimensions": dimensions,
+            "coordinates": coordinates,
+            "value_columns": value_columns,
+            "default_value_column": default_value_column,
+            "confidence": spatial.get("confidence"),
+            "total_rows": total_rows,
+            "shown_rows": len(coordinates["x"]["values"]),
+            "truncated": total_rows > int(frame.shape[0]),
+        }
+
     def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
         """Return a table preview section for this tabular asset.
 
@@ -727,7 +848,11 @@ class TabularAssetHandle(BaseAssetHandle):
             else self._read_sample_frame(max_rows)
         )
         total_rows = self.row_count
-        return [{
+        sections: list[dict[str, Any]] = []
+        scatter = self._scatter_section(preview, total_rows=total_rows)
+        if scatter is not None:
+            sections.append(scatter)
+        sections.append({
             "kind": "table",
             "title": "Preview",
             "columns": preview.columns.tolist(),
@@ -735,7 +860,8 @@ class TabularAssetHandle(BaseAssetHandle):
             "total_rows": total_rows,
             "shown_rows": int(preview.shape[0]),
             "truncated": total_rows > int(preview.shape[0]),
-        }]
+        })
+        return sections
 
     def summary_text(self) -> str:
         """Return row-by-column dimensions for this table.
@@ -1224,18 +1350,18 @@ class IgpAssetHandle(BaseAssetHandle):
             output_folder=output_folder,
         )
 
-    def to_vtk(self, filename: str | Path):
-        """Export this iGP/GiD asset to a VTK mesh file.
+    def to_vtk(self, filename: str | Path, cell_data=None):
+        """Export this iGP/GiD asset to a VTK mesh file, optionally with per-cell data arrays.
 
         Category: asset-handle
-        Tags: igp, gid, vtk, mesh, export, visualization
-        Usage: the user asks to convert an iGP/GiD project into VTK for visualization or download.
+        Tags: igp, gid, vtk, mesh, export, visualization, cell data
+        Usage: the user asks to convert an iGP/GiD project into VTK for visualization or download. cell_data maps array names to per-element values in original element order.
 
         Returns:
             Any: value returned by iGPReader.to_vtk.
         """
         reader = self.to_igp_reader(build_mesh=False, output_folder=None)
-        return reader.to_vtk(filename)
+        return reader.to_vtk(filename, cell_data=cell_data)
 
     def _node_bounds(self) -> list[list[float]]:
         nodes = self.reader.nodes
@@ -2061,6 +2187,7 @@ def build_asset_preview(
     max_tabular_eager_bytes: int = TABULAR_EAGER_BYTES,
     mime_type: str | None = None,
     size_bytes: int | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the standard preview document for an asset path.
 
@@ -2072,6 +2199,8 @@ def build_asset_preview(
         dict[str, Any]: preview document with sections, limits, and warnings.
     """
     asset_path = Path(path)
+    source_metadata = dict(metadata or {})
+    source_metadata["max_tabular_eager_bytes"] = max_tabular_eager_bytes
     source = AssetSource(
         reference_name=reference_name,
         file_name=file_name or asset_path.name,
@@ -2079,7 +2208,7 @@ def build_asset_preview(
         path=asset_path,
         size_bytes=size_bytes if size_bytes is not None else _path_size(asset_path),
         mime_type=mime_type,
-        metadata={"max_tabular_eager_bytes": max_tabular_eager_bytes},
+        metadata=source_metadata,
     )
     try:
         handle = load_asset_handle(source)
