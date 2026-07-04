@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import mimetypes
+import re
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -175,6 +176,83 @@ def _looks_like_tabular(header: bytes) -> bool:
         if min(counts) > 0:
             return True
     return False
+
+
+def _first_non_empty_line(header: bytes) -> str:
+    for line in _decode_text(header[:4096]).splitlines():
+        if line.strip():
+            return line.strip()
+    return ""
+
+
+def _parse_quoted_header_line(line: str) -> list[str]:
+    if not line:
+        return []
+    try:
+        return next(csv.reader([line], skipinitialspace=True))
+    except csv.Error:
+        return []
+
+
+def _extract_unit(column: str) -> str | None:
+    match = re.search(r"\[([^\]]+)\]\s*$", column)
+    return match.group(1).strip() if match else None
+
+
+def _looks_like_pflotran_mass_balance(header: bytes) -> bool:
+    if not is_probably_text(header):
+        return False
+    columns = _parse_quoted_header_line(_first_non_empty_line(header))
+    if len(columns) < 4:
+        return False
+    first = columns[0].strip().strip('"')
+    second = columns[1].strip().strip('"')
+    if not first.startswith("Time [") or not second.startswith("dt_tran ["):
+        return False
+    mass_columns = columns[2:]
+    unit_count = sum(1 for column in mass_columns if _extract_unit(str(column)) is not None)
+    return unit_count >= 2
+
+
+RASTER_HEADER_KEYS = {
+    "ncols",
+    "nrows",
+    "xllcorner",
+    "yllcorner",
+    "xllcenter",
+    "yllcenter",
+    "cellsize",
+    "dx",
+    "dy",
+    "nodata_value",
+}
+RASTER_EAGER_BYTES = 4 * TABULAR_EAGER_BYTES
+
+
+def _parse_esri_raster_header(header: bytes) -> tuple[dict[str, float], int]:
+    entries: dict[str, float] = {}
+    consumed = 0
+    for line in _decode_text(header[:4096]).splitlines():
+        parts = line.split()
+        if len(parts) == 2 and parts[0].lower() in RASTER_HEADER_KEYS:
+            try:
+                entries[parts[0].lower()] = float(parts[1])
+            except ValueError:
+                break
+            consumed += 1
+            continue
+        if not line.strip() and not entries:
+            consumed += 1
+            continue
+        break
+    return entries, consumed
+
+
+def _looks_like_esri_ascii_raster(header: bytes) -> bool:
+    if not is_probably_text(header):
+        return False
+    entries, _ = _parse_esri_raster_header(header)
+    return "ncols" in entries and "nrows" in entries and len(entries) >= 4
 
 
 def _image_dimensions(path: Path, extension: str) -> dict[str, int] | None:
@@ -885,6 +963,585 @@ class TabularAssetHandle(BaseAssetHandle):
             "column_names": preview["columns"],
             "preview_rows": preview["rows"],
             "shape": [schema["rows"], schema["columns"]],
+        }
+
+
+class PflotranMassBalanceAssetHandle(BaseAssetHandle):
+    """Handle PFLOTRAN mass-balance files with quoted headers and numeric rows.
+
+    Category: asset-handle
+    Tags: pflotran, mass-balance, dataframe, plotly, preview
+    Usage: the asset is a PFLOTRAN ``*-mas.dat`` style table and needs time-series mass or rate plots.
+    """
+    kind = "pflotran_mass_balance"
+    strategy_name = "pflotran_mass_balance"
+    DEFAULT_VISIBLE_TRACE_COUNT = 12
+
+    @cached_property
+    def columns(self) -> list[str]:
+        """Return PFLOTRAN mass-balance columns parsed from the first line.
+
+        Category: asset-handle
+        Tags: pflotran, mass-balance, columns, header
+        Usage: the file body is whitespace-delimited but column names are comma-separated and quoted.
+
+        Returns:
+            list[str]: column names exactly as written by PFLOTRAN.
+        """
+        columns = _parse_quoted_header_line(_first_non_empty_line(self.header))
+        return [str(column).strip() for column in columns]
+
+    @property
+    def time_column(self) -> str:
+        return self.columns[0]
+
+    @property
+    def timestep_column(self) -> str:
+        return self.columns[1]
+
+    @cached_property
+    def max_eager_bytes(self) -> int:
+        metadata = self.source.metadata or {}
+        configured = metadata.get("max_tabular_eager_bytes")
+        if isinstance(configured, int) and configured > 0:
+            return configured
+        return TABULAR_EAGER_BYTES
+
+    @cached_property
+    def eager_metadata_enabled(self) -> bool:
+        return self.source.size_bytes is None or self.source.size_bytes <= self.max_eager_bytes
+
+    def _read_sample_frame(self, nrows: int = PREVIEW_ROW_LIMIT) -> pd.DataFrame:
+        return pd.read_csv(
+            self.source.path,
+            skiprows=1,
+            header=None,
+            names=self.columns,
+            sep=r"\s+",
+            engine="python",
+            nrows=nrows,
+        )
+
+    @cached_property
+    def dataframe(self) -> pd.DataFrame:
+        return pd.read_csv(
+            self.source.path,
+            skiprows=1,
+            header=None,
+            names=self.columns,
+            sep=r"\s+",
+            engine="python",
+        )
+
+    @cached_property
+    def sample_dataframe(self) -> pd.DataFrame:
+        return self._read_sample_frame(PREVIEW_ROW_LIMIT)
+
+    @cached_property
+    def row_count(self) -> int:
+        if self.eager_metadata_enabled:
+            return int(self.dataframe.shape[0])
+        with self.source.path.open("r", encoding="utf-8", errors="replace", newline="") as handle:
+            return max(sum(1 for _ in handle) - 1, 0)
+
+    def _metadata_frame(self) -> pd.DataFrame:
+        return self.dataframe if self.eager_metadata_enabled else self.sample_dataframe
+
+    def _mass_columns(self) -> list[str]:
+        return self.columns[2:]
+
+    def _column_group(self, column: str) -> str:
+        stem = re.sub(r"\s*\[[^\]]+\]\s*$", "", column).strip()
+        return stem.split(maxsplit=1)[0] if stem else column
+
+    def _column_label(self, column: str) -> str:
+        stem = re.sub(r"\s*\[[^\]]+\]\s*$", "", column).strip()
+        parts = stem.split(maxsplit=1)
+        return parts[1] if len(parts) > 1 else stem
+
+    @cached_property
+    def column_metadata(self) -> list[dict[str, str | None]]:
+        return [
+            {
+                "name": column,
+                "group": self._column_group(column),
+                "label": self._column_label(column),
+                "unit": _extract_unit(column),
+            }
+            for column in self._mass_columns()
+        ]
+
+    @cached_property
+    def grouped_columns(self) -> dict[str, list[str]]:
+        groups: dict[str, list[str]] = {}
+        for item in self.column_metadata:
+            group = str(item["group"] or "Ungrouped")
+            groups.setdefault(group, []).append(str(item["name"]))
+        return groups
+
+    @cached_property
+    def unit_columns(self) -> dict[str, list[str]]:
+        groups: dict[str, list[str]] = {}
+        for item in self.column_metadata:
+            unit = str(item["unit"] or "unitless")
+            groups.setdefault(unit, []).append(str(item["name"]))
+        return groups
+
+    def to_dataframe(self) -> pd.DataFrame:
+        """Load this PFLOTRAN mass-balance file as a pandas DataFrame.
+
+        Category: asset-handle
+        Tags: pflotran, mass-balance, dataframe
+        Usage: scripts need the parsed PFLOTRAN mass-balance table with original column names.
+
+        Returns:
+            pd.DataFrame: parsed mass-balance table.
+        """
+        return self.dataframe.copy()
+
+    def to_records(self) -> list[dict[str, Any]]:
+        """Load this PFLOTRAN mass-balance file as row dictionaries.
+
+        Category: asset-handle
+        Tags: pflotran, mass-balance, records
+        Usage: scripts need serializable rows from a PFLOTRAN mass-balance file.
+
+        Returns:
+            list[dict[str, Any]]: table rows keyed by original column name.
+        """
+        return self.dataframe.fillna("").to_dict(orient="records")
+
+    def schema(self) -> dict[str, Any]:
+        """Return PFLOTRAN mass-balance table metadata.
+
+        Category: asset-handle
+        Tags: pflotran, mass-balance, schema, units, groups
+        Usage: scripts need time column, units, and group names before plotting or selecting columns.
+
+        Returns:
+            dict[str, Any]: PFLOTRAN mass-balance schema metadata.
+        """
+        frame = self._metadata_frame()
+        return {
+            "kind": self.kind,
+            "rows": self.row_count,
+            "columns": int(len(self.columns)),
+            "time_column": self.time_column,
+            "time_unit": _extract_unit(self.time_column),
+            "timestep_column": self.timestep_column,
+            "timestep_unit": _extract_unit(self.timestep_column),
+            "units": list(self.unit_columns.keys()),
+            "groups": {group: len(columns) for group, columns in self.grouped_columns.items()},
+            "unit_groups": {unit: len(columns) for unit, columns in self.unit_columns.items()},
+            "fields": [
+                {"name": column, "dtype": str(dtype)}
+                for column, dtype in zip(frame.columns.tolist(), frame.dtypes.tolist(), strict=False)
+            ],
+            "mass_balance_fields": self.column_metadata,
+        }
+
+    def preview(self) -> dict[str, Any]:
+        preview = (
+            self.dataframe.head(PREVIEW_ROW_LIMIT)
+            if self.eager_metadata_enabled
+            else self.sample_dataframe
+        )
+        return {
+            "kind": "table",
+            "columns": preview.columns.tolist(),
+            "rows": preview.fillna("").astype(str).values.tolist(),
+        }
+
+    @staticmethod
+    def _float_list(values: pd.Series) -> list[float | None]:
+        return [float(value) if pd.notna(value) else None for value in values.tolist()]
+
+    def _ordered_visible_columns(self, columns: list[str]) -> set[str]:
+        ordered = sorted(
+            columns,
+            key=lambda column: (
+                0 if self._column_group(column).lower() == "global" else 1,
+                self.columns.index(column),
+            ),
+        )
+        return set(ordered[:self.DEFAULT_VISIBLE_TRACE_COUNT])
+
+    def _plotly_section(
+        self,
+        *,
+        title: str,
+        frame: pd.DataFrame,
+        y_columns: list[str],
+        y_title: str,
+        total_rows: int,
+    ) -> dict[str, Any] | None:
+        if not y_columns:
+            return None
+        x_values = self._float_list(pd.to_numeric(frame[self.time_column], errors="coerce"))
+        visible_columns = self._ordered_visible_columns(y_columns)
+        traces: list[dict[str, Any]] = []
+        for column in y_columns:
+            values = self._float_list(pd.to_numeric(frame[column], errors="coerce"))
+            trace: dict[str, Any] = {
+                "type": "scatter",
+                "mode": "lines",
+                "name": self._column_label(column),
+                "x": x_values,
+                "y": values,
+                "hovertemplate": f"{self.time_column}: %{{x}}<br>{column}: %{{y:.6g}}<extra></extra>",
+            }
+            if column not in visible_columns:
+                trace["visible"] = "legendonly"
+            traces.append(trace)
+        return {
+            "kind": "plotly",
+            "title": title,
+            "figure": {
+                "data": traces,
+                "layout": {
+                    "margin": {"l": 64, "r": 22, "t": 14, "b": 48},
+                    "paper_bgcolor": "transparent",
+                    "plot_bgcolor": "transparent",
+                    "xaxis": {"title": self.time_column, "zeroline": False},
+                    "yaxis": {"title": y_title, "zeroline": False},
+                    "legend": {"orientation": "h", "y": -0.24},
+                    "hovermode": "x unified",
+                },
+            },
+            "total_rows": total_rows,
+            "shown_rows": int(frame.shape[0]),
+            "truncated": total_rows > int(frame.shape[0]),
+        }
+
+    def _group_summary_section(self) -> dict[str, Any]:
+        rows = []
+        for unit, columns in self.unit_columns.items():
+            counts = Counter(self._column_group(column) for column in columns)
+            rows.extend(
+                [group, unit, count]
+                for group, count in sorted(counts.items(), key=lambda item: item[0].lower())
+            )
+        return {
+            "kind": "table",
+            "title": "Mass-balance groups",
+            "columns": ["group", "unit", "columns"],
+            "rows": rows,
+        }
+
+    def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return Plotly and table sections for a PFLOTRAN mass-balance file.
+
+        Category: asset-handle
+        Tags: pflotran, mass-balance, preview, plotly, table
+        Usage: pydelling-cloud needs grouped time-series plots plus bounded raw rows.
+
+        Returns:
+            list[dict[str, Any]]: Plotly charts, group summary, and table preview sections.
+        """
+        frame = (
+            self.dataframe.head(max_rows)
+            if self.eager_metadata_enabled
+            else self._read_sample_frame(max_rows)
+        )
+        total_rows = self.row_count
+        sections: list[dict[str, Any]] = []
+        timestep_section = self._plotly_section(
+            title="Transport timestep",
+            frame=frame,
+            y_columns=[self.timestep_column],
+            y_title=self.timestep_column,
+            total_rows=total_rows,
+        )
+        if timestep_section is not None:
+            sections.append(timestep_section)
+        for unit, columns in self.unit_columns.items():
+            unit_section = self._plotly_section(
+                title=f"Mass balance ({unit})",
+                frame=frame,
+                y_columns=columns,
+                y_title=unit,
+                total_rows=total_rows,
+            )
+            if unit_section is not None:
+                sections.append(unit_section)
+        preview = frame.fillna("").astype(str)
+        return [
+            *sections,
+            self._group_summary_section(),
+            {
+                "kind": "table",
+                "title": "Data preview",
+                "columns": preview.columns.tolist(),
+                "rows": preview.values.tolist(),
+                "total_rows": total_rows,
+                "shown_rows": int(frame.shape[0]),
+                "truncated": total_rows > int(frame.shape[0]),
+            },
+        ]
+
+    def preview_metadata(self) -> dict[str, Any]:
+        schema = self.schema()
+        return {
+            "time_column": schema["time_column"],
+            "time_unit": schema["time_unit"],
+            "timestep_column": schema["timestep_column"],
+            "units": schema["units"],
+            "groups": schema["groups"],
+        }
+
+    def summary_text(self) -> str:
+        schema = self.schema()
+        units = ", ".join(schema["units"])
+        return f"{schema['rows']} PFLOTRAN mass-balance rows x {schema['columns']} columns ({units})"
+
+    def _flatten_description(self) -> dict[str, Any]:
+        preview = self.preview()
+        schema = self.schema()
+        return {
+            "rows": schema["rows"],
+            "columns": schema["columns"],
+            "column_names": preview["columns"],
+            "preview_rows": preview["rows"],
+            "shape": [schema["rows"], schema["columns"]],
+            "time_column": schema["time_column"],
+            "units": schema["units"],
+            "groups": schema["groups"],
+        }
+
+
+class RasterAssetHandle(BaseAssetHandle):
+    """Handle Esri ASCII grid rasters (.asc) with header metadata and cell values.
+
+    Category: asset-handle
+    Tags: raster, asc, esri, grid, elevation, preview
+    Usage: the asset is an ASCII raster grid (ncols/nrows header) such as a surface elevation map.
+    """
+    kind = "raster"
+    strategy_name = "esri_ascii_raster"
+
+    @cached_property
+    def _header_info(self) -> tuple[dict[str, float], int]:
+        return _parse_esri_raster_header(self.header)
+
+    @property
+    def grid_header(self) -> dict[str, float]:
+        """Return the parsed Esri ASCII raster header entries.
+
+        Category: asset-handle
+        Tags: raster, header, metadata, grid
+        Usage: scripts need grid dimensions, origin, cell size, or nodata value before loading cells.
+
+        Returns:
+            dict[str, float]: lower-cased header key/value pairs.
+        """
+        return self._header_info[0]
+
+    @property
+    def ncols(self) -> int:
+        return int(self.grid_header.get("ncols", 0))
+
+    @property
+    def nrows(self) -> int:
+        return int(self.grid_header.get("nrows", 0))
+
+    @property
+    def cell_size(self) -> tuple[float, float]:
+        header = self.grid_header
+        cellsize = header.get("cellsize")
+        dx = header.get("dx", cellsize)
+        dy = header.get("dy", cellsize)
+        return (abs(dx) if dx else 0.0, abs(dy) if dy else 0.0)
+
+    @property
+    def origin(self) -> tuple[float, float]:
+        header = self.grid_header
+        dx, dy = self.cell_size
+        if "xllcenter" in header or "yllcenter" in header:
+            return (
+                header.get("xllcenter", header.get("xllcorner", 0.0)) - dx / 2,
+                header.get("yllcenter", header.get("yllcorner", 0.0)) - dy / 2,
+            )
+        return (header.get("xllcorner", 0.0), header.get("yllcorner", 0.0))
+
+    @property
+    def nodata_value(self) -> float | None:
+        return self.grid_header.get("nodata_value")
+
+    @cached_property
+    def eager_stats_enabled(self) -> bool:
+        return self.source.size_bytes is None or self.source.size_bytes <= RASTER_EAGER_BYTES
+
+    @cached_property
+    def grid(self) -> pd.DataFrame:
+        """Load the raster cell values as a DataFrame with nodata masked to NaN.
+
+        Category: asset-handle
+        Tags: raster, grid, dataframe, nodata
+        Usage: scripts need the full 2D cell-value matrix of an ASCII raster.
+
+        Returns:
+            pd.DataFrame: nrows x ncols cell values, top row first.
+        """
+        _, skiprows = self._header_info
+        frame = pd.read_csv(
+            self.source.path,
+            skiprows=skiprows,
+            header=None,
+            sep=r"\s+",
+            engine="python",
+        )
+        nodata = self.nodata_value
+        if nodata is not None:
+            frame = frame.mask(frame == nodata)
+        return frame
+
+    def to_dataframe(self) -> pd.DataFrame:
+        """Load this ASCII raster as a DataFrame of cell values.
+
+        Category: asset-handle
+        Tags: raster, asc, dataframe, grid
+        Usage: scripts need raster cells for interpolation, statistics, or surface building.
+
+        Returns:
+            pd.DataFrame: nrows x ncols cell values with nodata as NaN.
+        """
+        return self.grid.copy()
+
+    def _value_stats(self) -> dict[str, Any]:
+        values = self.grid.to_numpy().ravel()
+        finite = values[pd.notna(values)]
+        stats: dict[str, Any] = {"nodata_cells": int(values.size - finite.size)}
+        if finite.size:
+            stats.update(
+                min=float(finite.min()),
+                max=float(finite.max()),
+                mean=float(finite.mean()),
+            )
+        return stats
+
+    def schema(self) -> dict[str, Any]:
+        """Return raster grid metadata: dimensions, extent, cell size, and value range.
+
+        Category: asset-handle
+        Tags: raster, schema, extent, cellsize, nodata
+        Usage: scripts need raster geometry and value range before processing cells.
+
+        Returns:
+            dict[str, Any]: raster schema metadata.
+        """
+        dx, dy = self.cell_size
+        x0, y0 = self.origin
+        schema: dict[str, Any] = {
+            "kind": self.kind,
+            "rows": self.nrows,
+            "columns": self.ncols,
+            "cell_size": [dx, dy],
+            "extent": {
+                "xmin": x0,
+                "xmax": x0 + dx * self.ncols,
+                "ymin": y0,
+                "ymax": y0 + dy * self.nrows,
+            },
+            "nodata_value": self.nodata_value,
+        }
+        if self.eager_stats_enabled:
+            schema["values"] = self._value_stats()
+        return schema
+
+    def _stats_rows(self, schema: dict[str, Any]) -> list[list[str]]:
+        extent = schema["extent"]
+        rows = [
+            ["grid size", f"{schema['rows']} rows x {schema['columns']} cols"],
+            ["cell size", f"{schema['cell_size'][0]:.6g} x {schema['cell_size'][1]:.6g}"],
+            ["x extent", f"{extent['xmin']:.6g} to {extent['xmax']:.6g}"],
+            ["y extent", f"{extent['ymin']:.6g} to {extent['ymax']:.6g}"],
+        ]
+        if schema.get("nodata_value") is not None:
+            rows.append(["nodata value", f"{schema['nodata_value']:.6g}"])
+        values = schema.get("values") or {}
+        if "min" in values:
+            rows.append(["value range", f"{values['min']:.6g} to {values['max']:.6g} (mean {values['mean']:.6g})"])
+        if values.get("nodata_cells"):
+            rows.append(["nodata cells", str(values["nodata_cells"])])
+        return rows
+
+    def preview(self) -> dict[str, Any]:
+        """Return raster header and value statistics as a key/value table preview.
+
+        Category: asset-handle
+        Tags: raster, preview, stats, table
+        Usage: the user inspects an ASCII raster asset without loading the full grid in the UI.
+
+        Returns:
+            dict[str, Any]: property/value table preview.
+        """
+        rows = self._stats_rows(self.schema())
+        return {
+            "kind": "table",
+            "columns": ["property", "value"],
+            "rows": rows,
+        }
+
+    def preview_sections(self, *, max_rows: int = PREVIEW_ROW_LIMIT, max_bytes: int = HEADER_READ_BYTES) -> list[dict[str, Any]]:
+        """Return a raster viewer marker section plus a grid summary table.
+
+        Category: asset-handle
+        Tags: raster, preview, section, heatmap
+        Usage: pydelling-cloud renders the 2D raster heatmap client-side and shows grid metadata.
+
+        Returns:
+            list[dict[str, Any]]: raster viewer and summary table sections.
+        """
+        schema = self.schema()
+        return [
+            {
+                "kind": "raster",
+                "title": "2D raster preview",
+                "metadata": {
+                    "rows": schema["rows"],
+                    "columns": schema["columns"],
+                    "cell_size": schema["cell_size"],
+                    "extent": schema["extent"],
+                    "nodata_value": schema["nodata_value"],
+                    **(schema.get("values") or {}),
+                },
+            },
+            {
+                "kind": "table",
+                "title": "Raster summary",
+                "columns": ["property", "value"],
+                "rows": self._stats_rows(schema),
+            },
+        ]
+
+    def preview_metadata(self) -> dict[str, Any]:
+        schema = self.schema()
+        return {
+            "rows": schema["rows"],
+            "columns": schema["columns"],
+            "cell_size": schema["cell_size"],
+            "extent": schema["extent"],
+            "nodata_value": schema["nodata_value"],
+        }
+
+    def summary_text(self) -> str:
+        schema = self.schema()
+        values = schema.get("values") or {}
+        value_range = (
+            f", values {values['min']:.6g} to {values['max']:.6g}" if "min" in values else ""
+        )
+        return f"{schema['rows']} x {schema['columns']} ASCII raster grid{value_range}"
+
+    def _flatten_description(self) -> dict[str, Any]:
+        schema = self.schema()
+        return {
+            "rows": schema["rows"],
+            "columns": schema["columns"],
+            "shape": [schema["rows"], schema["columns"]],
+            "cell_size": schema["cell_size"],
+            "extent": schema["extent"],
+            "nodata_value": schema["nodata_value"],
+            "values": schema.get("values") or {},
         }
 
 
@@ -2087,6 +2744,10 @@ def detect_asset_handle_class(source: AssetSource, header: bytes | None = None) 
         return ImageAssetHandle
     if extension == "json" or stripped[:1] in {b"{", b"["}:
         return JsonAssetHandle
+    if _looks_like_esri_ascii_raster(header):
+        return RasterAssetHandle
+    if _looks_like_pflotran_mass_balance(header):
+        return PflotranMassBalanceAssetHandle
     if extension in {"csv", "tsv"} or _looks_like_tabular(header):
         return TabularAssetHandle
     if extension in TEXT_EXTENSIONS or is_probably_text(header):

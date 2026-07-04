@@ -44,6 +44,7 @@ def make_output_manifest_item(
     mime_type=None,
     download_path=None,
     download_mime_type=None,
+    display_inline=False,
 ):
     """Create one outputs_manifest.json item for a generated file.
 
@@ -61,6 +62,7 @@ def make_output_manifest_item(
         mime_type=mime_type,
         download_path=download_path,
         download_mime_type=download_mime_type,
+        display_inline=display_inline,
     )
 
 
