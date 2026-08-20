@@ -63,9 +63,20 @@ class MeshPreprocessor(iGPLogic):
         self.external_boundaries = {}
         self.boundaries = {}
         self.external_boundaries = {}
+        self.cell_data = {}
+        self.point_data = {}
+        self.meshio_mesh = None
+        self._coords = None
+        self._centroids = None
+        self.kd_tree = None
+        self.has_kd_tree = False
+        self.is_intersected = False
+        self.is_connections_found = False
+        self.aux_nodes = {}
+        self._array_mesh_cache = None
+        self._array_mesh_cache_key = None
         BaseElement.local_id = 0
-        if 'st_file' in kwargs:
-            self.is_streamlit = True
+        self.is_streamlit = bool(kwargs.get('st_file', False))
 
         self.find_intersection_stats = {
             'total_intersections': 0,
@@ -73,6 +84,109 @@ class MeshPreprocessor(iGPLogic):
                 {
                 }
         }
+
+    def _invalidate_geometry_cache(self):
+        """Invalidate derived arrays after nodes or elements change."""
+
+        self._coords = None
+        self._centroids = None
+        self.kd_tree = None
+        self.has_kd_tree = False
+        self.meshio_mesh = None
+        self._array_mesh_cache = None
+        self._array_mesh_cache_key = None
+
+    def to_array_mesh(self, *, material_ids=None, use_cache=True):
+        """Return a compact array view while preserving source node and element IDs."""
+
+        from .array_mesh import ArrayMesh, CELL_NODE_COUNTS
+        from scipy.spatial import ConvexHull
+
+        if not self.elements:
+            raise ValueError("cannot convert an empty MeshPreprocessor")
+        type_lookup = {
+            "tetrahedra": "T", "tetra": "T",
+            "pyramid": "P",
+            "wedge": "W", "triangular_prism": "W",
+            "hexahedra": "H", "hexahedron": "H",
+        }
+        signature = tuple(
+            (
+                id(element), int(element.local_id), str(element.type),
+                tuple(map(int, element.nodes)), hash(np.asarray(element.coords, dtype=float).tobytes()),
+            )
+            for element in self.elements
+        )
+        inferred_materials = tuple(
+            getattr(element, "material_id", getattr(element, "rock_type", None))
+            for element in self.elements
+        )
+        material_signature = inferred_materials if material_ids is None else hash(np.asarray(material_ids).tobytes())
+        key = (signature, material_signature)
+        if use_cache and key == self._array_mesh_cache_key and self._array_mesh_cache is not None:
+            return self._array_mesh_cache
+
+        point_ids = np.asarray(sorted({int(node) for element in self.elements for node in element.nodes}), dtype=np.int64)
+        remap = {int(source): local for local, source in enumerate(point_ids)}
+        source_coordinates = {}
+        for element in self.elements:
+            for source, coordinate in zip(element.nodes, element.coords):
+                source = int(source)
+                coordinate = np.asarray(coordinate, dtype=float)
+                if source in source_coordinates and not np.allclose(source_coordinates[source], coordinate):
+                    raise ValueError(f"source node {source} has inconsistent coordinates")
+                source_coordinates[source] = coordinate
+        points = np.asarray([source_coordinates[int(source)] for source in point_ids], dtype=float)
+        n = len(self.elements)
+        connectivity = np.full((n, 8), -1, dtype=np.int64)
+        cell_types = np.empty(n, dtype="U1")
+        cell_ids = np.empty(n, dtype=np.int64)
+        centroids = np.empty((n, 3), dtype=float)
+        volumes = np.empty(n, dtype=float)
+        if len({int(element.local_id) for element in self.elements}) != n:
+            raise ValueError("mesh element local IDs must be unique")
+        for row, element in enumerate(self.elements):
+            try:
+                code = type_lookup[str(element.type).lower()]
+            except KeyError as exc:
+                raise ValueError(f"unsupported mesh element type {element.type!r}") from exc
+            nodes = np.asarray([remap[int(node)] for node in element.nodes], dtype=np.int64)
+            if len(nodes) != CELL_NODE_COUNTS[code]:
+                raise ValueError(f"element {element.local_id} has invalid {code} connectivity")
+            connectivity[row, :len(nodes)] = nodes
+            cell_types[row] = code
+            cell_ids[row] = int(element.local_id)
+            vertices = np.asarray(element.coords, dtype=float)
+            centroids[row] = vertices.mean(axis=0)
+            volumes[row] = float(ConvexHull(vertices).volume)
+
+        if material_ids is None:
+            inferred = list(inferred_materials)
+            material_ids = None if any(value is None for value in inferred) else np.asarray(inferred, dtype=np.int32)
+        else:
+            material_ids = np.asarray(material_ids, dtype=np.int32)
+            if material_ids.shape != (n,):
+                raise ValueError(f"material_ids must have shape ({n},)")
+        compact_cell_data = {}
+        for name, values in self.cell_data.items():
+            array = np.asarray(values)
+            if array.ndim >= 1 and len(array) == n and array.dtype != object:
+                compact_cell_data[name] = array.copy()
+        result = ArrayMesh(
+            points=points,
+            connectivity=connectivity,
+            cell_types=cell_types,
+            cell_ids=cell_ids,
+            centroids=centroids,
+            volumes=volumes,
+            point_ids=point_ids,
+            material_ids=material_ids,
+            cell_data=compact_cell_data,
+            metadata={"source": "MeshPreprocessor.to_array_mesh"},
+        )
+        self._array_mesh_cache_key = key
+        self._array_mesh_cache = result
+        return result
 
     def add_element(self, element: geometry.base_element):
         """Append an already-built mesh element to this mesh.
@@ -85,6 +199,7 @@ class MeshPreprocessor(iGPLogic):
             None: mutates the mesh element list.
         """
         self.elements.append(element)
+        self._invalidate_geometry_cache()
 
     def add_tetrahedra(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
         """Add one tetrahedral cell to the mesh.
@@ -99,6 +214,7 @@ class MeshPreprocessor(iGPLogic):
         self.elements.append(geometry.TetrahedraElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
+        self._invalidate_geometry_cache()
 
     def add_hexahedra(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
         """Add one hexahedral cell to the mesh.
@@ -113,6 +229,7 @@ class MeshPreprocessor(iGPLogic):
         self.elements.append(geometry.HexahedraElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
+        self._invalidate_geometry_cache()
 
     def add_wedge(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
         """Add one wedge cell to the mesh.
@@ -127,6 +244,7 @@ class MeshPreprocessor(iGPLogic):
         self.elements.append(geometry.WedgeElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
+        self._invalidate_geometry_cache()
 
     def add_pyramid(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
         """Add one pyramid cell to the mesh.
@@ -141,6 +259,7 @@ class MeshPreprocessor(iGPLogic):
         self.elements.append(geometry.PyramidElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
+        self._invalidate_geometry_cache()
 
     def add_triangular_prism(self, node_ids: List[int] or np.ndarray, node_coords: List[np.ndarray]):
         """Add one triangular-prism cell to the mesh as a wedge element.
@@ -155,6 +274,7 @@ class MeshPreprocessor(iGPLogic):
         self.elements.append(geometry.WedgeElement(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
+        self._invalidate_geometry_cache()
 
     @property
     def coords(self) -> np.ndarray:
@@ -168,7 +288,11 @@ class MeshPreprocessor(iGPLogic):
             np.ndarray: ordered node coordinate array.
         """
         if self._coords is None:
-            aux_nodes = np.ndarray(shape=(self.n_nodes, 3))
+            if not self.unordered_nodes:
+                return np.empty((0, 3), dtype=float)
+            # Keep source node IDs addressable for legacy geometry code.  VTK
+            # export compacts them separately, so gaps never become points.
+            aux_nodes = np.full((max(self.unordered_nodes) + 1, 3), np.nan, dtype=float)
             for idx, node in self.unordered_nodes.items():
                 aux_nodes[idx] = node
             self._coords = aux_nodes
@@ -200,6 +324,7 @@ class MeshPreprocessor(iGPLogic):
         self.elements.append(geometry.quadrilateral_face(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
+        self._invalidate_geometry_cache()
 
     def add_triangle(self, node_ids: List[int], node_coords: List[np.ndarray]):
         """Add one triangular face to the mesh.
@@ -214,6 +339,7 @@ class MeshPreprocessor(iGPLogic):
         self.elements.append(geometry.triangle_face(node_ids=node_ids, node_coords=node_coords))
         for idx, node in enumerate(node_coords):
             self.unordered_nodes[node_ids[idx]] = node
+        self._invalidate_geometry_cache()
 
     def add_node(self, node: np.ndarray):
         """Append one node to the coordinate array.
@@ -225,7 +351,9 @@ class MeshPreprocessor(iGPLogic):
         Returns:
             None: mutates the coordinate collection.
         """
-        self.coords.append(node)
+        source_id = max(self.unordered_nodes, default=-1) + 1
+        self.unordered_nodes[source_id] = np.asarray(node, dtype=float)
+        self._invalidate_geometry_cache()
 
     @property
     def n_nodes(self):
@@ -264,9 +392,9 @@ class MeshPreprocessor(iGPLogic):
             meshio.Mesh: converted mesh object stored on meshio_mesh.
         """
 
-        elements_in_meshio = self._create_meshio_dict(self.elements)
+        points, elements_in_meshio = self._compact_meshio_geometry(self.elements)
         self.meshio_mesh = msh.Mesh(
-            points=self.coords,
+            points=points,
             cells=elements_in_meshio,
             cell_data=self.cell_data,
             point_data=self.point_data
@@ -307,11 +435,22 @@ class MeshPreprocessor(iGPLogic):
         Returns:
             meshio mesh
         """
-        elements_in_meshio = self._create_meshio_dict(elements)
+        points, elements_in_meshio = self._compact_meshio_geometry(elements)
         return msh.Mesh(
-            points=self.coords,
+            points=points,
             cells=elements_in_meshio,
         )
+
+    def _compact_meshio_geometry(self, elements):
+        """Return compact points/connectivity for arbitrary source node IDs."""
+
+        used = sorted({int(node) for element in elements for node in element.nodes})
+        remap = {source_id: local_id for local_id, source_id in enumerate(used)}
+        points = np.asarray([self.unordered_nodes[source_id] for source_id in used], dtype=float)
+        cells = self._create_meshio_dict(elements)
+        for cell_type, connectivity in cells.items():
+            cells[cell_type] = [[remap[int(node)] for node in row] for row in connectivity]
+        return points, cells
 
     def _create_meshio_dict(self, elements: List[geometry.base_abstract_mesh_object]) -> Dict[str, List[List[int]]]:
         """
@@ -320,34 +459,27 @@ class MeshPreprocessor(iGPLogic):
         Args:
             elements (List[geometry.base_abstract_mesh_object]): Description.
         """
-        elements_in_meshio = {}
+        grouped = {
+            "wedge": [],
+            "pyramid": [],
+            "tetrahedra": [],
+            "hexahedra": [],
+            "triangle": [],
+            "quadrilateral": [],
+        }
         for element in elements:
-            if element.type == 'tetrahedra':
-                if not 'tetra' in elements_in_meshio.keys():
-                    elements_in_meshio['tetra'] = []
-                elements_in_meshio['tetra'].append(element.nodes.tolist())
-            elif element.type == 'hexahedra':
-                if not 'hexahedron' in elements_in_meshio.keys():
-                    elements_in_meshio['hexahedron'] = []
-                elements_in_meshio['hexahedron'].append(element.nodes.tolist())
-            elif element.type == 'wedge':
-                if not 'wedge' in elements_in_meshio.keys():
-                    elements_in_meshio['wedge'] = []
-                elements_in_meshio['wedge'].append(element.nodes.tolist())
-            elif element.type == 'triangle':
-                if not 'triangle' in elements_in_meshio.keys():
-                    elements_in_meshio['triangle'] = []
-                elements_in_meshio['triangle'].append(element.nodes.tolist())
-            elif element.type == 'quadrilateral':
-                if not 'quad' in elements_in_meshio.keys():
-                    elements_in_meshio['quad'] = []
-                elements_in_meshio['quad'].append(element.nodes.tolist())
-            elif element.type == 'pyramid':
-                if not 'pyramid' in elements_in_meshio.keys():
-                    elements_in_meshio['pyramid'] = []
-                elements_in_meshio['pyramid'].append(element.nodes.tolist())
-
-        return elements_in_meshio
+            if element.type not in grouped:
+                raise ValueError(f"unsupported mesh element type {element.type!r}")
+            grouped[element.type].append(element.nodes.tolist())
+        names = {
+            "wedge": "wedge",
+            "pyramid": "pyramid",
+            "tetrahedra": "tetra",
+            "hexahedra": "hexahedron",
+            "triangle": "triangle",
+            "quadrilateral": "quad",
+        }
+        return {names[key]: values for key, values in grouped.items() if values}
 
     def nodes_to_csv(self, filename='node_ids.csv'):
         """Export mesh node coordinates to a CSV file.
@@ -393,6 +525,7 @@ class MeshPreprocessor(iGPLogic):
         if kd_tree_config is None:
             kd_tree_config = {}
         self.kd_tree = KDTree(self.centroids, **kd_tree_config)
+        self.has_kd_tree = True
 
     def get_k_nearest_mesh_elements(self, point, k=15, distance_upper_bound=None):
         """Return the k nearest mesh elements to a point.
@@ -404,7 +537,7 @@ class MeshPreprocessor(iGPLogic):
         Returns:
             list: nearest mesh element objects.
         """
-        if not hasattr(self, 'kd_tree'):
+        if self.kd_tree is None:
             self.create_kd_tree()
         if distance_upper_bound:
             ids = self.kd_tree.query(point, k=k, distance_upper_bound=distance_upper_bound)[1]
@@ -447,8 +580,8 @@ class MeshPreprocessor(iGPLogic):
         if self.kd_tree is None:
             self.create_kd_tree()
 
-        ids = self.kd_tree.query(point, k=n)[1]
-        return [self.elements[i] for i in ids]
+        ids = np.atleast_1d(self.kd_tree.query(point, k=n)[1])
+        return [self.elements[int(i)] for i in ids]
 
     def clear(self):
         """Remove all nodes and elements from this mesh.
@@ -462,6 +595,9 @@ class MeshPreprocessor(iGPLogic):
         """
         self.unordered_nodes = {}
         self.elements = []
+        self.cell_data = {}
+        self.point_data = {}
+        self._invalidate_geometry_cache()
 
     @staticmethod
     def _intersect_fracture_with_element(element, fracture):
@@ -804,19 +940,20 @@ class MeshPreprocessor(iGPLogic):
             None: appends reconstructed elements to the mesh.
         """
         elements = []
+        source_coords = np.asarray(mesh._coords, dtype=float).copy()
         for local_id, element in tqdm(enumerate(element_dict), desc='Loading elements'):
             if element['type'] == 'tetrahedra':
                 mesh.add_tetrahedra(node_ids=element['nodes'],
-                                    node_coords=mesh._coords[element['nodes']])
+                                    node_coords=source_coords[element['nodes']])
             elif element['type'] == 'hexahedra':
                 mesh.add_hexahedra(node_ids=element['nodes'],
-                                   node_coords=mesh._coords[element['nodes']])
+                                   node_coords=source_coords[element['nodes']])
             elif element['type'] == 'wedge':
                 mesh.add_wedge(node_ids=element['nodes'],
-                               node_coords=mesh._coords[element['nodes']])
+                               node_coords=source_coords[element['nodes']])
             elif element['type'] == 'pyramid':
                 mesh.add_pyramid(node_ids=element['nodes'],
-                                 node_coords=mesh._coords[element['nodes']])
+                                 node_coords=source_coords[element['nodes']])
             associated_fractures_dict = element_dict[local_id]['associated_fractures']
             temp_associated_fractures = {}
             for key in associated_fractures_dict:
@@ -844,6 +981,8 @@ class MeshPreprocessor(iGPLogic):
             'pyramid': [],
             'tetrahedra': [],
             'hexahedra': [],
+            'triangle': [],
+            'quadrilateral': [],
         }
         for element in self.elements:
             temp_dict[element.type].append(array[element.local_id])

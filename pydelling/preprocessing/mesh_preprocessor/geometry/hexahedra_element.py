@@ -5,7 +5,7 @@ Module documentation.
 """
 
 import numpy as np
-from scipy.spatial.qhull import ConvexHull
+from scipy.spatial import ConvexHull
 
 from pydelling.preprocessing.mesh_preprocessor.geometry import QuadrilateralFace, BaseElement
 

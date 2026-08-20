@@ -6,6 +6,7 @@ Module documentation.
 
 from __future__ import annotations
 import logging
+import json
 from pathlib import Path
 from typing import List
 
@@ -57,6 +58,268 @@ class DfnPreprocessor(object):
         """
         self.dfn = []
         self.faults = []
+        self.surface_networks = []
+        self._surface_dfn_cache = None
+        self._surface_dfn_cache_key = None
+
+    def _invalidate_surface_cache(self):
+        self._surface_dfn_cache = None
+        self._surface_dfn_cache_key = None
+
+    @classmethod
+    def from_hgs_directory(
+        cls,
+        directory,
+        *,
+        companion_mesh,
+        variant="aperture",
+        groups="physical",
+        refinement=4,
+        validate_pairs=True,
+    ):
+        """Create a DFN containing one compact HydroGeoSphere surface network."""
+
+        from .surface_dfn import read_hgs_directory
+
+        instance = cls()
+        instance.surface_networks.append(
+            read_hgs_directory(
+                directory,
+                companion_mesh=companion_mesh,
+                variant=variant,
+                groups=groups,
+                refinement=refinement,
+                validate_pairs=validate_pairs,
+            )
+        )
+        return instance
+
+    @classmethod
+    def from_surface_vtk(cls, filename, *, groups="physical", active_group_names=None):
+        """Create a DFN from a triangle VTK with HGS-compatible cell fields."""
+
+        from .surface_dfn import read_surface_vtk
+
+        instance = cls()
+        instance.surface_networks.append(
+            read_surface_vtk(
+                filename,
+                groups=groups,
+                active_group_names=active_group_names,
+            )
+        )
+        return instance
+
+    def add_surface_network(self, surface):
+        """Add an array-backed triangulated fracture network."""
+
+        from .surface_dfn import SurfaceDfn
+
+        if not isinstance(surface, SurfaceDfn):
+            raise TypeError("surface must be a SurfaceDfn")
+        self.surface_networks.append(surface)
+        self._invalidate_surface_cache()
+
+    @staticmethod
+    def _triangulate_fracture_polygon(points, *, tolerance=1.0e-8):
+        """Triangulate a simple planar polygon while preserving concave boundaries."""
+
+        from shapely.geometry import Polygon
+        from shapely.ops import triangulate
+
+        xyz = np.asarray(points, dtype=float)
+        if xyz.ndim != 2 or xyz.shape[1] != 3 or len(xyz) < 3:
+            raise ValueError("fracture polygon must have shape (n>=3, 3)")
+        center = xyz.mean(axis=0)
+        _, singular, basis = np.linalg.svd(xyz - center, full_matrices=False)
+        scale = max(float(np.linalg.norm(np.ptp(xyz, axis=0))), 1.0)
+        if len(singular) < 2 or singular[1] <= tolerance * scale:
+            raise ValueError("fracture polygon is degenerate")
+        if len(singular) > 2 and singular[2] > tolerance * scale:
+            raise ValueError("fracture polygon is not planar")
+        uv = (xyz - center) @ basis[:2].T
+        polygon = Polygon(uv)
+        if not polygon.is_valid or polygon.area <= tolerance * tolerance:
+            raise ValueError("fracture polygon is self-intersecting or degenerate")
+        triangles = [part for part in triangulate(polygon) if polygon.covers(part.representative_point())]
+        if not triangles or not np.isclose(
+            sum(part.area for part in triangles), polygon.area, rtol=1.0e-8, atol=tolerance**2
+        ):
+            raise ValueError("fracture polygon could not be triangulated conservatively")
+        connectivity = []
+        for part in triangles:
+            row = []
+            for coordinate in list(part.exterior.coords)[:-1]:
+                distances = np.linalg.norm(uv - np.asarray(coordinate), axis=1)
+                index = int(np.argmin(distances))
+                if distances[index] > tolerance * scale:
+                    raise ValueError("triangulation introduced an unsupported boundary vertex")
+                row.append(index)
+            if len(set(row)) != 3:
+                raise ValueError("triangulation produced a degenerate triangle")
+            connectivity.append(row)
+        return xyz, np.asarray(connectivity, dtype=np.int64)
+
+    def to_surface_dfn(
+        self,
+        *,
+        density=997.16,
+        dynamic_viscosity=8.9e-4,
+        gravity=9.80665,
+        hydraulic_aperture_ratio=1.0,
+        use_cache=True,
+    ):
+        """Merge object and array-backed DFNs into one compact triangulated surface."""
+
+        from .hydraulic_properties import resolve_hydraulic_properties
+        from .surface_dfn import SurfaceDfn
+
+        # The production HGS path is already in the target representation;
+        # preserve its zero-copy behavior and full-model memory profile.
+        if not self.dfn and not self.faults and len(self.surface_networks) == 1:
+            return self.surface_networks[0]
+
+        object_signature = []
+        for kind, sources in (("fracture", self.dfn), ("fault", self.faults)):
+            for source in sources:
+                geometry_points = source.side_points if kind == "fracture" else source.meshio_mesh.points
+                object_signature.append(
+                    (
+                        kind,
+                        id(source),
+                        hash(np.asarray(geometry_points, dtype=float).tobytes()),
+                        repr(
+                            tuple(
+                                vars(source).get(name)
+                                for name in (
+                                    "aperture", "effective_aperture", "hydraulic_aperture",
+                                    "porosity", "_transmissivity", "transmissivity_constant",
+                                    "transmissivity", "hydraulic_conductivity", "_storativity", "storativity",
+                                    "specific_storage",
+                                )
+                            )
+                        ),
+                    )
+                )
+        key = (
+            tuple(object_signature),
+            tuple((id(surface), surface.n_triangles) for surface in self.surface_networks),
+            float(density), float(dynamic_viscosity), float(gravity), float(hydraulic_aperture_ratio),
+        )
+        if use_cache and key == self._surface_dfn_cache_key and self._surface_dfn_cache is not None:
+            return self._surface_dfn_cache
+
+        point_blocks = []
+        triangle_blocks = []
+        fields = {name: [] for name in (
+            "thickness", "hydraulic_conductivity", "porosity", "specific_storage",
+            "group_ids", "fracture_element_ids", "source_kinds", "source_object_ids",
+            "source_triangle_ids", "property_origins",
+        )}
+        group_names = {}
+        group_lookup = {}
+        point_offset = 0
+        warnings = []
+
+        def group_id(name):
+            if name not in group_lookup:
+                value = len(group_lookup)
+                group_lookup[name] = value
+                group_names[value] = name
+            return group_lookup[name]
+
+        def append_block(points, triangles, properties, *, kind, object_id, names, source_ids=None,
+                         triangle_ids=None, origins=None):
+            nonlocal point_offset
+            points = np.asarray(points, dtype=float)[:, :3]
+            triangles = np.asarray(triangles, dtype=np.int64)
+            count = len(triangles)
+            point_blocks.append(points)
+            triangle_blocks.append(triangles + point_offset)
+            point_offset += len(points)
+            for name in ("thickness", "hydraulic_conductivity", "porosity", "specific_storage"):
+                value = np.asarray(properties[name])
+                fields[name].append(np.full(count, float(value), dtype=float) if value.ndim == 0 else value)
+            fields["group_ids"].append(np.asarray([group_id(name) for name in names], dtype=np.int32))
+            source_ids = np.full(count, object_id, dtype=np.int64) if source_ids is None else source_ids
+            fields["fracture_element_ids"].append(np.asarray(source_ids, dtype=np.int64))
+            fields["source_kinds"].append(np.full(count, kind, dtype="U16"))
+            fields["source_object_ids"].append(np.asarray(source_ids, dtype=np.int64))
+            fields["source_triangle_ids"].append(
+                np.arange(count, dtype=np.int64) if triangle_ids is None else np.asarray(triangle_ids, dtype=np.int64)
+            )
+            fields["property_origins"].append(
+                np.full(count, origins or "input", dtype="U512")
+                if np.asarray(origins).ndim == 0 else np.asarray(origins, dtype="U512")
+            )
+
+        for surface_index, surface in enumerate(self.surface_networks):
+            names = [surface.group_names.get(int(value), f"surface_{surface_index}_{value}") for value in surface.group_ids]
+            append_block(
+                surface.points, surface.triangles,
+                {name: getattr(surface, name) for name in ("thickness", "hydraulic_conductivity", "porosity", "specific_storage")},
+                kind="surface" if surface.source_kinds is None else "surface",
+                object_id=surface_index,
+                names=names,
+                source_ids=surface.fracture_element_ids if surface.source_object_ids is None else surface.source_object_ids,
+                triangle_ids=surface.source_triangle_ids,
+                origins=surface.property_origins if surface.property_origins is not None else "input",
+            )
+            if surface.source_kinds is not None:
+                fields["source_kinds"][-1] = surface.source_kinds
+
+        for kind, sources in (("fracture", self.dfn), ("fault", self.faults)):
+            for source in sources:
+                resolved = resolve_hydraulic_properties(
+                    source,
+                    density=density,
+                    dynamic_viscosity=dynamic_viscosity,
+                    gravity=gravity,
+                    hydraulic_aperture_ratio=hydraulic_aperture_ratio,
+                )
+                if kind == "fracture":
+                    points, triangles = self._triangulate_fracture_polygon(source.side_points)
+                else:
+                    points = np.asarray(source.meshio_mesh.points)[:, :3]
+                    blocks = [block.data for block in source.meshio_mesh.cells if block.type == "triangle"]
+                    if not blocks:
+                        raise ValueError(f"fault {source.local_id} contains no triangles")
+                    triangles = np.concatenate(blocks)
+                origin = json.dumps(resolved.provenance, sort_keys=True, separators=(",", ":"))
+                append_block(
+                    points, triangles,
+                    {
+                        "thickness": resolved.thickness,
+                        "hydraulic_conductivity": resolved.hydraulic_conductivity,
+                        "porosity": resolved.porosity,
+                        "specific_storage": resolved.specific_storage,
+                    },
+                    kind=kind,
+                    object_id=int(source.local_id),
+                    names=["fractures" if kind == "fracture" else "faults"] * len(triangles),
+                    origins=origin,
+                )
+                warnings.extend(
+                    {"source_kind": kind, "source_id": int(source.local_id), "message": message}
+                    for message in resolved.warnings
+                )
+
+        if not triangle_blocks:
+            raise ValueError("DfnPreprocessor contains no fractures, faults, or surface networks")
+        result = SurfaceDfn(
+            points=np.concatenate(point_blocks),
+            triangles=np.concatenate(triangle_blocks),
+            group_names=group_names,
+            metadata={
+                "source": "DfnPreprocessor.to_surface_dfn",
+                "property_warnings": warnings,
+                "hydraulic_aperture_ratio": float(hydraulic_aperture_ratio),
+            },
+            **{name: np.concatenate(values) for name, values in fields.items()},
+        )
+        self._surface_dfn_cache_key = key
+        self._surface_dfn_cache = result
+        return result
 
 
     def load_fractures(self, pd_df: pd,
@@ -140,11 +403,17 @@ class DfnPreprocessor(object):
                      size=None,
                      aperture=None,
                      hydraulic_aperture=None,
+                     transmissivity=None,
+                     storativity=None,
                      aperture_constant=1E-3,
                      rock_type=None,
                      transmissivity_constant=None,
                      storativity_constant=None,
                      polygon=None,
+                     effective_aperture=None,
+                     porosity=None,
+                     hydraulic_conductivity=None,
+                     specific_storage=None,
                      ):
         """Add one fracture from orientation parameters or polygon geometry.
 
@@ -156,7 +425,7 @@ class DfnPreprocessor(object):
             None: appends a Fracture object to dfn.
         """
         from pydelling.preprocessing.dfn_preprocessor import Fracture
-        self.dfn.append(Fracture(
+        fracture = Fracture(
             dip=dip,
             dip_dir=dip_dir,
             x=x,
@@ -165,12 +434,21 @@ class DfnPreprocessor(object):
             size=size,
             aperture=aperture,
             hydraulic_aperture=hydraulic_aperture,
+            transmissivity=transmissivity,
+            storativity=storativity,
             aperture_constant=aperture_constant,
             rock_type=rock_type,
             transmissivity_constant=transmissivity_constant,
             storativity_constant=storativity_constant,
             polygon=polygon,
-        ))
+            effective_aperture=effective_aperture,
+            porosity=porosity,
+            hydraulic_conductivity=hydraulic_conductivity,
+            specific_storage=specific_storage,
+        )
+        fracture.local_id = len(self.dfn)
+        self.dfn.append(fracture)
+        self._invalidate_surface_cache()
 
     def add_fault(self, filename=None,
                   mesh=None,
@@ -179,6 +457,9 @@ class DfnPreprocessor(object):
                   effective_aperture=None,
                   porosity=None,
                   storativity=None,
+                  hydraulic_aperture=None,
+                  hydraulic_conductivity=None,
+                  specific_storage=None,
                   ):
         """Add one fault from a file path or existing Fault object.
 
@@ -193,20 +474,27 @@ class DfnPreprocessor(object):
         if aperture is None:
             logger.warning(f'No aperture specified for fault {filename}')
         if isinstance(filename, Fault):
+            filename.local_id = len(self.faults)
             self.faults.append(filename)
-        elif isinstance(filename, str) or isinstance(filename, Path):
-            self.faults.append(Fault(filename=filename,
-                                     mesh=mesh,
-                                     aperture=aperture,
-                                     transmissivity=transmissivity,
-                                     effective_aperture=effective_aperture,
-                                     porosity=porosity,
-                                     storativity=storativity,
-                                     ))
+        elif isinstance(filename, (str, Path)) or mesh is not None:
+            fault = Fault(filename=filename,
+                          mesh=mesh,
+                          aperture=aperture,
+                          transmissivity=transmissivity,
+                          effective_aperture=effective_aperture,
+                          porosity=porosity,
+                          storativity=storativity,
+                          hydraulic_aperture=hydraulic_aperture,
+                          hydraulic_conductivity=hydraulic_conductivity,
+                          specific_storage=specific_storage,
+                          )
+            fault.local_id = len(self.faults)
+            self.faults.append(fault)
             logger.info(f"Fault with aperture {aperture} has been added from {filename}")
         else:
             logger.error('Fault filename must be a string or Fault object')
             raise TypeError('Fault filename must be a string or Fault object')
+        self._invalidate_surface_cache()
 
     def summary(self):
         """Print a compact DFN summary table.
@@ -337,6 +625,7 @@ class DfnPreprocessor(object):
         logger.info(f'Shifting dfn object by {x_shift}, {y_shift}, {z_shift}')
         for fracture in self.dfn:
             fracture.shift(x_shift, y_shift, z_shift)
+        self._invalidate_surface_cache()
 
 
     def generate_dfn_plotly(self, add_centroid=False, size_color=False, fracture_color='blue'):
@@ -698,6 +987,3 @@ class DfnPreprocessor(object):
 
     def __str__(self):
         return self.__repr__()
-
-
-

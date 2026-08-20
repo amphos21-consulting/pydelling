@@ -19,7 +19,7 @@ from pydelling.utils.geometry_utils import filter_unique_points
 from pydelling.preprocessing.mesh_preprocessor.geometry.base_abstract_mesh_object import BaseAbstractMeshObject 
 from pydelling.preprocessing.mesh_preprocessor.geometry.base_face import BaseFace
 from scipy.spatial import Delaunay
-from scipy.spatial.qhull import ConvexHull
+from scipy.spatial import ConvexHull
 from functools import cached_property, lru_cache
 
 
@@ -366,6 +366,19 @@ class BaseElement(BaseAbstractMeshObject):
             float: convex hull volume.
         """
         return ConvexHull(self.coords, qhull_options='QJ').volume
+
+    def update_coordinates(self, coordinates):
+        """Replace element coordinates and invalidate derived geometry."""
+
+        coordinates = np.asarray(coordinates, dtype=float)
+        if coordinates.shape != self.coords.shape:
+            raise ValueError(f"coordinates must have shape {self.coords.shape}")
+        self.coords = coordinates
+        self.centroid = self.compute_centroid(self.centroid_method)
+        self.centroid_coords = self.centroid
+        self.__dict__.pop("volume", None)
+        self.faces = {}
+        self.define_faces()
 
 
     def get_json(self):

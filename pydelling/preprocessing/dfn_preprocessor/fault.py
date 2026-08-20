@@ -28,6 +28,9 @@ class Fault:
                  porosity=None,
                  storativity=None,
                  effective_aperture=None,
+                 hydraulic_aperture=None,
+                 hydraulic_conductivity=None,
+                 specific_storage=None,
                  ):
 
         """Initialize fault geometry and optional hydraulic properties.
@@ -43,7 +46,16 @@ class Fault:
             self.meshio_mesh = meshio.read(filename)
         if mesh is not None:
             self.meshio_mesh: meshio.Mesh = mesh
-        self.trimesh_mesh: trimesh.Trimesh = trimesh.load_mesh(filename)
+        if not hasattr(self, "meshio_mesh"):
+            raise ValueError("Fault requires filename or mesh")
+        triangle_blocks = [block.data for block in self.meshio_mesh.cells if block.type == "triangle"]
+        if not triangle_blocks:
+            raise ValueError("Fault mesh must contain triangle cells")
+        self.trimesh_mesh = trimesh.Trimesh(
+            vertices=np.asarray(self.meshio_mesh.points)[:, :3],
+            faces=np.concatenate(triangle_blocks),
+            process=False,
+        )
         self.aperture = aperture
         self.associated_elements = []
         self.transmissivity = transmissivity
@@ -52,6 +64,9 @@ class Fault:
         self.filename = filename
         self.local_id = Fault.local_id
         self.effective_aperture=effective_aperture
+        self.hydraulic_aperture = hydraulic_aperture
+        self.hydraulic_conductivity = hydraulic_conductivity
+        self.specific_storage = specific_storage
         Fault.local_id += 1
 
     def distance(self, points: np.ndarray, n_max: int = 2500):
@@ -66,15 +81,21 @@ class Fault:
         Returns:
             numpy.ndarray: signed distance for each input point.
         """
-        if points.shape[0] == 3:
-            points = points.reshape(-1, 3)
-        # Divide the points into chunks of n_max
-        n_chunks = int(points.shape[0] / n_max)
-        if n_chunks == 0:
-            n_chunks = 1
-        distances = []
-        for i in range(n_chunks):
-            distances.append(proximity.signed_distance(self.trimesh_mesh, points[i * n_max:(i + 1) * n_max]))
+        points = np.asarray(points, dtype=float)
+        if points.ndim == 1:
+            if points.shape != (3,):
+                raise ValueError("points must have shape (3,) or (n, 3)")
+            points = points.reshape(1, 3)
+        if points.ndim != 2 or points.shape[1] != 3:
+            raise ValueError("points must have shape (3,) or (n, 3)")
+        if n_max <= 0:
+            raise ValueError("n_max must be positive")
+        if len(points) == 0:
+            return np.empty(0, dtype=float)
+        distances = [
+            proximity.signed_distance(self.trimesh_mesh, points[start : start + n_max])
+            for start in range(0, len(points), n_max)
+        ]
         return np.concatenate(distances)
 
     def _to_obj(self, global_id=0):
@@ -91,7 +112,7 @@ class Fault:
         for i, f in enumerate(self.meshio_mesh.points):
             str_obj += f"v {f[0]} {f[1]} {f[2]}\n"
 
-        for i, f in enumerate(self.meshio_mesh.cells[0].data):
+        for i, f in enumerate(self.trimesh_mesh.faces):
             str_obj += "f "
             for j in range(3):
                 str_obj += str(f[j] + global_id) + " "
@@ -139,7 +160,7 @@ class Fault:
         Returns:
             numpy.ndarray: first mesh cell block connectivity.
         """
-        return self.meshio_mesh.cells[0].data
+        return np.asarray(self.trimesh_mesh.faces)
 
     @property
     def num_points(self):
@@ -165,7 +186,7 @@ class Fault:
         Returns:
             int: number of cells in the first mesh cell block.
         """
-        return self.meshio_mesh.cells[0].data.shape[0]
+        return len(self.trimesh_mesh.faces)
 
     @property
     def centroid(self):
@@ -222,6 +243,10 @@ class Fault:
             "transmissivity": self.transmissivity,
             "porosity": self.porosity,
             "storativity": self.storativity,
+            "effective_aperture": self.effective_aperture,
+            "hydraulic_aperture": self.hydraulic_aperture,
+            "hydraulic_conductivity": self.hydraulic_conductivity,
+            "specific_storage": self.specific_storage,
             "filename": str(self.filename),
         }
         return save_dict
@@ -241,9 +266,5 @@ class Fault:
 
     def __str__(self):
         return f"Fault {self.local_id}"
-
-
-
-
 
 

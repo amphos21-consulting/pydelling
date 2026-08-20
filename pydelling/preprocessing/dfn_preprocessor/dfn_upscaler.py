@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from pydelling.preprocessing.dfn_preprocessor.fault import Fault
     from pydelling.preprocessing.dfn_preprocessor import DfnPreprocessor
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
+from pydelling.preprocessing.mesh_preprocessor.array_mesh import ArrayMesh
 from pydelling.utils.geometry_utils import compute_polygon_area
 
 logger = logging.getLogger(__name__)
@@ -72,8 +73,199 @@ class DfnUpscaler:
         self.add_to_class('nearest', nearest, default=None)
         self.add_to_class('check_nodes', check_nodes, default=False)
 
-        if not loading:
-            self._intersect_dfn_with_mesh(parallel=parallel)
+        self.surface_intersections = None
+        self.intersection_index = None
+        self.upscaling_result = None
+        self.default_workers = cpu_count() if parallel is True else int(parallel) if isinstance(parallel, int) and parallel > 0 else 1
+
+    def upscale(
+        self,
+        *,
+        matrix_porosity,
+        matrix_intrinsic_permeability,
+        matrix_specific_storage=0.0,
+        density=997.16,
+        dynamic_viscosity=8.9e-4,
+        gravity=9.80665,
+        chunk_size=50_000,
+        workers=None,
+        keep_intersections="auto",
+        group_contributions=True,
+        engine="auto",
+        hydraulic_aperture_ratio=1.0,
+        combination_mode="volume_weighted",
+    ):
+        """Upscale object- or array-backed DFNs with a unit-explicit result.
+
+        This is the unit-explicit API. The historical
+        :meth:`upscale_mesh_permeability` method is retained for object-backed
+        fracture networks and returns hydraulic conductivity despite its name.
+        ``engine='auto'`` selects the indexed array engine for bulk work.
+        """
+
+        from .surface_upscaler import IntersectionIndex, intersect_surface_with_mesh, upscale_surface_dfn
+
+        if engine not in ("auto", "indexed", "legacy"):
+            raise ValueError("engine must be 'auto', 'indexed', or 'legacy'")
+        if engine == "legacy":
+            if combination_mode != "volume_weighted":
+                raise ValueError(
+                    "engine='legacy' only supports combination_mode='volume_weighted'"
+                )
+            return self._upscale_legacy_result(
+                matrix_porosity=matrix_porosity,
+                matrix_intrinsic_permeability=matrix_intrinsic_permeability,
+                matrix_specific_storage=matrix_specific_storage,
+                density=density,
+                dynamic_viscosity=dynamic_viscosity,
+                gravity=gravity,
+            )
+        workers = self.default_workers if workers is None else int(workers)
+        if workers < 1:
+            raise ValueError("workers must be at least one")
+        array_mesh = self.mesh if isinstance(self.mesh, ArrayMesh) else self.mesh.to_array_mesh()
+        def align(values):
+            if not isinstance(values, dict):
+                return values
+            return np.asarray([values[int(cell_id)] for cell_id in array_mesh.cell_ids])
+        matrix_porosity = align(matrix_porosity)
+        matrix_intrinsic_permeability = align(matrix_intrinsic_permeability)
+        matrix_specific_storage = align(matrix_specific_storage)
+        if hasattr(self.dfn, "to_surface_dfn"):
+            surface = self.dfn.to_surface_dfn(
+                density=density,
+                dynamic_viscosity=dynamic_viscosity,
+                gravity=gravity,
+                hydraulic_aperture_ratio=hydraulic_aperture_ratio,
+            )
+        else:
+            raise TypeError("dfn must provide to_surface_dfn()")
+        object_backed = bool(getattr(self.dfn, "dfn", [])) or bool(getattr(self.dfn, "faults", []))
+        if keep_intersections not in (True, False, "auto"):
+            raise ValueError("keep_intersections must be True, False, or 'auto'")
+        retain = object_backed if keep_intersections == "auto" else bool(keep_intersections)
+        intersections = None
+        if retain:
+            intersections = intersect_surface_with_mesh(
+                surface,
+                array_mesh,
+                chunk_size=chunk_size,
+                workers=workers,
+            )
+        result = upscale_surface_dfn(
+            surface,
+            array_mesh,
+            matrix_porosity=matrix_porosity,
+            matrix_intrinsic_permeability=matrix_intrinsic_permeability,
+            matrix_specific_storage=matrix_specific_storage,
+            density=density,
+            dynamic_viscosity=dynamic_viscosity,
+            gravity=gravity,
+            intersections=intersections,
+            chunk_size=chunk_size,
+            workers=workers,
+            group_contributions=group_contributions,
+            combination_mode=combination_mode,
+        )
+        self.surface_intersections = intersections
+        self.intersection_index = None if intersections is None else IntersectionIndex(surface, array_mesh, intersections)
+        result.metadata["intersection_engine"] = "indexed"
+        result.metadata["intersections_retained"] = intersections is not None
+        self.upscaling_result = result
+        return result
+
+    def prepare_intersections(self, *, engine="auto", chunk_size=50_000, workers=None,
+                              density=997.16, dynamic_viscosity=8.9e-4, gravity=9.80665,
+                              hydraulic_aperture_ratio=1.0):
+        """Prepare intersections explicitly without running property upscaling."""
+
+        if engine not in ("auto", "indexed", "legacy"):
+            raise ValueError("engine must be 'auto', 'indexed', or 'legacy'")
+        if engine == "legacy":
+            if isinstance(self.mesh, ArrayMesh):
+                raise TypeError("legacy intersections require MeshPreprocessor")
+            self._clear_legacy_associations()
+            self._intersect_dfn_with_mesh(parallel=False)
+            return None
+        from .surface_upscaler import IntersectionIndex, intersect_surface_with_mesh
+        array_mesh = self.mesh if isinstance(self.mesh, ArrayMesh) else self.mesh.to_array_mesh()
+        surface = self.dfn.to_surface_dfn(
+            density=density, dynamic_viscosity=dynamic_viscosity, gravity=gravity,
+            hydraulic_aperture_ratio=hydraulic_aperture_ratio,
+        )
+        table = intersect_surface_with_mesh(
+            surface, array_mesh, chunk_size=chunk_size,
+            workers=self.default_workers if workers is None else workers,
+        )
+        self.surface_intersections = table
+        self.intersection_index = IntersectionIndex(surface, array_mesh, table)
+        return self.intersection_index
+
+    def intersections_for(self, obj):
+        """Return retained compact intersections for a fracture, fault, or mesh element."""
+
+        if self.intersection_index is None:
+            raise RuntimeError("no compact intersections retained; call prepare_intersections() or upscale(..., keep_intersections=True)")
+        if hasattr(obj, "meshio_mesh"):
+            return self.intersection_index.for_fault(obj)
+        if hasattr(obj, "side_points"):
+            return self.intersection_index.for_fracture(obj)
+        return self.intersection_index.for_cell(obj)
+
+    def materialize_legacy_intersections(self, *, fractures=None, faults=None, cells=None):
+        """Populate legacy dictionaries only for explicitly selected objects."""
+
+        if self.intersection_index is None or isinstance(self.mesh, ArrayMesh):
+            raise RuntimeError("materialization requires retained intersections and MeshPreprocessor")
+        if fractures is None and faults is None and cells is None:
+            raise ValueError("select fractures, faults, or cells to materialize")
+        fracture_items = self.dfn.dfn if fractures is None and cells is not None else (fractures or [])
+        fault_items = self.dfn.faults if faults is None and cells is not None else (faults or [])
+        cell_ids = None if cells is None else {int(getattr(cell, "local_id", cell)) for cell in cells}
+        elements = {int(element.local_id): element for element in self.mesh.elements}
+        for fracture in fracture_items:
+            if not hasattr(fracture, "local_id"):
+                fracture = self.dfn.dfn[int(fracture)]
+            view = self.intersection_index.for_fracture(fracture)
+            aggregate = {}
+            for cell_id, area, volume in zip(view.cell_ids, view.areas, view.pore_volumes):
+                if cell_ids is not None and int(cell_id) not in cell_ids:
+                    continue
+                current = aggregate.setdefault(int(cell_id), [0.0, 0.0])
+                current[0] += float(area)
+                current[1] += float(volume)
+            for cell_id, (area, volume) in aggregate.items():
+                element = elements[int(cell_id)]
+                fracture.intersection_dictionary[int(cell_id)] = area
+                element.associated_fractures[int(fracture.local_id)] = {
+                    "area": area, "volume": volume, "fracture": int(fracture.local_id)
+                }
+        for fault in fault_items:
+            if not hasattr(fault, "local_id"):
+                fault = self.dfn.faults[int(fault)]
+            view = self.intersection_index.for_fault(fault)
+            aggregate = {}
+            for cell_id, area, volume in zip(view.cell_ids, view.areas, view.pore_volumes):
+                if cell_ids is not None and int(cell_id) not in cell_ids:
+                    continue
+                current = aggregate.setdefault(int(cell_id), [0.0, 0.0])
+                current[0] += float(area)
+                current[1] += float(volume)
+            for cell_id, (area, volume) in aggregate.items():
+                element = elements[int(cell_id)]
+                element.associated_faults[int(fault.local_id)] = {"area": area, "volume": volume}
+                if element not in fault.associated_elements:
+                    fault.associated_elements.append(element)
+
+    def upscale_hydraulic_conductivity(self, **kwargs):
+        """Run compact upscaling and return the combined conductivity tensor in m/s."""
+
+        return self.upscale(**kwargs).hydraulic_conductivity
+
+    def upscale_intrinsic_permeability(self, **kwargs):
+        """Run compact upscaling and return the combined permeability tensor in m²."""
+
+        return self.upscale(**kwargs).intrinsic_permeability
 
 
 
@@ -130,7 +322,7 @@ class DfnUpscaler:
 
         # Proceed with fault cell assignments
         if not self.load_faults:
-            self.find_fault_cells(nearest=self.nearest, check_nodes=self.check_nodes)
+            self.find_fault_cells(save_fault_cells=False, nearest=self.nearest, check_nodes=self.check_nodes)
         else:
             logger.info(f'Loading fault assignment information from {self.load_faults}')
             with open(self.load_faults, 'rb') as f:
@@ -212,6 +404,8 @@ class DfnUpscaler:
         fault_cells = {}
         for fault in tqdm(self.dfn.faults, desc='Finding distances to faults'):
             fault: Fault
+            # Re-running association must be idempotent.
+            fault.associated_elements = []
             # Iterate over each triangle individually and find close mesh elements
             triangle_centers = fault.trimesh_mesh.triangles_center
             triangle_areas = fault.trimesh_mesh.area_faces
@@ -284,6 +478,10 @@ class DfnUpscaler:
                             fault.associated_elements.append(element)
                             break
 
+            fault.associated_elements = list(
+                {element.local_id: element for element in fault.associated_elements}.values()
+            )
+
         if save_fault_cells:
             import dill
             for element in self.mesh.elements:
@@ -298,12 +496,13 @@ class DfnUpscaler:
         # Compute volume of fractures in each element.
         # self.elements.total_fracture_volume = np.zeros([len(elements)])
         for elem in tqdm(self.mesh.elements, desc="Computing fracture volume fractions"):
+            elem.total_fracture_volume = 0.0
             for fracture in elem.associated_fractures:
                 fracture_dict = elem.associated_fractures[fracture]
                 # Attribute of the element: portion of element occupied by fractures.
                 elem.total_fracture_volume += fracture_dict['volume']
 
-    def upscale_mesh_porosity(self,
+    def _legacy_upscale_mesh_porosity(self,
                               matrix_porosity=None,
                               intensity_correction_factor=1.0,
                               existing_fractures_fraction=1.0,
@@ -321,33 +520,37 @@ class DfnUpscaler:
         Returns:
             dict: element ids mapped to upscaled porosity values.
         """
-        matrix_porosity = 0.0
+        matrix_porosity = 0.0 if matrix_porosity is None else matrix_porosity
         self._compute_fracture_volume_in_elements()
         upscaled_porosity = {}
         for elem in tqdm(self.mesh.elements, desc="Upscaling porosity"):
             element_volume = elem.volume
-            upscaled_porosity[elem.local_id] = (elem.total_fracture_volume / element_volume) + matrix_porosity * (1 - (elem.total_fracture_volume / element_volume))
+            local_matrix_porosity = (
+                matrix_porosity.get(elem.local_id, 0.0)
+                if isinstance(matrix_porosity, dict)
+                else np.asarray(matrix_porosity)[elem.local_id]
+                if np.asarray(matrix_porosity).ndim
+                else float(matrix_porosity)
+            )
+            upscaled_porosity[elem.local_id] = (elem.total_fracture_volume / element_volume) + local_matrix_porosity * (1 - (elem.total_fracture_volume / element_volume))
             upscaled_porosity[elem.local_id] = np.abs(upscaled_porosity[elem.local_id]) * intensity_correction_factor * (1 / existing_fractures_fraction)
 
         for fault in self.dfn.faults:
             for element in fault.associated_elements:
-                upscaled_porosity[element.local_id] = fault.porosity
+                if fault.porosity is not None:
+                    current = upscaled_porosity[element.local_id]
+                    upscaled_porosity[element.local_id] = current + fault.porosity * (1.0 - current)
 
         #Post-processing: Truncate values to P5 and P95.
         if truncate:
             resulting_porosity = [upscaled_porosity[local_id] for local_id in upscaled_porosity]
-            minimum_porosity = -1.0
-            min_percentile = truncate_to_min_percentile - 1
-            while minimum_porosity <= 0:
-                minimum_porosity = np.percentile(np.array(resulting_porosity)[~np.isnan(resulting_porosity)],
-                                                 min_percentile)
-                min_percentile = min_percentile + 1
-            logger.info("Porosity will be truncated to Percentile = " + str(min_percentile))
+            finite = np.asarray(resulting_porosity, dtype=float)
+            finite = finite[np.isfinite(finite)]
+            positive = finite[finite > 0]
+            minimum_porosity = float(np.percentile(positive, truncate_to_min_percentile)) if len(positive) else 0.0
 
             # Truncate to max
-            maximum_porosity = np.percentile(np.array(resulting_porosity)[~np.isnan(resulting_porosity)],
-                                                truncate_to_max_percentile)  # TODO: check if this is correct (strange results with small datasets)
-            maximum_porosity = np.max(np.array(resulting_porosity)[~np.isnan(resulting_porosity)])
+            maximum_porosity = float(np.percentile(finite, truncate_to_max_percentile)) if len(finite) else 0.0
 
             for elem in tqdm(self.mesh.elements, desc="Truncating porosity values to P1 and P99"):
 
@@ -360,7 +563,7 @@ class DfnUpscaler:
                 else:
                     continue
 
-        vtk_porosity = np.asarray(self.mesh.elements)
+        vtk_porosity = np.zeros(len(self.mesh.elements), dtype=float)
         for local_id in upscaled_porosity:
             vtk_porosity[local_id] = upscaled_porosity[local_id]
 
@@ -371,7 +574,7 @@ class DfnUpscaler:
 
         return upscaled_porosity
 
-    def upscale_mesh_storativity(self,
+    def _legacy_upscale_mesh_storativity(self,
                                  matrix_storativity=None,
                                  truncate_to_min_percentile=5,
                                  truncate_to_max_percentile=95,
@@ -389,38 +592,54 @@ class DfnUpscaler:
         """
         upscaled_storativity = {}
 
+        def local_matrix_value(element_id):
+            if matrix_storativity is None:
+                return 0.0
+            if isinstance(matrix_storativity, dict):
+                return float(matrix_storativity[element_id])
+            values = np.asarray(matrix_storativity, dtype=float)
+            return float(values[element_id]) if values.ndim else float(values)
+
         for elem in tqdm(self.mesh.elements, desc="Upscaling fractures storativity"):
-            upscaled_storativity[elem.local_id] = 0.0
+            matrix_value = local_matrix_value(elem.local_id)
             element_volume = elem.volume
-            sum_weights = 0.0
-            sum_weigted_storativity = 0.0
+            fracture_fraction = 0.0
+            fracture_storage = 0.0
             for frac_name in elem.associated_fractures:
                 frac_dict = elem.associated_fractures[frac_name]
                 frac = frac_dict['fracture']
                 frac_volume_in_element = frac_dict['volume'] / element_volume
-                sum_weights += frac_volume_in_element
-                sum_weigted_storativity += self.dfn[frac].storativity * frac_volume_in_element
-                upscaled_storativity[elem.local_id] = sum_weigted_storativity/sum_weights
+                fracture_fraction += frac_volume_in_element
+                fracture_storage += self.dfn[frac].storativity * frac_volume_in_element
+            fracture_fraction = min(max(fracture_fraction, 0.0), 1.0)
+            upscaled_storativity[elem.local_id] = (
+                fracture_storage + matrix_value * (1.0 - fracture_fraction)
+            )
 
 
         for fault in self.dfn.faults:
             for element in fault.associated_elements:
-                upscaled_storativity[element.local_id] = fault.storativity
+                if fault.storativity is not None:
+                    upscaled_storativity[element.local_id] = max(
+                        upscaled_storativity[element.local_id], float(fault.storativity)
+                    )
 
 
         #Post-processing: Truncate values to P5 and P95.
         if truncate:
-            resulting_storativity = [upscaled_storativity[local_id] for local_id in upscaled_storativity]
-            minimum_storativity = -1.0
-            min_percentile = truncate_to_min_percentile - 1
-            while minimum_storativity <= 0:
-                minimum_storativity = np.percentile(np.array(resulting_storativity)[~np.isnan(resulting_storativity)], min_percentile)
-                min_percentile = min_percentile + 1
-                print(min_percentile)
-
-            print("Storativity will be truncated to Percentile = " + str(min_percentile))
-
-            maximum_storativity = np.percentile(np.array(resulting_storativity)[~np.isnan(resulting_storativity)], truncate_to_max_percentile)
+            resulting_storativity = np.asarray(list(upscaled_storativity.values()), dtype=float)
+            finite = resulting_storativity[np.isfinite(resulting_storativity)]
+            positive = finite[finite > 0]
+            minimum_storativity = (
+                float(np.percentile(positive, truncate_to_min_percentile))
+                if len(positive)
+                else 0.0
+            )
+            maximum_storativity = (
+                float(np.percentile(finite, truncate_to_max_percentile))
+                if len(finite)
+                else 0.0
+            )
 
             for elem in tqdm(self.mesh.elements, desc="Truncating porosity values to P1 and P99"):
                 if math.isnan(upscaled_storativity[elem.local_id]):
@@ -432,7 +651,7 @@ class DfnUpscaler:
                 else:
                     continue
 
-        vtk_storativity = np.asarray(self.mesh.elements)
+        vtk_storativity = np.zeros(len(self.mesh.elements), dtype=float)
         for local_id in upscaled_storativity:
             vtk_storativity[local_id] = upscaled_storativity[local_id]
 
@@ -491,7 +710,7 @@ class DfnUpscaler:
         self.mesh.cell_data[property] = [vtk_property.tolist()]
         self.property_dict = property_dict
 
-    def upscale_mesh_permeability(self,
+    def _legacy_upscale_mesh_permeability(self,
                                   matrix_permeability=None,
                                   rho=1000,
                                   g=9.8,
@@ -511,12 +730,29 @@ class DfnUpscaler:
         Returns:
             dict: element ids mapped to 3x3 upscaled permeability tensors.
         """
-        matrix_permeability = {}
-
-        for elem in tqdm(self.mesh.elements, desc="Creating permeability tensor for dummy anisotropic case"):
-            matrix_permeability[elem.local_id] = np.ones([3, 3]) * 0.0
-
-        matrix_permeability_tensor = matrix_permeability
+        self._compute_fracture_volume_in_elements()
+        if matrix_permeability is None:
+            matrix_permeability_tensor = {
+                elem.local_id: np.zeros((3, 3), dtype=float) for elem in self.mesh.elements
+            }
+        elif isinstance(matrix_permeability, dict):
+            matrix_permeability_tensor = {}
+            for elem in self.mesh.elements:
+                value = np.asarray(matrix_permeability[elem.local_id], dtype=float)
+                matrix_permeability_tensor[elem.local_id] = self._as_legacy_tensor(value)
+        else:
+            value = np.asarray(matrix_permeability, dtype=float)
+            n_elements = len(self.mesh.elements)
+            if value.ndim == 1 and value.shape != (n_elements,):
+                raise ValueError("matrix_permeability vector must have one value per element")
+            if value.ndim == 3 and value.shape != (n_elements, 3, 3):
+                raise ValueError("matrix_permeability tensor field must have shape (n, 3, 3)")
+            if value.ndim not in (0, 1, 2, 3):
+                raise ValueError("unsupported matrix_permeability shape")
+            matrix_permeability_tensor = {}
+            for elem in self.mesh.elements:
+                current = value[elem.local_id] if value.ndim in (1, 3) else value
+                matrix_permeability_tensor[elem.local_id] = self._as_legacy_tensor(current)
 
         # Check correct size of matrix_permeability.
         # matrix_permeability_tensor = np.zeros(len(self.elements))
@@ -584,7 +820,7 @@ class DfnUpscaler:
                     perm_tensor[1, 2] = self.dfn[frac].hk * (-1) * n2 * n3
                     perm_tensor[2, 2] = self.dfn[frac].hk * ((n1 ** 2) + (n2 ** 2))
 
-                    if 'mode' == 'anisotropy_principals':
+                    if mode == 'anisotropy_principals':
                         eigen_perm_tensor = np.diag(np.linalg.eig(perm_tensor)[0])
                         perm_tensor = eigen_perm_tensor
 
@@ -592,11 +828,11 @@ class DfnUpscaler:
                     # Add fracture permeability, weighted by the area that the fracture occupies in the element.
                     fracture_hk[elem.local_id][0, 0] += (perm_tensor[0, 0] * frac_volume_in_element)
                     fracture_hk[elem.local_id][0, 1] += (perm_tensor[0, 1] * frac_volume_in_element)
-                    fracture_hk[elem.local_id][0, 2] += (perm_tensor[0, 1] * frac_volume_in_element)
+                    fracture_hk[elem.local_id][0, 2] += (perm_tensor[0, 2] * frac_volume_in_element)
                     fracture_hk[elem.local_id][1, 0] += (perm_tensor[0, 1] * frac_volume_in_element)
                     fracture_hk[elem.local_id][1, 1] += (perm_tensor[1, 1] * frac_volume_in_element)
                     fracture_hk[elem.local_id][1, 2] += (perm_tensor[1, 2] * frac_volume_in_element)
-                    fracture_hk[elem.local_id][2, 0] += (perm_tensor[0, 1] * frac_volume_in_element)
+                    fracture_hk[elem.local_id][2, 0] += (perm_tensor[0, 2] * frac_volume_in_element)
                     fracture_hk[elem.local_id][2, 1] += (perm_tensor[1, 2] * frac_volume_in_element)
                     fracture_hk[elem.local_id][2, 2] += (perm_tensor[2, 2] * frac_volume_in_element)
 
@@ -621,6 +857,16 @@ class DfnUpscaler:
                     if mode == 'isotropy':
                         # Add fault permeability.
                         fault_hk[elem.local_id][0, 0] += fault.hk
+
+                    else:
+                        normal = np.asarray(fault.normal_vector, dtype=float)
+                        norm = np.linalg.norm(normal)
+                        if norm == 0:
+                            raise ValueError(f"fault {fault.local_id} has no valid normal")
+                        normal /= norm
+                        fault_hk[elem.local_id] += fault.hk * (
+                            np.eye(3) - np.outer(normal, normal)
+                        )
 
                 #
                 # else:  # 'anisotropy' in 'mode':
@@ -655,19 +901,12 @@ class DfnUpscaler:
 
         #Post-processing: Truncate values in each direction.
         if truncate:
-            for i in range(0,3):
-                for j in range(0,3):
-                    resulting_hk = [upscaled_hk[local_id][0,0] for local_id in upscaled_hk]
-                    minimum_hk = -1.0
-                    min_percentile = truncate_to_min_percentile - 1
-                    while minimum_hk <= 0:
-                        minimum_hk = np.percentile(np.array(resulting_hk)[~np.isnan(resulting_hk)], min_percentile)
-                        min_percentile = min_percentile + 1
-                        print(min_percentile)
-
-                    print("HK will be truncated to Percentile = " + str(min_percentile))
-
-                    maximum_hk = np.percentile(np.array(resulting_hk)[~np.isnan(resulting_hk)], truncate_to_max_percentile)
+            for i, j in ((0, 0), (1, 1), (2, 2)):
+                    resulting_hk = np.asarray([upscaled_hk[local_id][i, j] for local_id in upscaled_hk], dtype=float)
+                    finite_hk = resulting_hk[np.isfinite(resulting_hk)]
+                    positive_hk = finite_hk[finite_hk > 0]
+                    minimum_hk = float(np.percentile(positive_hk, truncate_to_min_percentile)) if len(positive_hk) else 0.0
+                    maximum_hk = float(np.percentile(finite_hk, truncate_to_max_percentile)) if len(finite_hk) else 0.0
 
                     for elem in tqdm(self.mesh.elements, desc="Truncating permeability values"):
                         if math.isnan(upscaled_hk[elem.local_id][i,j]):
@@ -680,12 +919,12 @@ class DfnUpscaler:
                             continue
 
         # Export values to VTK
-        vtk_kxx = np.asarray(self.mesh.elements)
-        vtk_kyy = np.asarray(self.mesh.elements)
-        vtk_kzz = np.asarray(self.mesh.elements)
-        vtk_kxy = np.asarray(self.mesh.elements)
-        vtk_kxz = np.asarray(self.mesh.elements)
-        vtk_kyz = np.asarray(self.mesh.elements)
+        vtk_kxx = np.zeros(len(self.mesh.elements), dtype=float)
+        vtk_kyy = np.zeros(len(self.mesh.elements), dtype=float)
+        vtk_kzz = np.zeros(len(self.mesh.elements), dtype=float)
+        vtk_kxy = np.zeros(len(self.mesh.elements), dtype=float)
+        vtk_kxz = np.zeros(len(self.mesh.elements), dtype=float)
+        vtk_kyz = np.zeros(len(self.mesh.elements), dtype=float)
         for local_id in upscaled_hk:
             vtk_kxx[local_id] = upscaled_hk[local_id][0, 0]
             vtk_kyy[local_id] = upscaled_hk[local_id][1, 1]
@@ -704,6 +943,227 @@ class DfnUpscaler:
         self.upscaled_permeability = upscaled_hk
 
         return upscaled_hk
+
+    @staticmethod
+    def _as_legacy_tensor(value):
+        """Normalize one historical matrix property to a 3x3 tensor."""
+
+        value = np.asarray(value, dtype=float)
+        if value.ndim == 0:
+            return np.eye(3) * float(value)
+        if value.shape != (3, 3):
+            raise ValueError("matrix permeability values must be scalar or 3x3 tensors")
+        return value.copy()
+
+    def _clear_legacy_associations(self):
+        for fracture in getattr(self.dfn, "dfn", []):
+            fracture.intersection_dictionary = {}
+        for fault in getattr(self.dfn, "faults", []):
+            fault.associated_elements = []
+        for element in self.mesh.elements:
+            element.associated_fractures = {}
+            element.associated_faults = {}
+
+    def _upscale_legacy_result(self, *, matrix_porosity, matrix_intrinsic_permeability,
+                               matrix_specific_storage, density, dynamic_viscosity, gravity):
+        """Build a unified result from the historical object intersection engine."""
+
+        if isinstance(self.mesh, ArrayMesh):
+            raise TypeError("engine='legacy' requires MeshPreprocessor")
+        from .surface_upscaler import UpscalingResult, _scalar_field, _tensor_field
+
+        self._clear_legacy_associations()
+        self._intersect_dfn_with_mesh(parallel=False)
+        array_mesh = self.mesh.to_array_mesh(use_cache=False)
+        ids = array_mesh.cell_ids
+        n = array_mesh.n_cells
+        matrix_phi = _scalar_field(matrix_porosity, n, "matrix_porosity")
+        matrix_storage = _scalar_field(matrix_specific_storage, n, "matrix_specific_storage")
+        matrix_k = _tensor_field(matrix_intrinsic_permeability, n, "matrix_intrinsic_permeability")
+        conversion = density * gravity / dynamic_viscosity
+        phi_dict = self._legacy_upscale_mesh_porosity(
+            matrix_porosity={int(cell_id): matrix_phi[row] for row, cell_id in enumerate(ids)}, truncate=False
+        )
+        storage_dict = self._legacy_upscale_mesh_storativity(
+            matrix_storativity={int(cell_id): matrix_storage[row] for row, cell_id in enumerate(ids)}, truncate=False
+        )
+        conductivity_dict = self._legacy_upscale_mesh_permeability(
+            matrix_permeability={int(cell_id): matrix_k[row] * conversion for row, cell_id in enumerate(ids)},
+            rho=density, g=gravity, mu=dynamic_viscosity, truncate=False,
+        )
+        porosity = np.asarray([phi_dict[int(cell_id)] for cell_id in ids], dtype=float)
+        storage = np.asarray([storage_dict[int(cell_id)] for cell_id in ids], dtype=float)
+        conductivity = np.asarray([conductivity_dict[int(cell_id)] for cell_id in ids], dtype=float)
+        area = np.zeros(n, dtype=float)
+        pore_volume = np.zeros(n, dtype=float)
+        count = np.zeros(n, dtype=np.int64)
+        for row, element in enumerate(self.mesh.elements):
+            for association in element.associated_fractures.values():
+                area[row] += association["area"]
+                pore_volume[row] += association["volume"]
+                count[row] += 1
+        dfn_phi = pore_volume / array_mesh.volumes
+        matrix_K = matrix_k * conversion
+        dfn_K = conductivity - matrix_K * (1.0 - dfn_phi)[:, None, None]
+        dfn_storage = storage - matrix_storage * (1.0 - dfn_phi)
+        result = UpscalingResult(
+            mesh=array_mesh,
+            matrix_porosity=matrix_phi,
+            dfn_porosity=dfn_phi,
+            porosity=porosity,
+            matrix_specific_storage=matrix_storage,
+            dfn_specific_storage=dfn_storage,
+            specific_storage=storage,
+            matrix_hydraulic_conductivity=matrix_K,
+            dfn_hydraulic_conductivity=dfn_K,
+            hydraulic_conductivity=conductivity,
+            matrix_intrinsic_permeability=matrix_k,
+            dfn_intrinsic_permeability=dfn_K / conversion,
+            intrinsic_permeability=conductivity / conversion,
+            fracture_area=area,
+            fracture_pore_volume=pore_volume,
+            fracture_element_count=count,
+            metadata={
+                "density_kg_m3": density,
+                "dynamic_viscosity_pa_s": dynamic_viscosity,
+                "gravity_m_s2": gravity,
+                "intersection_engine": "legacy",
+                "intersections_retained": True,
+            },
+        )
+        self.upscaling_result = result
+        return result
+
+    @staticmethod
+    def _safe_percentile_clip(values, low, high, *, positive=False):
+        result = np.asarray(values, dtype=float).copy()
+        finite = result[np.isfinite(result)]
+        reference = finite[finite > 0] if positive else finite
+        if not len(reference):
+            result[~np.isfinite(result)] = 0.0
+            return result
+        lower = float(np.percentile(reference, low))
+        upper = float(np.percentile(finite, high))
+        result[~np.isfinite(result)] = lower
+        return np.clip(result, lower, upper)
+
+    def _store_scalar_legacy_field(self, name, cell_ids, values):
+        if isinstance(self.mesh, ArrayMesh):
+            self.mesh.cell_data[name] = np.asarray(values, dtype=float)
+            return
+        maximum = max((int(value) for value in cell_ids), default=-1)
+        storage = np.zeros(maximum + 1, dtype=float)
+        storage[np.asarray(cell_ids, dtype=np.int64)] = values
+        self.mesh.cell_data[name] = self.mesh.refactor_array_by_element_type(storage)
+
+    def upscale_mesh_porosity(self, matrix_porosity=None, intensity_correction_factor=1.0,
+                              existing_fractures_fraction=1.0, truncate_to_min_percentile=5,
+                              truncate_to_max_percentile=95, truncate=True, *, engine="auto",
+                              workers=1, chunk_size=50_000):
+        if engine == "legacy":
+            return self._legacy_upscale_mesh_porosity(
+                matrix_porosity=matrix_porosity,
+                intensity_correction_factor=intensity_correction_factor,
+                existing_fractures_fraction=existing_fractures_fraction,
+                truncate_to_min_percentile=truncate_to_min_percentile,
+                truncate_to_max_percentile=truncate_to_max_percentile,
+                truncate=truncate,
+            )
+        matrix_porosity = 0.0 if matrix_porosity is None else matrix_porosity
+        result = self.upscale(
+            matrix_porosity=matrix_porosity, matrix_intrinsic_permeability=0.0,
+            matrix_specific_storage=0.0, engine=engine, workers=workers, chunk_size=chunk_size,
+        )
+        values = result.porosity * float(intensity_correction_factor) / float(existing_fractures_fraction)
+        if truncate:
+            values = self._safe_percentile_clip(
+                values, truncate_to_min_percentile, truncate_to_max_percentile, positive=True
+            )
+        output = {int(cell_id): float(values[row]) for row, cell_id in enumerate(result.mesh.cell_ids)}
+        self._store_scalar_legacy_field("upscaled_porosity", result.mesh.cell_ids, values)
+        self.upscaled_porosity = output
+        return output
+
+    def upscale_mesh_storativity(self, matrix_storativity=None, truncate_to_min_percentile=5,
+                                 truncate_to_max_percentile=95, truncate=True, *, engine="auto",
+                                 workers=1, chunk_size=50_000):
+        if engine == "legacy":
+            return self._legacy_upscale_mesh_storativity(
+                matrix_storativity=matrix_storativity,
+                truncate_to_min_percentile=truncate_to_min_percentile,
+                truncate_to_max_percentile=truncate_to_max_percentile,
+                truncate=truncate,
+            )
+        matrix_storativity = 0.0 if matrix_storativity is None else matrix_storativity
+        result = self.upscale(
+            matrix_porosity=0.0, matrix_intrinsic_permeability=0.0,
+            matrix_specific_storage=matrix_storativity, engine=engine,
+            workers=workers, chunk_size=chunk_size,
+        )
+        values = result.specific_storage
+        if truncate:
+            values = self._safe_percentile_clip(
+                values, truncate_to_min_percentile, truncate_to_max_percentile, positive=True
+            )
+        output = {int(cell_id): float(values[row]) for row, cell_id in enumerate(result.mesh.cell_ids)}
+        self._store_scalar_legacy_field("upscaled_storativity", result.mesh.cell_ids, values)
+        self.upscaled_storativity = output
+        return output
+
+    def upscale_mesh_permeability(self, matrix_permeability=None, rho=1000, g=9.8, mu=8.9e-4,
+                                  mode="full_tensor", truncate_to_min_percentile=5,
+                                  truncate_to_max_percentile=95, truncate=True, *, engine="auto",
+                                  workers=1, chunk_size=50_000):
+        """Historical wrapper returning hydraulic conductivity despite its name."""
+
+        if engine == "legacy":
+            return self._legacy_upscale_mesh_permeability(
+                matrix_permeability=matrix_permeability, rho=rho, g=g, mu=mu, mode=mode,
+                truncate_to_min_percentile=truncate_to_min_percentile,
+                truncate_to_max_percentile=truncate_to_max_percentile, truncate=truncate,
+            )
+        matrix_conductivity = 0.0 if matrix_permeability is None else matrix_permeability
+        conversion = float(rho) * float(g) / float(mu)
+        if isinstance(matrix_conductivity, dict):
+            intrinsic = {
+                key: np.asarray(value, dtype=float) / conversion
+                for key, value in matrix_conductivity.items()
+            }
+        else:
+            intrinsic = np.asarray(matrix_conductivity, dtype=float) / conversion
+        result = self.upscale(
+            matrix_porosity=0.0,
+            matrix_intrinsic_permeability=intrinsic,
+            density=rho, dynamic_viscosity=mu, gravity=g, engine=engine,
+            workers=workers, chunk_size=chunk_size,
+        )
+        values = result.hydraulic_conductivity.copy()
+        if mode == "isotropy":
+            isotropic = np.trace(values, axis1=1, axis2=2) / 3.0
+            values[:] = 0.0
+            values[:, range(3), range(3)] = isotropic[:, None]
+        elif mode == "anisotropy_principals":
+            eigenvalues = np.linalg.eigvalsh(values)
+            values[:] = 0.0
+            values[:, range(3), range(3)] = eigenvalues
+        elif mode not in ("full_tensor", "anisotropy"):
+            raise ValueError("mode must be full_tensor, anisotropy, anisotropy_principals, or isotropy")
+        if truncate:
+            for i in range(3):
+                values[:, i, i] = self._safe_percentile_clip(
+                    values[:, i, i], truncate_to_min_percentile, truncate_to_max_percentile, positive=True
+                )
+        output = {int(cell_id): values[row].copy() for row, cell_id in enumerate(result.mesh.cell_ids)}
+        maximum = max(map(int, result.mesh.cell_ids))
+        for label, i, j in (("Kxx",0,0),("Kyy",1,1),("Kzz",2,2),("Kxy",0,1),("Kxz",0,2),("Kyz",1,2)):
+            if isinstance(self.mesh, ArrayMesh):
+                self.mesh.cell_data[label] = values[:, i, j].copy()
+            else:
+                storage = np.zeros(maximum + 1, dtype=float)
+                storage[result.mesh.cell_ids] = values[:, i, j]
+                self.mesh.cell_data[label] = self.mesh.refactor_array_by_element_type(storage)
+        self.upscaled_permeability = output
+        return output
 
     def to_vtk(self, filename):
         """Export the mesh and any upscaled cell variables to VTK.

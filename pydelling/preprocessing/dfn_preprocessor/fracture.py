@@ -36,12 +36,18 @@ class Fracture(object):
         size=None,
         aperture=None,
         hydraulic_aperture=None,
+        transmissivity=None,
+        storativity=None,
         rock_type=None,
         aperture_constant=None,
         transmissivity_constant=None,
         storativity_constant=None,
         normal_vector=None,
         polygon: List[np.ndarray] = None,
+        effective_aperture=None,
+        porosity=None,
+        hydraulic_conductivity=None,
+        specific_storage=None,
     ):
         """Initialize fracture geometry and optional hydraulic constants.
 
@@ -52,15 +58,20 @@ class Fracture(object):
         Returns:
             None: stores geometry, hydraulic fields, side points, and local id.
         """
+        self._transmissivity = transmissivity
+        self._storativity = storativity
+        self._plane = None
+        self._corners = None
+        self._polygon = None
+        self._side_points = None
+        self._unit_normal_vector = None
         if normal_vector is not None:
             self._unit_normal_vector: np.ndarray = normal_vector
         self.side_points = None
         if dip is not None:
             assert dip_dir is not None
-        if size is None:
-            assert aperture is not None
-        if aperture is None:
-            assert size is not None
+        if polygon is None and size is None:
+            raise ValueError("a generated fracture requires size; polygon fractures do not")
         # Allow definition of a Fracture object based on a polygon
         if polygon is not None:
             # Assert x, y, z are not provided
@@ -79,6 +90,10 @@ class Fracture(object):
         self.size = size
         self._aperture = aperture
         self.hydraulic_aperture = hydraulic_aperture
+        self.effective_aperture = effective_aperture
+        self.porosity = porosity
+        self.hydraulic_conductivity = hydraulic_conductivity
+        self.specific_storage = specific_storage
         self.rock_type = rock_type
         self.intersection_dictionary = {}
         self.aperture_constant = aperture_constant
@@ -415,7 +430,7 @@ class Fracture(object):
         Returns:
             Plane: plane defined by centroid and unit normal vector.
         """
-        if not hasattr(self, "_plane"):
+        if self._plane is None:
             self._plane = Plane(self.centroid, normal=self.unit_normal_vector)
 
         return self._plane
@@ -431,7 +446,7 @@ class Fracture(object):
         Returns:
             list: Point objects for each corner.
         """
-        if not hasattr(self, "_corners"):
+        if self._corners is None:
             self._corners = [Point(point) for point in self.get_side_points()]
         return self._corners
 
@@ -446,13 +461,10 @@ class Fracture(object):
         Returns:
             list: Segment objects around the fracture boundary.
         """
-        corner_segments = [
-            Segment(self.corners[0], self.corners[1]),
-            Segment(self.corners[1], self.corners[2]),
-            Segment(self.corners[2], self.corners[3]),
-            Segment(self.corners[3], self.corners[0]),
+        return [
+            Segment(self.corners[index], self.corners[(index + 1) % len(self.corners)])
+            for index in range(len(self.corners))
         ]
-        return corner_segments
 
     @property
     def corner_lines(self):
@@ -465,13 +477,10 @@ class Fracture(object):
         Returns:
             list: Line objects around the fracture boundary.
         """
-        corner_segments = [
-            Line(self.corners[0], self.corners[1]),
-            Line(self.corners[1], self.corners[2]),
-            Line(self.corners[2], self.corners[3]),
-            Line(self.corners[3], self.corners[0]),
+        return [
+            Line(self.corners[index], self.corners[(index + 1) % len(self.corners)])
+            for index in range(len(self.corners))
         ]
-        return corner_segments
 
     def contains(self, point: np.ndarray) -> bool:
         """Check whether a 3D point lies inside the fracture polygon.
@@ -583,6 +592,19 @@ class Fracture(object):
             self._side_points = [
                 point + np.array([x, y, z]) for point in self._side_points
             ]
+        self._plane = None
+        self._corners = None
+        self._polygon = None
+
+    @property
+    def area(self):
+        """Return the area of an arbitrary planar fracture polygon."""
+
+        points = np.asarray(self.get_side_points(), dtype=float)
+        if len(points) < 3:
+            return 0.0
+        normal = self.unit_normal_vector
+        return abs(float(np.dot(np.sum(np.cross(points, np.roll(points, -1, axis=0)), axis=0), normal))) * 0.5
 
     @property
     def largest_index_normal_vector(self):
@@ -609,13 +631,14 @@ class Fracture(object):
         """
         if self._aperture is not None:
             return self._aperture
-        else:
+        elif self.aperture_constant is not None and self.size is not None:
             # const = config.globals.constants
             # computed_aperture = np.power((12 * const.mu
             #                              * config.globals.constitutive_laws.transmissivity.a
             #                              * np.log10(self.size / 2.0) ** 2) / (const.rho * const.g), 1/3)
             computed_aperture = self.aperture_constant * np.log10(self.size / 2.0)
             return computed_aperture
+        return None
 
     @property
     def transmissivity(self):
@@ -682,6 +705,12 @@ class Fracture(object):
             "rock_type": self.rock_type,
             "transmissivity_constant": self.transmissivity_constant,
             "storativity_constant": self.storativity_constant,
+            "transmissivity": self._transmissivity,
+            "storativity": self._storativity,
+            "effective_aperture": self.effective_aperture,
+            "porosity": self.porosity,
+            "hydraulic_conductivity": self.hydraulic_conductivity,
+            "specific_storage": self.specific_storage,
             "normal_vector": self._unit_normal_vector.tolist()
             if self._unit_normal_vector is not None
             else None,
