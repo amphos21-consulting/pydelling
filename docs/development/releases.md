@@ -2,6 +2,25 @@
 
 This document tracks the development history and evolution of pydelling, highlighting major features, improvements, and bug fixes in each version.
 
+## Version 1.2.1
+
+*Release Date: 2026-09-28*
+
+### Study system (parameter sweeps)
+- New `PflotranDeck` card/block parser (`pydelling.managers.pflotran_deck`). It matches every `END`/`/` to its block (nested sub-blocks, empty blocks, `SKIP`/`NOSKIP`, `SUBSURFACE`/`END_SUBSURFACE`), using PFLOTRAN keywords and indentation. Guesses are reported in `deck.warnings`.
+- `PflotranStudy` card API: `deck`, `get_card`, `get_card_values`, `set_card_values`, `add_card` and `remove_card`, selected by paths such as `("MATERIAL_PROPERTY soil", "PERM_ISO")`. Edits keep indentation and inline comments.
+- `get_regions`, `get_datasets`, `get_region_file`, `replace_region_file`, `get_subsurface_idx` and the block helpers now use the parser. Blocks no longer end at any line that merely contains "end" (e.g. `# recommended`), and `FILE` lookups no longer match `FILENAME`.
+- `replace_material_properties` finds `POROSITY`, `PERM_ISO`/`PERM_HORIZONTAL` and `VERTICAL_ANISOTROPY_RATIO` by keyword instead of fixed line offsets. It raises `LineNotFound` when a line is missing; `new_vertical_anisotropy` is optional.
+- Strict templates: rendering raises `MissingTemplateVariables` listing every placeholder without a value. `strict=False` restores the old behaviour. Also new: `variable_delimiters` (e.g. `("<<", ">>")`), `placeholders()`, `missing_variables()` and `set_variables(**values)`.
+- `study.copy()` now returns an independent deep copy (settings, files and callbacks) and accepts `study_name`. Callbacks of a copy are bound to the copy.
+- `BaseManager.add_study` sets `study.idx` to the study's position and rejects a different study with a duplicate name. `to_file` no longer advances the global study counter, and it creates nested folders.
+- `generate_run_files(studies_folder)` works without calling `run()` first; it used to crash on `results_folder=None`.
+
+### Import behaviour
+- Importing pydelling no longer creates `./logs/`, reconfigures the root logger or captures Python warnings (warnings were previously silenced process-wide).
+- Only the `pydelling` logger gets a Rich console handler. Use `pydelling.config.configure_logging("package" | "root" | "none")` or `PYDELLING_LOGGING` to change this; `"root"` restores the previous output.
+- Config discovery checks `PYDELLING_CONFIG`, then `*config*.yaml`/`*.yml` in the working directory, then the packaged default.
+
 ## Version 1.2.0
 
 - Introduce `pydelling.assets` with versioned preview contracts, PFLOTRAN case handlers, and a packaged API catalog. Existing `pydelling.preview` imports remain supported for the 1.2 series.
