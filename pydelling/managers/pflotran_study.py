@@ -58,7 +58,7 @@ class PflotranStudy(BaseStudy):
                 logger.warning(f"{self.input_file_name}: {warning}")
         return self._deck_cache
 
-    def get_card(self, *selectors: str) -> Card:
+    def get_card(self, *selectors: str, direct: bool = False) -> Card:
         """Return the card at a selector path, e.g. ``('MATERIAL_PROPERTY soil', 'POROSITY')``.
 
         Category: manager
@@ -72,6 +72,14 @@ class PflotranStudy(BaseStudy):
         Returns:
             Card: the matched card (``card.line`` is its line index in ``raw_text``).
         """
+        if direct:
+            card = self.deck.select(selectors[0])
+            for selector in selectors[1:]:
+                found = next((child for child in card.children if child.matches(selector)), None)
+                if found is None:
+                    raise CardNotFound(f'No direct child {selector} under {card.keyword}')
+                card = found
+            return card
         return self.deck.select(*selectors)
 
     def get_card_values(self, *selectors: str) -> List[str]:
@@ -86,7 +94,7 @@ class PflotranStudy(BaseStudy):
         """
         return list(self.get_card(*selectors).args)
 
-    def set_card_values(self, *selectors: str, values):
+    def set_card_values(self, *selectors: str, values, direct: bool = False):
         """Replace the arguments of a card, keeping its keyword, indentation and comment.
 
         Category: manager
@@ -98,7 +106,7 @@ class PflotranStudy(BaseStudy):
         Returns:
             None: mutates raw_text.
         """
-        card = self.get_card(*selectors)
+        card = self.get_card(*selectors, direct=direct)
         if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
             values = [values]
         line = self._get_line(card.line)
@@ -109,7 +117,7 @@ class PflotranStudy(BaseStudy):
             new_line += '  ' + comment
         self._replace_line(card.line, [new_line])
 
-    def add_card(self, *selectors: str, line: str):
+    def add_card(self, *selectors: str, line: str, direct: bool = False):
         """Append a line as the last entry of the selected block (before its terminator).
 
         Category: manager
@@ -124,13 +132,13 @@ class PflotranStudy(BaseStudy):
         Returns:
             None: mutates raw_text.
         """
-        block = self.get_card(*selectors)
+        block = self.get_card(*selectors, direct=direct)
         if not block.is_block:
             raise ValueError(f"'{block.path}' is not a block")
         indent = block.children[0].indent if block.children else block.indent + 2
         self._add_line(block.end_line, [' ' * indent + line.strip()])
 
-    def remove_card(self, *selectors: str):
+    def remove_card(self, *selectors: str, direct: bool = False):
         """Remove a card, including its whole block when it is one.
 
         Category: manager
@@ -140,7 +148,7 @@ class PflotranStudy(BaseStudy):
         Returns:
             None: mutates raw_text.
         """
-        card = self.get_card(*selectors)
+        card = self.get_card(*selectors, direct=direct)
         self._delete_lines(list(range(card.line, card.last_line + 1)))
 
     @staticmethod
@@ -610,4 +618,3 @@ class PflotranStudy(BaseStudy):
             dict: line indexes mapped to region names.
         """
         return {v: k for k, v in self.regions_to_idx.items()}
-

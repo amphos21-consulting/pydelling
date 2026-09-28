@@ -33,6 +33,15 @@ class PflotranManager(BaseManager):
         and how it gathers results afterward.
     """
 
+    def run_batch(self, executor, folder, requirements, *, resume=True, provenance=None, batch_name='batch'):
+        """Execute registered studies with durable status, validation and resume.
+
+        Unlike legacy ``run``, this opt-in API returns a BatchResult and never
+        assumes PETSc contains the system MPI launcher.
+        """
+        return executor.run_batch(self.studies.values(), folder, requirements,
+                                  resume=resume, provenance=provenance, batch_name=batch_name)
+
     def _get_study_status(self, study_id: int):
         """Return status information for a PFLOTRAN study.
 
@@ -497,7 +506,6 @@ class PflotranManager(BaseManager):
             os.chdir(self.results_folder / 'merged_results')
             pflotran_postprocesser.run()
             # Return to the original working directory
-
 
 
 

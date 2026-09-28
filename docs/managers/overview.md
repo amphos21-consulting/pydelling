@@ -66,3 +66,61 @@ and logs it.
 Detailed documentation for simulation managers is being updated. Please check back soon or refer to the API documentation for specific class details.
 
 For examples, see the `code_snippets/managers/` directory in the repository.
+## Reproducible parameter batches
+
+The new opt-in API preserves legacy `run()` callers:
+
+```python
+from pydelling.managers import (
+    ParameterSpace, SamplingConfig, PflotranStudy, PflotranManager, LocalExecutor,
+)
+space = ParameterSpace({"permeability": {"bounds": [1e-15, 1e-12], "scale": "log"}})
+samples = space.sample(SamplingConfig(method="lhs", n=4, seed=42))
+base = PflotranStudy("template.in")
+manager = PflotranManager()
+requirements = {}
+for i, values in enumerate(samples.to_dict("records")):
+    study = base.copy(study_name=f"case-{i:04d}")
+    study.set_variables(**values)
+    manager.add_study(study)
+    requirements[study.name] = {
+        "expected_times": [20000.],  # seconds, regardless of native HDF5 units
+        "required_variables": ["Total_Tracer [M]"],
+    }
+result = manager.run_batch(
+    LocalExecutor(executable="/path/to/pflotran", workers=4),
+    "runs/example", requirements, resume=True,
+)
+assert result.successful
+```
+
+`ParameterSpace` supports fixed values, discrete values, continuous bounds,
+weighted disjoint intervals, and generated linear/log partitions. `SamplingConfig`
+supports random/LHS/Sobol/grid designs. Grid levels are physical values supplied
+through `options={"levels": {...}}`; Sobol requires a power-of-two size. Additional
+unit-cube samplers can be installed through `register_sampler`.
+
+`SSHExecutor(host, root, uv, ...)` provides source deployment, detached workers,
+status and allowlisted artifact retrieval through OpenSSH. `deploy(workspace,
+relative_files)` returns a remote uv runtime. Set `runtime` to that directory and
+`local_options` to the remote `LocalExecutor` settings to pass an `SSHExecutor`
+directly to `manager.run_batch`. This invokes the generic pydelling batch worker;
+no application-specific module is needed. The supplied runtime must contain the
+locked pydelling workspace. For complete application pipelines, `start` accepts a
+config and a configurable `entrypoint` (default `run_models.py`).
+
+A batch preserves each attempt, validates HDF5 variables and times, records return
+codes and output hashes, rejects changed provenance, and skips intact successful
+studies on resume. `LocalExecutor.pipeline(folder)` holds the same campaign lock
+across multiple named batches and postprocessing, allowing applications to gate a
+training batch on verification. No shell interpolation or global cwd/env mutation
+is used for local solver launches.
+
+Use `PflotranStudy.get_card`, `set_card_values`, `add_card`, or `remove_card` with
+`direct=True` when subsequent selectors must be direct children (e.g. a flow
+condition's pressure value rather than the pressure keyword inside its TYPE card).
+The default descendant lookup remains backward-compatible.
+
+`PflotranReader` is a context manager. `times_seconds` normalizes supported HDF5
+units without changing legacy native-time access, and `cell_centers` computes
+structured-grid centroids from face coordinates.

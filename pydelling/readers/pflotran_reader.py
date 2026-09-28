@@ -59,7 +59,8 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
             self.variables = variables
         else:
             self.variables = list(self.data[self.time_keys[self.time_values[0]]])
-        if 'Material_ID' not in self.variables:
+        self.variables = list(self.variables)
+        if 'Material_ID' not in self.variables and 'Material_ID' in self.data[self.time_keys[self.time_values[0]]]:
             self.variables.append('Material_ID')
 
         for time in tqdm(self.time_keys, desc='Reading PFLOTRAN results'):
@@ -79,10 +80,36 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
             None: sets data, time_dict_keys, and time_keys.
         """
         self.data: h5py.File = h5py.File(self.filename, 'r')
-        # Obtain time keys
-        self.time_dict_keys = natsort.natsorted(OrderedDict({float(key.split(' ')[2]): key for key in self.data.keys() if 'Time' in key}))
-        self.time_keys = OrderedDict({float(key.split(' ')[2]): key for key in self.data.keys() if 'Time' in key})
-        self.time_keys = {key: self.time_keys[key] for key in self.time_dict_keys}
+        # Preserve legacy native-time access; expose SI times separately.
+        indexed = {}
+        for key in self.data.keys():
+            if key.startswith('Time:'):
+                value = float(key.split()[1].replace('D', 'E').replace('d', 'e'))
+                indexed[value] = key
+        self.time_dict_keys = sorted(indexed)
+        self.time_keys = {value: indexed[value] for value in self.time_dict_keys}
+
+    def close(self):
+        """Close the HDF5 handle; loaded result arrays remain available."""
+        self.data.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    @property
+    def times_seconds(self):
+        """Time values in SI seconds, aligned with ``time_values``."""
+        from pydelling.managers.batch import time_seconds
+        return [time_seconds(self.time_keys[t]) for t in self.time_values]
+
+    @property
+    def cell_centers(self):
+        """Structured-grid cell centers from PFLOTRAN face coordinates."""
+        return {axis: (values[:-1] + values[1:]) / 2
+                for axis, values in self.coordinates.items()}
 
     @property
     def time_values(self) -> list[float]:
@@ -109,9 +136,9 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
             dict: coordinate arrays keyed by x[m], y[m], and z[m].
         """
         temp_coordinates = self.data['Coordinates']
-        temp_df = {'x[m]': np.array(temp_coordinates['X [m]']),
-                    'y[m]': np.array(temp_coordinates['Y [m]']),
-                    'z[m]': np.array(temp_coordinates['Z [m]']),
+        temp_df = {'x[m]': temp_coordinates['X [m]'][...],
+                    'y[m]': temp_coordinates['Y [m]'][...],
+                    'z[m]': temp_coordinates['Z [m]'][...],
                   }
         return temp_df
 
@@ -546,7 +573,7 @@ class PflotranResults:
         """
         self.time = time
         self.raw_data = data
-        self.results = {key: np.array(self.raw_data[key]) for key in self.raw_data}
+        self.results = {key: np.asarray(self.raw_data[key][...]) for key in self.raw_data}
         self.variable_keys = self.results.keys()
 
     def __repr__(self) -> str:
@@ -577,5 +604,4 @@ class PflotranResults:
         """
         temp_keys = [key.split('_')[1] for key in self.variable_keys if 'Total' in key]
         return temp_keys
-
 
