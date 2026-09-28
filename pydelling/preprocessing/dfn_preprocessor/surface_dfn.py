@@ -516,7 +516,7 @@ def read_surface_vtk(
             import vtk
             from vtk.util.numpy_support import vtk_to_numpy
         except ImportError as exc:
-            raise SurfaceDfnError("reading legacy VTK POLYDATA requires the vtk dependency") from exc
+            raise SurfaceDfnError("reading legacy VTK POLYDATA requires vtk; install pydelling[cloud]") from exc
         reader = vtk.vtkPolyDataReader()
         reader.SetFileName(str(path))
         reader.Update()

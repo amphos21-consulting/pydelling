@@ -167,6 +167,8 @@ plugins:
             docstring_style: google
             docstring_options:
               ignore_init_summary: true
+              # Legacy dynamic APIs lack annotations; retain strict link/build checks.
+              warn_missing_types: false
             merge_init_into_class: true
             show_submodules: true
             show_bases: false

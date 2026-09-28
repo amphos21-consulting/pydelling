@@ -56,6 +56,7 @@ def test_hgs_physical_policy_pair_validation_and_vtk_round_trip(tmp_path: Path):
 
 
 def test_legacy_polydata_surface_vtk_is_supported(tmp_path: Path):
+    pytest.importorskip("vtk", reason="legacy POLYDATA requires the cloud extra")
     path = tmp_path / "surface.vtk"
     path.write_text(
         """# vtk DataFile Version 3.0
@@ -93,3 +94,14 @@ fracture_element_id 1 1 int
     assert restored.group_names == {0: "test_group"}
     assert restored.fracture_element_ids[0] == 7
     assert restored.effective_aperture[0] == pytest.approx(0.025)
+
+
+def test_legacy_polydata_reports_missing_optional_dependency(tmp_path: Path, monkeypatch):
+    import sys
+    from pydelling.preprocessing.dfn_preprocessor.surface_dfn import SurfaceDfnError
+
+    monkeypatch.setitem(sys.modules, "vtk", None)
+    path = tmp_path / "surface.vtk"
+    path.write_text("# vtk DataFile Version 3.0\nsurface\nASCII\nDATASET POLYDATA\n")
+    with pytest.raises(SurfaceDfnError, match="cloud"):
+        DfnPreprocessor.from_surface_vtk(path)
