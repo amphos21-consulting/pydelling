@@ -39,7 +39,7 @@ def generate_structured_mesh(
       0────────1
     """
     from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
-    logging.info("Generating structured mesh")
+    logger.info("Generating structured mesh")
     p_i = bounds[0]
     p_f = bounds[1]
 

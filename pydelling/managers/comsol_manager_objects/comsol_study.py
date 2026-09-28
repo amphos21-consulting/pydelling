@@ -72,6 +72,7 @@ class ComsolStudy:
         """
             
         logfile = Path(f"./logs/temp_{Path(self.comsol.file_path).name}_{int(time.time())}.log")
+        logfile.parent.mkdir(parents=True, exist_ok=True)
         if logfile.exists():
             logfile.unlink()
         
