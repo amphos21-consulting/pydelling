@@ -1,4 +1,5 @@
 from unittest import TestCase
+from tempfile import TemporaryDirectory
 from pydelling.managers import PflotranStudy
 from pydelling.managers.pflotran_study import LineNotFound
 from pydelling.utils.configuration_utils import test_data_path
@@ -46,7 +47,8 @@ class TestPflotranCase(TestCase):
         self.assertEqual(manager_no_checkpoint.get_checkpoint(), None)
         manager_no_checkpoint.add_checkpoint(times=times, time_unit=time_unit)
         self.assertEqual(manager_no_checkpoint.get_checkpoint(), 'TIMES d 1.0 2.0 3.0')
-        manager_no_checkpoint.to_file()
+        with TemporaryDirectory() as output_folder:
+            manager_no_checkpoint.to_file(output_folder=output_folder)
 
     def test_datasets(self):
         datasets = ['dirichletpressure', 'topflow']
@@ -82,7 +84,7 @@ class TestPflotranCase(TestCase):
         file_lines = new_study.raw_text.splitlines()
 
         try:
-            line = new_study.get_line_after_finding(["FLOW_CONDITION dirichlet", "PRESSURE DIRICHLET_ZERO_GRADIENT"],
+            new_study.get_line_after_finding(["FLOW_CONDITION dirichlet", "PRESSURE DIRICHLET_ZERO_GRADIENT"],
                 file_lines)
             line_found = True
         except LineNotFound:

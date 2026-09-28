@@ -91,7 +91,7 @@ class MassBalanceCheckPflotran:
         with open(path, "r", encoding="utf-8") as f:
             header_line = f.readline().strip()
         raw_cols = [c.strip().strip('"') for c in header_line.split(",")]
-        df = pd.read_csv(path, skiprows=1, delim_whitespace=True, header=None, names=raw_cols, engine="python")
+        df = pd.read_csv(path, skiprows=1, sep=r"\s+", header=None, names=raw_cols, engine="python")
         # Normalize spaces in column names
         df.rename(columns={c: " ".join(c.split()) for c in df.columns}, inplace=True)
         return df

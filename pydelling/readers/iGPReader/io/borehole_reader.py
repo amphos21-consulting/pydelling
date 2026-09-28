@@ -245,15 +245,15 @@ class BoreholeReader(BaseReader):
                                 right=plot_range[1],
                                 )
         ax.legend()
-        if variable is 'Porosity (-)':
+        if variable == 'Porosity (-)':
             ax.set_xlabel('Porosity [-]')
-        elif variable is 'kx':
+        elif variable == 'kx':
             ax.set_xlabel('Permeability-x $[m^2]$')
-        elif variable is 'ky':
+        elif variable == 'ky':
             ax.set_xlabel('Permeability-y $[m^2]$')
-        elif variable is 'kz':
+        elif variable == 'kz':
             ax.set_xlabel('Permeability-z $[m^2]$')
-        elif variable is 'kmean':
+        elif variable == 'kmean':
             ax.set_xlabel('Geometric mean of permeability $[m^2]$')
         else:
             ax.set_xlabel(f"{variable}")

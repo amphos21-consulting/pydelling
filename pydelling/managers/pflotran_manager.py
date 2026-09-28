@@ -4,22 +4,22 @@ Module documentation.
 
 """
 
+from __future__ import annotations
+
 from .base_manager import BaseManager
 from . import PflotranStudy
 import subprocess
-import docker
-from docker.models.containers import Container
 from io import BytesIO
 from pathlib import Path
+from typing import TYPE_CHECKING
 from pydelling.utils import create_results_folder
 from pydelling.managers.pflotran_postprocessing import PflotranPostprocessing
-from pydelling.managers.ssh import JurecaSsh, LumiSsh, BaseSsh
-from pydelling.managers.status import PflotranStatus
-from pydelling.managers.ssh.steps import BaseStep
 import logging
 import os
 import getpass
-import os
+
+if TYPE_CHECKING:
+    from pydelling.managers.ssh import BaseSsh
 
 logger = logging.getLogger(__name__)
 
@@ -107,20 +107,26 @@ class PflotranManager(BaseManager):
             Creates or starts a container, archives the study folder into it,
             runs PFLOTRAN, then stops and removes the container.
         """
+        try:
+            import docker
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "Docker execution requires the 'pydelling[hpc]' extra."
+            ) from exc
         docker_client = docker.from_env()
             # Run the study in serial
 
         try:
             docker_client.api.start(self.manager_name)
             container = docker_client.containers.get(self.manager_name)
-        except:
+        except Exception:
             docker_client.api.create_container(
                 name=self.manager_name,
                 image=docker_image,
                 command='/bin/sh',
                 detach=True,
                 tty=True,
-                volumes=[f'/home/pflotran/'],
+                volumes=['/home/pflotran/'],
                 host_config=docker_client.api.create_host_config(
                     binds={
                         Path().cwd() / f'studies/{study.name}': {
@@ -149,7 +155,7 @@ class PflotranManager(BaseManager):
                                    f" cd /home/pflotran/{study.output_folder.name} && "
                                    f"pflotran -pflotranin {study.input_file_name}'")
         else:
-            result = container.exec_run(cmd=f"sudo bash -c 'export PATH=$PATH:/home/pflotran/pflotran/src/pflotran && "
+            container.exec_run(cmd=f"sudo bash -c 'export PATH=$PATH:/home/pflotran/pflotran/src/pflotran && "
                                    f"export PETSC_DIR=/home/pflotran/petsc && "
                                    f"export PETSC_ARCH=docker-petsc && "
                                    f"cd /home/pflotran/{study.output_folder.name} && "
@@ -196,6 +202,8 @@ class PflotranManager(BaseManager):
             Prompts for a password if needed, creates remote folders, uploads
             files, submits a job, waits for completion, and may download results.
         """
+        from pydelling.managers.ssh import JurecaSsh
+
         if self.password is None:
             self.password = getpass.getpass(prompt='Password: ', stream=None)
 
@@ -288,6 +296,8 @@ class PflotranManager(BaseManager):
             Prompts for a password if needed, creates remote folders, uploads
             files, submits a job, waits for completion, and may download results.
         """
+        from pydelling.managers.ssh import LumiSsh
+
         if self.password is None:
             self.password = getpass.getpass(prompt='Password: ', stream=None)
 
@@ -367,7 +377,7 @@ class PflotranManager(BaseManager):
         """
         # Check if the shared files are already in the remote server
         if self.has_shared_files:
-            if not PflotranStudy.shared_folder_default_name in ssh_manager.ls:
+            if PflotranStudy.shared_folder_default_name not in ssh_manager.ls:
                 ssh_manager.mkdir(PflotranStudy.shared_folder_default_name)
             shared_folder_ls = ssh_manager.ls_dir(PflotranStudy.shared_folder_default_name)
             for file in study._shared_files:
@@ -440,7 +450,7 @@ class PflotranManager(BaseManager):
         for file in dir_list:
             try:
                 self.ssh.get(f"{file}", study.output_folder / file)
-            except:
+            except Exception:
                 logger.warning(f"Could not download {file}.")
 
 
@@ -487,8 +497,6 @@ class PflotranManager(BaseManager):
             os.chdir(self.results_folder / 'merged_results')
             pflotran_postprocesser.run()
             # Return to the original working directory
-
-
 
 
 

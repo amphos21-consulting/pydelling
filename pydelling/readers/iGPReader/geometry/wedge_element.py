@@ -4,7 +4,7 @@ Module documentation.
 
 """
 
-from scipy.spatial.qhull import ConvexHull
+from scipy.spatial import ConvexHull
 
 from pydelling.readers.iGPReader.geometry import QuadrilateralFace, TriangleFace, BaseElement
 from pydelling.readers.iGPReader.utils.geometry_utils import *

@@ -1698,106 +1698,143 @@ wheels = [
 
 [[package]]
 name = "pydelling"
-version = "1.1.4"
+version = "1.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "alive-progress" },
-    { name = "black" },
     { name = "charset-normalizer" },
     { name = "dill" },
-    { name = "docker" },
-    { name = "extra-streamlit-components" },
     { name = "h5py" },
+    { name = "jinja2" },
     { name = "matplotlib" },
     { name = "meshio" },
-    { name = "mkdocs" },
-    { name = "mkdocs-gen-files" },
-    { name = "mkdocs-literate-nav" },
-    { name = "mkdocs-material" },
-    { name = "mkdocstrings" },
-    { name = "mkdocstrings-python" },
-    { name = "mph" },
     { name = "mpmath" },
     { name = "natsort" },
     { name = "numpy-stl" },
     { name = "ofpp" },
     { name = "openpyxl" },
     { name = "pandas" },
-    { name = "paramiko" },
     { name = "plotly" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
     { name = "python-box" },
     { name = "pyyaml" },
     { name = "rasterio" },
     { name = "rich" },
     { name = "rtree" },
-    { name = "ruff" },
     { name = "scikit-image" },
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "seaborn" },
     { name = "setuptools" },
     { name = "shapely" },
-    { name = "streamlit" },
     { name = "tabulate" },
     { name = "tqdm" },
     { name = "translate" },
     { name = "trimesh" },
-    { name = "vtk", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or sys_platform == 'darwin' or sys_platform == 'win32'" },
     { name = "xlrd" },
+]
+
+[package.optional-dependencies]
+cloud = [
+    { name = "h5py" },
+    { name = "meshio" },
+    { name = "pandas" },
+    { name = "plotly" },
+    { name = "rasterio" },
+    { name = "trimesh" },
+    { name = "vtk", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or sys_platform == 'darwin' or sys_platform == 'win32'" },
+]
+comsol = [
+    { name = "mph" },
+]
+hpc = [
+    { name = "docker" },
+    { name = "paramiko" },
+]
+webapps = [
+    { name = "extra-streamlit-components" },
+    { name = "streamlit" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "black" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+docs = [
+    { name = "mkdocs" },
+    { name = "mkdocs-gen-files" },
+    { name = "mkdocs-literate-nav" },
+    { name = "mkdocs-material" },
+    { name = "mkdocstrings" },
+    { name = "mkdocstrings-python" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "alive-progress", specifier = ">=3.1.5" },
-    { name = "black", specifier = ">=25.9.0" },
     { name = "charset-normalizer", specifier = ">=3.3.2" },
     { name = "dill", specifier = ">=0.3.8" },
-    { name = "docker", specifier = ">=7.1.0" },
-    { name = "extra-streamlit-components", specifier = ">=0.1.71" },
+    { name = "docker", marker = "extra == 'hpc'", specifier = ">=7.1.0" },
+    { name = "extra-streamlit-components", marker = "extra == 'webapps'", specifier = ">=0.1.71" },
     { name = "h5py", specifier = "==3.11" },
+    { name = "h5py", marker = "extra == 'cloud'", specifier = "==3.11" },
+    { name = "jinja2", specifier = ">=3.1.4" },
     { name = "matplotlib", specifier = ">=3.9.2" },
     { name = "meshio", specifier = ">=5.3.5" },
-    { name = "mkdocs", specifier = ">=1.6.1" },
-    { name = "mkdocs-gen-files", specifier = ">=0.5.0" },
-    { name = "mkdocs-literate-nav", specifier = ">=0.6.1" },
-    { name = "mkdocs-material", specifier = ">=9.5.34" },
-    { name = "mkdocstrings", specifier = ">=0.26.1" },
-    { name = "mkdocstrings-python", specifier = ">=1.7.0" },
-    { name = "mph", specifier = ">=1.2.4" },
+    { name = "meshio", marker = "extra == 'cloud'", specifier = ">=5.3.5" },
+    { name = "mph", marker = "extra == 'comsol'", specifier = ">=1.2.4" },
     { name = "mpmath", specifier = ">=1.3.0" },
     { name = "natsort", specifier = ">=8.4.0" },
     { name = "numpy-stl", specifier = ">=3.1.2" },
     { name = "ofpp", specifier = ">=0.12" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=2.2.2" },
-    { name = "paramiko", specifier = ">=3.5.0" },
+    { name = "pandas", marker = "extra == 'cloud'", specifier = ">=2.2.2" },
+    { name = "paramiko", marker = "extra == 'hpc'", specifier = ">=3.5.0" },
     { name = "plotly", specifier = ">=5.24.1" },
-    { name = "pytest", specifier = ">=8.4.2" },
-    { name = "pytest-cov", specifier = ">=6.0.0" },
+    { name = "plotly", marker = "extra == 'cloud'", specifier = ">=5.24.1" },
     { name = "python-box", specifier = ">=7.2.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "rasterio", specifier = ">=1.4.3" },
+    { name = "rasterio", marker = "extra == 'cloud'", specifier = ">=1.4.3" },
     { name = "rich", specifier = ">=13.8.1" },
     { name = "rtree", specifier = ">=1.3.0" },
-    { name = "ruff", specifier = ">=0.13.1" },
     { name = "scikit-image", specifier = ">=0.24.0" },
     { name = "scikit-learn", specifier = ">=1.5.2" },
     { name = "scipy", specifier = ">=1.14.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "setuptools", specifier = ">=75.1.0" },
     { name = "shapely", specifier = ">=2.0.6" },
-    { name = "streamlit", specifier = ">=1.38.0" },
+    { name = "streamlit", marker = "extra == 'webapps'", specifier = ">=1.38.0" },
     { name = "tabulate", specifier = ">=0.9.0" },
     { name = "tqdm", specifier = ">=4.66.5" },
     { name = "translate", specifier = ">=3.6.1" },
     { name = "trimesh", specifier = ">=0.0.1" },
     { name = "trimesh", specifier = ">=4.4.9" },
-    { name = "vtk", marker = "sys_platform == 'darwin'", specifier = ">=9.3.1" },
-    { name = "vtk", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'", specifier = ">=9.3.1" },
-    { name = "vtk", marker = "sys_platform == 'win32'", specifier = ">=9.3.1" },
+    { name = "trimesh", marker = "extra == 'cloud'", specifier = ">=4.4.9" },
+    { name = "vtk", marker = "sys_platform == 'darwin' and extra == 'cloud'", specifier = ">=9.3.1" },
+    { name = "vtk", marker = "platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'cloud'", specifier = ">=9.3.1" },
+    { name = "vtk", marker = "sys_platform == 'win32' and extra == 'cloud'", specifier = ">=9.3.1" },
     { name = "xlrd", specifier = ">=2.0.1" },
+]
+provides-extras = ["cloud", "comsol", "webapps", "hpc"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "black", specifier = ">=25.9.0" },
+    { name = "pytest", specifier = ">=8.4.2" },
+    { name = "pytest-cov", specifier = ">=6.0.0" },
+    { name = "ruff", specifier = ">=0.13.1" },
+]
+docs = [
+    { name = "mkdocs", specifier = ">=1.6.1" },
+    { name = "mkdocs-gen-files", specifier = ">=0.5.0" },
+    { name = "mkdocs-literate-nav", specifier = ">=0.6.1" },
+    { name = "mkdocs-material", specifier = ">=9.5.34" },
+    { name = "mkdocstrings", specifier = ">=0.26.1" },
+    { name = "mkdocstrings-python", specifier = ">=1.7.0" },
 ]
 
 [[package]]

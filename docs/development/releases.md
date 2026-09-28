@@ -2,7 +2,19 @@
 
 This document tracks the development history and evolution of pydelling, highlighting major features, improvements, and bug fixes in each version.
 
-## Version 1.0.5 (Current)
+## Version 1.2.0
+
+- Introduce `pydelling.assets` with versioned preview contracts, PFLOTRAN case handlers, and a packaged API catalog. Existing `pydelling.preview` imports remain supported for the 1.2 series.
+- Add surface DFN upscaling and strengthen interpolation, raster writing, and optional integration tests.
+- Split COMSOL, cloud visualization, HPC, and web application dependencies into extras; move development and documentation tools into dependency groups.
+- Make `pyproject.toml` the single package version source; remove obsolete setuptools metadata.
+- Build and test locked core/cloud environments and validate distribution contents before documentation deployment.
+
+Use `uv sync --locked --extra cloud` for Cloud/VTK workflows. Use `--extra comsol`, `--extra hpc`, or `--extra webapps` for those integrations. Documentation tools use `--group docs`.
+
+Pydelling Cloud pins the library commit through its submodule and records version 1.2.0 in its workspace lock. Update and commit both together; do not update the submodule to a floating branch during deployment.
+
+## Version 1.0.5
 
 *Release Date: 2024-09-24*
 

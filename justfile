@@ -1,60 +1,77 @@
-#Call tasks by typing: just taskName [args]
-list:
-	just --list
+set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
-#Docker compose up
-up: build
-	docker compose up -d
+# List workflows (color only in an interactive terminal, unless NO_COLOR is set).
+default:
+    @if [[ -t 1 && -z "${NO_COLOR+x}" ]]; then just --color always --list; else just --color never --list; fi
 
-#Docker compose build
+# Install the locked development and cloud dependencies.
+[group('development')]
+setup:
+    uv sync --locked --group dev --extra cloud
+
+# Serve the documentation with live reload.
+[group('development')]
+dev:
+    uv run --group docs mkdocs serve
+
+# Run a Python command in the project environment.
+[group('development')]
+run *args:
+    uv run python {{args}}
+
+# Verify the dependency lock and run the regression suite.
+[group('checks')]
+checks:
+    uv lock --check
+    just test
+
+# Run all library tests; optional COMSOL tests skip when unavailable.
+[group('checks')]
+test:
+    uv run --group dev pytest pydelling/tests -q
+
+# Generate coverage and JUnit reports for CI.
+[group('checks')]
+test-ci:
+    uv run --group dev pytest pydelling/tests --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml
+
+alias coverage := test-ci
+alias ci-test-reports := test-ci
+
+# Build wheel and source distributions without changing the version.
+[group('release')]
 build:
-	docker compose build
-	
-#Docker compose down
+    uv build
+
+alias compile := build
+alias wheel := build
+
+# Refresh the dependency lock after an intentional dependency/version change.
+[group('release')]
+lock:
+    uv lock
+
+# Build strict documentation for deployment.
+[group('release')]
+docs-build:
+    uv run --group docs mkdocs build --strict
+
+# Build the development container.
+[group('containers')]
+container-build:
+    docker compose build
+
+# Start the development container.
+[group('containers')]
+up: container-build
+    docker compose up -d
+
+# Stop the development container.
+[group('containers')]
 down:
-	docker compose down --remove-orphans
+    docker compose down --remove-orphans
 
-#Shell into container
+# Open a shell in the development container.
+[group('containers')]
 shell: up
-	docker compose exec pydelling bash
-
-#Run static checks and tests
-test: up
-	docker compose exec pydelling python -m unittest discover
-
-coverage: up
-	docker compose exec pydelling python -m pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --cov-report=term
-
-#Run tests with coverage for CI (includes Cobertura format)
-test-ci: up
-	docker compose exec pydelling python -m pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short
-
-#Run tests with coverage for CI and copy reports to host
-ci-test-reports: up
-	sh -c 'docker compose exec -T pydelling python -m pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short; status=$$?; docker compose cp pydelling:/app/coverage.xml ./coverage.xml || true; docker compose cp pydelling:/app/report.xml ./report.xml || true; docker compose cp pydelling:/app/htmlcov ./htmlcov || echo "HTML coverage report not found"; exit $$status'
-
-#Build production image
-compile: up
-	## Build docker image
-	#docker build --file Dockerfile --target production -t pydelling .
-	## Generate Wheel package into dist folder
-	docker compose exec pydelling uv build --format wheel
-
-#Generate wheel package
-wheel: up
-	just patch
-	just lock
-	just compile
-	
-#yv lock
-lock: up
-	docker compose exec pydelling uv lock
-
-#Prune docker system
-prune:
-	docker system prune -a -f
-
-#Clean dist and test files/folders
-clean: up
-	docker compose exec pydelling rm -rf dist old_models output test_Timeseries* datasets
-
+    docker compose exec pydelling bash

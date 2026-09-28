@@ -6,6 +6,7 @@ upstream package eagerly loads optional configuration and COMSOL integrations.
 """
 
 __all__ = [
+    "assets",
     "interpolation",
     "preprocessing",
     "readers",

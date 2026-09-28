@@ -456,7 +456,7 @@ class PflotranReader(BaseReader, PflotranProcessingUtils):
         """
         if times is None:
             times = [self.time_values[0]]
-        elif times is 'all':
+        elif times == 'all':
             times = self.time_values
         else:
             times = times
@@ -577,6 +577,5 @@ class PflotranResults:
         """
         temp_keys = [key.split('_')[1] for key in self.variable_keys if 'Total' in key]
         return temp_keys
-
 
 

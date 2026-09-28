@@ -5,14 +5,15 @@ Module documentation.
 """
 
 import logging
+from pathlib import Path
+
+import meshio
+import numpy as np
+from tqdm import tqdm
 
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
 
 logger = logging.getLogger(__name__)
-from tqdm import tqdm
-import meshio
-from pathlib import Path
-import numpy as np
 
 
 class VTKMeshReader(MeshPreprocessor):
@@ -54,7 +55,7 @@ class VTKMeshReader(MeshPreprocessor):
         super().__init__()
         self.is_streamlit = st_file
 
-        if Path(filename).suffix == '.vtk' or '.vtu':
+        if Path(filename).suffix.lower() in {'.vtk', '.vtu'}:
             self.meshio_mesh: meshio.Mesh = meshio.read(filename)
             self._coords = self.meshio_mesh.points
             if generate_internal_mesh:
@@ -250,8 +251,6 @@ class VTKMeshReader(MeshPreprocessor):
                 temp_dict[key] += cell_values.tolist()
             temp_dict[key] = np.array(temp_dict[key])
         return temp_dict
-
-
 
 
 

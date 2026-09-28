@@ -1,83 +1,60 @@
-import unittest
-import numpy.testing as nptest
 import numpy as np
-from pydelling.utils.geometry import Line
+import pytest
+
 from pydelling.preprocessing import DfnPreprocessor, MeshPreprocessor
 from pydelling.preprocessing.dfn_preprocessor import DfnUpscaler
 
 
-class UpscalingCase(unittest.TestCase):
-    def setUp(self) -> None:
-        self.dfn_preprocessor = DfnPreprocessor()
-        self.dfn_preprocessor.add_fracture(
-            x=0.0, y=0.0, z=0.0, dip=0, dip_dir=0, size=2.0
-        )
-        self.dfn_preprocessor.add_fracture(
-            x=0.1, y=0.0, z=0.1, dip=0, dip_dir=0, size=0.5
-        )
-        self.dfn_preprocessor[0].aperture = 0.01
-        self.dfn_preprocessor[1].aperture = 0.01
-
-        self.dfn_preprocessor[0].hydraulic_aperture = 0.01
-        self.dfn_preprocessor[1].hydraulic_aperture = 0.01
-
-        self.dfn_preprocessor.to_obj('fracture.obj')
-        self.mesh_preprocessor = MeshPreprocessor()
-        self.mesh_preprocessor.add_hexahedra(
-            node_ids=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            node_coords=[
-                np.array([-0.5, -0.5, -0.5]),
-                np.array([0.5, -0.5, -0.5]),
-                np.array([0.5, 0.5, -0.5]),
-                np.array([-0.5, 0.5, -0.5]),
-                np.array([-0.5, -0.5, 0.5]),
-                np.array([0.5, -0.5, 0.5]),
-                np.array([0.5, 0.5, 0.5]),
-                np.array([-0.5, 0.5, 0.5])
-            ],
-        )
-        self.mesh_preprocessor.to_vtk(filename='./test_mesh.vtk')
-
-        self.dfn_upscaler = DfnUpscaler(
-            dfn=self.dfn_preprocessor,
-            mesh=self.mesh_preprocessor,
-        )
-
-    # def test_porosity_and_permeability(self):
-    #     porosity = self.dfn_upscaler.upscale_mesh_porosity(intensity_correction_factor=1.53,
-    #                                                        existing_fractures_fraction=0.385,
-    #                                                        truncate_to_min_percentile=5,
-    #                                                        truncate_to_max_percentile=95)
-
-    #     porosity_solution = 0.049675324675324685
-    #     self.assertAlmostEqual(float(porosity[0]), porosity_solution)
-    #     # Upscale permeability
-    #     permeability = self.dfn_upscaler.upscale_mesh_permeability(truncate_to_min_percentile=5,
-    #                                                                truncate_to_max_percentile=95)
-    #     # #self.assertEqual(porosity, porosity_solution)
-    #     # permeability_solution = np.array([[1.1470037453,0,0],[0,1.1470037453,0],[0,0,0]])
-    #     permeability_solution_0 = 1.1470037453
-    #     self.assertAlmostEqual(permeability[0][0][0], permeability_solution_0)
-
-    # def test_save_load_upscaler(self):
-    #     self.dfn_upscaler.save('upscaler.pkl')
-    #     new_upscaler = DfnUpscaler.load('upscaler.pkl')
-    #     self.assertEqual(len(self.dfn_upscaler.mesh.elements), len(new_upscaler.mesh.elements))
-    #     self.assertEqual(len(self.dfn_upscaler.dfn.dfn), len(new_upscaler.dfn.dfn))
-    #     self.assertEqual(len(self.dfn_upscaler.dfn.dfn[0].intersection_dictionary), len(new_upscaler.dfn.dfn[0].intersection_dictionary))
-    #     self.assertEqual(len(self.dfn_upscaler.dfn.faults), len(new_upscaler.dfn.faults))
-    #     self.assertEqual(len(self.dfn_upscaler.upscaled_porosity), len(new_upscaler.upscaled_porosity))
-    #     from pathlib import Path
-    #     Path('upscaler.pkl').unlink()
-
-    # def test_save_load_json(self):
-    #     self.dfn_upscaler.to_json('upscaler.json')
-    #     new_upscaler = DfnUpscaler.from_json('upscaler.json')
-    #     new_upscaler.upscale_mesh_porosity()
-    #     # self.dfn_upscaler.upscale_mesh_porosity()
-    #     # self.assertEqual(self.dfn_upscaler.upscaled_porosity[0], new_upscaler.upscaled_porosity[0])
-    # #
+def legacy_case():
+    dfn = DfnPreprocessor()
+    dfn.add_fracture(
+        polygon=np.asarray([[0, 0, 0], [0, 1, 0], [-1, 0, 1]], dtype=float),
+        aperture=0.1,
+        transmissivity=0.02,
+        storativity=2.0e-6,
+    )
+    mesh = MeshPreprocessor()
+    mesh.add_hexahedra(
+        node_ids=np.arange(8),
+        node_coords=np.asarray(
+            [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
+             [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]],
+            dtype=float,
+        ),
+    )
+    mesh.elements[0].associated_fractures[dfn[0].local_id] = {
+        "area": 1.0,
+        "volume": 0.1,
+        "fracture": dfn[0].local_id,
+    }
+    return dfn, mesh, DfnUpscaler(dfn, mesh, loading=True)
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_legacy_porosity_honors_matrix_and_is_idempotent():
+    _, _, upscaler = legacy_case()
+    first = upscaler.upscale_mesh_porosity(matrix_porosity=0.2, truncate=False, engine="legacy")
+    second = upscaler.upscale_mesh_porosity(matrix_porosity=0.2, truncate=False, engine="legacy")
+    assert first[0] == pytest.approx(0.28)
+    assert second[0] == pytest.approx(first[0])
+
+
+def test_legacy_permeability_preserves_full_symmetric_tensor():
+    _, _, upscaler = legacy_case()
+    result = upscaler.upscale_mesh_permeability(
+        matrix_permeability=1.0e-6,
+        mode="full_tensor",
+        truncate=False,
+        engine="legacy",
+    )[0]
+    np.testing.assert_allclose(result, result.T)
+    assert result[0, 2] < 0
+    assert result[0, 2] != result[0, 1]
+    assert np.all(np.diag(result) >= 0)
+
+
+def test_legacy_storativity_honors_matrix_input():
+    _, _, upscaler = legacy_case()
+    result = upscaler.upscale_mesh_storativity(
+        matrix_storativity=1.0e-6, truncate=False, engine="legacy"
+    )
+    assert result[0] == pytest.approx(1.1e-6)

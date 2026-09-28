@@ -142,3 +142,9 @@ dmypy.json
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+
+# Local editor and generated validation files
+.DS_Store
+.vscode/
+report*.xml
+.ruff_cache/

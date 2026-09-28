@@ -12,7 +12,10 @@ The module contains the following functions:
 """
 import logging
 import numpy as np
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:  # optional pydelling[webapps] integration
+    st = None
 from tqdm import tqdm
 from pathlib import Path
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
@@ -38,6 +41,8 @@ class ConnectFlowMeshReader(MeshPreprocessor):
             kd_tree (Any): Description.
             st_file (Any): Description.
         """
+        if st_file and st is None:
+            raise RuntimeError("Streamlit progress requires the pydelling[webapps] extra.")
         super().__init__()
         # temporary variables...
         self.nodes_tmp = []

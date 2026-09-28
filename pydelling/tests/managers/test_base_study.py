@@ -1,4 +1,5 @@
 from unittest import TestCase
+from tempfile import TemporaryDirectory
 from pydelling.managers import BaseStudy, BaseCallback, BaseManager
 from pydelling.utils.configuration_utils import test_data_path
 
@@ -13,7 +14,8 @@ class TestBaseStudy(TestCase):
         self.assertEqual(self.base_manager._get_line(regions[0]), 'REGION pepe')
 
     def test_to_file(self):
-        self.base_manager.to_file(output_folder='test_folder')
+        with TemporaryDirectory() as output_folder:
+            self.base_manager.to_file(output_folder=output_folder)
         self.assertTrue(True)
 
     def test_callback(self):
@@ -25,12 +27,12 @@ class TestBaseStudy(TestCase):
 
         dummy_manager = BaseManager()
         dummy_manager.add_study(dummy_study)
-        dummy_manager.run()
+        with TemporaryDirectory() as studies_folder:
+            dummy_manager.run(studies_folder=studies_folder)
         self.assertEqual(dummy_study.callbacks[0].kind, 'pre')
         self.assertEqual(dummy_study.callbacks[0].study, dummy_study)
         self.assertEqual(dummy_study.callbacks[0].manager, dummy_manager)
         self.assertEqual(dummy_study.callbacks[0].is_run, True)
-
 
 
 

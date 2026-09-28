@@ -3,6 +3,8 @@ Contains general purpose utility functions
 
 
 """
+from __future__ import annotations
+
 import os
 from pathlib import Path
 
@@ -10,13 +12,7 @@ import numpy as np
 import yaml
 
 import pydelling.interpolation as interpolation
-from pydelling.paraview_processor.filters import base_filter
 import pydelling.readers as readers
-
-try:
-    from pydelling.paraview_processor.filters import plot_over_line_filter
-except:
-    from pydelling.paraview_processor.filters import base_filter
 import pandas as pd
 from box import Box
 
@@ -24,7 +20,6 @@ import logging
 from typing import Union
 
 logger = logging.getLogger(__name__)
-import streamlit as st
 
 from pydelling.utils.geometry import *
 from pydelling.preprocessing.mesh_preprocessor.geometry.hexahedra_element import HexahedraElement
@@ -172,6 +167,9 @@ def get_config_path() -> Path:
 def test_data_path() -> Path:
     """Returns path to the root of the project"""
     return Path(__file__).parent.parent / "tests/test_data"
+
+
+test_data_path.__test__ = False
 
 def runtime_path():
     return Path(os.getcwd())
@@ -605,4 +603,3 @@ def compute_area_of_polygon(points):
         area -= points[j][0] * points[i][1]
     area = abs(area) / 2.0
     return area
-

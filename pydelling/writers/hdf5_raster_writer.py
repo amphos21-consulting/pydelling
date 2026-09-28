@@ -7,7 +7,6 @@ Module documentation.
 import os
 
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 
 from .base_writer import BaseWriter
@@ -28,7 +27,7 @@ class HDF5RasterWriter(BaseWriter):
                  dataset_name,
                  data=None,
                  times=0.0,
-                 attributes={},
+                 attributes=None,
                  interpolation_info=None,
                  n_x=None,
                  n_y=None,
@@ -48,23 +47,42 @@ class HDF5RasterWriter(BaseWriter):
         Returns:
             None: stores metadata, reshapes data, and marks it ready for writing.
         """
-        assert data is not None, "You must provide the data"
-        if interpolation_info is not None:
-            self.info = interpolation_info
-        if any([n_x, n_y, x_min, x_max, y_min, y_max]):
-            assert all([x_min is not None, x_max is not None, y_min is not None, y_max is not None]), \
-                "You must provide all the interpolation information if interpolation_info is not provided"
+        if data is None:
+            raise ValueError("data must be provided")
+        data = np.asarray(data)
+
+        legacy_info = kwargs.pop("info", None)
+        self.info = interpolation_info if interpolation_info is not None else legacy_info
+        direct_grid_parameters = (n_x, n_y, x_min, x_max, y_min, y_max)
+        if any(parameter is not None for parameter in direct_grid_parameters):
+            if not all(
+                coordinate is not None for coordinate in (x_min, x_max, y_min, y_max)
+            ):
+                raise ValueError(
+                    "x_min, x_max, y_min, and y_max must all be provided"
+                )
             if n_x is None:
                 if len(data.shape) == 2:
-                    n_x = data.shape[0]
+                    n_x = data.shape[1]
                 else:
                     raise ValueError("Could not determine n_x, please provide it")
 
             if n_y is None:
                 if len(data.shape) == 2:
-                    n_y = data.shape[1]
+                    n_y = data.shape[0]
                 else:
                     raise ValueError("Could not determine n_y, please provide it")
+            self._validate_grid_size(n_x, n_y)
+            dilatation_factor = self._validate_dilatation_factor(dilatation_factor)
+            if x_max <= x_min or y_max <= y_min:
+                raise ValueError("x_max and y_max must be greater than x_min and y_min")
+
+            grid_x_min, grid_x_max = self._dilatated_bounds(
+                x_min, x_max, dilatation_factor
+            )
+            grid_y_min, grid_y_max = self._dilatated_bounds(
+                y_min, y_max, dilatation_factor
+            )
             self.info = {
                 "interpolation": {
                     "type": "regular_mesh",
@@ -74,50 +92,112 @@ class HDF5RasterWriter(BaseWriter):
                     "x_max": x_max,
                     "y_min": y_min,
                     "y_max": y_max,
-                    "d_x": (x_max - x_min) / n_x,
-                    "d_y": (y_max - y_min) / n_y,
+                    "grid_x_min": grid_x_min,
+                    "grid_x_max": grid_x_max,
+                    "grid_y_min": grid_y_min,
+                    "grid_y_max": grid_y_max,
+                    "d_x": (grid_x_max - grid_x_min) / (n_x - 1),
+                    "d_y": (grid_y_max - grid_y_min) / (n_y - 1),
                     "dilatation_factor": dilatation_factor,
                 }
             }
 
-        super().__init__(self, data=data, **kwargs)
-        if self.info["interpolation"]["type"] == "regular_mesh":
-            if len(self.data.shape) == 1:
-                assert all([self.info["interpolation"]["n_x"], self.info["interpolation"]["n_y"]]), \
-                    "You must provide the n_x and n_y parameters if the data is 1D"
-                self.data = self.transform_flatten_to_regular_mesh(self.data)
-                self.data = np.array(self.data)
-                plt.imshow(self.data[0, :, :])
-                # plt.show()
-                self.data = np.swapaxes(np.array(self.data), 0, 1)
-                self.data = np.swapaxes(self.data, 1, 2)
-            elif len(self.data.shape) == 2:
-                if self.data.shape[1] == 3:
-                    self.data = self.centroid_transform_to_mesh()
-                else:
-                    try:
-                        self.data = self.transform_flatten_to_regular_mesh(data=self.data)
-                    except:
-                        self.data =[self.data]
-                    self.data = np.array(self.data)
-                    plt.imshow(self.data[0, :, :])
-                    # plt.show()
-                    self.data = np.swapaxes(np.array(self.data), 0, 1)
-                    self.data = np.swapaxes(self.data, 1, 2)
-            elif len(self.data.shape) == 3:
-                _data = []
-                for layer in self.data:
-                    _data.append(np.array(self._centroid_transform_to_mesh(layer)))
-                self.data = np.array(_data)
-                self.data = np.swapaxes(np.array(_data), 0, 1)
-                self.data = np.swapaxes(self.data, 1, 2)
+        if self.info is None or "interpolation" not in self.info:
+            raise ValueError(
+                "interpolation_info or complete regular-grid coordinates must be provided"
+            )
+
+        interpolation = self.info["interpolation"]
+        self._validate_grid_size(interpolation.get("n_x"), interpolation.get("n_y"))
+        interpolation["dilatation_factor"] = self._validate_dilatation_factor(
+            interpolation.get("dilatation_factor", 1.0)
+        )
+
+        super().__init__(data=data, **kwargs)
+        if interpolation.get("type") == "regular_mesh":
+            self.data = self._prepare_regular_mesh_data(self.data)
         if self.data is not None:
             self.data_loaded = True
         self.region_name = dataset_name
         self.times = times
-        self.attributes = attributes
+        self.attributes = {} if attributes is None else dict(attributes)
         self.filename = filename
         logger.info(f"Created HDF5RasterWriter with filename {filename} and parameters {self.info}")
+
+    @staticmethod
+    def _validate_grid_size(n_x, n_y):
+        for name, value in (("n_x", n_x), ("n_y", n_y)):
+            if (
+                isinstance(value, (bool, np.bool_))
+                or not isinstance(value, (int, np.integer))
+                or value < 2
+            ):
+                raise ValueError(f"{name} must be an integer greater than 1")
+
+    @staticmethod
+    def _validate_dilatation_factor(dilatation_factor):
+        if isinstance(dilatation_factor, (bool, np.bool_)):
+            raise ValueError("dilatation_factor must be a finite number greater than 0")
+        try:
+            factor = float(dilatation_factor)
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                "dilatation_factor must be a finite number greater than 0"
+            ) from error
+        if not np.isfinite(factor) or factor <= 0.0:
+            raise ValueError("dilatation_factor must be a finite number greater than 0")
+        return factor
+
+    @staticmethod
+    def _dilatated_bounds(lower, upper, factor):
+        center = (lower + upper) / 2.0
+        half_length = (upper - lower) * factor / 2.0
+        return center - half_length, center + half_length
+
+    def _prepare_regular_mesh_data(self, data):
+        """Normalize supported inputs to PFLOTRAN's ``(x, y, time)`` order."""
+        interpolation = self.info["interpolation"]
+        n_x = interpolation["n_x"]
+        n_y = interpolation["n_y"]
+        point_count = n_x * n_y
+
+        if data.ndim == 1:
+            if data.size != point_count:
+                raise ValueError(
+                    f"1D data must contain exactly {point_count} regular-grid values"
+                )
+            return data.reshape(n_y, n_x).T[:, :, np.newaxis]
+
+        if data.ndim == 2:
+            if data.shape == (point_count, 3):
+                return data[:, 2].reshape(n_y, n_x).T[:, :, np.newaxis]
+            if data.shape == (n_y, n_x):
+                return data.T[:, :, np.newaxis]
+            if n_x != n_y and data.shape == (n_x, n_y):
+                return data[:, :, np.newaxis]
+            if data.shape[1] == point_count:
+                layers = [layer.reshape(n_y, n_x).T for layer in data]
+                return np.moveaxis(np.asarray(layers), 0, -1)
+            raise ValueError(
+                "2D data must be a y-by-x grid, x-by-y grid, centroid rows, "
+                "or time-by-flattened-values"
+            )
+
+        if data.ndim == 3:
+            if data.shape[1:] == (point_count, 3):
+                layers = [layer[:, 2].reshape(n_y, n_x).T for layer in data]
+                return np.moveaxis(np.asarray(layers), 0, -1)
+            if data.shape[1:] == (n_y, n_x):
+                layers = [layer.T for layer in data]
+                return np.moveaxis(np.asarray(layers), 0, -1)
+            if data.shape[:2] == (n_x, n_y):
+                return data
+            raise ValueError(
+                "3D data must be time-indexed grids, time-indexed centroid rows, "
+                "or already use x-by-y-by-time order"
+            )
+
+        raise ValueError("regular-grid data must have between one and three dimensions")
 
 
     def transform_flatten_to_regular_mesh(self, data):
@@ -151,7 +231,7 @@ class HDF5RasterWriter(BaseWriter):
         """
         assert len(self.data.shape) >= 2 and self.data.shape[1] == 3
         _data = self.data[:, 2]
-        _data = np.reshape(_data, (self.info["interpolation"]["n_x"], self.info["interpolation"]["n_y"]))
+        _data = np.reshape(_data, (self.info["interpolation"]["n_y"], self.info["interpolation"]["n_x"])).T
         return _data
 
     def _centroid_transform_to_mesh(self, data):
@@ -166,7 +246,7 @@ class HDF5RasterWriter(BaseWriter):
         """
         assert len(data.shape) >= 1 and data.shape[1] == 3
         _data = data[:, 2]
-        _data = np.reshape(_data, (self.info["interpolation"]["n_x"], self.info["interpolation"]["n_y"]))
+        _data = np.reshape(_data, (self.info["interpolation"]["n_y"], self.info["interpolation"]["n_x"])).T
         return _data
 
     def add_default_attributes(self, hdf5_group: h5py.Dataset):
@@ -179,19 +259,22 @@ class HDF5RasterWriter(BaseWriter):
         Returns:
             None: mutates HDF5 group attributes.
         """
-        dilatation_factor = self.info['interpolation']['dilatation_factor']
-        l_x = np.abs(self.info["interpolation"]["x_max"] - self.info["interpolation"]["x_min"])
-        l_x_dilatated = np.abs(self.info["interpolation"]["x_max"] - self.info["interpolation"]["x_min"]) * dilatation_factor
-        delta_x = (l_x_dilatated - l_x) / 2.0
-        dx = self.info["interpolation"]["d_x"] * dilatation_factor
-        l_y = np.abs(self.info["interpolation"]["y_max"] - self.info["interpolation"]["y_min"])
-        l_y_dilatated = np.abs(self.info["interpolation"]["y_max"] - self.info["interpolation"]["y_min"]) * dilatation_factor
-        delta_y = (l_y_dilatated - l_y) / 2.0
-        dy = self.info["interpolation"]["d_y"] * dilatation_factor
+        interpolation = self.info["interpolation"]
+        factor = interpolation["dilatation_factor"]
+        grid_x_min = interpolation.get("grid_x_min")
+        grid_y_min = interpolation.get("grid_y_min")
+        if grid_x_min is None:
+            grid_x_min, _ = self._dilatated_bounds(
+                interpolation["x_min"], interpolation["x_max"], factor
+            )
+        if grid_y_min is None:
+            grid_y_min, _ = self._dilatated_bounds(
+                interpolation["y_min"], interpolation["y_max"], factor
+            )
 
         hdf5_group.attrs.create('Dimension', self.attributes['Dimension'] if 'Dimension' in self.attributes else 'XY', dtype="S3")
-        hdf5_group.attrs["Discretization"] = [dx, dy]
-        hdf5_group.attrs["Origin"] = [self.info["interpolation"]["x_min"] - delta_x, self.info["interpolation"]["y_min"] - delta_y]
+        hdf5_group.attrs["Discretization"] = [interpolation["d_x"], interpolation["d_y"]]
+        hdf5_group.attrs["Origin"] = [grid_x_min, grid_y_min]
         hdf5_group.attrs["Interpolation_Method"] = "STEP"
 
     def run(self, filename=None):
@@ -221,19 +304,16 @@ class HDF5RasterWriter(BaseWriter):
                     temp_group = h5temp.create_group(name=self.region_name)
                 except ValueError as e:
                     print(f"ERROR writing HDF5 file: {e}")
-                    print(f"INFO: Possible solution: use remove_output_file(filename=\"\")")
+                    print("INFO: Possible solution: use remove_output_file(filename=\"\")")
                     exit(1)
                 temp_group.create_dataset("Times", data=self.times)
                 temp_group.create_dataset("Data", data=self.data)
                 # Adds default attributes to the group
                 self.add_default_attributes(temp_group)
                 # Extends the default attributes to the ones defined by the user
-                if self.attributes is not {}:
-                    for attribute in self.attributes:
-                        if attribute == "Dimension":
-                            temp_group.attrs.create(attribute, self.attributes[attribute], dtype="S3")
-                        else:
-                            temp_group.attrs[attribute] = self.attributes[attribute]
+                for attribute, value in self.attributes.items():
+                    if attribute != "Dimension":
+                        temp_group.attrs[attribute] = value
 
             logger.info(f"Saved raster file to {self.filename}")
         else:

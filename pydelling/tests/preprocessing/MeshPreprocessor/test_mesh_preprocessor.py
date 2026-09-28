@@ -1,12 +1,12 @@
 import unittest
+from tempfile import TemporaryDirectory
+from pathlib import Path
 
 import numpy as np
 
 from pydelling.preprocessing.mesh_preprocessor import MeshPreprocessor
-from pydelling.readers.fem_reader import FemReader
 from pydelling.utils import test_data_path
 from pydelling.readers import ConnectFlowMeshReader
-from pydelling.preprocessing import DfnPreprocessor
 
 
 class TestMeshPreprocessor(unittest.TestCase):
@@ -45,8 +45,10 @@ class TestMeshPreprocessor(unittest.TestCase):
                                                             np.array([1.0, 0.0, -0.5]),
                                                             np.array([0.0, 1.0, -0.5]),
                                                             np.array([0.0, 0.0, 0.5])])
-        mesh_preprocessor.to_json(filename='./test.json')
-        mesh_preprocessor_2 = MeshPreprocessor.from_json(filename='./test.json')
+        with TemporaryDirectory() as output_folder:
+            output_path = Path(output_folder) / 'test.json'
+            mesh_preprocessor.to_json(filename=output_path)
+            MeshPreprocessor.from_json(filename=output_path)
 
     def test_edge_line_generation(self):
         mesh_preprocessor = MeshPreprocessor()

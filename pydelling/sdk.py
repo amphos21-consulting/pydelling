@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-from pydelling_cloud_backend.runtime_sdk import (
-    RuntimeContext,
-    load_context as _load_context,
-    load_asset_handles_from_context as _load_asset_handles_from_context,
-    make_output_manifest_item as _make_output_manifest_item,
-    write_outputs_manifest as _write_outputs_manifest,
-)
-from pydelling.preview import build_asset_preview
+from typing import TYPE_CHECKING
+
+from pydelling.assets import build_asset_preview
+
+if TYPE_CHECKING:
+    from pydelling_cloud_backend.runtime_sdk import RuntimeContext
+
+
+def __getattr__(name):
+    if name == "RuntimeContext":
+        from pydelling_cloud_backend.runtime_sdk import RuntimeContext
+
+        return RuntimeContext
+    raise AttributeError(name)
 
 
 def load_context(context_json):
@@ -20,7 +26,9 @@ def load_context(context_json):
     Returns:
         RuntimeContext: context object exposing get_asset and list_assets.
     """
-    return _load_context(context_json)
+    from pydelling_cloud_backend.runtime_sdk import load_context as cloud_load_context
+
+    return cloud_load_context(context_json)
 
 
 def load_asset_handles_from_context(items):
@@ -33,7 +41,11 @@ def load_asset_handles_from_context(items):
     Returns:
         list: typed asset handles built from context entries.
     """
-    return _load_asset_handles_from_context(items)
+    from pydelling_cloud_backend.runtime_sdk import (
+        load_asset_handles_from_context as cloud_load_asset_handles,
+    )
+
+    return cloud_load_asset_handles(items)
 
 
 def make_output_manifest_item(
@@ -55,7 +67,11 @@ def make_output_manifest_item(
     Returns:
         dict: manifest item with path, kind, title, and MIME type.
     """
-    return _make_output_manifest_item(
+    from pydelling_cloud_backend.runtime_sdk import (
+        make_output_manifest_item as cloud_manifest_item,
+    )
+
+    return cloud_manifest_item(
         path,
         kind=kind,
         title=title,
@@ -76,7 +92,12 @@ def write_outputs_manifest(output_dir, items):
     Returns:
         Path: path to the written outputs manifest.
     """
-    return _write_outputs_manifest(output_dir, items)
+    from pydelling_cloud_backend.runtime_sdk import (
+        write_outputs_manifest as cloud_write_manifest,
+    )
+
+    return cloud_write_manifest(output_dir, items)
+
 
 __all__ = [
     "RuntimeContext",

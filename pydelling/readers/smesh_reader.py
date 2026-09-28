@@ -16,7 +16,10 @@ import numpy as np
 logger = logging.getLogger(__name__)
 from tqdm import tqdm
 from pathlib import Path
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:  # optional pydelling[webapps] integration
+    st = None
 
 
 class SmeshReader(MeshPreprocessor):
@@ -44,6 +47,8 @@ class SmeshReader(MeshPreprocessor):
         Side effects:
             Reads mesh data, may build a KD-tree, and marks ``has_kd_tree``.
         """
+        if st_file and st is None:
+            raise RuntimeError("Streamlit progress requires the pydelling[webapps] extra.")
         super().__init__()
         self.is_streamlit = st_file
 

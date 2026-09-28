@@ -24,6 +24,9 @@ def test_data_path() -> Path:
     return Path(__file__).parent.parent / "tests/test_data"
 
 
+test_data_path.__test__ = False
+
+
 def runtime_path():
     return Path.cwd()
 

@@ -1,30 +1,28 @@
-image: python:3.11
+image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.cache/uv"
 
 cache:
   paths:
-    - .cache/pip
-    - .venv/
+    - .cache/uv
 
 stages:
   - test
+  - build
   - build-docs
   - pages
   - mirror
 
 # Test stage with coverage reporting
-test:
+test-core:
   stage: test
-  image: python:3.12
-
+  parallel:
+    matrix:
+      - UV_PYTHON: ["3.10", "3.12"]
   script:
-    - python -m pip install --upgrade pip
-    - pip install --cache-dir "$PIP_CACHE_DIR" .
-    - mkdir -p htmlcov
-    - printf '<coverage version="1"></coverage>' > coverage.xml
-    - pytest pydelling/tests/ --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short
+    - uv sync --locked --group dev
+    - uv run pytest pydelling/tests/ --ignore=pydelling/tests/managers/test_comsol_manager.py --cov=pydelling --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=report.xml -v --tb=short
   
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
@@ -40,17 +38,42 @@ test:
         path: coverage.xml
     expire_in: 1 week
 
+test-cloud:
+  stage: test
+  script:
+    - uv sync --locked --group dev --extra cloud
+    - uv run pytest pydelling/tests/ --ignore=pydelling/tests/managers/test_comsol_manager.py -q
+
+test-comsol:
+  stage: test
+  allow_failure: true
+  rules:
+    - if: '$COMSOL_TESTS == "1"'
+  script:
+    - uv sync --locked --group dev --extra comsol
+    - uv run pytest pydelling/tests/managers/test_comsol_manager.py -q
+
+# Validate the installable artifact before deployment, including package data.
+build-package:
+  stage: build
+  script:
+    - uv build
+    - uv run --no-project --with ./dist/pydelling-*.whl python -I -c "from importlib.metadata import version; from pydelling.assets import get_api_catalog; from pydelling.preview import build_asset_preview; assert version('pydelling'); assert get_api_catalog()['schema_version'] == 1"
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+
 ## Documentation build for MR feedback and branch validation
 build-docs:
   stage: build-docs
-  image: python:3.11
   script:
-    - pip install --cache-dir "$PIP_CACHE_DIR" mkdocs mkdocs-gen-files mkdocs-literate-nav mkdocs-material "mkdocstrings[python]" mkdocstrings-python pymdown-extensions mike
+    - uv sync --locked --group docs
     - |
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
-        mkdocs build --strict --site-dir site
+        uv run mkdocs build --strict --site-dir site
       else
-        mkdocs build --site-dir site
+        uv run mkdocs build --site-dir site
       fi
   artifacts:
     name: "docs_$CI_COMMIT_SHORT_SHA"

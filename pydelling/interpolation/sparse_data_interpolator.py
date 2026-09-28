@@ -41,24 +41,73 @@ class SparseDataInterpolator(BaseInterpolator):
             Sets ``self.interpolated_data`` and marks the interpolator as run via
             the ``set_run`` decorator.
         """
+        self._invalidate_results()
+        self._validate_interpolation_inputs()
+        if divide_over_direction not in (None, False, True, "x"):
+            raise ValueError("divide_over_direction currently supports only True or 'x'")
+
         if not divide_over_direction:
             logger.info(f"Interpolating data based on {self.info}")
-            self.interpolated_data = griddata(self.data[:, 0:-1], self.data[:, -1], self.mesh, method=method, **kwargs)
+            self.interpolated_data = np.asarray(
+                griddata(
+                    self.data[:, 0:-1],
+                    self.data[:, -1],
+                    self.mesh,
+                    method=method,
+                    **kwargs,
+                )
+            ).reshape(-1)
             return self.get_data()
         else:
-            logger.info(f"Dividing data into smaller chunks")
+            logger.info("Dividing data into smaller chunks")
             # Divide the data depending on the given direction
             # For now, only divide in the x direction using the mean value
-            mesh_x_plus: np.ndarray = self.mesh[self.mesh[:, 0] >= self.mesh[:, 0].mean()]
-            mesh_x_minus: np.ndarray = self.mesh[self.mesh[:, 0] < self.mesh[:, 0].mean()]
-            data_x_plus: np.ndarray = self.data[self.data[:, 0] >= self.data[:, 0].mean()]
-            data_x_minus: np.ndarray = self.data[self.data[:, 0] < self.data[:, 0].mean()]
+            dividing_coordinate = self.data[:, 0].mean()
+            mesh_plus_mask = self.mesh[:, 0] >= dividing_coordinate
+            mesh_minus_mask = ~mesh_plus_mask
+            data_plus_mask = self.data[:, 0] >= dividing_coordinate
+            data_minus_mask = ~data_plus_mask
+            if not data_plus_mask.any() or not data_minus_mask.any():
+                raise ValueError("cannot divide interpolation data into two non-empty x chunks")
             # Interpolate the data
-            interpolate_plus = griddata(data_x_plus[:, 0:-1], data_x_plus[:, -1], mesh_x_plus, method=method, **kwargs)
-            interpolate_minus = griddata(data_x_minus[:, 0:-1], data_x_minus[:, -1], mesh_x_minus, method=method, **kwargs)
-            # Combine the data
-            self.interpolated_data = np.concatenate((interpolate_plus, interpolate_minus), axis=0)
+            self.interpolated_data = np.empty(self.mesh.shape[0], dtype=float)
+            if mesh_plus_mask.any():
+                self.interpolated_data[mesh_plus_mask] = np.asarray(
+                    griddata(
+                        self.data[data_plus_mask, 0:-1],
+                        self.data[data_plus_mask, -1],
+                        self.mesh[mesh_plus_mask],
+                        method=method,
+                        **kwargs,
+                    )
+                ).reshape(-1)
+            if mesh_minus_mask.any():
+                self.interpolated_data[mesh_minus_mask] = np.asarray(
+                    griddata(
+                        self.data[data_minus_mask, 0:-1],
+                        self.data[data_minus_mask, -1],
+                        self.mesh[mesh_minus_mask],
+                        method=method,
+                        **kwargs,
+                    )
+                ).reshape(-1)
             return self.get_data()
+
+    def _validate_interpolation_inputs(self):
+        if self.data.size == 0:
+            raise ValueError("interpolation data must be provided before interpolation")
+        if self.mesh.size == 0:
+            raise ValueError("mesh data must be provided before interpolation")
+        coordinate_dimensions = self.data.shape[1] - 1
+        if self.mesh.shape[1] != coordinate_dimensions:
+            raise ValueError(
+                "interpolation data and mesh coordinate dimensions must match "
+                f"({coordinate_dimensions} != {self.mesh.shape[1]})"
+            )
+        if not np.isfinite(self.data).all():
+            raise ValueError("interpolation coordinates and values must be finite")
+        if not np.isfinite(self.mesh).all():
+            raise ValueError("mesh coordinates must be finite")
 
 
     def get_data(self) -> np.ndarray:
@@ -71,6 +120,8 @@ class SparseDataInterpolator(BaseInterpolator):
         Returns:
             np.ndarray: ``self.mesh`` with interpolated values appended.
         """
+        if self.interpolated_data.size == 0:
+            raise RuntimeError("the interpolation has not been run with the current inputs")
         temp_array = np.reshape(self.interpolated_data, (self.interpolated_data.shape[0], 1))
         return np.concatenate((self.mesh, temp_array), axis=1)
 
@@ -87,7 +138,17 @@ class SparseDataInterpolator(BaseInterpolator):
         Side effects:
             Updates ``self.interpolated_data`` in place.
         """
-        logger.info(f"Equaling values <{min_value} to {min_value}")
+        if self.interpolated_data.size == 0:
+            raise RuntimeError("the interpolation has not been run with the current inputs")
+        if isinstance(min_value, (bool, np.bool_)):
+            raise ValueError("min_value must be a finite numeric threshold")
+        try:
+            min_value = float(min_value)
+        except (TypeError, ValueError) as error:
+            raise ValueError("min_value must be a finite numeric threshold") from error
+        if not np.isfinite(min_value):
+            raise ValueError("min_value must be a finite numeric threshold")
+        logger.info(f"Setting values below {min_value} to {min_value}")
         self.interpolated_data[self.interpolated_data < min_value] = min_value
         return self.interpolated_data
 
@@ -102,11 +163,22 @@ class SparseDataInterpolator(BaseInterpolator):
             AssertionError: If interpolation has not run or no regular mesh is
                 available.
         """
-        assert self.is_run, "The interpolator has not been run"
-        assert self.has_regular_mesh, "The interpolator has not been run with a regular mesh"
+        self._require_results()
+        if not self.has_regular_mesh:
+            raise RuntimeError("the interpolator does not have a regular mesh")
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
-        plot_data = self.get_data()
+        interpolation = self.info["interpolation"]
+        n_x = interpolation["n_x"]
+        n_y = interpolation["n_y"]
+        grid_x = self.mesh[:, 0].reshape(n_y, n_x)
+        grid_y = self.mesh[:, 1].reshape(n_y, n_x)
+        values = self.interpolated_data.reshape(n_y, n_x)
+        plot = ax.pcolormesh(grid_x, grid_y, values, shading="auto")
+        fig.colorbar(plot, ax=ax)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        return ax
 
 
     def generate_pointwise_data(self) -> np.ndarray:
@@ -122,8 +194,9 @@ class SparseDataInterpolator(BaseInterpolator):
             AssertionError: If interpolation has not run or no regular mesh is
                 available.
         """
-        assert self.is_run, "The interpolator has not been run"
-        assert self.has_regular_mesh, "The interpolator has not been run with a regular mesh"
+        self._require_results()
+        if not self.has_regular_mesh:
+            raise RuntimeError("the interpolator does not have a regular mesh")
         mesh_data = self.mesh.copy()
         mesh_data = np.hstack((mesh_data, np.reshape(self.interpolated_data, (-1, 1))))
         return mesh_data
@@ -139,7 +212,8 @@ class SparseDataInterpolator(BaseInterpolator):
         Side effects:
             Writes pointwise data with ``x,y,value`` header.
         """
-        assert self.is_run, "The interpolator has not been run"
-        assert self.has_regular_mesh, "The interpolator has not been run with a regular mesh"
+        self._require_results()
+        if not self.has_regular_mesh:
+            raise RuntimeError("the interpolator does not have a regular mesh")
         mesh_data = self.generate_pointwise_data()
         np.savetxt(output_file, mesh_data, delimiter=',', header='x,y,value')

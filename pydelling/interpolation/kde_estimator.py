@@ -10,12 +10,12 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from sklearn.neighbors import KernelDensity
 
 from pydelling.utils.decorators import set_run
 
 logger = logging.getLogger(__name__)
-import seaborn as sns
 
 class KdeEstimator:
     """Fit and sample kernel density estimates from tabular data.
@@ -36,12 +36,12 @@ class KdeEstimator:
             bandwidth (Any): Description.
             package (Any): Description.
         """
-        self.data = data
+        self.data = self._normalize_data(data) if data is not None else None
         self.kernel = kernel
         self.bandwidth = bandwidth
         self.package = package
-        if type(self.data) == pd.Series:
-            self.data = pd.DataFrame(self.data)
+        self.kde_estimator = None
+        self.is_run = False
 
     @set_run
     def run(self, data: pd.DataFrame=None):
@@ -54,11 +54,32 @@ class KdeEstimator:
         Returns:
             sklearn.neighbors.KernelDensity: fitted KDE estimator.
         """
-        if data:
-            self.data = data
+        self.is_run = False
+        self.kde_estimator = None
+        if data is not None:
+            self.data = self._normalize_data(data)
+        if self.data is None or self.data.empty:
+            raise ValueError("non-empty data must be provided before fitting the KDE")
         logger.info(f'Fitting KDE generator for {self.data.columns.to_list()} variables')
         self.kde_estimator: KernelDensity = KernelDensity(kernel=self.kernel, bandwidth=self.bandwidth).fit(self._training_data)
         return self.kde_estimator
+
+    @staticmethod
+    def _normalize_data(data):
+        if isinstance(data, pd.Series):
+            return data.to_frame()
+        if isinstance(data, pd.DataFrame):
+            return data
+        array = np.asarray(data)
+        if array.ndim == 1:
+            array = array.reshape(-1, 1)
+        if array.ndim != 2:
+            raise ValueError("KDE data must be one- or two-dimensional")
+        return pd.DataFrame(array)
+
+    def _require_fitted(self):
+        if not self.is_run or self.kde_estimator is None:
+            raise RuntimeError("the KDE estimator has not been fitted")
 
     def plot_1d_comparison_histograms(self,
                                       variable=None,
@@ -82,7 +103,8 @@ class KdeEstimator:
         fig, ax = plt.subplots()
         fig: plt.Figure
         ax: plt.Axes
-        if not variable:
+        self._require_fitted()
+        if variable is None:
             variable = self.data.columns[0]
 
         sampled_values = pd.DataFrame(self.kde_estimator.sample(n), columns=self.data.columns)
@@ -128,19 +150,21 @@ class KdeEstimator:
         fig: plt.Figure
         ax: plt.Axes
 
+        self._require_fitted()
         sampled_values = pd.DataFrame(self.kde_estimator.sample(n), columns=self.data.columns)
         for idx, variable in enumerate(variables):
             if palette:
                 color = palette[idx]
+            histogram_options = {"color": color} if palette else {}
             sns.histplot(self.data[variable].values, bins=bins,
                     alpha=0.75,
                     label=variable,
-                    color=color if palette else {}
+                    **histogram_options,
                     )
             sns.histplot(sampled_values[variable].values, bins=bins,
                     alpha=0.25,
                     label=f"{variable}-kde",
-                    color=color if palette else {}
+                    **histogram_options,
                          )
         ax.set_axisbelow(True)
         plt.legend()
@@ -162,13 +186,16 @@ class KdeEstimator:
             matplotlib.axes.Axes: density plot axes.
         """
         plt.clf()
-        if not variable:
+        self._require_fitted()
+        if variable is None:
             variable = self.data.columns[0]
         logger.info(f'Generating 1D comparison plot for {variable} variable')
 
         temp = [np.linspace(self.data[column].min(), self.data[column].max(), n) for column in self.data]
-        sampling_data = np.meshgrid(*temp)
-        sampling_data: np.ndarray = np.vstack(map(np.ravel, sampling_data)).T.reshape(-1, self.data.shape[1])
+        sampling_grid = np.meshgrid(*temp)
+        sampling_data = np.stack(
+            [grid.ravel() for grid in sampling_grid], axis=-1
+        )
 
         predicted_distribution = self.kde_estimator.score_samples(sampling_data)
         predicted_distribution = np.exp(predicted_distribution)
@@ -199,7 +226,8 @@ class KdeEstimator:
 
     @property
     def _training_data(self):
-        assert not self.data.empty, 'Provide some data to work with'
+        if self.data is None or self.data.empty:
+            raise ValueError("non-empty data must be provided before fitting the KDE")
         return self.data.values.reshape(-1, self.data.shape[1])
 
     def sample(self, *args, **kwargs):
@@ -212,4 +240,5 @@ class KdeEstimator:
         Returns:
             numpy.ndarray: samples returned by KernelDensity.sample.
         """
+        self._require_fitted()
         return self.kde_estimator.sample(*args, **kwargs)

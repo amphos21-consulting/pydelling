@@ -4,17 +4,19 @@
 - Read the output status of the simulation
 """
 
+from __future__ import annotations
+
 from .base_study import BaseStudy
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List
 import logging
-from alive_progress import alive_bar
 from tqdm import tqdm
 from pydelling.utils import create_results_folder
-from pydelling.managers.ssh import BaseSsh, JurecaSsh, LumiSsh
-from docker import DockerClient
 from pathlib import Path
 import subprocess
+
+if TYPE_CHECKING:
+    from pydelling.managers.ssh import BaseSsh
 
 
 logger = logging.getLogger(__name__)
@@ -403,6 +405,14 @@ class BaseManager(ABC):
         Side effects:
             Instantiates and stores ``self.ssh``.
         """
+        try:
+            from pydelling.managers.ssh import JurecaSsh, LumiSsh
+        except ModuleNotFoundError as exc:
+            if exc.name == "paramiko":
+                raise RuntimeError(
+                    "Remote execution requires the 'pydelling[hpc]' extra."
+                ) from exc
+            raise
         platform_to_ssh = {
             'jureca': JurecaSsh,
             'lumi': LumiSsh,
