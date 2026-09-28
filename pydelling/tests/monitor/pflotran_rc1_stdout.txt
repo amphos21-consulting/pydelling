@@ -1,0 +1,87 @@
+ Finished Initialization
+
+
+== RICHARDS FLOW ===============================================================
+  0 2r: 1.67E-16 2x: 0.00E+00 2u: 0.00E+00 ir: 1.67E-16 iu: 0.00E+00 rsn:   0
+  1 2r: 0.00E+00 2x: 2.16E+06 2u: 7.23E-10 ir: 0.00E+00 iu: 8.83E-11 rsn: atol
+
+ Step      1 Time=  1.00000E+00 Dt=  1.00000E+00 [s] conv_reason: 2
+  newton =   1 [       1] linear =     1 [         1] cuts =  0 [   0]
+  --> SNES Linear/Non-Linear Iterations = 1 / 1
+  --> SNES Residual: 0.000000E+00 0.000000E+00 0.000000E+00
+  --> max change: dpmx=   8.7311E-11
+
+== REACTIVE TRANSPORT ==========================================================
+  0 2r: 5.90E-01 2x: 0.00E+00 2u: 0.00E+00 ir: 3.41E-01 iu: 0.00E+00 rsn:   0
+  1 2r: 8.34E-17 2x: 5.81E-02 2u: 5.81E-02 ir: 6.22E-17 iu: 4.10E-02 rsn: rtol
+
+ Step      1 Time=  1.00000E+00 Dt=  1.00000E+00 [s] conv_reason: 3
+  newton =   1 [       1] linear =     1 [         1] cuts =  0 [   0]
+  --> SNES Linear/Non-Linear Iterations = 1 / 1
+  --> SNES Residual: 0.834005E-16 0.834005E-16 0.622122E-16
+  --> max change:  dcmx=   4.1000E-02  dc/dt=   4.1000E-02 [mol/s]
+
+ --> appending to hdf5 output file: model.h5
+      0.00 Seconds to write HDF5 file.
+
+== RICHARDS FLOW ===============================================================
+  0 2r: 0.00E+00 2x: 0.00E+00 2u: 0.00E+00 ir: 0.00E+00 iu: 0.00E+00 rsn:   0
+  1 2r: 0.00E+00 2x: 2.16E+06 2u: 0.00E+00 ir: 0.00E+00 iu: 0.00E+00 rsn: atol
+
+ Step      2 Time=  1.33652E+00 Dt=  3.36523E-01 [s] conv_reason: 2
+  newton =   1 [       2] linear =     0 [         1] cuts =  0 [   0]
+  --> SNES Linear/Non-Linear Iterations = 0 / 1
+  --> SNES Residual: 0.000000E+00 0.000000E+00 0.000000E+00
+  --> max change: dpmx=   0.0000E+00
+
+== REACTIVE TRANSPORT ==========================================================
+  0 2r: 5.65E-01 2x: 0.00E+00 2u: 0.00E+00 ir: 3.39E-01 iu: 0.00E+00 rsn:   0
+  1 2r: 2.24E-16 2x: 7.73E-02 2u: 1.92E-02 ir: 2.22E-16 iu: 1.35E-02 rsn: rtol
+
+ Step      2 Time=  1.33652E+00 Dt=  3.36523E-01 [s] conv_reason: 3
+  newton =   1 [       2] linear =     1 [         2] cuts =  0 [   0]
+  --> SNES Linear/Non-Linear Iterations = 1 / 1
+  --> SNES Residual: 0.223789E-15 0.223789E-15 0.222045E-15
+  --> max change:  dcmx=   1.3505E-02  dc/dt=   4.0131E-02 [mol/s]
+
+[... excerpt ...]
+== RICHARDS FLOW ===============================================================
+  0 2r: 0.00E+00 2x: 0.00E+00 2u: 0.00E+00 ir: 0.00E+00 iu: 0.00E+00 rsn:   0
+  1 2r: 0.00E+00 2x: 2.16E+06 2u: 0.00E+00 ir: 0.00E+00 iu: 0.00E+00 rsn: atol
+
+ Step    944 Time=  8.64000E+07 Dt=  2.00000E+04 [s] conv_reason: 2
+  newton =   1 [     944] linear =     0 [         5] cuts =  0 [   0]
+  --> SNES Linear/Non-Linear Iterations = 0 / 1
+  --> SNES Residual: 0.000000E+00 0.000000E+00 0.000000E+00
+  --> max change: dpmx=   0.0000E+00
+
+== REACTIVE TRANSPORT ==========================================================
+  0 2r: 5.11E-16 2x: 0.00E+00 2u: 0.00E+00 ir: 7.77E-17 iu: 0.00E+00 rsn:   0
+  1 2r: 4.80E-16 2x: 2.45E+01 2u: 2.92E-15 ir: 8.71E-17 iu: 6.40E-16 rsn: stol
+
+ Step    951 Time=  8.64000E+07 Dt=  2.00000E+04 [s] conv_reason: 4
+  newton =   1 [     988] linear =     1 [       988] cuts =  0 [   0]
+  --> SNES Linear/Non-Linear Iterations = 1 / 1
+  --> SNES Residual: 0.479892E-15 0.479892E-15 0.871113E-16
+  --> max change:  dcmx=   6.6613E-16  dc/dt=   3.3307E-20 [mol/s]
+
+ --> appending to hdf5 output file: model.h5
+      0.00 Seconds to write HDF5 file.
+
+PMCSubsurfaceFlow
+ Total Time: 1.3362E-01 seconds
+
+ FLOW TS SNES steps = 944  newton = 944  linear = 5  cuts = 0
+ FLOW TS SNES Wasted Linear Iterations = 0
+ FLOW TS SNES Wasted Newton Iterations = 0
+ FLOW TS SNES time = 0.1 seconds
+
+PMCSubsurfaceTransport
+ Total Time: 2.3662E-01 seconds
+
+ TRAN TS SNES steps = 951  newton = 988  linear = 988  cuts = 0
+ TRAN TS SNES Wasted Linear Iterations = 0
+ TRAN TS SNES Wasted Newton Iterations = 0
+ TRAN TS SNES time = 0.2 seconds
+
+ Wall Clock Time:  4.3836E-01 [sec]   7.3060E-03 [min]   1.2177E-04 [hr]

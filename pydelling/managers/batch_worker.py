@@ -4,7 +4,7 @@ import json
 import sys
 from pathlib import Path
 
-from .batch import LocalExecutor, atomic_json
+from .batch import LocalExecutor, atomic_json, cancel_requested
 from .pflotran_manager import PflotranManager
 from .pflotran_study import PflotranStudy
 
@@ -31,9 +31,10 @@ def main():
                 provenance=job["provenance"],
                 batch_name=job["batch_name"],
             )
-            atomic_json(
-                folder / "campaign.json", {"state": "completed" if result.successful else "failed"}
-            )
+            state = "completed" if result.successful else "failed"
+            if not result.successful and cancel_requested(folder):
+                state = "cancelled"
+            atomic_json(folder / "campaign.json", {"state": state})
         except Exception as exc:
             atomic_json(folder / "campaign.json", {"state": "failed", "error": str(exc)})
             raise

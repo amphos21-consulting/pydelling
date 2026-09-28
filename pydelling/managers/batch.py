@@ -58,6 +58,42 @@ def atomic_json(path, value):
     os.replace(tmp, path)
 
 
+EVENTS_FILE = "events.jsonl"
+CANCEL_FILE = "cancel.request"
+_EVENTS_LOCK = threading.Lock()
+
+
+def append_event(folder, event_type, **payload):
+    """Append one JSON line to the campaign event log read by monitors."""
+    record = {**payload, "ts": time.time(), "type": event_type}
+    line = (json.dumps(record, sort_keys=True, default=str) + "\n").encode()
+    path = Path(folder) / EVENTS_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # One write() per O_APPEND line keeps records whole across threads/processes.
+    with _EVENTS_LOCK:
+        fd = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        try:
+            os.write(fd, line)
+        finally:
+            os.close(fd)
+
+
+def cancel_requested(folder):
+    return (Path(folder) / CANCEL_FILE).exists()
+
+
+def request_cancel(folder, origin="api"):
+    """Ask running batches in ``folder`` to stop; idempotent and cross-platform."""
+    if cancel_requested(folder):
+        return
+    atomic_json(Path(folder) / CANCEL_FILE, {"origin": origin, "requested": time.time()})
+    append_event(folder, "cancel.requested", origin=origin)
+
+
+def clear_cancel(folder):
+    (Path(folder) / CANCEL_FILE).unlink(missing_ok=True)
+
+
 @contextmanager
 def campaign_lock(folder):
     """OS-owned lock, automatically released after a crash (including Windows)."""
@@ -153,7 +189,24 @@ class LocalExecutor:
 
     def _execute(self, study, folder, expected_times, required_variables, identity):
         state_path = folder / "status.json"
+        campaign = folder.parent
         previous = json.loads(state_path.read_text()) if state_path.exists() else {}
+        if self._stop.is_set() or cancel_requested(campaign):
+            if previous.get("state") == "running":
+                previous["state"] = "interrupted"
+                atomic_json(folder / previous["workdir"] / "status.json", previous)
+            now = time.time()
+            state = {
+                "state": "interrupted",
+                "identity": identity,
+                "error": "Cancelled before start",
+                "started": now,
+                "finished": now,
+                "runtime_s": 0.0,
+            }
+            atomic_json(state_path, state)
+            append_event(campaign, "study.state", study=study.name, state="interrupted")
+            return state
         attempts = folder / "attempts"
         attempts.mkdir(exist_ok=True)
         attempt = max([int(p.name) for p in attempts.iterdir() if p.name.isdigit()] + [0]) + 1
@@ -190,9 +243,12 @@ class LocalExecutor:
                 proc = Path(f"/proc/{process.pid}/stat")
                 state["process_start"] = proc.read_text().split()[21] if proc.exists() else None
                 atomic_json(state_path, state)
+                append_event(
+                    campaign, "study.state", study=study.name, state="running", attempt=attempt
+                )
                 deadline = time.monotonic() + self.timeout
                 while True:
-                    if self._stop.is_set():
+                    if self._stop.is_set() or cancel_requested(campaign):
                         raise InterruptedError("Batch cancelled")
                     remaining = deadline - time.monotonic()
                     if remaining <= 0:
@@ -235,6 +291,16 @@ class LocalExecutor:
             state["runtime_s"] = state["finished"] - state["started"]
             atomic_json(work / "status.json", state)
             atomic_json(state_path, state)
+            details = {"error": state["error"]} if "error" in state else {}
+            append_event(
+                campaign,
+                "study.state",
+                study=study.name,
+                state=state["state"],
+                attempt=attempt,
+                runtime_s=round(state["runtime_s"], 3),
+                **details,
+            )
         return state
 
     @contextmanager
@@ -316,18 +382,29 @@ class LocalExecutor:
                 atomic_json(status, state)
             pending.append((study, study_folder))
         self._stop = threading.Event()
-        with ThreadPoolExecutor(max_workers=self.workers) as pool:
-            futures = [
-                (
-                    s.name,
-                    pool.submit(self._execute, s, dest, **requirements[s.name], identity=identity),
-                )
-                for s, dest in pending
-            ]
-            try:
-                for name, future in futures:
-                    states[name] = future.result()
-            except KeyboardInterrupt:
-                self._stop.set()
-                raise
+        append_event(
+            folder, "batch.started", batch=batch_name, studies=len(studies), pending=len(pending)
+        )
+        try:
+            with ThreadPoolExecutor(max_workers=self.workers) as pool:
+                futures = [
+                    (
+                        s.name,
+                        pool.submit(
+                            self._execute, s, dest, **requirements[s.name], identity=identity
+                        ),
+                    )
+                    for s, dest in pending
+                ]
+                try:
+                    for name, future in futures:
+                        states[name] = future.result()
+                except KeyboardInterrupt:
+                    self._stop.set()
+                    raise
+        finally:
+            counts = {}
+            for record in states.values():
+                counts[record["state"]] = counts.get(record["state"], 0) + 1
+            append_event(folder, "batch.finished", batch=batch_name, counts=counts)
         return BatchResult(states)

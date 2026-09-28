@@ -16,7 +16,51 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
-from .batch import BatchResult, atomic_json, file_hash, fingerprint
+from .batch import CANCEL_FILE, EVENTS_FILE, BatchResult, atomic_json, file_hash, fingerprint
+
+# Remote snippets run with the host's python3 (stdlib only, Linux: fcntl and /proc).
+WORKER_LAUNCHER = """import fcntl,json,os,pathlib,subprocess,sys,time
+folder=pathlib.Path(sys.argv[1])
+def start_token(pid):
+ try: return (pathlib.Path('/proc')/str(pid)/'stat').read_text().split()[21]
+ except OSError: return None
+with (folder/'.launch.lock').open('a') as lock:
+ fcntl.flock(lock,fcntl.LOCK_EX)
+ marker=folder/'worker.json'
+ if marker.exists():
+  old=json.loads(marker.read_text())
+  proc=pathlib.Path('/proc')/str(old['pid'])/'stat'
+  if proc.exists() and proc.read_text().split()[21]==old.get('start') and proc.read_text().split()[2]!='Z':
+   print(json.dumps(old)); sys.exit(0)
+ for stale in ('cancel.request','worker-exit.json'):
+  (folder/stale).unlink(missing_ok=True)
+ env=dict(os.environ,PYDELLING_RUNS_WORKER='1')
+ with (folder/'worker.log').open('ab') as log:
+  p=subprocess.Popen([sys.executable,'-c',sys.argv[4],sys.argv[2],str(folder)],stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True,cwd=sys.argv[3],env=env)
+ state={'pid':p.pid,'start':start_token(p.pid),'launched':time.time()}
+ temp=marker.with_suffix('.tmp'); temp.write_text(json.dumps(state)); os.replace(temp,marker)
+ print(json.dumps(state))
+"""
+
+WORKER_SUPERVISOR = """import json,os,pathlib,subprocess,sys,time
+argv=json.loads(sys.argv[1]); folder=pathlib.Path(sys.argv[2])
+try:
+ code=subprocess.call(argv)
+except OSError as exc:
+ print(f'Cannot start worker: {exc}',file=sys.stderr,flush=True); code=127
+temp=folder/'worker-exit.json.tmp'
+temp.write_text(json.dumps({'returncode':code,'finished':time.time()}))
+os.replace(temp,folder/'worker-exit.json')
+sys.exit(code)
+"""
+
+CANCEL_REQUEST = """import json,os,pathlib,sys,time
+folder=pathlib.Path(sys.argv[1]); marker=folder/sys.argv[2]
+if folder.is_dir() and not marker.exists():
+ temp=marker.with_suffix('.tmp'); temp.write_text(json.dumps({'origin':'ssh','requested':time.time()})); os.replace(temp,marker)
+ with (folder/sys.argv[3]).open('a') as log:
+  log.write(json.dumps({'origin':'ssh','ts':time.time(),'type':'cancel.requested'},sort_keys=True)+chr(10))
+"""
 
 
 @dataclass
@@ -29,6 +73,7 @@ class SSHExecutor:
     runtime: str | None = None
     local_options: dict = field(default_factory=dict)
     entrypoint: str = "run_models.py"
+    ssh: str = "ssh"
 
     def __post_init__(self):
         if not self.host or self.host.startswith("-") or any(c.isspace() for c in self.host):
@@ -40,7 +85,7 @@ class SSHExecutor:
 
     def command(self, argv, *, capture=True):
         return subprocess.run(
-            ["ssh", *self.ssh_options, self.host, shlex.join(list(map(str, argv)))],
+            [self.ssh, *self.ssh_options, self.host, shlex.join(list(map(str, argv)))],
             check=True,
             text=True,
             capture_output=capture,
@@ -49,8 +94,13 @@ class SSHExecutor:
     def python(self, code, *args):
         return self.command(["python3", "-c", code, *args]).stdout
 
-    def deploy(self, workspace, files):
-        """Deploy only explicit source files into a content-addressed release."""
+    def deploy(self, workspace, files, on_event=None):
+        """Deploy only explicit source files into a content-addressed release.
+
+        ``on_event(event_type, **payload)`` receives the stage boundaries
+        (``deploy.hashed``, ``deploy.uploaded``, ``deploy.verified``, ``deploy.synced``).
+        """
+        emit = on_event or (lambda event_type, **payload: None)
         workspace = Path(workspace).resolve()
         files = sorted({Path(f) for f in files})
         hashes = {}
@@ -61,6 +111,7 @@ class SSHExecutor:
             hashes[relative.as_posix()] = file_hash(source)
         release = hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()[:20]
         destination = f"{self.root}/releases/{release}"
+        emit("deploy.hashed", files=len(hashes), release=release)
         self.command(["mkdir", "-p", destination], capture=False)
         # rsync preserves exact source bytes; no --delete outside an isolated release.
         use_rsync = self.transfer == "rsync"
@@ -81,7 +132,7 @@ class SSHExecutor:
                         "--files-from",
                         str(listing),
                         "-e",
-                        shlex.join(["ssh", *self.ssh_options]),
+                        shlex.join([self.ssh, *self.ssh_options]),
                         str(workspace) + "/",
                         f"{self.host}:{destination}/",
                     ],
@@ -95,6 +146,7 @@ class SSHExecutor:
                         tar.add(workspace / relative, arcname=relative.as_posix(), recursive=False)
                 self._upload(archive, destination + "/source.tar.gz")
                 self.command(["tar", "-xzf", destination + "/source.tar.gz", "-C", destination])
+        emit("deploy.uploaded", transfer="rsync" if use_rsync else "tar")
         self.python(
             "import hashlib,json,pathlib,sys; root=pathlib.Path(sys.argv[1]); "
             "expected=json.loads(sys.argv[2]); "
@@ -102,9 +154,11 @@ class SSHExecutor:
             destination,
             json.dumps(hashes),
         )
+        emit("deploy.verified")
         self.command(
             [self.uv, "sync", "--locked", "--no-dev", "--project", destination], capture=False
         )
+        emit("deploy.synced", release=release)
         return destination, release
 
     def _upload(self, local, remote):
@@ -112,7 +166,7 @@ class SSHExecutor:
         with Path(local).open("rb") as stream:
             subprocess.run(
                 [
-                    "ssh",
+                    self.ssh,
                     *self.ssh_options,
                     self.host,
                     shlex.join(
@@ -128,7 +182,7 @@ class SSHExecutor:
                 check=True,
             )
 
-    def start(self, release, config, campaign, *, resume=False):
+    def start(self, release, config, campaign, *, resume=False, on_event=None):
         """Detach a worker. A remote OS lock serializes launch and execution."""
         if not campaign or any(
             c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
@@ -170,28 +224,25 @@ with (p.parent/'.config.lock').open('a') as lock:
             folder,
         ]
         state = self.launch_worker(release, folder, argv)
+        if on_event:
+            on_event("worker.started", pid=state.get("pid"))
         return {"remote_folder": folder, "release": release, **state}
 
     def launch_worker(self, release, folder, argv):
-        """Launch arbitrary argv once, independently of the SSH channel."""
-        launcher = """import fcntl,json,os,pathlib,subprocess,sys
-folder=pathlib.Path(sys.argv[1])
-with (folder/'.launch.lock').open('a') as lock:
- fcntl.flock(lock,fcntl.LOCK_EX)
- marker=folder/'worker.json'
- if marker.exists():
-  old=json.loads(marker.read_text())
-  proc=pathlib.Path('/proc')/str(old['pid'])/'stat'
-  if proc.exists() and proc.read_text().split()[21]==old.get('start') and proc.read_text().split()[2]!='Z':
-   print(json.dumps(old)); sys.exit(0)
- with (folder/'worker.log').open('ab') as log:
-  p=subprocess.Popen(json.loads(sys.argv[2]),stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True,cwd=sys.argv[3])
- state={'pid':p.pid,'start':(pathlib.Path('/proc')/str(p.pid)/'stat').read_text().split()[21]}
- temp=marker.with_suffix('.tmp'); temp.write_text(json.dumps(state)); os.replace(temp,marker)
- print(json.dumps(state))
-"""
-        state = json.loads(self.python(launcher, folder, json.dumps(argv), release))
+        """Launch arbitrary argv once, independently of the SSH channel.
+
+        The argv runs under a tiny stdlib supervisor that records the exit code in
+        ``worker-exit.json`` so monitors can tell a crash from a clean finish. A new
+        launch clears stale ``cancel.request``/``worker-exit.json`` files.
+        """
+        state = json.loads(
+            self.python(WORKER_LAUNCHER, folder, json.dumps(argv), release, WORKER_SUPERVISOR)
+        )
         return state
+
+    def cancel(self, folder):
+        """Request cooperative cancellation of the campaign in ``folder``."""
+        self.python(CANCEL_REQUEST, folder, CANCEL_FILE, EVENTS_FILE)
 
     def configuration(self, folder):
         return json.loads(
@@ -312,7 +363,7 @@ with (folder/'.launch.lock').open('a') as lock:
     def status(self, folder):
         code = """import json,pathlib,sys
 p=pathlib.Path(sys.argv[1]); result={}
-for name in ('campaign.json','worker.json'):
+for name in ('campaign.json','worker.json','worker-exit.json'):
  f=p/name
  if f.exists(): result[name]=json.loads(f.read_text())
 w=result.get('worker.json',{}); proc=pathlib.Path('/proc')/str(w.get('pid',0))/'stat'
@@ -333,7 +384,7 @@ print(json.dumps(result))
         destination.mkdir(parents=True, exist_ok=True)
         code = """import pathlib,sys,tarfile
 root=pathlib.Path(sys.argv[1]); raw=sys.argv[2]=='1'
-allowed={'.json','.yaml','.csv','.parquet','.png','.log','.in','.out','.dat'}
+allowed={'.json','.jsonl','.yaml','.csv','.parquet','.png','.log','.in','.out','.dat'}
 with tarfile.open(fileobj=sys.stdout.buffer,mode='w|gz') as tar:
  for p in sorted(root.rglob('*')):
   if p.is_file() and not p.is_symlink() and (p.suffix in allowed or (raw and p.suffix in {'.h5','.xmf'})):
@@ -344,7 +395,7 @@ with tarfile.open(fileobj=sys.stdout.buffer,mode='w|gz') as tar:
             with archive.open("wb") as stream:
                 subprocess.run(
                     [
-                        "ssh",
+                        self.ssh,
                         *self.ssh_options,
                         self.host,
                         shlex.join(["python3", "-c", code, folder, "1" if raw else "0"]),
