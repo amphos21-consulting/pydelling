@@ -52,6 +52,18 @@ class TestStudyIdentity(TestCase):
             self.assertTrue((target / 'test_manager.in').exists())
 
 
+class TestGenerateRunFiles(TestCase):
+    def test_writes_one_folder_per_study_without_running(self):
+        manager = DummyManager()
+        base = PflotranStudy(str(test_data_path() / 'test_manager.in'))
+        for i in range(3):
+            manager.add_study(base.copy(study_name=f'case-{i}'))
+        with TemporaryDirectory() as tmp:
+            manager.generate_run_files(Path(tmp) / 'nested' / 'studies')
+            written = sorted(p.parent.name for p in (Path(tmp) / 'nested' / 'studies').rglob('*.in'))
+        self.assertEqual(written, ['case-0', 'case-1', 'case-2'])
+
+
 class TestStudyCopy(TestCase):
     def test_copy_does_not_share_settings(self):
         with TemporaryDirectory() as tmp:

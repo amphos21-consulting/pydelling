@@ -53,7 +53,7 @@ def initialize_config(config_file="./config/config.yaml"):
 
 def create_results_folder(folder_name='./results'):
     output_folder = Path(folder_name)
-    output_folder.mkdir(exist_ok=True)
+    output_folder.mkdir(parents=True, exist_ok=True)
     return output_folder
 
 def create_output_folder(folder_name='output'):

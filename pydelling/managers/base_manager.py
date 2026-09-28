@@ -203,11 +203,14 @@ class BaseManager(ABC):
         Usage: to write reproducible solver input decks on disk but
             should not launch the solver.
         Args:
-            studies_folder: Kept for API compatibility; run files are written
-                under ``self.results_folder``.
+            studies_folder: Folder that receives one sub-folder per study (created
+                if needed), as in ``run``.
         Side effects:
-            Calls ``study.to_file`` for each registered study.
+            Sets ``self.results_folder`` and calls ``study.to_file`` for each
+            registered study.
         """
+        self.results_folder = create_results_folder(studies_folder)
+        self.studies_folder_name = Path(studies_folder).name
         for study in self.studies.values():
             study: BaseStudy
             study.to_file(self.results_folder / study.name)

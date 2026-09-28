@@ -1,25 +1,20 @@
 """
-Module documentation.
+PFLOTRAN study: a templated PFLOTRAN input deck with structure-aware editing.
 
+Structure queries (regions, datasets, blocks, parent cards) go through
+:class:`~pydelling.managers.pflotran_deck.PflotranDeck`, which parses ``raw_text`` into a
+card/block tree. The card API (``get_card``, ``get_card_values``, ``set_card_values``,
+``add_card``, ``remove_card``) edits lines selected by card path, e.g.::
 
+    study.set_card_values('MATERIAL_PROPERTY soil', 'PERMEABILITY', 'PERM_ISO', values=1e-12)
 """
 
 from .base_study import BaseStudy
+from .pflotran_deck import Card, CardNotFound, LineNotFound, PflotranDeck
 import logging
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Sequence
 
 logger = logging.getLogger(__name__)
-
-class LineNotFound(Exception):
-    """Raised when a requested PFLOTRAN input-deck line cannot be found.
-
-    Category: PFLOTRAN study.
-    Tags: pflotran, input-file, exception, lookup.
-    Usage: to identify errors from PFLOTRAN input-deck
-        editing operations.
-    """
-
-    pass
 
 class PflotranStudy(BaseStudy):
     """Manage and edit PFLOTRAN input decks.
@@ -28,6 +23,9 @@ class PflotranStudy(BaseStudy):
     Tags: pflotran, study, input-file, simulation, editing
     Usage: scripts need to inspect or modify PFLOTRAN regions, datasets, timing, checkpoints, and material blocks.
     """
+    # the parsed deck is rebuilt on demand, never copied
+    _copy_skip_attrs = BaseStudy._copy_skip_attrs + ('_deck_cache',)
+
     def __init__(self, input_file: str, *args, **kwargs):
         """Initialize a PFLOTRAN study from an input file.
 
@@ -41,6 +39,115 @@ class PflotranStudy(BaseStudy):
         super().__init__(input_file, *args, **kwargs)
         self.regions_to_idx = {}
         self.datasets_to_idx = {}
+        self._deck_cache = None
+
+    @property
+    def deck(self) -> PflotranDeck:
+        """Parsed card/block tree of the current ``raw_text`` (re-parsed after edits).
+
+        Category: manager
+        Tags: pflotran, parser, deck, blocks
+        Usage: structure-aware queries on the input deck.
+
+        Returns:
+            PflotranDeck: parsed deck.
+        """
+        if self._deck_cache is None or self._deck_cache.text != self.raw_text:
+            self._deck_cache = PflotranDeck(self.raw_text)
+            for warning in self._deck_cache.warnings:
+                logger.warning(f"{self.input_file_name}: {warning}")
+        return self._deck_cache
+
+    def get_card(self, *selectors: str) -> Card:
+        """Return the card at a selector path, e.g. ``('MATERIAL_PROPERTY soil', 'POROSITY')``.
+
+        Category: manager
+        Tags: pflotran, card, lookup, parser
+        Usage: reading or locating any card of the deck. Each selector is ``KEYWORD`` or
+            ``KEYWORD name`` (case-insensitive) and matches at any depth below the previous one.
+
+        Raises:
+            CardNotFound: if a selector does not match.
+
+        Returns:
+            Card: the matched card (``card.line`` is its line index in ``raw_text``).
+        """
+        return self.deck.select(*selectors)
+
+    def get_card_values(self, *selectors: str) -> List[str]:
+        """Return the argument tokens of a card, e.g. ``['0.25']`` for ``POROSITY 0.25``.
+
+        Category: manager
+        Tags: pflotran, card, values, lookup
+        Usage: reading a parameter value from the deck.
+
+        Returns:
+            list: argument tokens (comments removed).
+        """
+        return list(self.get_card(*selectors).args)
+
+    def set_card_values(self, *selectors: str, values):
+        """Replace the arguments of a card, keeping its keyword, indentation and comment.
+
+        Category: manager
+        Tags: pflotran, card, values, edit
+        Usage: changing a parameter, e.g.
+            ``set_card_values('MATERIAL_PROPERTY soil', 'POROSITY', values=0.3)`` or
+            ``set_card_values('FINAL_TIME', values=[10, 'y'])``.
+
+        Returns:
+            None: mutates raw_text.
+        """
+        card = self.get_card(*selectors)
+        if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+            values = [values]
+        line = self._get_line(card.line)
+        indent = line[:len(line) - len(line.lstrip())]
+        new_line = indent + ' '.join([card.keyword, *map(str, values)])
+        comment = self._inline_comment(line)
+        if comment:
+            new_line += '  ' + comment
+        self._replace_line(card.line, [new_line])
+
+    def add_card(self, *selectors: str, line: str):
+        """Append a line as the last entry of the selected block (before its terminator).
+
+        Category: manager
+        Tags: pflotran, card, insert, edit
+        Usage: adding a card to a block, e.g.
+            ``add_card('MATERIAL_PROPERTY soil', line='TORTUOSITY 0.5')``. The line is indented
+            like the block's existing entries.
+
+        Raises:
+            CardNotFound: if the selector does not match; ValueError if it is not a block.
+
+        Returns:
+            None: mutates raw_text.
+        """
+        block = self.get_card(*selectors)
+        if not block.is_block:
+            raise ValueError(f"'{block.path}' is not a block")
+        indent = block.children[0].indent if block.children else block.indent + 2
+        self._add_line(block.end_line, [' ' * indent + line.strip()])
+
+    def remove_card(self, *selectors: str):
+        """Remove a card, including its whole block when it is one.
+
+        Category: manager
+        Tags: pflotran, card, delete, edit
+        Usage: dropping an option or a block from the deck.
+
+        Returns:
+            None: mutates raw_text.
+        """
+        card = self.get_card(*selectors)
+        self._delete_lines(list(range(card.line, card.last_line + 1)))
+
+    @staticmethod
+    def _inline_comment(line: str) -> str:
+        """Return the ``#``/``!`` comment of a line (with its marker), or ''."""
+        positions = [pos for pos in (line.find('#'), line.find('!')) if pos >= 0]
+        return line[min(positions):].strip() if positions else ''
 
     def get_regions(self):
         """Return region names defined in the PFLOTRAN input deck.
@@ -50,15 +157,12 @@ class PflotranStudy(BaseStudy):
         Usage: scripts need to inspect available REGION blocks or map region names to line indexes.
 
         Returns:
-            list: region names found in top-level REGION blocks.
+            list: names of REGION blocks (not REGION references inside couplers), in file order.
         """
-        region_lines = self._find_tags('region')
         regions = []
-        for line_idx in region_lines:
-            line = self._get_line(line_idx)
-            if self._get_parent_tag_name(line_idx).lower() == 'region':
-                regions.append(line.split()[1])
-                self.regions_to_idx[line.split()[1]] = line_idx
+        for card in self.deck.find_all('REGION', blocks_only=True):
+            regions.append(card.name)
+            self.regions_to_idx[card.name] = card.line
         return regions
 
     def get_simulation_time(self, time_unit: str = 'y'):
@@ -135,7 +239,7 @@ class PflotranStudy(BaseStudy):
         Tags: pflotran, material, porosity, permeability, edit
         Usage: scripts need to update material hydraulic properties before running PFLOTRAN.
 
-        Lines are located by keyword inside the block (not by fixed offsets), so the
+        Cards are located by keyword inside the block (not by fixed offsets), so the
         block's layout does not matter. ``new_perm`` replaces ``PERM_ISO`` and/or
         ``PERM_HORIZONTAL``; ``new_vertical_anisotropy`` replaces
         ``VERTICAL_ANISOTROPY_RATIO`` when given.
@@ -145,40 +249,32 @@ class PflotranStudy(BaseStudy):
                 line, or (when requested) its VERTICAL_ANISOTROPY_RATIO line is missing.
 
         Returns:
-            None: mutates the matching lines, keeping their indentation.
+            None: mutates the matching lines, keeping their indentation and comments.
         """
-        start = self._find_material_property(material_name)
-        replacements = {'porosity': new_porosity, 'perm_iso': new_perm, 'perm_horizontal': new_perm}
+        selector = f'MATERIAL_PROPERTY {material_name}'.strip()
+        material = self.deck.find(selector, blocks_only=True)
+        if material is None:
+            raise CardNotFound(f"No block '{selector}'")
+        replacements = {'POROSITY': new_porosity, 'PERM_ISO': new_perm, 'PERM_HORIZONTAL': new_perm}
         if new_vertical_anisotropy is not None:
-            replacements['vertical_anisotropy_ratio'] = new_vertical_anisotropy
-        replaced = set()
-        for line_idx in self._get_block_line_idx(start)[1:]:
-            line = self._get_line(line_idx)
-            tokens = self._strip_comment(line).split()
-            key = tokens[0].lower() if tokens else None
-            if key in replacements:
-                indent = line[:len(line) - len(line.lstrip())]
-                self._replace_line(line_idx, [indent + tokens[0], str(replacements[key])])
-                replaced.add(key)
+            replacements['VERTICAL_ANISOTROPY_RATIO'] = new_vertical_anisotropy
+        targets = [card for card in material.iter() if card.key in replacements]
+        replaced = {card.key for card in targets}
         missing = []
-        if 'porosity' not in replaced:
+        if 'POROSITY' not in replaced:
             missing.append('POROSITY')
-        if not replaced & {'perm_iso', 'perm_horizontal'}:
+        if not replaced & {'PERM_ISO', 'PERM_HORIZONTAL'}:
             missing.append('PERM_ISO/PERM_HORIZONTAL')
-        if new_vertical_anisotropy is not None and 'vertical_anisotropy_ratio' not in replaced:
+        if new_vertical_anisotropy is not None and 'VERTICAL_ANISOTROPY_RATIO' not in replaced:
             missing.append('VERTICAL_ANISOTROPY_RATIO')
         if missing:
-            raise LineNotFound(f"MATERIAL_PROPERTY {material_name or '(first)'} has no {', '.join(missing)} line")
-
-    def _find_material_property(self, material_name: str = '') -> int:
-        """Return the line index of ``MATERIAL_PROPERTY <material_name>`` (first one if no name)."""
-        for line_idx, line in enumerate(self.raw_text.splitlines()):
-            tokens = self._strip_comment(line).split()
-            if not tokens or tokens[0].lower() != 'material_property':
-                continue
-            if not material_name or (len(tokens) > 1 and tokens[1].lower() == material_name.lower()):
-                return line_idx
-        raise LineNotFound(f"MATERIAL_PROPERTY {material_name} not found")
+            raise LineNotFound(f"{selector} has no {', '.join(missing)} line")
+        for card in targets:  # line numbers are unchanged by single-line replacements
+            line = self._get_line(card.line)
+            indent = line[:len(line) - len(line.lstrip())]
+            new_line = f"{indent}{card.keyword} {replacements[card.key]}"
+            comment = self._inline_comment(line)
+            self._replace_line(card.line, [new_line + ('  ' + comment if comment else '')])
 
     def get_line_after_finding(self, given_lines: list, file_lines: list) -> int:
         """Find the line index reached after matching an ordered sequence.
@@ -264,16 +360,20 @@ class PflotranStudy(BaseStudy):
         Tags: pflotran, region, file, lookup
         Usage: scripts need to resolve the geometry file referenced by a PFLOTRAN region.
 
+        Raises:
+            KeyError: if there is no REGION block with that name.
+
         Returns:
-            str | None: region file path token, or None when not found.
+            str | None: region file path token, or None when the region has no FILE card.
         """
-        self.get_regions()
-        region_line = self.regions_to_idx[region]
-        region_block = self._get_block_lines(region_line)
-        for line in region_block:
-            if 'file' in line.lower():
-                return line.split()[1]
-        return None
+        file_card = self._region_file_card(region)
+        return file_card.name if file_card is not None else None
+
+    def _region_file_card(self, region: str):
+        block = self.deck.find(f'REGION {region}', blocks_only=True)
+        if block is None:
+            raise KeyError(region)
+        return next((card for card in block.children if card.key == 'FILE'), None)
 
     def get_datasets(self) -> List[str]:
         """Return DATASET names defined in the input deck.
@@ -283,16 +383,12 @@ class PflotranStudy(BaseStudy):
         Usage: scripts need to inspect or update referenced PFLOTRAN datasets.
 
         Returns:
-            list: dataset names found in top-level DATASET blocks.
+            list: names of DATASET blocks, in file order.
         """
         datasets = []
-        for line_idx in self._find_tags('DATASET'):
-            line = self._get_line(line_idx)
-            if line.split()[0].lower() == 'hdf5_dataset_name':
-                continue
-            if self._get_parent_tag_name(line_idx).lower() == 'dataset':
-                datasets.append(line.split()[1])
-                self.datasets_to_idx[line.split()[1]] = line_idx
+        for card in self.deck.find_all('DATASET', blocks_only=True):
+            datasets.append(card.name)
+            self.datasets_to_idx[card.name] = card.line
         return datasets
 
     def replace_region_file(self, region: str, new_file: str):
@@ -302,18 +398,18 @@ class PflotranStudy(BaseStudy):
         Tags: pflotran, region, file, edit
         Usage: scripts need to point a PFLOTRAN region to a new geometry file.
 
+        Raises:
+            KeyError: if there is no REGION block with that name.
+
         Returns:
-            None: mutates the in-memory input text.
+            None: mutates the in-memory input text (no-op if the region has no FILE card).
         """
-        self.get_regions()
-        old_file = self.get_region_file(region)
-        region_line = self.regions_to_idx[region]
-        region_block = self._get_block_lines(region_line)
-        region_block_idx = self._get_block_line_idx(region_line)
-        logger.info(f"Replacing region {region} file from '{old_file}' to '{new_file}'")
-        for line_idx, line in zip(region_block_idx, region_block):
-            if 'file' in line.lower():
-                self._replace_line(line_index=line_idx, new_line=['FILE', new_file])
+        file_card = self._region_file_card(region)
+        if file_card is None:
+            logger.warning(f"Region {region} has no FILE card; nothing replaced")
+            return
+        logger.info(f"Replacing region {region} file from '{file_card.name}' to '{new_file}'")
+        self.set_card_values(f'REGION {region}', 'FILE', values=new_file)
 
     def add_checkpoint(self, times: Union[float, List[float]], time_unit: str = 'y'):
         """Add or update CHECKPOINT output times.
@@ -409,12 +505,12 @@ class PflotranStudy(BaseStudy):
         Usage: scripts need an insertion point for subsurface dataset edits.
 
         Returns:
-            int: line index of the top-level SUBSURFACE block.
+            int | None: line index of the top-level SUBSURFACE card, or None.
         """
-        subsurface_idx = self._find_tags('SUBSURFACE')
-        for idx in subsurface_idx:
-            if self._get_parent_tag_name(idx) == 'SUBSURFACE':
-                return idx
+        for card in self.deck.root.children:
+            if card.key == 'SUBSURFACE':
+                return card.line
+        return None
 
     def has_tag(self, tag: str):
         """Check whether a tag appears in the input deck.
@@ -429,70 +525,51 @@ class PflotranStudy(BaseStudy):
         return len(self._find_tags(tag)) > 0
 
     def _get_parent_tag_name(self, line_index: int):
-        """Return the parent block tag name for a line index.
+        """Return the top-level card keyword containing a line (looking through SUBSURFACE).
 
         Category: util
-        Tags: pflotran, block, parent, line-index
-        Usage: parsing needs to distinguish top-level tags from nested tag references.
+        Tags: pflotran, parent-tag, block, parser
+        Usage: parsers need to classify matching tags by their enclosing block.
 
         Returns:
-            str: parent tag name.
+            str: keyword of the outermost enclosing card, as written in the deck.
         """
-        # Walk back to the END closing the previous block (or the SUBSURFACE card / file start);
-        # the parent tag is the first card after it.
-        temp_list = [self._get_line(line_index)]
-        while line_index >= 0:
-            line = self._get_line(line_index)
-            line_index -= 1
-            tokens = self._strip_comment(line).split()
-            if not tokens:
-                continue
-            temp_list.append(line)
-            if tokens[0].lower() in ('end', 'end_subsurface', 'subsurface'):
-                break
-        return temp_list[-2].split()[0] if len(temp_list) > 1 else temp_list[0].split()[0]
+        card = self.deck.card_at(line_index)
+        if card is None:
+            return self._get_line(line_index).split()[0]
+        return self.deck.top_level(card).keyword
 
     def _get_block_lines(self, line_index: int):
-        """Return non-comment lines in the block starting at a line index.
+        """Return non-comment lines of the card starting at a line index (through its terminator).
 
         Category: util
         Tags: pflotran, block, lines, parser
-        Usage: scripts need the text content of a PFLOTRAN block.
+        Usage: parsers need all lines in a PFLOTRAN input block.
 
         Returns:
-            list: block lines from the start tag through END.
+            list: block lines from the start card through its END or '/'.
         """
         return [self._get_line(idx) for idx in self._get_block_line_idx(line_index)]
 
     def _get_block_line_idx(self, line_index: int):
-        """Return line indexes in the block starting at a line index.
+        """Return non-comment line indexes of the card starting at a line index.
 
         Category: util
         Tags: pflotran, block, line-index, parser
-        Usage: scripts need editable line indexes inside a PFLOTRAN block.
+        Usage: editing helpers need exact indexes for lines in a PFLOTRAN block.
+
+        Blocks end at their matching terminator (``END`` or ``/``), so nested sub-blocks are
+        included and never end the parent early. A card that is not a block returns only its
+        own line.
 
         Returns:
-            list: line indexes from the start tag through END.
+            list: line indexes from the start card through its terminator.
         """
-        # Nested sub-blocks closed with '/' are included; the block ends at the first END card.
-        n_lines = len(self.raw_text.splitlines())
-        temp_list = [line_index]
-        while line_index + 1 < n_lines:
-            line_index += 1
-            tokens = self._strip_comment(self._get_line(line_index)).split()
-            if not tokens:
-                continue
-            temp_list.append(line_index)
-            if tokens[0].lower() == 'end':
-                break
-        return temp_list
-
-    @staticmethod
-    def _strip_comment(line: str) -> str:
-        """Return ``line`` without its ``#`` comment (PFLOTRAN uses ``#`` and ``!``)."""
-        for marker in ('#', '!'):
-            line = line.split(marker, 1)[0]
-        return line.strip()
+        deck = self.deck
+        card = deck.card_at(line_index)
+        if card is None or card.line != line_index:
+            return [line_index]
+        return deck.block_line_indexes(card)
 
     # Class properties
     @property
