@@ -17,8 +17,9 @@ The idea to process the input files is the following:
 """
 
 from __future__ import annotations
+import copy as _copy
 from pathlib import Path
-from jinja2 import Template
+from jinja2 import Environment, StrictUndefined, Undefined, meta
 import shutil
 from pydelling.utils import UnitConverter
 from typing import Callable
@@ -32,6 +33,20 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_VARIABLE_DELIMITERS = ('{{', '}}')
+
+
+class MissingTemplateVariables(KeyError):
+    """Raised when a strict study is rendered without values for all its placeholders."""
+
+    def __init__(self, missing, input_file_name=None):
+        self.missing = sorted(missing)
+        self.input_file_name = input_file_name
+        super().__init__(f"Template '{input_file_name}' has no value for: {', '.join(self.missing)}")
+
+    def __str__(self):
+        return self.args[0]
+
 
 class BaseStudy(UnitConverter):
     """Base class for templated simulation studies and input-file generation.
@@ -40,7 +55,7 @@ class BaseStudy(UnitConverter):
     Tags: study, simulation, jinja, input-files, callbacks
     Usage: implementing software-specific study managers that render templates, copy inputs, and run hooks.
     """
-    count = 0
+    count = 0  # Only used to build default study names; the manager assigns ``idx``.
     shared_folder_default_name = 'shared_folder'
     results_folder_name = None
 
@@ -49,12 +64,22 @@ class BaseStudy(UnitConverter):
                  study_name: str = None,
                  is_independent: bool = False,
                  input_file_name: str = None,
+                 variable_delimiters: tuple = DEFAULT_VARIABLE_DELIMITERS,
+                 strict: bool = True,
                  ):
         """Initialize a study from a template input file.
 
         Category: manager
         Tags: study, template, input-file, initialization
         Usage: subclasses need common state for rendering input files and managing auxiliary files.
+
+        Args:
+            variable_delimiters: start/end strings of template placeholders, e.g. ``('<<', '>>')``
+                for ``<<PERM>>``. With non-default delimiters, Jinja block and comment syntax is
+                moved to ``<%``/``%>`` and ``<#``/``#>`` so ``{% %}``/``{# #}`` in the deck are
+                left untouched.
+            strict: if True, rendering raises :class:`MissingTemplateVariables` when any
+                placeholder has no value (instead of silently rendering it empty).
 
         Returns:
             None: stores template text, settings, callbacks, and file registries.
@@ -76,7 +101,10 @@ class BaseStudy(UnitConverter):
         self.raw_text = self.input_file.read_text()
         self.aux_files = {}
         self.output_folder = None
-        self._callbacks: List[Callable] = []
+        self.variable_delimiters = tuple(variable_delimiters)
+        self.strict = strict
+        # (callback class, kwargs) pairs, bound to the study in initialize_callbacks
+        self._callbacks: List[tuple] = []
         self.callbacks: List[BaseCallback] = []
         self.steps: List[BaseStep] = []
         self._shared_files = []
@@ -308,8 +336,64 @@ class BaseStudy(UnitConverter):
             str: rendered input text.
         """
         logger.info(f"Rendering input file {self.input_file_name}")
-        template = Template(self.raw_text)
-        return template.render(self.jinja_settings, **kwargs)
+        if self.strict:
+            missing = self.missing_variables(**kwargs)
+            if missing:
+                raise MissingTemplateVariables(missing, self.input_file_name)
+        template = self._jinja_environment().from_string(self.raw_text)
+        return template.render({**self.jinja_settings, **kwargs})
+
+    def _jinja_environment(self) -> Environment:
+        """Build the Jinja environment for this study's delimiters and strictness."""
+        start, end = self.variable_delimiters
+        options = dict(
+            variable_start_string=start,
+            variable_end_string=end,
+            keep_trailing_newline=True,
+            undefined=StrictUndefined if self.strict else Undefined,
+        )
+        if self.variable_delimiters != DEFAULT_VARIABLE_DELIMITERS:
+            options.update(block_start_string=f'{start[0]}%', block_end_string=f'%{end[-1]}',
+                           comment_start_string=f'{start[0]}#', comment_end_string=f'#{end[-1]}')
+        return Environment(**options)
+
+    def placeholders(self) -> set:
+        """Return the names of all variables referenced by the template.
+
+        Category: manager
+        Tags: study, jinja, template, placeholders
+        Usage: validating that a parameter set covers every placeholder before rendering.
+
+        Returns:
+            set: undeclared template variable names.
+        """
+        environment = self._jinja_environment()
+        return set(meta.find_undeclared_variables(environment.parse(self.raw_text)))
+
+    def missing_variables(self, **kwargs) -> list:
+        """Return the sorted placeholders that have no value yet.
+
+        Category: manager
+        Tags: study, jinja, template, validation
+        Usage: checking a study before writing it to disk.
+
+        Returns:
+            list: placeholder names absent from the Jinja settings and ``kwargs``.
+        """
+        return sorted(self.placeholders() - set(self.jinja_settings) - set(kwargs))
+
+    def set_variables(self, **values):
+        """Set values for several template placeholders at once.
+
+        Category: manager
+        Tags: study, jinja, variable, parameters
+        Usage: applying one sampled parameter set to a study.
+
+        Returns:
+            None: updates the Jinja settings.
+        """
+        logger.debug(f"Setting template variables {values}")
+        self.jinja_settings.update(values)
 
 
     def add_auxiliary_file(self, file_path: str):
@@ -371,7 +455,7 @@ class BaseStudy(UnitConverter):
             None: stores a callback factory for later initialization.
         """
         kwargs['kind'] = kind
-        self._callbacks.append(lambda manager: callback(manager, self, **kwargs))
+        self._callbacks.append((callback, kwargs))
 
     def add_ssh_step(self, step: BaseStep):
         """Register an SSH execution step for this study.
@@ -410,10 +494,7 @@ class BaseStudy(UnitConverter):
         Returns:
             None: populates callbacks from registered callback factories.
         """
-        temp_callbacks = []
-        for callback in self._callbacks:
-            temp_callbacks.append(callback(manager))
-        self.callbacks = temp_callbacks
+        self.callbacks = [callback(manager, self, **kwargs) for callback, kwargs in self._callbacks]
 
     def to_shared_folder(self,
                          shared_folder_name='./shared_folder',
@@ -454,14 +535,13 @@ class BaseStudy(UnitConverter):
             None: writes the rendered input file and copies auxiliary files.
         """
 
-        self.output_folder = output_folder if output_folder is not None else f'case-{BaseStudy.count}'
+        self.output_folder = output_folder if output_folder is not None else self.name
         # Get the results folder name (previously set by the manager)
         self.results_folder_name = Path(self.output_folder).parent.name
 
-        logger.info(f"Saving input files to {output_folder}")
-        BaseStudy.count += 1
+        logger.info(f"Saving input files to {self.output_folder}")
         output_folder = Path(self.output_folder)
-        output_folder.mkdir(exist_ok=True)
+        output_folder.mkdir(parents=True, exist_ok=True)
         output_file = output_folder / (output_file if output_file is not None else Path(self.input_file_name))
         output_file.write_text(self.render(**kwargs))
 
@@ -471,7 +551,7 @@ class BaseStudy(UnitConverter):
         if len(self.aux_files) > 0:
             auxiliary_folder = auxiliary_folder if auxiliary_folder is not None else 'input_files'
             auxiliary_folder = output_folder / auxiliary_folder
-            auxiliary_folder.mkdir(exist_ok=True)
+            auxiliary_folder.mkdir(parents=True, exist_ok=True)
             for aux_file in self.aux_files:
                 # Only copy if it is not in the shared folder
                 if aux_file not in self._shared_files:
@@ -522,21 +602,34 @@ class BaseStudy(UnitConverter):
         return f"{self.__class__.__name__} (input template: {self.input_file.name})"
 
     # Properties
-    def copy(self):
-        """Return a shallow study copy preserving configurable state.
+    # Attributes a copy must not inherit: identity is new, run state is reset.
+    _copy_skip_attrs = ('idx', 'name', 'callbacks', 'output_folder')
+    # Attributes copied as new containers holding the same elements (e.g. SSH steps).
+    _copy_shallow_attrs = ('steps',)
+
+    def copy(self, study_name: str = None):
+        """Return an independent copy of the study.
 
         Category: manager
         Tags: study, copy, clone
         Usage: scripts need a duplicate study object before changing parameters.
 
+        Template text, variables, files and callback registrations are deep-copied, so
+        changing the copy never affects the original. The copy gets a new name (``study_name``
+        or the next default name) and no ``idx`` until it is added to a manager.
+
         Returns:
             BaseStudy: copied study instance.
         """
-        new_obj = self.__class__(self.input_file)
-        for attr in self.__dict__:
-            if attr in ['idx', 'name']:
+        new_obj = self.__class__(self.input_file, study_name=study_name)
+        for attr, value in self.__dict__.items():
+            if attr in self._copy_skip_attrs:
                 continue
-            setattr(new_obj, attr, getattr(self, attr))
+            if attr in self._copy_shallow_attrs:
+                value = _copy.copy(value)
+            else:
+                value = _copy.deepcopy(value)
+            setattr(new_obj, attr, value)
         return new_obj
 
 

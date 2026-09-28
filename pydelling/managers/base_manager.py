@@ -58,10 +58,18 @@ class BaseManager(ABC):
             study: ``BaseStudy`` instance to add to the manager.
         Raises:
             AssertionError: If ``study`` is not a ``BaseStudy`` instance.
+            ValueError: If a different study with the same name is already registered.
         Side effects:
-            Stores the study in ``self.studies`` keyed by name.
+            Stores the study in ``self.studies`` keyed by name and sets ``study.idx`` to its
+            position in the manager (used by ``start_from`` and restart callbacks).
         """
         assert isinstance(study, BaseStudy), f"Study must be a object from a class inherited from BaseStudy, not {type(study)}"
+        existing = self.studies.get(study.name)
+        if existing is study:
+            return
+        if existing is not None:
+            raise ValueError(f"A different study named '{study.name}' is already registered")
+        study.idx = len(self.studies)
         self.studies[study.name] = study
 
     def run(self,

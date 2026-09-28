@@ -128,20 +128,57 @@ class PflotranStudy(BaseStudy):
         parameter_lines = self._find_tags(label[0])
         self._replace_line(line_index=parameter_lines[0] + inside, new_line=[label[1], str(new_value)])
 
-    def replace_material_properties(self, new_perm: float, new_porosity: float, new_vertical_anisotropy: float, material_name: str = ''):
+    def replace_material_properties(self, new_perm: float, new_porosity: float, new_vertical_anisotropy: float = None, material_name: str = ''):
         """Replace porosity and permeability values in a MATERIAL_PROPERTY block.
 
         Category: manager
         Tags: pflotran, material, porosity, permeability, edit
         Usage: scripts need to update material hydraulic properties before running PFLOTRAN.
 
+        Lines are located by keyword inside the block (not by fixed offsets), so the
+        block's layout does not matter. ``new_perm`` replaces ``PERM_ISO`` and/or
+        ``PERM_HORIZONTAL``; ``new_vertical_anisotropy`` replaces
+        ``VERTICAL_ANISOTROPY_RATIO`` when given.
+
+        Raises:
+            LineNotFound: if the material block, its POROSITY line, a PERM_ISO/PERM_HORIZONTAL
+                line, or (when requested) its VERTICAL_ANISOTROPY_RATIO line is missing.
+
         Returns:
-            None: mutates POROSITY, PERM_HORIZONTAL, and VERTICAL_ANISOTROPY_RATIO lines.
+            None: mutates the matching lines, keeping their indentation.
         """
-        material_lines = self._find_tags('MATERIAL_PROPERTY ' + material_name)
-        self._replace_line(line_index=material_lines[0] + 2, new_line=['POROSITY', str(new_porosity)])
-        self._replace_line(line_index=material_lines[0] + 8, new_line=['PERM_HORIZONTAL', str(new_perm)])
-        self._replace_line(line_index=material_lines[0] + 9, new_line=['VERTICAL_ANISOTROPY_RATIO', str(new_vertical_anisotropy)])
+        start = self._find_material_property(material_name)
+        replacements = {'porosity': new_porosity, 'perm_iso': new_perm, 'perm_horizontal': new_perm}
+        if new_vertical_anisotropy is not None:
+            replacements['vertical_anisotropy_ratio'] = new_vertical_anisotropy
+        replaced = set()
+        for line_idx in self._get_block_line_idx(start)[1:]:
+            line = self._get_line(line_idx)
+            tokens = self._strip_comment(line).split()
+            key = tokens[0].lower() if tokens else None
+            if key in replacements:
+                indent = line[:len(line) - len(line.lstrip())]
+                self._replace_line(line_idx, [indent + tokens[0], str(replacements[key])])
+                replaced.add(key)
+        missing = []
+        if 'porosity' not in replaced:
+            missing.append('POROSITY')
+        if not replaced & {'perm_iso', 'perm_horizontal'}:
+            missing.append('PERM_ISO/PERM_HORIZONTAL')
+        if new_vertical_anisotropy is not None and 'vertical_anisotropy_ratio' not in replaced:
+            missing.append('VERTICAL_ANISOTROPY_RATIO')
+        if missing:
+            raise LineNotFound(f"MATERIAL_PROPERTY {material_name or '(first)'} has no {', '.join(missing)} line")
+
+    def _find_material_property(self, material_name: str = '') -> int:
+        """Return the line index of ``MATERIAL_PROPERTY <material_name>`` (first one if no name)."""
+        for line_idx, line in enumerate(self.raw_text.splitlines()):
+            tokens = self._strip_comment(line).split()
+            if not tokens or tokens[0].lower() != 'material_property':
+                continue
+            if not material_name or (len(tokens) > 1 and tokens[1].lower() == material_name.lower()):
+                return line_idx
+        raise LineNotFound(f"MATERIAL_PROPERTY {material_name} not found")
 
     def get_line_after_finding(self, given_lines: list, file_lines: list) -> int:
         """Find the line index reached after matching an ordered sequence.
@@ -401,24 +438,19 @@ class PflotranStudy(BaseStudy):
         Returns:
             str: parent tag name.
         """
-        # Find the previous END tag
-        has_end_tag = False
-        temp_list = []
-        temp_list.append(self._get_line(line_index))
-        while not has_end_tag:
+        # Walk back to the END closing the previous block (or the SUBSURFACE card / file start);
+        # the parent tag is the first card after it.
+        temp_list = [self._get_line(line_index)]
+        while line_index >= 0:
             line = self._get_line(line_index)
             line_index -= 1
-            if len(line.split()) == 0:
+            tokens = self._strip_comment(line).split()
+            if not tokens:
                 continue
-            if line[0] == '#':
-                continue
-            if 'subsurface' in line.lower():
-                has_end_tag = True
             temp_list.append(line)
-            if 'end' in line.lower():
-                has_end_tag = True
-
-        return temp_list[-2].split()[0]
+            if tokens[0].lower() in ('end', 'end_subsurface', 'subsurface'):
+                break
+        return temp_list[-2].split()[0] if len(temp_list) > 1 else temp_list[0].split()[0]
 
     def _get_block_lines(self, line_index: int):
         """Return non-comment lines in the block starting at a line index.
@@ -430,21 +462,7 @@ class PflotranStudy(BaseStudy):
         Returns:
             list: block lines from the start tag through END.
         """
-        # Find the previous END tag
-        has_end_tag = False
-        temp_list = []
-        temp_list.append(self._get_line(line_index))
-        while not has_end_tag:
-            line_index += 1
-            line = self._get_line(line_index)
-            if len(line.split()) == 0:
-                continue
-            if line[0] == '#':
-                continue
-            temp_list.append(line)
-            if 'end' in line.lower():
-                has_end_tag = True
-        return temp_list
+        return [self._get_line(idx) for idx in self._get_block_line_idx(line_index)]
 
     def _get_block_line_idx(self, line_index: int):
         """Return line indexes in the block starting at a line index.
@@ -456,21 +474,25 @@ class PflotranStudy(BaseStudy):
         Returns:
             list: line indexes from the start tag through END.
         """
-        # Find the previous END tag
-        has_end_tag = False
-        temp_list = []
-        temp_list.append(line_index)
-        while not has_end_tag:
+        # Nested sub-blocks closed with '/' are included; the block ends at the first END card.
+        n_lines = len(self.raw_text.splitlines())
+        temp_list = [line_index]
+        while line_index + 1 < n_lines:
             line_index += 1
-            line = self._get_line(line_index)
-            if len(line.split()) == 0:
-                continue
-            if line[0] == '#':
+            tokens = self._strip_comment(self._get_line(line_index)).split()
+            if not tokens:
                 continue
             temp_list.append(line_index)
-            if 'end' in line.lower().split():
-                has_end_tag = True
+            if tokens[0].lower() == 'end':
+                break
         return temp_list
+
+    @staticmethod
+    def _strip_comment(line: str) -> str:
+        """Return ``line`` without its ``#`` comment (PFLOTRAN uses ``#`` and ``!``)."""
+        for marker in ('#', '!'):
+            line = line.split(marker, 1)[0]
+        return line.strip()
 
     # Class properties
     @property
