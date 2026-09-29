@@ -496,7 +496,7 @@ export const HostsView = {
             <template v-if="h.hello"><dt>Sistema</dt><dd>{{ h.hello.hostname }} · Python {{ h.hello.python }} · {{ h.hello.platform }}</dd></template>
           </dl>
           <div style="display:flex;gap:8px">
-            <button class="btn" :disabled="checking[h.id]" @click="check(h.id)"><Icon name="shield" size="sm" :spin="checking[h.id]"/>Comprobar acceso</button>
+            <button class="btn" :disabled="checking[h.id]" @click="check(h.id)"><Icon name="shield" size="sm" :anim="checking[h.id] ? 'scan' : ''"/>Comprobar acceso</button>
             <button class="btn ghost" @click="reconnect(h.id)"><Icon name="refresh" size="sm"/>Reconectar</button>
           </div>
           <CheckList v-if="checks[h.id]" :checks="checks[h.id].checks"/>

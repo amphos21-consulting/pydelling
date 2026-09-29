@@ -392,11 +392,17 @@ def test_delete_files_is_optional_and_checks_paths(project, registry):
     outside = project.root / "source"
     outside.mkdir()
     run = registry.ensure_run("local", str(outside), status="completed")
-    from pydelling.monitor.transport import TransportError
-
-    with pytest.raises(TransportError, match="segura"):
-        service.clear_history(files=True)
-    assert outside.exists() and registry.get_run(run)
+    safe = project.local_runs / "another"
+    safe.mkdir()
+    safe_run = registry.ensure_run("local", str(safe), status="completed")
+    result = service.clear_history(files=True)
+    assert set(result["deleted_runs"]) == {run, safe_run}
+    assert result["skipped_folders"] == [{
+        "host_id": "local", "folder": str(outside),
+        "reason": f"Carpeta de run no segura: {outside}",
+    }]
+    assert outside.exists() and registry.get_run(run) is None
+    assert not safe.exists()
 
 
 def test_remote_cleanup_failure_keeps_history(project, registry, monkeypatch):
@@ -478,3 +484,54 @@ def test_run_detail_exposes_download_progress_without_flooding_events(project, r
     assert registry.last_event(run_id, "collect.progress")["payload_json"]["files"] == 299
     assert registry.last_event(run_id, "nope") is None
     assert "collect.progress" not in {e["event_type"] for e in registry.milestones(run_id)}
+
+
+def test_cleanup_validates_all_workers_before_deleting(project, registry):
+    import os
+
+    from pydelling.monitor.transport import TransportError
+
+    safe = project.local_runs / "first"
+    busy = project.local_runs / "busy"
+    for folder in (safe, busy):
+        folder.mkdir(parents=True)
+        registry.ensure_run("local", str(folder), status="completed")
+    (busy / "worker.json").write_text(json.dumps({"pid": os.getpid()}))
+    with pytest.raises(TransportError, match="activo"):
+        RunsService(project, registry).clear_history(files=True)
+    assert safe.exists() and busy.exists() and registry.kpis()["total"] == 2
+
+
+def test_cleanup_delete_failure_retains_all_history(project, registry, monkeypatch):
+    from pydelling.monitor import service as module
+    from pydelling.monitor.transport import TransportError, make_transport
+
+    safe = project.local_runs / "done"
+    safe.mkdir(parents=True)
+    outside = project.root / "external"
+    outside.mkdir()
+    for folder in (safe, outside):
+        registry.ensure_run("local", str(folder), status="completed")
+
+    class FailingDelete:
+        def __init__(self, host):
+            self.transport = make_transport(host)
+
+        def python(self, source, root, folder, mode, **kwargs):
+            if mode == "delete":
+                raise TransportError("error", "Deletion failed")
+            return self.transport.python(source, root, folder, mode, **kwargs)
+
+    monkeypatch.setattr(module, "make_transport", FailingDelete)
+    with pytest.raises(TransportError, match="Deletion failed"):
+        RunsService(project, registry).clear_history(files=True)
+    assert registry.kpis()["total"] == 2
+    assert safe.exists() and outside.exists()
+
+
+def test_cleanup_missing_external_results_has_no_preserved_folders(project, registry):
+    missing = project.root / "old-pytest" / "out"
+    run = registry.ensure_run("local", str(missing), status="completed")
+    result = RunsService(project, registry).clear_history(files=True)
+    assert result == {"deleted_runs": [run], "skipped_folders": []}
+    assert registry.get_run(run) is None

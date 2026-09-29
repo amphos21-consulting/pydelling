@@ -5,6 +5,7 @@ lists and streams (those are fetched on demand), so live updates stay small even
 for campaigns with thousands of studies.
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -368,7 +369,7 @@ class RunsService:
         )
         return {"run_id": run_id}
 
-    def _delete_files(self, runs):
+    def _delete_files(self, runs, skipped):
         source = Path(__file__).with_name("cleanup_script.py").read_text()
         targets = {}
         for run in runs:
@@ -378,25 +379,36 @@ class RunsService:
                 local = self.project.local_host()
                 targets[(local.id, run["local_folder"])] = (local, str(self.project.local_runs))
         # Validate all destinations first. If deletion fails, retain history for retry.
-        for mode in ("check", "delete"):
-            for (_, folder), (host, root) in targets.items():
-                make_transport(host).python(source, str(root), folder, mode, timeout=120)
+        permitted = []
+        for (host_id, folder), (host, root) in targets.items():
+            result = json.loads(make_transport(host).python(
+                source, str(root), folder, "check", timeout=120
+            ))
+            if result["skipped"]:
+                skipped.append({"host_id": host_id, "folder": folder, "reason": result["reason"]})
+            else:
+                permitted.append((host, root, folder))
+        for host, root, folder in permitted:
+            result = json.loads(make_transport(host).python(
+                source, str(root), folder, "delete", timeout=120
+            ))
+            if result["skipped"]:
+                skipped.append({"host_id": host.id, "folder": folder, "reason": result["reason"]})
+
+    def _delete_history(self, run_id=None, *, files=False):
+        skipped = []
+        deleted = self.registry.delete_runs(
+            run_id,
+            before_delete=(lambda runs: self._delete_files(runs, skipped)) if files else None,
+        )
+        return {"deleted_runs": deleted, "skipped_folders": skipped}
 
     def delete(self, run_id, *, files=False):
         self._run(run_id)
-        return {
-            "deleted_runs": self.registry.delete_runs(
-                run_id,
-                before_delete=self._delete_files if files else None,
-            )
-        }
+        return self._delete_history(run_id, files=files)
 
     def clear_history(self, *, files=False):
-        return {
-            "deleted_runs": self.registry.delete_runs(
-                before_delete=self._delete_files if files else None,
-            )
-        }
+        return self._delete_history(files=files)
 
     def cancel(self, run_id):
         self._run(run_id)

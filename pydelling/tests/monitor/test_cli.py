@@ -169,3 +169,13 @@ def test_cleanup_cli_requires_confirmation(project, registry):
     assert cli(project, "clear-history", check=False).returncode == 2
     cli(project, "clear-history", "--yes")
     assert registry.kpis()["total"] == 0
+
+
+def test_cleanup_cli_reports_preserved_files(project, registry):
+    outside = project.root / "external"
+    outside.mkdir()
+    registry.ensure_run("local", str(outside), status="completed")
+    result = cli(project, "clear-history", "--yes", "--files")
+    assert "Archivos conservados [local]" in result.stdout
+    assert str(outside) in result.stdout
+    assert outside.exists() and registry.kpis()["total"] == 0

@@ -2,11 +2,11 @@
 
 export const RUN_STATUS = {
   queued: { label: 'En cola', tone: 'neutral', icon: 'clock' },
-  preflight: { label: 'Comprobando acceso', tone: 'active', icon: 'shield', spin: true },
-  deploying: { label: 'Desplegando', tone: 'active', icon: 'upload', spin: true },
-  starting: { label: 'Arrancando', tone: 'active', icon: 'rocket', spin: true },
-  running: { label: 'En ejecución', tone: 'running', icon: 'loader', spin: true },
-  cancelling: { label: 'Cancelando', tone: 'warning', icon: 'loader', spin: true },
+  preflight: { label: 'Comprobando acceso', tone: 'active', icon: 'shield', anim: 'scan' },
+  deploying: { label: 'Desplegando', tone: 'active', icon: 'upload', anim: 'upload' },
+  starting: { label: 'Arrancando', tone: 'active', icon: 'rocket', anim: 'launch' },
+  running: { label: 'En ejecución', tone: 'running', icon: 'loader', anim: 'spin' },
+  cancelling: { label: 'Cancelando', tone: 'warning', icon: 'loader', anim: 'spin' },
   completed: { label: 'Completado', tone: 'good', icon: 'check' },
   failed: { label: 'Fallido', tone: 'critical', icon: 'x' },
   cancelled: { label: 'Cancelado', tone: 'serious', icon: 'stop' },

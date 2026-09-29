@@ -34,9 +34,12 @@ export const Tooltip = {
 };
 
 export const Icon = {
-  props: { name: String, size: { type: String, default: '' }, spin: Boolean },
-  setup: (props) => ({ path: computed(() => ICONS[props.name] || ICONS.circle) }),
-  template: `<svg class="icon" :class="[size, {spin}]" viewBox="0 0 24 24" aria-hidden="true" v-html="path"></svg>`,
+  props: { name: String, size: { type: String, default: '' }, spin: Boolean, anim: { type: String, default: '' } },
+  setup: (props) => ({
+    path: computed(() => ICONS[props.name] || ICONS.circle),
+    motion: computed(() => (props.anim ? 'anim-' + props.anim : props.spin ? 'anim-spin' : '')),
+  }),
+  template: `<svg class="icon" :class="[size, motion]" viewBox="0 0 24 24" aria-hidden="true" v-html="path"></svg>`,
 };
 
 export const StatusPill = {
@@ -50,7 +53,7 @@ export const StatusPill = {
     });
     return { info };
   },
-  template: `<span class="pill" :class="'tone-' + info.tone"><Icon :name="info.icon" size="sm" :spin="info.spin || info.icon === 'loader'"/>{{ info.label }}</span>`,
+  template: `<span class="pill" :class="'tone-' + info.tone"><Icon :name="info.icon" size="sm" :anim="info.anim || (info.icon === 'loader' ? 'spin' : '')"/>{{ info.label }}</span>`,
 };
 
 export const Kpi = {
@@ -106,7 +109,7 @@ export const Stages = {
       if (stage.seconds != null) return fmtDuration(stage.seconds);
       return info(stage).label;
     };
-    // Downloads report bytes and files: show a bar plus two short lines instead of one label.
+    // Downloads report bytes and files: show a progress bar (the stage underline) and one status line.
     const hasBar = (stage) => Boolean(stage.progress) || (stage.id === 'collect' && stage.status === 'running');
     const fraction = (stage) => {
       const p = stage.progress;
@@ -116,28 +119,39 @@ export const Stages = {
       if (p.total_files) return Math.min(1, p.files / p.total_files);
       return 0;
     };
-    const lines = (stage) => {
+    // One line per card (same height as the other stages); the full breakdown goes in the tooltip.
+    const counters = (stage) => {
       const p = stage.progress;
-      if (!hasBar(stage)) return [detail(stage)];
-      if (stage.status === 'failed') return [detail(stage)];
-      if (!p) return ['Preparando lista de archivos…'];
       const files = p.total_files != null ? `${fmtInt(p.files)}/${fmtInt(p.total_files)} archivos` : `${fmtInt(p.files)} archivos`;
       const size = p.total_bytes != null ? `${fmtBytes(p.bytes)} de ${fmtBytes(p.total_bytes)}` : fmtBytes(p.bytes);
-      if (stage.status === 'done') {
-        return [`${fmtInt(p.files)} archivos · ${fmtBytes(p.bytes)}`, stage.seconds != null ? fmtDuration(stage.seconds) : info(stage).label];
-      }
-      const rate = p.elapsed > 0 ? ` · ${fmtBytes(p.bytes / p.elapsed)}/s` : '';
-      return [`${size} · ${Math.round(fraction(stage) * 100)} %`, `${files}${rate}`];
+      const rate = p.elapsed > 0 ? `${fmtBytes(p.bytes / p.elapsed)}/s` : null;
+      return { files, size, rate };
     };
-    const title = (stage) => (stage.status === 'failed' && stage.detail ? stage.detail : lines(stage).join(' · '));
-    return { info, hasBar, fraction, lines, title };
+    const text = (stage) => {
+      const p = stage.progress;
+      if (!hasBar(stage) || stage.status === 'failed') return detail(stage);
+      if (!p) return 'Preparando lista de archivos…';
+      if (stage.status === 'done') {
+        return [`${fmtInt(p.files)} archivos`, fmtBytes(p.bytes), stage.seconds != null ? fmtDuration(stage.seconds) : null]
+          .filter(Boolean).join(' · ');
+      }
+      return `${counters(stage).size} · ${Math.round(fraction(stage) * 100)} %`;
+    };
+    const title = (stage) => {
+      if (stage.status === 'failed' && stage.detail) return stage.detail;
+      if (!stage.progress) return text(stage);
+      const c = counters(stage);
+      return [c.size, c.files, c.rate, stage.status === 'done' && stage.seconds != null ? fmtDuration(stage.seconds) : null]
+        .filter(Boolean).join(' · ');
+    };
+    return { info, hasBar, fraction, text, title };
   },
   template: `<div class="pipeline" role="list" aria-label="Fases del run">
     <div v-for="stage in stages" :key="stage.id" role="listitem" class="stage"
       :class="['tone-' + info(stage).tone, 'status-' + stage.status, {'has-bar': hasBar(stage)}]" :title="title(stage)">
       <div class="stage-top"><Icon :name="info(stage).icon" size="sm" :spin="stage.status === 'running'"/>
         <span class="ellipsis">{{ stage.label }}</span></div>
-      <div v-for="(line, i) in lines(stage)" :key="i" class="stage-detail ellipsis tabular">{{ line }}</div>
+      <div class="stage-detail ellipsis tabular">{{ text(stage) }}</div>
       <ProgressBar v-if="hasBar(stage)" class="stage-bar" :value="fraction(stage)" :tone="info(stage).tone"
         :label="stage.label"/>
     </div></div>`,

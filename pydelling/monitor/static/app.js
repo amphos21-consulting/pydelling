@@ -1,6 +1,7 @@
 // pydelling monitor — app shell, hash router and theme.
 import { computed, createApp, onBeforeUnmount, onMounted, ref } from './vendor/vue.esm-browser.prod.js';
 import { Icon, Tooltip } from './js/components.js';
+import { CleanupDialog } from './js/cleanup.js';
 import { ACTIVE } from './js/format.js';
 import { bootstrap, state } from './js/store.js';
 import { AuthView, HostsView, LaunchView, RunView, RunsView } from './js/views.js';
@@ -35,7 +36,7 @@ function parseRoute() {
 }
 
 const App = {
-  components: { AuthView, HostsView, Icon, LaunchView, RunView, RunsView, Tooltip },
+  components: { CleanupDialog, AuthView, HostsView, Icon, LaunchView, RunView, RunsView, Tooltip },
   setup() {
     const route = ref(parseRoute());
     const theme = ref(readTheme());
@@ -94,6 +95,7 @@ const App = {
     </main>
   </div>
   <Tooltip/>
+  <CleanupDialog/>
   <div v-if="state.toast" class="toast" role="status" :class="'tone-' + state.toast.tone">
     <Icon :name="state.toast.tone === 'critical' ? 'alert' : 'check'"/><span>{{ state.toast.message }}</span></div>`,
 };

@@ -315,6 +315,9 @@ def run(args):
             else service.clear_history(files=args.files)
         )
         print(f"Eliminados {len(result['deleted_runs'])} runs.")
+        for skipped in result["skipped_folders"]:
+            print(f"Archivos conservados [{skipped['host_id']}]: "
+                  f"{skipped['folder']} — {skipped['reason']}")
         return 0
 
     if args.command == "cancel":

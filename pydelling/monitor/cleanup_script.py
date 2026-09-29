@@ -43,14 +43,26 @@ def process_alive(worker):
         return True
 
 
+class UnsafeFolder(ValueError):
+    """A destination excluded from file deletion by policy."""
+
+
 def cleanup(root, folder, *, delete=False):
     root = Path(root).expanduser().resolve()
     path = Path(folder).expanduser()
+    if not path.is_absolute():
+        raise UnsafeFolder(f"Carpeta de run no segura: {folder}")
+    # Missing results are already clean, including old external test outputs.
+    # lstat keeps dangling symlinks visible and propagates permission/I/O errors.
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return
     # Only direct run directories: never roots, source trees, symlinks or parents.
-    if not path.is_absolute() or path.is_symlink() or path.resolve().parent != root:
-        raise ValueError(f"Carpeta de run no segura: {folder}")
+    if path.is_symlink() or path.resolve().parent != root:
+        raise UnsafeFolder(f"Carpeta de run no segura: {folder}")
     if path.name.startswith("."):
-        raise ValueError(f"Carpeta reservada: {folder}")
+        raise UnsafeFolder(f"Carpeta reservada: {folder}")
     if not path.exists():
         return
     if not path.is_dir():
@@ -67,4 +79,9 @@ def cleanup(root, folder, *, delete=False):
 
 
 if __name__ == "__main__":
-    cleanup(sys.argv[1], sys.argv[2], delete=sys.argv[3] == "delete")
+    try:
+        cleanup(sys.argv[1], sys.argv[2], delete=sys.argv[3] == "delete")
+        result = {"skipped": False}
+    except UnsafeFolder as exc:
+        result = {"skipped": True, "reason": str(exc)}
+    print(json.dumps(result))
