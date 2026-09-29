@@ -68,6 +68,32 @@ def test_launch_script_locally_records_exit_and_log(project, registry):
     assert "preflight.check" in types and "worker.started" in types
 
 
+def test_script_without_args_runs_with_its_declared_defaults(project, registry):
+    (project.root / "scripts" / "camp.py").write_text(
+        'MONITOR = {"options": [{"name": "action", "choices": ["run", "prepare"], "default": "run"}]}\n'
+    )
+    run_id = launch_entry(project, registry, "script", "scripts/camp.py", spawn=False)
+    assert registry.get_run(run_id)["argv_json"] == ["run"]
+    explicit = launch_entry(
+        project, registry, "script", "scripts/camp.py", args=["prepare"], spawn=False
+    )
+    assert registry.get_run(explicit)["argv_json"] == ["prepare"]
+    plain = launch_entry(project, registry, "script", "scripts/job.py", spawn=False)
+    assert registry.get_run(plain)["argv_json"] == []
+
+
+def test_local_script_worker_knows_its_run_folder(project, registry):
+    (project.root / "scripts" / "where.py").write_text(
+        "import os, pathlib\n"
+        "pathlib.Path(os.environ['PYDELLING_RUN_FOLDER'], 'seen.txt').write_text('yes')\n"
+    )
+    run_id = launch_entry(project, registry, "script", "scripts/where.py", spawn=False)
+    launch_script(project, registry, run_id)
+    folder = Path(registry.get_run(run_id)["remote_folder"])
+    wait_until(lambda: (folder / "worker-exit.json").exists())
+    assert (folder / "seen.txt").read_text() == "yes"
+
+
 def test_launch_script_failure_is_failed(project, registry):
     run_id = launch_entry(project, registry, "script", "scripts/job.py", args=["3"], spawn=False)
     launch_script(project, registry, run_id)

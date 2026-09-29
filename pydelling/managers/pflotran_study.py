@@ -3,18 +3,51 @@ PFLOTRAN study: a templated PFLOTRAN input deck with structure-aware editing.
 
 Structure queries (regions, datasets, blocks, parent cards) go through
 :class:`~pydelling.managers.pflotran_deck.PflotranDeck`, which parses ``raw_text`` into a
-card/block tree. The card API (``get_card``, ``get_card_values``, ``set_card_values``,
-``add_card``, ``remove_card``) edits lines selected by card path, e.g.::
+card/block tree. A study behaves like a dict of card paths:
 
-    study.set_card_values('MATERIAL_PROPERTY soil', 'PERMEABILITY', 'PERM_ISO', values=1e-12)
+    study["MATERIAL_PROPERTY soil/PERMEABILITY/PERM_ISO"] = 1e-12
+    study["GRID/BOUNDS"] = [[0, 0, 0], [10, 1, 1]]
+
+The selector-tuple API (``get_card``, ``set_card_values``, ``add_card``, ``remove_card``)
+is still available.
 """
 
 from .base_study import BaseStudy
-from .pflotran_deck import Card, CardNotFound, LineNotFound, PflotranDeck
+from .batch import TIME_UNITS
+from .pflotran_deck import Card, CardNotFound, LineNotFound, PflotranDeck, split_path
 import logging
 from typing import Union, List, Dict, Sequence
 
 logger = logging.getLogger(__name__)
+
+
+def _as_list(value: object) -> list:
+    """Card values as a list: a scalar or string is one token, numpy arrays become lists."""
+    if hasattr(value, 'tolist'):
+        value = value.tolist()
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        return [value]
+    return list(value)
+
+
+def _line(*tokens: object) -> str:
+    """One deck line from tokens; nested sequences are flattened (``'TIMES', ['s', 1]``)."""
+    flat = []
+    for token in tokens:
+        flat.extend(_as_list(token) if isinstance(token, (list, tuple)) else [token])
+    return ' '.join(str(token) for token in flat)
+
+
+def _seconds_per(unit: str) -> float:
+    try:
+        return TIME_UNITS[unit.lower()]
+    except KeyError:
+        raise ValueError(f"Unsupported time unit {unit!r}; use one of {sorted(TIME_UNITS)}")
+
+
+def _child_indent(block: Card) -> int:
+    return block.children[0].indent if block.children else block.indent + 2
+
 
 class PflotranStudy(BaseStudy):
     """Manage and edit PFLOTRAN input decks.
@@ -106,12 +139,188 @@ class PflotranStudy(BaseStudy):
         Returns:
             None: mutates raw_text.
         """
-        card = self.get_card(*selectors, direct=direct)
-        if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
-            values = [values]
+        self._write_values(self.get_card(*selectors, direct=direct), _as_list(values))
+
+    # ------------------------------------------------------------------ card paths
+    # A study behaves like a dict of card paths: ``study['GRID/NXYZ'] = [200, 1, 1]``.
+    # See :meth:`PflotranDeck.resolve` for how a path is matched.
+
+    def __getitem__(self, path: str) -> list:
+        """Read the card at a path.
+
+        Args:
+            path: Card path, e.g. ``"GRID/NXYZ"`` or ``"REGION west/COORDINATES"``. The first
+                selector is a top-level card, the rest direct children (see
+                :meth:`PflotranDeck.resolve`).
+
+        Returns:
+            list: String tokens as written in the deck. A card gives its arguments
+            (``['200', '1', '1']``), a block its rows (``[['0.d0', '0.d0', '0.d0'], ...]``) and
+            a repeated card, such as ``OUTPUT/TIMES``, one row of arguments per card.
+
+        Raises:
+            CardNotFound: If nothing matches; the message lists where the keyword exists.
+        """
+        cards = self._matching(path)
+        if len(cards) > 1:
+            return [list(card.args) for card in cards]
+        card = cards[0]
+        if card.is_block:
+            return [[child.keyword, *child.args] for child in card.children]
+        return list(card.args)
+
+    def __setitem__(self, path: str, value: object) -> None:
+        """Edit the card at a path; the shape of the value says how.
+
+        Args:
+            path: Card path, e.g. ``"MATERIAL_PROPERTY soil/POROSITY"``.
+            value: One of
+
+                - a value or flat list (``0.3``, ``[1e5, "s"]``): the new arguments. The
+                  keyword, indentation and comment are kept. A missing card is appended to
+                  its parent block.
+                - a list of rows (``[[0, 0, 0], [10, 1, 1]]``): the new content of a block
+                  such as ``GRID/BOUNDS``, or one card per row for a repeated card such as
+                  ``OUTPUT/TIMES``.
+                - ``None``: remove the card(s), if present.
+
+        Raises:
+            CardNotFound: If the parent block is missing or ambiguous, or the keyword exists
+                elsewhere in that block (a misplaced path, e.g. ``PERM_ISO`` outside
+                ``PERMEABILITY``).
+            ValueError: If the value does not fit the card (a flat list for a block, one row
+                for several repeated cards, rows for a card that does not exist).
+
+        Example:
+            ```python
+            study["TIME/FINAL_TIME"] = [1000, "d"]
+            study["GRID/BOUNDS"] = [[0, 0, 0], [10, 1, 1]]
+            study["OUTPUT/MASS_BALANCE"] = None
+            ```
+        """
+        if value is None:
+            if path in self:
+                del self[path]
+            return
+        values = _as_list(value)
+        rows = bool(values) and all(isinstance(row, (list, tuple)) for row in values)
+        parent, cards = self.deck.resolve(path)
+        if not cards:
+            if rows:
+                raise ValueError(f"'{path}' does not exist, so rows cannot tell whether it is "
+                                 f"a block or repeated cards; add it to the template")
+            selector = split_path(path)[-1]
+            if parent is None:
+                raise CardNotFound(self.deck.not_found_message(path)
+                                   + "; top-level cards cannot be added, edit the template")
+            if parent.find(selector) is not None:  # e.g. PERM_ISO lives in PERMEABILITY
+                raise CardNotFound(self.deck.not_found_message(path))
+            self._add_line(parent.end_line, [' ' * _child_indent(parent) + _line(selector, values)])
+            return
+        if len(cards) > 1 and any(card.is_block for card in cards):
+            raise CardNotFound(self._ambiguous(path, cards))
+        card = cards[0]
+        if card.is_block:
+            if not rows:
+                raise ValueError(f"'{path}' is a block; assign a list of rows")
+            indent = ' ' * _child_indent(card)
+            self._delete_lines(list(range(card.line + 1, card.end_line)))
+            self._add_lines(card.line + 1, [indent + _line(*row) for row in values])
+        elif rows:
+            first = self._get_line(card.line)
+            indent = first[:len(first) - len(first.lstrip())]
+            self._delete_lines([i for c in cards for i in range(c.line, c.last_line + 1)])
+            self._add_lines(card.line, [indent + _line(card.keyword, row) for row in values])
+        elif len(cards) > 1:
+            raise ValueError(f"'{path}' matches {len(cards)} cards; assign one row per card")
+        else:
+            self._write_values(card, values)
+
+    def __delitem__(self, path: str) -> None:
+        """Remove the card(s) at a path, including whole blocks.
+
+        Args:
+            path: Card path, e.g. ``"OUTPUT/SNAPSHOT_FILE"``.
+
+        Raises:
+            CardNotFound: If nothing matches (assign ``None`` to remove only if present).
+        """
+        cards = self._matching(path)
+        self._delete_lines([i for c in cards for i in range(c.line, c.last_line + 1)])
+
+    def __contains__(self, path: str) -> bool:
+        """Whether a card exists at a path (``"GRID/BOUNDS" in study``)."""
+        try:
+            return bool(self.deck.resolve(path)[1])
+        except CardNotFound:
+            return False
+
+    def update(self, cards: Dict[str, object]) -> None:
+        """Apply several card edits in order, as ``study[path] = value`` each.
+
+        Args:
+            cards: Card paths mapped to values, e.g.
+                ``{"GRID/NXYZ": [200, 1, 1], "OUTPUT/MASS_BALANCE": None}``.
+        """
+        for path, value in cards.items():
+            self[path] = value
+
+    def output_times(self, unit: str = 's') -> List[float]:
+        """Read the ``OUTPUT/TIMES`` of the deck.
+
+        Args:
+            unit: Unit of the returned times (``s``, ``min``, ``h``, ``d`` or ``y``).
+
+        Returns:
+            list: Every output time of every ``TIMES`` card, in ``unit``, in file order.
+
+        Raises:
+            CardNotFound: If the deck has no ``OUTPUT/TIMES``.
+            ValueError: If a unit is not supported.
+        """
+        cards = self.deck.resolve('OUTPUT/TIMES')[1]
+        if not cards:
+            raise CardNotFound(self.deck.not_found_message('OUTPUT/TIMES'))
+        times = []
+        for card in cards:
+            factor = _seconds_per(card.args[0])
+            times += [float(t.replace('d', 'e').replace('D', 'e')) * factor for t in card.args[1:]]
+        return [t / _seconds_per(unit) for t in times]
+
+    def set_output_times(self, times: Sequence[float], unit: str = 's', per_line: int = 10) -> None:
+        """Replace the ``OUTPUT/TIMES`` cards with ``times``, ``per_line`` values per card.
+
+        Args:
+            times: Strictly increasing output times, in ``unit``.
+            unit: Time unit written in the deck (``s``, ``min``, ``h``, ``d`` or ``y``).
+            per_line: Values per ``TIMES`` card, to keep deck lines short.
+
+        Raises:
+            ValueError: If the times are not strictly increasing or the unit is unknown.
+        """
+        _seconds_per(unit)
+        times = [float(t) for t in times]
+        if not times or any(b <= a for a, b in zip(times, times[1:])):
+            raise ValueError("Output times must be a nonempty, strictly increasing list")
+        self['OUTPUT/TIMES'] = [[unit, *(f"{t:.12g}" for t in times[i:i + per_line])]
+                                for i in range(0, len(times), per_line)]
+
+    def _matching(self, path: str) -> List[Card]:
+        cards = self.deck.resolve(path)[1]
+        if not cards:
+            raise CardNotFound(self.deck.not_found_message(path))
+        if len(cards) > 1 and any(card.is_block for card in cards):
+            raise CardNotFound(self._ambiguous(path, cards))
+        return cards
+
+    def _ambiguous(self, path: str, cards: List[Card]) -> str:
+        names = ', '.join(self.deck.path_of(card) for card in cards)
+        return f"'{path}' matches {len(cards)} blocks ({names}); name the one you mean"
+
+    def _write_values(self, card: Card, values: list) -> None:
+        """Rewrite a card's arguments, keeping its keyword, indentation and comment."""
         line = self._get_line(card.line)
-        indent = line[:len(line) - len(line.lstrip())]
-        new_line = indent + ' '.join([card.keyword, *map(str, values)])
+        new_line = line[:len(line) - len(line.lstrip())] + _line(card.keyword, values)
         comment = self._inline_comment(line)
         if comment:
             new_line += '  ' + comment

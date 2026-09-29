@@ -12,7 +12,8 @@ export const RUN_STATUS = {
   cancelled: { label: 'Cancelado', tone: 'serious', icon: 'stop' },
   interrupted: { label: 'Interrumpido', tone: 'serious', icon: 'pause' },
   lost: { label: 'Worker perdido', tone: 'critical', icon: 'alert' },
-  unknown: { label: 'Sin sincronizar', tone: 'neutral', icon: 'help' },
+  missing: { label: 'Carpeta no disponible', tone: 'warning', icon: 'folder' },
+  unknown: { label: 'Estado desconocido', tone: 'neutral', icon: 'help' },
   prepared: { label: 'Preparado', tone: 'neutral', icon: 'layers' },
 };
 
@@ -39,6 +40,7 @@ export const HOST_STATE = {
 export const STAGE_STATE = {
   pending: { tone: 'neutral', icon: 'circle', label: 'Pendiente' },
   skipped: { tone: 'neutral', icon: 'minus', label: 'No aplica' },
+  queued: { tone: 'active', icon: 'clock', label: 'En cola' },
   running: { tone: 'running', icon: 'loader', label: 'En curso' },
   done: { tone: 'good', icon: 'check', label: 'Hecho' },
   failed: { tone: 'critical', icon: 'x', label: 'Error' },

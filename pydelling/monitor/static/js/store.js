@@ -19,6 +19,21 @@ export const state = reactive({
 
 const EVENTS_KEPT = 400;
 const timers = new Map();
+const deletedRuns = new Set();
+
+export function removeRuns(ids) {
+  for (const id of ids) {
+    deletedRuns.add(id);
+    if (window.location.hash === `#/runs/${id}`) window.location.hash = '#/runs';
+    delete state.runs[id];
+    delete state.details[id];
+    for (const key of Object.keys(state.studies)) {
+      if (key.startsWith(`${id}/`)) delete state.studies[key];
+    }
+  }
+  refreshKpis();
+}
+
 
 function debounce(key, delay, fn) {
   if (timers.has(key)) return;
@@ -42,6 +57,7 @@ function mergeHost(row) {
 }
 
 function mergeRun(row) {
+  if (deletedRuns.has(row.id)) return;
   state.runs[row.id] = { ...(state.runs[row.id] || {}), ...row };
   const detail = state.details[row.id];
   if (detail) detail.run = { ...detail.run, ...row };
@@ -56,7 +72,31 @@ export async function loadOverview() {
   return data;
 }
 
+const COLLECT_PROGRESS_KEYS = ['files', 'total_files', 'bytes', 'total_bytes', 'elapsed'];
+
+// Download counters arrive up to twice a second: patch the collect stage in place instead of
+// reloading the whole run detail (the debounced reload still reconciles it afterwards).
+function patchCollect(detail, event) {
+  const stage = detail.stages.find((s) => s.id === 'collect');
+  if (!stage) return;
+  const kind = event.event_type;
+  if (kind === 'collect.queued') {
+    stage.status = 'queued';
+  } else if (kind === 'collect.started') {
+    Object.assign(stage, { status: 'running', started: event.ts, progress: null, detail: null, seconds: null });
+  } else if (kind === 'collect.progress') {
+    const payload = event.payload_json || {};
+    stage.status = 'running';
+    stage.progress = Object.fromEntries(COLLECT_PROGRESS_KEYS.map((k) => [k, payload[k] ?? null]));
+  } else if (kind === 'collect.done') {
+    Object.assign(stage, { status: 'done', finished: event.ts, seconds: stage.started != null ? event.ts - stage.started : null });
+  } else if (kind === 'collect.failed') {
+    Object.assign(stage, { status: 'failed', finished: event.ts, detail: event.message });
+  }
+}
+
 function applyChanges(data) {
+  if (data.deleted_runs && data.deleted_runs.length) removeRuns(data.deleted_runs);
   data.hosts.forEach(mergeHost);
   data.runs.forEach(mergeRun);
   const touched = new Set();
@@ -70,6 +110,8 @@ function applyChanges(data) {
   }
   for (const event of data.events) {
     const detail = state.details[event.run_id];
+    if (detail && event.event_type.startsWith('collect.')) patchCollect(detail, event);
+    if (event.event_type === 'collect.progress') continue; // live counters only: no timeline, no reload
     if (detail && !detail.eventIds.has(event.id)) {
       detail.eventIds.add(event.id);
       detail.events.push(event);
@@ -96,6 +138,7 @@ async function refreshKpis() {
 
 export async function loadRun(id) {
   const data = await api(`/runs/${id}`);
+  if (deletedRuns.has(id)) return null;
   const studies = {};
   for (const study of data.studies) studies[study.name] = study;
   const existing = state.details[id];
@@ -115,7 +158,7 @@ export async function loadRun(id) {
 
 export async function loadStudy(runId, name) {
   const study = await api(`/runs/${runId}/studies/${encodeURIComponent(name)}`);
-  state.studies[`${runId}/${name}`] = study;
+  if (!deletedRuns.has(runId)) state.studies[`${runId}/${name}`] = study;
   return study;
 }
 

@@ -119,6 +119,25 @@ def test_entries_preview_and_launch_validation(served, project):
     wait_until(lambda: (project.root / "launched.json").exists())
 
 
+def test_tables_are_served_over_http_with_paging_and_confinement(served, tmp_path):
+    folder = tmp_path / "download"
+    folder.mkdir()
+    (folder / "profiles.csv").write_text("a,b\n" + "".join(f"{i},{i * 2}\n" for i in range(30)))
+    run_id = served[2].ensure_run("macario", "/r/campaigns/t", name="t", status="completed")
+    served[2].update_run(run_id, local_folder=str(folder))
+    status, body, _ = call(served, "GET", f"/api/runs/{run_id}/tables")
+    assert status == 200 and [t["path"] for t in body["tables"]] == ["profiles.csv"]
+    url = f"/api/runs/{run_id}/table?path=profiles.csv&offset=20&limit=5"
+    status, page, _ = call(served, "GET", url)
+    assert status == 200 and page["total"] == 30 and page["rows"][0] == ["20", "40"]
+    status, hits, _ = call(served, "GET", f"/api/runs/{run_id}/table?path=profiles.csv&q=29")
+    assert status == 200 and hits["rows"] == [["29", "58"]]
+    assert call(served, "GET", f"/api/runs/{run_id}/table?path=../x.csv")[0] == 400
+    assert call(served, "GET", f"/api/runs/{run_id}/table?path=profiles.csv&offset=x")[0] == 400
+    assert call(served, "GET", f"/api/runs/{run_id}/table?path=profiles.csv", token=False)[0] == 401
+    assert call(served, "GET", "/api/runs/nope/tables")[0] == 404
+
+
 def test_actions_map_errors_to_http(served):
     run_id = seed(served[2])
     served[2].update_run(run_id, worker_alive=1)
@@ -273,6 +292,38 @@ def test_finished_study_convergence_is_parsed_lazily_from_the_local_copy(project
     assert registry.studies(run_id)[0]["series_json"], "the parsed series is cached"
 
 
+def test_convergence_is_parsed_from_a_flat_study_folder(project, registry):
+    from pathlib import Path
+
+    fixture = Path(__file__).with_name("pflotran_rc1_stdout.txt")
+    copy = project.local_runs / "flat"
+    work = copy / "s1"
+    work.mkdir(parents=True)
+    (work / "stdout.log").write_text(fixture.read_text())
+    (work / "model.in").write_text("TIME\n  FINAL_TIME 86400000.0 s\nEND\n")
+    run_id = registry.ensure_run("macario", "/r/campaigns/flat", name="flat", status="completed")
+    registry.update_run(run_id, local_folder=str(copy))
+    registry.upsert_study(run_id, "s1", state="completed", workdir=".")
+    assert RunsService(project, registry).study(run_id, "s1")["step"] == 951
+
+
+def test_truncated_local_log_tail_is_not_parsed_as_the_full_series(project, registry):
+    from pathlib import Path
+
+    from pydelling.managers.ssh_executor import TRUNCATED_MARKER
+
+    fixture = Path(__file__).with_name("pflotran_rc1_stdout.txt").read_text()
+    copy = project.local_runs / "tail"
+    work = copy / "s1" / "attempts" / "0001"
+    work.mkdir(parents=True)
+    (work / "stdout.log").write_text(f"{TRUNCATED_MARKER}: last 1 of 2 bytes\n" + fixture)
+    run_id = registry.ensure_run("macario", "/r/campaigns/tail", name="tail", status="completed")
+    registry.update_run(run_id, local_folder=str(copy))
+    registry.upsert_study(run_id, "s1", state="completed", workdir="attempts/0001")
+    study = RunsService(project, registry).study(run_id, "s1")
+    assert not study.get("series_json"), "a tail must not stand in for the full log"
+
+
 def test_stages_survive_thousands_of_study_events(project, registry):
     run_id = registry.ensure_run("macario", "/r/campaigns/big", name="big", status="running")
     for kind in (
@@ -309,3 +360,121 @@ def test_stages_survive_thousands_of_study_events(project, registry):
     types = [e["event_type"] for e in detail["events"]]
     assert "launch.requested" in types and "deploy.done" in types
     assert any(e["level"] == "error" for e in detail["events"])
+
+
+def test_delete_and_clear_history_endpoints(served):
+    registry = served[2]
+    run = seed(registry)
+    path = f"/api/runs/{run}/delete"
+    assert call(served, "POST", path, body={}, token=False)[0] == 401
+    assert call(served, "POST", path, body={})[0] == 400
+    registry.update_run(run, status="completed", worker_alive=0)
+    status, data, _ = call(served, "POST", path, body={})
+    assert status == 200 and data["deleted_runs"] == [run]
+    assert call(served, "GET", f"/api/runs/{run}")[0] == 404
+    assert call(served, "POST", path, body={})[0] == 404
+    registry.ensure_run("local", "/tmp/another", status="failed")
+    assert call(served, "POST", "/api/history/clear", body={})[0] == 200
+    assert registry.kpis()["total"] == 0
+
+
+def test_delete_files_is_optional_and_checks_paths(project, registry):
+    service = RunsService(project, registry)
+    folder = project.local_runs / "done"
+    folder.mkdir(parents=True)
+    (folder / "results.csv").write_text("data")
+    run = registry.ensure_run("local", str(folder), status="completed", local_folder=str(folder))
+    service.delete(run)
+    assert folder.exists()
+    run = registry.ensure_run("local", str(folder), status="completed", local_folder=str(folder))
+    service.delete(run, files=True)
+    assert not folder.exists() and registry.get_run(run) is None
+    outside = project.root / "source"
+    outside.mkdir()
+    run = registry.ensure_run("local", str(outside), status="completed")
+    from pydelling.monitor.transport import TransportError
+
+    with pytest.raises(TransportError, match="segura"):
+        service.clear_history(files=True)
+    assert outside.exists() and registry.get_run(run)
+
+
+def test_remote_cleanup_failure_keeps_history(project, registry, monkeypatch):
+    from pydelling.monitor import service as module
+    from pydelling.monitor.transport import TransportError
+
+    run = registry.ensure_run("local", str(project.local_runs / "done"), status="completed")
+
+    class Unavailable:
+        def python(self, *args, **kwargs):
+            raise TransportError("unreachable", "Host offline")
+
+    monkeypatch.setattr(module, "make_transport", lambda host: Unavailable())
+    with pytest.raises(TransportError, match="offline"):
+        RunsService(project, registry).clear_history(files=True)
+    assert registry.get_run(run)
+
+
+def collect_events(*extra):
+    launch = {"id": 1, "event_type": "launch.requested", "ts": 1.0, "source": "client"}
+    return [launch, *extra]
+
+
+def test_collect_stage_carries_progress_of_the_current_download():
+    tick = {
+        "id": 9,
+        "event_type": "collect.progress",
+        "ts": 12.0,
+        "payload_json": {"files": 3, "total_files": 10, "bytes": 30, "total_bytes": 100, "elapsed": 2.0},
+    }
+    started = {"id": 5, "event_type": "collect.started", "ts": 10.0, "source": "client"}
+    run = {"status": "completed", "kind": "campaign"}
+    stage = {s["id"]: s for s in stages(run, collect_events(started), progress=tick)}["collect"]
+    assert stage["status"] == "running"
+    assert stage["progress"] == {
+        "files": 3,
+        "total_files": 10,
+        "bytes": 30,
+        "total_bytes": 100,
+        "elapsed": 2.0,
+    }
+    done = {"id": 10, "event_type": "collect.done", "ts": 14.0, "source": "client"}
+    stage = {s["id"]: s for s in stages(run, collect_events(started, done), progress=tick)}
+    assert stage["collect"]["status"] == "done" and stage["collect"]["seconds"] == 4.0
+    assert stage["collect"]["progress"]["files"] == 3
+
+
+def test_collect_stage_ignores_progress_of_a_previous_download_and_tracks_queueing():
+    old = {"id": 3, "event_type": "collect.progress", "ts": 5.0, "payload_json": {"files": 9}}
+    queued = {"id": 4, "event_type": "collect.queued", "ts": 6.0, "source": "client"}
+    run = {"status": "completed", "kind": "campaign"}
+    stage = {s["id"]: s for s in stages(run, collect_events(queued), progress=old)}["collect"]
+    assert stage["status"] == "queued" and "progress" not in stage
+    started = {"id": 5, "event_type": "collect.started", "ts": 7.0, "source": "client"}
+    failed = {
+        "id": 6,
+        "event_type": "collect.failed",
+        "ts": 8.0,
+        "message": "ssh cayó",
+        "source": "client",
+    }
+    stage = {s["id"]: s for s in stages(run, collect_events(queued, started, failed))}["collect"]
+    assert stage["status"] == "failed" and stage["detail"] == "ssh cayó"
+    assert "progress" not in stage
+
+
+def test_run_detail_exposes_download_progress_without_flooding_events(project, registry):
+    run_id = registry.ensure_run("macario", "/r/campaigns/c1", name="c1", status="completed")
+    registry.add_event(run_id, "launch.requested")
+    registry.add_event(run_id, "collect.started")
+    for n in range(300):
+        registry.add_event(
+            run_id, "collect.progress", payload={"files": n, "total_files": 300, "bytes": n}
+        )
+    detail = RunsService(project, registry).run_detail(run_id)
+    assert not [e for e in detail["events"] if e["event_type"] == "collect.progress"]
+    collect = {s["id"]: s for s in detail["stages"]}["collect"]
+    assert collect["status"] == "running" and collect["progress"]["files"] == 299
+    assert registry.last_event(run_id, "collect.progress")["payload_json"]["files"] == 299
+    assert registry.last_event(run_id, "nope") is None
+    assert "collect.progress" not in {e["event_type"] for e in registry.milestones(run_id)}

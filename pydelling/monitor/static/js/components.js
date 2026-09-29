@@ -3,7 +3,7 @@ import {
   computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch,
 } from '../vendor/vue.esm-browser.prod.js';
 import {
-  HOST_STATE, STAGE_STATE, STUDY_ORDER, fmtDuration, fmtInt, fmtNumber, fmtPct, fmtSimTime,
+  HOST_STATE, STAGE_STATE, STUDY_ORDER, fmtBytes, fmtDuration, fmtInt, fmtNumber, fmtPct, fmtSimTime,
   fmtTime, runStatus, studyState,
 } from './format.js';
 import { ICONS } from './icons.js';
@@ -93,7 +93,7 @@ export const ProgressBar = {
 };
 
 export const Stages = {
-  components: { Icon },
+  components: { Icon, ProgressBar },
   props: { stages: Array },
   setup() {
     const info = (stage) => STAGE_STATE[stage.status] || STAGE_STATE.pending;
@@ -106,14 +106,40 @@ export const Stages = {
       if (stage.seconds != null) return fmtDuration(stage.seconds);
       return info(stage).label;
     };
-    return { info, detail };
+    // Downloads report bytes and files: show a bar plus two short lines instead of one label.
+    const hasBar = (stage) => Boolean(stage.progress) || (stage.id === 'collect' && stage.status === 'running');
+    const fraction = (stage) => {
+      const p = stage.progress;
+      if (stage.status === 'done' && p) return 1;
+      if (!p) return 0;
+      if (p.total_bytes) return Math.min(1, p.bytes / p.total_bytes);
+      if (p.total_files) return Math.min(1, p.files / p.total_files);
+      return 0;
+    };
+    const lines = (stage) => {
+      const p = stage.progress;
+      if (!hasBar(stage)) return [detail(stage)];
+      if (stage.status === 'failed') return [detail(stage)];
+      if (!p) return ['Preparando lista de archivos…'];
+      const files = p.total_files != null ? `${fmtInt(p.files)}/${fmtInt(p.total_files)} archivos` : `${fmtInt(p.files)} archivos`;
+      const size = p.total_bytes != null ? `${fmtBytes(p.bytes)} de ${fmtBytes(p.total_bytes)}` : fmtBytes(p.bytes);
+      if (stage.status === 'done') {
+        return [`${fmtInt(p.files)} archivos · ${fmtBytes(p.bytes)}`, stage.seconds != null ? fmtDuration(stage.seconds) : info(stage).label];
+      }
+      const rate = p.elapsed > 0 ? ` · ${fmtBytes(p.bytes / p.elapsed)}/s` : '';
+      return [`${size} · ${Math.round(fraction(stage) * 100)} %`, `${files}${rate}`];
+    };
+    const title = (stage) => (stage.status === 'failed' && stage.detail ? stage.detail : lines(stage).join(' · '));
+    return { info, hasBar, fraction, lines, title };
   },
   template: `<div class="pipeline" role="list" aria-label="Fases del run">
     <div v-for="stage in stages" :key="stage.id" role="listitem" class="stage"
-      :class="['tone-' + info(stage).tone, 'status-' + stage.status]" :title="stage.detail || ''">
+      :class="['tone-' + info(stage).tone, 'status-' + stage.status, {'has-bar': hasBar(stage)}]" :title="title(stage)">
       <div class="stage-top"><Icon :name="info(stage).icon" size="sm" :spin="stage.status === 'running'"/>
         <span class="ellipsis">{{ stage.label }}</span></div>
-      <div class="stage-detail ellipsis">{{ detail(stage) }}</div>
+      <div v-for="(line, i) in lines(stage)" :key="i" class="stage-detail ellipsis tabular">{{ line }}</div>
+      <ProgressBar v-if="hasBar(stage)" class="stage-bar" :value="fraction(stage)" :tone="info(stage).tone"
+        :label="stage.label"/>
     </div></div>`,
 };
 
@@ -322,10 +348,11 @@ const EVENT_LABELS = {
   'collect.started': 'Descargando resultados',
   'collect.done': 'Resultados descargados',
   'collect.failed': 'Descarga fallida',
+  'collect.progress': 'Descargando resultados',
   'run.status': 'Cambio de estado',
   'verification.gate': 'Control de verificación',
   'watcher.warning': 'Aviso del watcher',
-  'campaign.state': 'Estado de la campaña',
+  'campaign.state': 'Estado del lote',
 };
 
 export const Timeline = {

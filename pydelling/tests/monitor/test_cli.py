@@ -58,7 +58,9 @@ def test_connect_master_accepts_background_sessions(tmp_path, monkeypatch):
     from pydelling.monitor import __main__ as monitor_cli
 
     host = SimpleNamespace(id="remote", transport="ssh", ssh="user@localhost", ssh_options=[])
-    monkeypatch.setattr(monitor_cli, "load_project", lambda root: SimpleNamespace(host=lambda _: host))
+    monkeypatch.setattr(
+        monitor_cli, "load_project", lambda root: SimpleNamespace(host=lambda _: host)
+    )
     monkeypatch.setattr(monitor_cli, "open_registry", lambda project: None)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     calls = []
@@ -73,7 +75,9 @@ def test_connect_master_accepts_background_sessions(tmp_path, monkeypatch):
     # Ask OpenSSH to resolve the generated configuration without opening a connection.
     result = real_run(
         [calls[-1][0], "-G", "-F", os.devnull, *calls[-1][1:]],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     config = dict(line.split(" ", 1) for line in result.stdout.splitlines())
     assert config["controlmaster"] == "true", result.stdout
@@ -153,3 +157,15 @@ def test_demo_project_is_self_contained(tmp_path):
         "rc1-demo-barrido": "failed",
         "rc1-demo-en-vivo": "completed",
     }
+
+
+def test_cleanup_cli_requires_confirmation(project, registry):
+    run = registry.ensure_run("local", str(project.local_runs / "old"), status="completed")
+    assert cli(project, "delete", run, check=False).returncode == 2
+    assert registry.get_run(run)
+    cli(project, "delete", run, "--yes")
+    assert registry.get_run(run) is None
+    registry.ensure_run("local", str(project.local_runs / "other"), status="completed")
+    assert cli(project, "clear-history", check=False).returncode == 2
+    cli(project, "clear-history", "--yes")
+    assert registry.kpis()["total"] == 0

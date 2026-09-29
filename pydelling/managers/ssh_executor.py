@@ -13,6 +13,7 @@ import subprocess
 import tarfile
 import tempfile
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
@@ -34,7 +35,7 @@ with (folder/'.launch.lock').open('a') as lock:
    print(json.dumps(old)); sys.exit(0)
  for stale in ('cancel.request','worker-exit.json'):
   (folder/stale).unlink(missing_ok=True)
- env=dict(os.environ,PYDELLING_RUNS_WORKER='1')
+ env=dict(os.environ,PYDELLING_RUNS_WORKER='1',PYDELLING_RUN_FOLDER=str(folder))
  with (folder/'worker.log').open('ab') as log:
   p=subprocess.Popen([sys.executable,'-c',sys.argv[4],sys.argv[2],str(folder)],stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True,cwd=sys.argv[3],env=env)
  state={'pid':p.pid,'start':start_token(p.pid),'launched':time.time()}
@@ -60,6 +61,59 @@ if folder.is_dir() and not marker.exists():
  temp=marker.with_suffix('.tmp'); temp.write_text(json.dumps({'origin':'ssh','requested':time.time()})); os.replace(temp,marker)
  with (folder/sys.argv[3]).open('a') as log:
   log.write(json.dumps({'origin':'ssh','ts':time.time(),'type':'cancel.requested'},sort_keys=True)+chr(10))
+"""
+
+# Default bytes kept from the end of each large .log/.out when collecting.
+LOG_TAIL_BYTES = 64 * 1024
+# First line of a collected log tail; the full file stays on the host.
+TRUNCATED_MARKER = "[pydelling collect] truncated"
+# Archive member carrying the collect report; merged into download.json, never written.
+COLLECT_REPORT = ".pydelling-collect.json"
+COLLECT_PLAN = ".pydelling-plan.json"
+PROGRESS_INTERVAL = 0.5  # seconds between collect.progress events
+COPY_CHUNK = 1 << 20
+
+# argv: folder, raw (1/0), log limit in bytes (-1 = full logs), marker, report name, plan name.
+# The first tar member is the plan (files and bytes about to travel) so the client can
+# report progress from a single ssh connection.
+COLLECT = r"""import io,json,pathlib,sys,tarfile,time
+root=pathlib.Path(sys.argv[1]); raw=sys.argv[2]=='1'; limit=int(sys.argv[3]); marker=sys.argv[4]
+allowed={'.json','.jsonl','.yaml','.csv','.parquet','.png','.log','.in','.out','.dat'}
+report={'truncated':{},'left_on_host':{}}
+def duplicate(p,size):
+ s=p.parent/'stdout.log'
+ return 0<=limit<size and p.suffix=='.out' and p.with_suffix('.in').is_file() and s.is_file() and s.stat().st_size>=limit
+entries=[]
+for p in sorted(root.rglob('*')):
+ if not p.is_file() or p.is_symlink(): continue
+ name=str(p.relative_to(root)); size=p.stat().st_size
+ heavy=p.suffix in {'.h5','.xmf'} or p.name.endswith('-mas.dat')
+ if (heavy and not raw) or duplicate(p,size):
+  report['left_on_host'][name]=size; continue
+ if not heavy and p.suffix not in allowed: continue
+ if 0<=limit<size and p.suffix in {'.log','.out'}:
+  with p.open('rb') as f:
+   f.seek(size-limit); data=f.read(limit)
+  cut=data.find(b'\n')
+  if 0<=cut<len(data)-1: data=data[cut+1:]
+  head='%s: last %d of %d bytes; full file on the host: %s\n'%(marker,len(data),size,p)
+  data=head.encode(errors='replace')+data
+  entries.append((p,name,data)); report['truncated'][name]=size
+ else:
+  entries.append((p,name,None))
+with tarfile.open(fileobj=sys.stdout.buffer,mode='w|gz') as tar:
+ plan=json.dumps({'files':len(entries),'bytes':sum(len(d) if d is not None else p.stat().st_size for p,n,d in entries)}).encode()
+ info=tarfile.TarInfo(sys.argv[6]); info.size=len(plan); info.mode=0o644; info.mtime=int(time.time())
+ tar.addfile(info,io.BytesIO(plan))
+ for p,name,data in entries:
+  if data is not None:
+   info=tar.gettarinfo(str(p),arcname=name); info.size=len(data)
+   tar.addfile(info,io.BytesIO(data))
+  else:
+   tar.add(p,arcname=name,recursive=False)
+ data=json.dumps(report,sort_keys=True).encode()
+ info=tarfile.TarInfo(sys.argv[5]); info.size=len(data); info.mode=0o644; info.mtime=int(time.time())
+ tar.addfile(info,io.BytesIO(data))
 """
 
 
@@ -182,8 +236,22 @@ class SSHExecutor:
                 check=True,
             )
 
-    def start(self, release, config, campaign, *, resume=False, on_event=None):
-        """Detach a worker. A remote OS lock serializes launch and execution."""
+    def start(
+        self,
+        release,
+        config,
+        campaign,
+        *,
+        resume=False,
+        on_event=None,
+        volatile=(),
+    ):
+        """Detach a worker. A remote OS lock serializes launch and execution.
+
+        ``volatile`` lists ``execution`` settings (e.g. ``workers``) that may differ from
+        the stored ``config.json``: when only those differ the file is updated, otherwise
+        an incompatible configuration is refused.
+        """
         if not campaign or any(
             c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
             for c in campaign
@@ -191,19 +259,30 @@ class SSHExecutor:
             raise ValueError("Unsafe campaign name")
         folder = f"{self.root}/campaigns/{campaign}"
         self.command(["mkdir", "-p", folder])
-        # Do not rewrite a running worker's configuration.
+        # A running worker keeps the configuration it already loaded; only the settings
+        # named in ``volatile`` may change under it.
         self.python(
             """import fcntl,json,os,pathlib,sys
-p=pathlib.Path(sys.argv[1]); text=sys.argv[2]
+p=pathlib.Path(sys.argv[1]); text=sys.argv[2]; volatile=json.loads(sys.argv[3])
+def core(c):
+ c=json.loads(json.dumps(c))
+ if isinstance(c.get('execution'),dict):
+  for key in volatile: c['execution'].pop(key,None)
+ return c
+def write():
+ tmp=p.with_suffix('.tmp'); tmp.write_text(text); os.replace(tmp,p)
 with (p.parent/'.config.lock').open('a') as lock:
  fcntl.flock(lock,fcntl.LOCK_EX)
  if p.exists():
-  assert json.loads(p.read_text())==json.loads(text), 'Incompatible remote configuration'
+  old=json.loads(p.read_text()); new=json.loads(text)
+  assert core(old)==core(new), 'Incompatible remote configuration'
+  if old!=new: write()
  else:
-  tmp=p.with_suffix('.tmp'); tmp.write_text(text); os.replace(tmp,p)
+  write()
 """,
             folder + "/config.json",
             json.dumps(config, sort_keys=True, indent=2),
+            json.dumps(list(volatile)),
         )
         action = "resume" if resume else "run"
         argv = [
@@ -284,6 +363,7 @@ with (p.parent/'.config.lock').open('a') as lock:
                         "name": study.name,
                         "input": study.input_file_name,
                         "auxiliary": list(study.aux_files),
+                        "postprocess": [c.spec() for c in getattr(study, "postprocess", [])],
                     }
                 )
             job = {
@@ -378,39 +458,153 @@ print(json.dumps(result))
 """
         return json.loads(self.python(code, folder))
 
-    def collect(self, folder, destination, *, raw=False):
-        """Retrieve allowlisted artifacts, rejecting archive traversal and links."""
+    def collect(
+        self,
+        folder: str,
+        destination: str | Path,
+        *,
+        raw: bool = False,
+        full_logs: bool = False,
+        log_tail_bytes: int = LOG_TAIL_BYTES,
+        on_event: Callable[..., None] | None = None,
+    ) -> dict:
+        """Retrieve allowlisted artifacts, rejecting archive traversal and links.
+
+        By default only lightweight results travel: status, events, manifests,
+        figures, tables, inputs and small logs. Heavy solver output stays on the host:
+
+        * A ``<stem>.out`` above ``log_tail_bytes`` is skipped when ``<stem>.in`` and a
+          ``stdout.log`` of at least ``log_tail_bytes`` sit beside it: PFLOTRAN writes the
+          same screen output to both, and ``stdout.log`` also has MPI/PETSc messages and
+          is the file the runs monitor reads.
+        * ``.log``/``.out`` files above ``log_tail_bytes`` keep only their last lines,
+          behind a first line starting with :data:`TRUNCATED_MARKER`.
+        * PFLOTRAN mass balances (``*-mas.dat``) travel only with ``raw``, as HDF5/XMF.
+
+        Args:
+            folder: Absolute remote campaign folder.
+            destination: Local folder that receives the results.
+            raw: Also download HDF5/XMF files and ``*-mas.dat`` mass balances.
+            full_logs: Download every log complete, including duplicated ``.out`` copies.
+            log_tail_bytes: Byte budget kept from the end of each large log.
+            on_event: Optional ``on_event("collect.progress", **payload)`` callback, called
+                about every :data:`PROGRESS_INTERVAL` seconds and once more at the end.
+                The payload has ``files``, ``total_files``, ``bytes``, ``total_bytes``
+                (uncompressed bytes written vs. planned by the host), ``elapsed`` seconds
+                and ``current`` (the file being written).
+
+        Returns:
+            dict: The ``download.json`` record, with ``truncated`` (log path to its
+            original size) and ``left_on_host`` (skipped path to its size).
+        """
+        if log_tail_bytes < 0:
+            raise ValueError("log_tail_bytes must be non-negative")
         destination = Path(destination).resolve()
         destination.mkdir(parents=True, exist_ok=True)
-        code = """import pathlib,sys,tarfile
-root=pathlib.Path(sys.argv[1]); raw=sys.argv[2]=='1'
-allowed={'.json','.jsonl','.yaml','.csv','.parquet','.png','.log','.in','.out','.dat'}
-with tarfile.open(fileobj=sys.stdout.buffer,mode='w|gz') as tar:
- for p in sorted(root.rglob('*')):
-  if p.is_file() and not p.is_symlink() and (p.suffix in allowed or (raw and p.suffix in {'.h5','.xmf'})):
-   tar.add(p,arcname=str(p.relative_to(root)),recursive=False)
-"""
-        with tempfile.TemporaryDirectory() as temp:
-            archive = Path(temp) / "results.tar.gz"
-            with archive.open("wb") as stream:
-                subprocess.run(
-                    [
-                        self.ssh,
-                        *self.ssh_options,
-                        self.host,
-                        shlex.join(["python3", "-c", code, folder, "1" if raw else "0"]),
-                    ],
-                    stdout=stream,
-                    check=True,
-                )
-            with tarfile.open(archive) as tar:
-                for member in tar:
-                    target = destination / member.name
-                    if not member.isfile() or not target.resolve().is_relative_to(destination):
-                        raise ValueError("Unsafe result archive member")
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    with tar.extractfile(member) as source, target.open("wb") as dest:
-                        shutil.copyfileobj(source, dest)
-        atomic_json(
-            destination / "download.json", {"host": self.host, "folder": folder, "raw": raw}
-        )
+        limit = -1 if full_logs else log_tail_bytes
+        report = {"truncated": {}, "left_on_host": {}}
+        plan: dict = {}
+        done = {"files": 0, "bytes": 0}
+        started = last_emit = time.monotonic()
+
+        def progress(current: str | None, *, force: bool = False) -> None:
+            nonlocal last_emit
+            now = time.monotonic()
+            if on_event is None or not (force or now - last_emit >= PROGRESS_INTERVAL):
+                return
+            last_emit = now
+            on_event(
+                "collect.progress",
+                files=done["files"],
+                total_files=plan.get("files"),
+                bytes=done["bytes"],
+                total_bytes=plan.get("bytes"),
+                elapsed=round(now - started, 3),
+                current=current,
+            )
+
+        command = [
+            self.ssh,
+            *self.ssh_options,
+            self.host,
+            shlex.join(
+                [
+                    "python3",
+                    "-c",
+                    COLLECT,
+                    folder,
+                    "1" if raw else "0",
+                    str(limit),
+                    TRUNCATED_MARKER,
+                    COLLECT_REPORT,
+                    COLLECT_PLAN,
+                ]
+            ),
+        ]
+        with subprocess.Popen(command, stdout=subprocess.PIPE) as proc:
+            try:
+                with tarfile.open(fileobj=proc.stdout, mode="r|gz") as tar:
+                    for member in tar:
+                        target = destination / member.name
+                        if not member.isfile() or not target.resolve().is_relative_to(destination):
+                            raise ValueError("Unsafe result archive member")
+                        if member.name in (COLLECT_PLAN, COLLECT_REPORT):
+                            with tar.extractfile(member) as source:
+                                loaded = json.load(source)
+                            if member.name == COLLECT_REPORT:
+                                report = loaded
+                            else:
+                                plan = loaded
+                                progress(None, force=True)
+                            continue
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        with tar.extractfile(member) as source, target.open("wb") as dest:
+                            while chunk := source.read(COPY_CHUNK):
+                                dest.write(chunk)
+                                done["bytes"] += len(chunk)
+                                progress(member.name)
+                        done["files"] += 1
+                        progress(member.name)
+                while proc.stdout.read(COPY_CHUNK):  # trailing gzip padding
+                    pass
+            except BaseException as exc:
+                if isinstance(exc, tarfile.TarError | EOFError):
+                    # ssh died before a valid archive: report its exit status, not the tar noise.
+                    try:
+                        code = proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        code = 0
+                    if code:
+                        raise subprocess.CalledProcessError(code, command) from exc
+                proc.kill()
+                raise
+        if proc.returncode:
+            raise subprocess.CalledProcessError(proc.returncode, command)
+        progress(None, force=True)
+        record = {
+            "host": self.host,
+            "folder": folder,
+            "raw": raw,
+            "full_logs": full_logs,
+            "log_tail_bytes": None if full_logs else log_tail_bytes,
+            **report,
+        }
+        atomic_json(destination / "download.json", record)
+        return record
+
+
+def is_truncated(path: str | Path) -> bool:
+    """Tell whether a collected log is a tail written by :meth:`SSHExecutor.collect`.
+
+    Args:
+        path: Local log file.
+
+    Returns:
+        bool: True when the file starts with :data:`TRUNCATED_MARKER`.
+    """
+    marker = TRUNCATED_MARKER.encode()
+    try:
+        with Path(path).open("rb") as stream:
+            return stream.read(len(marker)) == marker
+    except OSError:
+        return False

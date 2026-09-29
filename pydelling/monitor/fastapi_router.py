@@ -63,6 +63,14 @@ def create_router(service):
     async def worker_log(run_id: str, live: bool = False):
         return await call(service.worker_log, run_id, live=live)
 
+    @router.get("/runs/{run_id}/tables")
+    async def tables(run_id: str):
+        return await call(service.tables, run_id)
+
+    @router.get("/runs/{run_id}/table")
+    async def table(run_id: str, path: str, offset: int = 0, limit: int = 100, q: str = ""):
+        return await call(service.table, run_id, path, offset=offset, limit=limit, query=q)
+
     @router.get("/runs/{run_id}/studies/{name}")
     async def study(run_id: str, name: str):
         return await call(service.study, run_id, name)
@@ -93,7 +101,12 @@ def create_router(service):
 
     @router.post("/runs/{run_id}/collect")
     async def collect(run_id: str, payload: dict = Body(default={})):  # noqa: B008
-        return await call(service.collect, run_id, raw=bool(payload.get("raw")))
+        return await call(
+            service.collect,
+            run_id,
+            raw=bool(payload.get("raw")),
+            full_logs=bool(payload.get("full_logs")),
+        )
 
     @router.get("/stream")
     async def stream(rev: int = 0, event_id: int = 0):

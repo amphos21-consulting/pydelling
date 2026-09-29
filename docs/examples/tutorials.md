@@ -2,6 +2,21 @@
 
 Comprehensive tutorials for learning pydelling workflows and best practices.
 
+## PFLOTRAN manager
+
+Runnable scripts in `code_snippets/managers/pflotran_manager/`, using a small 1D column
+template (`column_template.in`). Run them from any folder; they write to `./studies/`.
+
+1. **`tutorial_01_edit_cards.py` — edit a deck like a dict.** Read and change cards by path
+   (`study["GRID/NXYZ"] = [200, 1, 1]`), rewrite coordinate blocks, replace repeated
+   `OUTPUT/TIMES` cards, add/remove cards, and see the error a wrong path gives.
+2. **`tutorial_02_samplers_and_sensitivity.py` — samplings and sensitivity cases.** Define
+   a `ParameterSpace`, generate LHS and grid `Design`s, add them to a `PflotranManager` on
+   a base template and on a variant (a sensitivity case), then `select`, `records`, write
+   the inputs and sample tables, and replay a design from CSV.
+
+See [Simulation management](../managers/overview.md) for the full API.
+
 ## Coming Soon
 
 Interactive tutorials are being developed to help you learn pydelling effectively. These will include:

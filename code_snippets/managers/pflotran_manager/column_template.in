@@ -1,0 +1,127 @@
+#================================================================
+# 1D saturated column: tracer injected at the west face.
+# <<PERM>> and <<PHI>> are filled per study by the tutorials.
+#================================================================
+SIMULATION
+  SIMULATION_TYPE SUBSURFACE
+  PROCESS_MODELS
+    SUBSURFACE_FLOW flow
+      MODE RICHARDS
+    /
+    SUBSURFACE_TRANSPORT transport
+      MODE GIRT
+    /
+  /
+END
+
+SUBSURFACE
+
+GRID
+  TYPE STRUCTURED
+  NXYZ 100 1 1
+  BOUNDS
+    0.d0 0.d0 0.d0
+    10.d0 1.d0 1.d0
+  /
+END
+
+MATERIAL_PROPERTY soil
+  ID 1
+  POROSITY <<PHI>>
+  TORTUOSITY 1.d0
+  LONGITUDINAL_DISPERSIVITY 0.5d0   # m
+  CHARACTERISTIC_CURVES default
+  PERMEABILITY
+    PERM_ISO <<PERM>>
+  /
+END
+
+CHARACTERISTIC_CURVES default
+  DEFAULT
+END
+
+REGION all
+  COORDINATES
+    0.d0 0.d0 0.d0
+    10.d0 1.d0 1.d0
+  /
+END
+
+REGION west
+  FACE WEST
+  COORDINATES
+    0.d0 0.d0 0.d0
+    0.d0 1.d0 1.d0
+  /
+END
+
+REGION east
+  FACE EAST
+  COORDINATES
+    10.d0 0.d0 0.d0
+    10.d0 1.d0 1.d0
+  /
+END
+
+FLOW_CONDITION inlet
+  TYPE
+    LIQUID_PRESSURE DIRICHLET
+  /
+  LIQUID_PRESSURE 199425 Pa
+END
+
+FLOW_CONDITION outlet
+  TYPE
+    LIQUID_PRESSURE DIRICHLET
+  /
+  LIQUID_PRESSURE 101325 Pa
+END
+
+CHEMISTRY
+  PRIMARY_SPECIES
+    Tracer
+  /
+  DATABASE ./hanford.dat
+  OUTPUT
+    TOTAL
+    ALL
+  /
+END
+
+TRANSPORT_CONDITION inflow
+  TYPE DIRICHLET_ZERO_GRADIENT
+  CONSTRAINT_LIST
+    0.d0 inflow_conc
+  /
+END
+
+CONSTRAINT inflow_conc
+  CONCENTRATIONS
+    Tracer 1.d0 T
+  /
+END
+
+BOUNDARY_CONDITION inlet
+  FLOW_CONDITION inlet
+  TRANSPORT_CONDITION inflow
+  REGION west
+END
+
+STRATA
+  REGION all
+  MATERIAL soil
+END
+
+TIME
+  FINAL_TIME 100.d0 d
+  MAXIMUM_TIMESTEP_SIZE 1.d0 d
+END
+
+OUTPUT
+  TIMES d 10. 20. 30. 40. 50.
+  TIMES d 60. 70. 80. 90. 100.
+  FORMAT HDF5
+  MASS_BALANCE
+END
+
+END_SUBSURFACE

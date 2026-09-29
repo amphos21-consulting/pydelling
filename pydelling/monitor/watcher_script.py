@@ -1,12 +1,4 @@
-"""Campaign watcher executed on the target host as ``python3 -u -c <this file>``.
-
-Stdlib only. The first stdin line is JSON ``{roots, known, interval, once}``; later
-lines are commands (``tail``, ``cancel``, ``ping``). Every stdout line is one JSON
-message: hello, campaign, study, event, log, progress, cursor, heartbeat, warning,
-reply.
-Downloaded copies (``remote.json``) are campaigns with ``mirror`` set. Only changes
-are sent: ``known`` carries the client's offsets and mtimes.
-"""
+"""Stdlib JSONL watcher."""
 
 import json
 import os
@@ -266,6 +258,7 @@ class Watcher:
         self.emit = emit or self.write
         self.campaigns = {}
         self.last_beat = 0.0
+        self.missing = set()
 
     @staticmethod
     def write(message):
@@ -341,6 +334,18 @@ class Watcher:
         self.emit({"t": "warning", "folder": folder, "path": rel, "message": str(exc)})
 
     def scan(self, force=False):
+        for folder in set(self.known) | set(self.campaigns):
+            try:
+                os.stat(folder)
+            except FileNotFoundError:
+                if folder not in self.missing:
+                    self.emit({"t": "missing", "folder": folder})
+                    self.missing.add(folder)
+                self.campaigns.pop(folder, None)
+            except OSError:
+                pass  # Only ENOENT proves absence.
+            else:
+                self.missing.discard(folder)
         self.discover()
         now = time.time()
         for folder, state in list(self.campaigns.items()):

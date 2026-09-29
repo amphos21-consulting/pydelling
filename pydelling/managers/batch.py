@@ -18,6 +18,8 @@ from pathlib import Path
 import h5py
 import numpy as np
 
+from .postprocess.base import processed_intact, run_postprocess, validate_postprocess
+
 TIME_UNITS = {
     "s": 1.0,
     "sec": 1.0,
@@ -129,6 +131,22 @@ def campaign_lock(folder):
                 fcntl.flock(stream, fcntl.LOCK_UN)
 
 
+def clear_study_folder(folder):
+    """Empty a study's own folder before a flat re-run, keeping ``status.json``.
+
+    Args:
+        folder: ``<campaign>/<study>``. Earlier ``attempts/`` sub-folders (from a campaign
+            run with ``attempts=True``) are left alone.
+    """
+    for child in Path(folder).iterdir():
+        if child.name in ("status.json", "attempts"):
+            continue
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
+
+
 def check_outputs(folder, expected_times, required_variables):
     """Require every requested HDF5 time/variable and finite numerical output."""
     found = {}
@@ -152,6 +170,43 @@ def check_outputs(folder, expected_times, required_variables):
     return {str(t): name for t, name in found.items()}
 
 
+def solver_outputs_intact(work, state, requirement):
+    """Whether a finished run still has every required output, byte for byte.
+
+    Args:
+        work: Attempt folder of the run.
+        state: Its ``status.json`` (``output_hashes``).
+        requirement: ``{"expected_times": [...], "required_variables": [...]}``.
+
+    Returns:
+        bool: True if :func:`check_outputs` passes and no output file changed.
+    """
+    try:
+        check_outputs(work, **requirement)
+        return all(
+            file_hash(work / name) == digest
+            for name, digest in state.get("output_hashes", {}).items()
+        )
+    except (ValueError, OSError, KeyError):
+        return False
+
+
+def study_identity(study):
+    """What makes a study's run reproducible: deck, input files and callbacks.
+
+    ``postprocess`` is only present for studies with callbacks, so campaigns without them
+    keep the identity they had before callbacks existed.
+    """
+    identity = {
+        "deck": study.render(),
+        "files": {name: file_hash(p) for name, p in study.aux_files.items()},
+    }
+    callbacks = getattr(study, "postprocess", None)
+    if callbacks:
+        identity["postprocess"] = [callback.spec() for callback in callbacks]
+    return identity
+
+
 @dataclass
 class BatchResult:
     states: dict
@@ -163,12 +218,28 @@ class BatchResult:
 
 @dataclass
 class LocalExecutor:
+    """Run studies as local PFLOTRAN processes, several at a time.
+
+    Attributes:
+        executable: PFLOTRAN binary.
+        workers: Studies running at once.
+        mpi_ranks: MPI ranks per study.
+        mpiexec: MPI launcher used when ``mpi_ranks > 1``.
+        timeout: Seconds a study may run before it is killed.
+        env: Extra environment variables for the solver.
+        attempts: Where a study's files go. False (default): directly in the study's
+            folder (``<campaign>/<study>/``); a re-run first clears that folder, so it
+            only ever holds the latest run. True: one ``attempts/0001``, ``attempts/0002``…
+            sub-folder per run, so earlier runs (their logs and outputs) are kept.
+    """
+
     executable: str = "pflotran"
     workers: int = 4
     mpi_ranks: int = 1
     mpiexec: str = "mpiexec"
     timeout: float = 3600.0
     env: dict = field(default_factory=dict)
+    attempts: bool = False
 
     def __post_init__(self):
         if self.workers < 1 or self.mpi_ranks < 1 or self.timeout <= 0:
@@ -207,21 +278,27 @@ class LocalExecutor:
             atomic_json(state_path, state)
             append_event(campaign, "study.state", study=study.name, state="interrupted")
             return state
-        attempts = folder / "attempts"
-        attempts.mkdir(exist_ok=True)
-        attempt = max([int(p.name) for p in attempts.iterdir() if p.name.isdigit()] + [0]) + 1
-        work = attempts / f"{attempt:04d}"
-        work.mkdir()
+        if self.attempts:
+            history = folder / "attempts"
+            history.mkdir(exist_ok=True)
+            attempt = max([int(p.name) for p in history.iterdir() if p.name.isdigit()] + [0]) + 1
+            work = history / f"{attempt:04d}"
+            work.mkdir()
+        else:
+            attempt = int(previous.get("attempt") or 0) + 1
+            work = folder
         state = {
             "state": "running",
             "attempt": attempt,
             "identity": identity,
             "started": time.time(),
-            "workdir": str(work.relative_to(folder)),
+            "workdir": work.relative_to(folder).as_posix(),  # "." when flat
         }
         if previous.get("state") == "running":
             previous["state"] = "interrupted"
             atomic_json(folder / previous["workdir"] / "status.json", previous)
+        if not self.attempts:
+            clear_study_folder(folder)
         atomic_json(state_path, state)
         process = None
         try:
@@ -264,7 +341,8 @@ class LocalExecutor:
             state["output_hashes"] = {
                 name: file_hash(work / name) for name in set(state["outputs"].values())
             }
-            state["state"] = "completed"
+            state["solver_completed"] = True
+            self._postprocess(study, work, state, campaign)
         except (
             Exception,  # noqa: BLE001 -- record per-study errors, including library failures
             KeyboardInterrupt,
@@ -303,6 +381,67 @@ class LocalExecutor:
             )
         return state
 
+    @staticmethod
+    def _postprocess(study, work, state, campaign):
+        """Run the study's post-processing callbacks and set the final state.
+
+        A failed callback fails the study; its solver outputs are kept, so a resume only
+        re-runs the callbacks (see ``_reprocess``).
+        """
+        if not getattr(study, "postprocess", None):
+            state["state"] = "completed"
+            return
+        records = run_postprocess(study, work)
+        tracebacks = [r.pop("traceback") for r in records.values() if "traceback" in r]
+        if tracebacks:
+            with (work / "postprocess.log").open("a") as log:
+                log.write("\n".join(tracebacks) + "\n")
+        state["postprocess"] = records
+        state["postprocess_attempts"] = state.get("postprocess_attempts", 0) + 1
+        for name, record in records.items():
+            details = {"error": record["error"]} if record["error"] else {}
+            append_event(
+                campaign,
+                "study.postprocess",
+                study=study.name,
+                name=name,
+                state=record["state"],
+                rows=record["rows"],
+                **details,
+            )
+        failed = [f"postprocess {n}: {r['error']}" for n, r in records.items() if r["error"]]
+        state["state"] = "failed" if failed else "completed"
+        if failed:
+            state["error"] = "; ".join(failed)
+        else:
+            state.pop("error", None)
+
+    def _reprocess(self, study, folder, state):
+        """Re-run only the callbacks of a study whose solver outputs are intact."""
+        campaign = folder.parent
+        if self._stop.is_set() or cancel_requested(campaign):
+            return state
+        state = dict(state)
+        work = folder / state["workdir"]
+        try:
+            self._postprocess(study, work, state, campaign)
+        except Exception as exc:  # noqa: BLE001 -- persisted like any study failure
+            state["state"] = "failed"
+            state["error"] = f"{type(exc).__name__}: {exc}"
+        state["postprocessed"] = time.time()
+        atomic_json(work / "status.json", state)
+        atomic_json(folder / "status.json", state)
+        details = {"error": state["error"]} if state["state"] != "completed" else {}
+        append_event(
+            campaign,
+            "study.state",
+            study=study.name,
+            state=state["state"],
+            attempt=state.get("attempt"),
+            **details,
+        )
+        return state
+
     @contextmanager
     def pipeline(self, folder):
         """Hold the campaign lock across several gated batches and collection."""
@@ -330,17 +469,12 @@ class LocalExecutor:
             not re.fullmatch(r"[\w.-]+", n) or n in (".", "..") for n in names
         ):
             raise ValueError("Study names must be unique safe directory names")
+        validate_postprocess(studies)
         identity_data = {
             "solver": self.provenance(),
             "provenance": provenance,
             "requirements": requirements,
-            "studies": {
-                s.name: {
-                    "deck": s.render(),
-                    "files": {name: file_hash(p) for name, p in s.aux_files.items()},
-                }
-                for s in studies
-            },
+            "studies": {s.name: study_identity(s) for s in studies},
         }
         identity = fingerprint(identity_data)
         if not re.fullmatch(r"[A-Za-z0-9_-]+", batch_name):
@@ -351,6 +485,7 @@ class LocalExecutor:
         atomic_json(manifest_path, {"identity": identity, **identity_data})
         states = {}
         pending = []
+        reprocess = []
         for study in studies:
             study_folder = folder / study.name
             study_folder.mkdir(exist_ok=True)
@@ -366,24 +501,30 @@ class LocalExecutor:
                     raise RuntimeError(
                         f"Solver for {study.name} is still running; refusing duplicate execution"
                     )
-            if resume and state["state"] == "completed":
-                try:
-                    check_outputs(study_folder / state["workdir"], **requirements[study.name])
-                    if any(
-                        file_hash(study_folder / state["workdir"] / name) != digest
-                        for name, digest in state.get("output_hashes", {}).items()
+            if resume and (state["state"] == "completed" or state.get("solver_completed")):
+                work = study_folder / state["workdir"]
+                if solver_outputs_intact(work, state, requirements[study.name]):
+                    if state["state"] == "completed" and processed_intact(
+                        study, work, state.get("postprocess")
                     ):
-                        raise ValueError("Output content changed")
-                    states[study.name] = state
-                    continue
-                except (ValueError, OSError, KeyError):
-                    pass
+                        states[study.name] = state
+                        continue
+                    if getattr(study, "postprocess", None):
+                        # The solver's results are fine: only the callbacks run again.
+                        reprocess.append((study, study_folder, state))
+                        continue
             if not status.exists():
                 atomic_json(status, state)
             pending.append((study, study_folder))
         self._stop = threading.Event()
         append_event(
-            folder, "batch.started", batch=batch_name, studies=len(studies), pending=len(pending)
+            folder,
+            "batch.started",
+            batch=batch_name,
+            workers=self.workers,
+            studies=len(studies),
+            pending=len(pending) + len(reprocess),
+            postprocess_only=len(reprocess),
         )
         try:
             with ThreadPoolExecutor(max_workers=self.workers) as pool:
@@ -395,6 +536,10 @@ class LocalExecutor:
                         ),
                     )
                     for s, dest in pending
+                ]
+                futures += [
+                    (s.name, pool.submit(self._reprocess, s, dest, state))
+                    for s, dest, state in reprocess
                 ]
                 try:
                     for name, future in futures:

@@ -60,6 +60,18 @@ ROUTES = [
         r"/api/runs/(?P<run>[^/]+)/log",
         lambda s, m, q, b: s.worker_log(m["run"], live=_flag(q.get("live"))),
     ),
+    ("GET", r"/api/runs/(?P<run>[^/]+)/tables", lambda s, m, q, b: s.tables(m["run"])),
+    (
+        "GET",
+        r"/api/runs/(?P<run>[^/]+)/table",
+        lambda s, m, q, b: s.table(
+            m["run"],
+            q.get("path"),
+            offset=int(q.get("offset", 0)),
+            limit=int(q.get("limit", 100)),
+            query=q.get("q", ""),
+        ),
+    ),
     (
         "GET",
         r"/api/runs/(?P<run>[^/]+)/studies/(?P<study>[^/]+)",
@@ -72,13 +84,23 @@ ROUTES = [
     ),
     ("POST", r"/api/hosts/(?P<host>[^/]+)/preflight", lambda s, m, q, b: s.preflight(m["host"])),
     ("POST", r"/api/hosts/(?P<host>[^/]+)/reconnect", lambda s, m, q, b: s.reconnect(m["host"])),
+    (
+        "POST",
+        r"/api/history/clear",
+        lambda s, m, q, b: s.clear_history(files=b.get("files") is True),
+    ),
+    (
+        "POST",
+        r"/api/runs/(?P<run>[^/]+)/delete",
+        lambda s, m, q, b: s.delete(m["run"], files=b.get("files") is True),
+    ),
     ("POST", r"/api/launch", lambda s, m, q, b: s.launch(b)),
     ("POST", r"/api/runs/(?P<run>[^/]+)/cancel", lambda s, m, q, b: s.cancel(m["run"])),
     ("POST", r"/api/runs/(?P<run>[^/]+)/resume", lambda s, m, q, b: s.resume(m["run"])),
     (
         "POST",
         r"/api/runs/(?P<run>[^/]+)/collect",
-        lambda s, m, q, b: s.collect(m["run"], raw=bool(b.get("raw"))),
+        lambda s, m, q, b: s.collect(m["run"], raw=bool(b.get("raw")), full_logs=bool(b.get("full_logs"))),
     ),
     ("POST", r"/api/runs/(?P<run>[^/]+)/open", lambda s, m, q, b: s.open_folder(m["run"])),
 ]
@@ -206,7 +228,13 @@ class Handler(BaseHTTPRequestHandler):
             quiet = time.monotonic()
             while not self.server.stopping:
                 data = service.changes(rev, event_id)
-                if data["hosts"] or data["runs"] or data["studies"] or data["events"]:
+                if (
+                    data.get("deleted_runs")
+                    or data["hosts"]
+                    or data["runs"]
+                    or data["studies"]
+                    or data["events"]
+                ):
                     frame("changes", data)
                     quiet = time.monotonic()
                 elif time.monotonic() - quiet > KEEPALIVE_SECONDS:

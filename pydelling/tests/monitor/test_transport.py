@@ -166,3 +166,22 @@ def test_collect_downloads_the_event_log(tmp_path, monkeypatch):
     transport.executor().collect(str(campaign), tmp_path / "local")
     assert (tmp_path / "local" / "events.jsonl").exists()
     assert not (tmp_path / "local" / "secret.key").exists()
+
+
+def test_cleanup_remote_results_and_local_copy(project, registry, tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from pydelling.monitor.service import RunsService
+
+    fake_ssh.install(tmp_path, monkeypatch)
+    host = ssh_host(tmp_path)
+    monkeypatch.setattr(project, "hosts", lambda: [project.local_host(), host])
+    remote = Path(host.campaigns_root) / "result with spaces"
+    local = project.local_runs / "download"
+    for folder in (remote, local):
+        folder.mkdir(parents=True)
+        (folder / "result.sqlite").write_text("sample")
+    run = registry.ensure_run(host.id, str(remote), local_folder=str(local), status="completed")
+    RunsService(project, registry).delete(run, files=True)
+    assert not remote.exists() and not local.exists()
+    assert registry.get_run(run) is None

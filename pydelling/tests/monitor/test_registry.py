@@ -172,3 +172,46 @@ def test_status_timestamps(registry):
 )
 def test_derive_status(run, expected):
     assert derive_status(run) == expected
+
+
+def test_delete_cascades_streams_and_blocks_rediscovery(registry):
+    run = registry.ensure_run("local", "/runs/old", status="completed", log_tail="private log")
+    registry.upsert_study(run, "study", state="completed", points=[[1, 2, 0]])
+    registry.add_event(run, "finished")
+    rev = registry.current_rev()
+    assert registry.delete_runs(run) == [run]
+    assert registry.get_run(run) is None
+    assert registry.studies(run) == [] and registry.events(run) == []
+    assert registry.changes(rev, 0)["deleted_runs"] == [run]
+    reopened = Registry(registry.path)
+    assert reopened.ensure_run("local", "/runs/old", origin="discovered") is None
+    # A deliberate new launch can reuse a folder, with a fresh identity.
+    new = reopened.ensure_run("local", "/runs/old", origin="ui")
+    assert new and new != run
+    registry.add_event(run, "late event")
+    registry.upsert_study(run, "late study", state="completed")
+    assert registry.events(run) == [] and registry.studies(run) == []
+
+
+def test_clear_skips_active_runs_and_is_not_paginated(registry):
+    for i in range(205):
+        registry.ensure_run("local", f"/runs/{i}", status="completed")
+    active = registry.ensure_run("local", "/runs/active", status="running")
+    alive = registry.ensure_run("local", "/runs/alive", status="completed", worker_alive=1)
+    cleaned = []
+    assert len(registry.delete_runs(before_delete=lambda rows: cleaned.extend(rows))) == 205
+    assert {r["id"] for r in cleaned}.isdisjoint({active, alive})
+    assert registry.kpis()["total"] == 2
+    with pytest.raises(ValueError, match="activos"):
+        registry.delete_runs()
+    with pytest.raises(ValueError, match="activo"):
+        registry.delete_runs(active)
+    registry.update_run(active, status="completed")
+    registry.update_run(alive, worker_alive=0)
+    assert len(registry.delete_runs()) == 2
+    assert registry.kpis()["total"] == 0
+
+
+def test_cancel_without_worker_does_not_stay_cancelling():
+    assert derive_status({'status': 'cancelling', 'worker_alive': 0}) == 'cancelled'
+    assert derive_status({'status': 'cancelling', 'worker_alive': None}) == 'cancelling'

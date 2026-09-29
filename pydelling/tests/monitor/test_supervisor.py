@@ -281,3 +281,39 @@ def test_cursor_messages_advance_the_stored_mtime(project, registry):
     supervisor.apply("local", campaign_message("/r/campaigns/c1", mtime=10.0))
     supervisor.apply("local", {"t": "cursor", "folder": "/r/campaigns/c1", "mtime": 42.0})
     assert registry.known("local")["/r/campaigns/c1"]["mtime"] == 42.0
+
+
+def test_deleted_run_stays_deleted_after_watcher_restart(project, registry):
+    supervisor = Supervisor(project, registry)
+    message = campaign_message(
+        "/runs/old", alive=False, exit={"returncode": 0}, campaign={"state": "completed"}
+    )
+    supervisor.apply("local", message)
+    run = registry.find_run("local", "/runs/old")
+    registry.delete_runs(run["id"])
+    for instance in (supervisor, Supervisor(project, registry)):
+        instance.apply("local", message)
+        instance.apply(
+            "local",
+            {"t": "study", "folder": "/runs/old", "name": "late", "status": {"state": "completed"}},
+        )
+    assert registry.list_runs() == []
+
+
+def test_missing_folder_reconciles_stale_run_and_recovers(project, registry):
+    supervisor = Supervisor(project, registry)
+    run = registry.ensure_run('local', '/runs/gone', status='cancelling', worker_alive=0)
+    supervisor.apply('local', {'t': 'missing', 'folder': '/runs/gone'})
+    assert registry.get_run(run)['status'] == 'missing'
+    assert 'carpeta' in registry.get_run(run)['error']
+    supervisor.apply('local', campaign_message('/runs/gone', alive=False,
+                     campaign={'state': 'completed'}, exit={'returncode': 0}))
+    assert registry.get_run(run)['status'] == 'completed'
+    assert registry.get_run(run)['error'] is None
+
+
+def test_missing_folder_does_not_interrupt_deployment(project, registry):
+    supervisor = Supervisor(project, registry)
+    run = registry.ensure_run('local', '/runs/new', status='deploying')
+    supervisor.apply('local', {'t': 'missing', 'folder': '/runs/new'})
+    assert registry.get_run(run)['status'] == 'deploying'

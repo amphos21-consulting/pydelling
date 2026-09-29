@@ -437,3 +437,13 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .page-actions { margin-left: 0; }
 }
+
+.cleanup-dialog { width: min(calc(100% - 48px), 560px); max-height: 90vh; padding: 0; color: inherit; }
+.cleanup-dialog::backdrop { background: #0008; }
+
+/* Downloaded CSV tables ------------------------------------------------------------- */
+table.data.plain tr:hover td { cursor: default; }
+table.data.plain td { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+.stage.has-bar::after { display: none; }
+.stage-bar { margin-top: 8px; height: 6px; }
+.stage.status-queued .stage-bar { opacity: 0.5; }

@@ -6,9 +6,10 @@
 
 from __future__ import annotations
 
+import copy as _copy
 from .base_study import BaseStudy
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 import logging
 from tqdm import tqdm
 from pydelling.utils import create_results_folder
@@ -17,6 +18,7 @@ import subprocess
 
 if TYPE_CHECKING:
     from pydelling.managers.ssh import BaseSsh
+    from pydelling.managers.study_design import Design, ParameterSpace, Sampler
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +43,7 @@ class BaseManager(ABC):
         """
         self.results_folder = None
         self.studies: Dict[str, BaseStudy] = {}
+        self.designs: Dict[str, Design] = {}
         self.manager_name = name if name is not None else self.__class__.__name__
         self.is_dummy = False
         self.ssh: BaseSsh = None
@@ -71,6 +74,97 @@ class BaseManager(ABC):
             raise ValueError(f"A different study named '{study.name}' is already registered")
         study.idx = len(self.studies)
         self.studies[study.name] = study
+
+    def add_studies(self, sampler: Sampler, parameters: ParameterSpace | dict,
+                    template: BaseStudy,
+                    variables: Optional[Callable[[dict], dict]] = None,
+                    name: Optional[str] = None,
+                    metadata: Optional[dict] = None) -> List[BaseStudy]:
+        """Draw samples and add one study per sample, each a copy of a template.
+
+        Card edits shared by all samples belong on the template (apply them once, before
+        calling this). The same sampler (same seed) on another template, under another
+        ``name``, is a sensitivity case with the same samples.
+
+        Args:
+            sampler: How samples are drawn, e.g. ``LHS(n=16, seed=42)``, ``Sobol(...)``,
+                ``Grid(levels=...)``, ``Table("samples.csv")`` or your own ``Sampler``.
+                ``n=0`` adds nothing.
+            parameters: ``ParameterSpace`` (or its mapping) the samples must respect.
+            template: Study copied once per sample. It is never modified.
+            variables: Function mapping one sample (``{"K": 1e-4, ...}``) to the template
+                placeholder values (``{"PERM": 1e-11, ...}``). Defaults to the sample itself.
+            name: Prefix of the study names and key in :attr:`designs`. Defaults to
+                ``sampler.name`` (``"lhs"``, ``"sobol"``, ...).
+            metadata: Extra fields recorded for every study, e.g. ``{"kind": "training"}``.
+
+        Returns:
+            list: The new studies, named ``<name>-000000``, ``<name>-000001``, ...
+
+        Raises:
+            ValueError: If samples with the same name were already added, or the sampler's
+                samples fall outside ``parameters``.
+
+        Example:
+            ```python
+            manager.add_studies(LHS(n=16, seed=42), space, template,
+                                variables=lambda s: {"PHI": s["porosity"]})
+            manager.studies["lhs-000000"].metadata
+            # {'design': 'lhs', 'method': 'lhs', 'seed': 42, 'porosity': 0.31, 'PHI': 0.31}
+            ```
+        """
+        name = name or sampler.name
+        if name in self.designs:
+            raise ValueError(f"Samples named '{name}' were already added")
+        design = sampler.sample(parameters)
+        if not len(design):
+            return []
+        studies = []
+        for index, sample in enumerate(design):
+            values = variables(sample) if variables else sample
+            study = template.copy(study_name=f"{name}-{index:06d}")
+            study.set_variables(**values)
+            study.metadata = {**(metadata or {}), "design": name, "method": design.method,
+                              "seed": design.seed, **sample, **values}
+            self.add_study(study)
+            studies.append(study)
+        self.designs[name] = design
+        return studies
+
+    def select(self, **criteria) -> 'BaseManager':
+        """Return a manager holding only the studies whose metadata match.
+
+        Args:
+            **criteria: Metadata values to match, e.g. ``kind="verification"`` or
+                ``design="lhs"``.
+
+        Returns:
+            BaseManager: A manager of the same class sharing the selected study objects
+            (their ``idx`` is not renumbered) and the designs they come from.
+
+        Example:
+            ```python
+            manager.select(kind="training").run_batch(executor, folder, requirements)
+            ```
+        """
+        subset = _copy.copy(self)
+        subset.studies = {name: study for name, study in self.studies.items()
+                          if all(study.metadata.get(k) == v for k, v in criteria.items())}
+        used = {study.metadata.get("design") for study in subset.studies.values()}
+        subset.designs = {name: design for name, design in self.designs.items() if name in used}
+        return subset
+
+    def records(self) -> List[dict]:
+        """Describe every study as one JSON-ready row, e.g. for a manifest.
+
+        Returns:
+            list: One dict per study, in order: ``study_id``, its metadata and a
+            ``simulation_id`` (hash of the rendered input, shared by identical inputs
+            whatever design produced them).
+        """
+        from .batch import fingerprint
+        return [{"study_id": name, **study.metadata, "simulation_id": fingerprint(study.render())}
+                for name, study in self.studies.items()]
 
     def run(self,
             studies_folder: str = './studies',
@@ -388,6 +482,11 @@ class BaseManager(ABC):
             for callback in study.callbacks:
                 if callback.kind == 'post':
                     callback.run(self.on_remote)
+            if study.postprocess and study.output_folder.is_dir():
+                from pydelling.managers.postprocess import run_postprocess
+                for name, record in run_postprocess(study, study.output_folder).items():
+                    if record['error']:
+                        logger.error(f"{study.name}: postprocess {name} failed: {record['error']}")
 
             study.post_run()
 

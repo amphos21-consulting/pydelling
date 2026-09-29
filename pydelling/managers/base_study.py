@@ -27,6 +27,7 @@ from typing import Callable
 from typing import TYPE_CHECKING, List, Union
 if TYPE_CHECKING:
     from pydelling.managers import BaseCallback, BaseManager
+    from pydelling.managers.postprocess import PostprocessCallback
     from pydelling.managers.ssh.steps import BaseStep
 
 import logging
@@ -100,12 +101,16 @@ class BaseStudy(UnitConverter):
         # Step 1: read and set the input file
         self.raw_text = self.input_file.read_text()
         self.aux_files = {}
+        # Free-form description of the study (design, sample, case…), see BaseManager.records
+        self.metadata = {}
         self.output_folder = None
         self.variable_delimiters = tuple(variable_delimiters)
         self.strict = strict
         # (callback class, kwargs) pairs, bound to the study in initialize_callbacks
         self._callbacks: List[tuple] = []
         self.callbacks: List[BaseCallback] = []
+        # Post-processing callbacks run where the study ran, see add_postprocess
+        self.postprocess: List[PostprocessCallback] = []
         self.steps: List[BaseStep] = []
         self._shared_files = []
 
@@ -456,6 +461,38 @@ class BaseStudy(UnitConverter):
         """
         kwargs['kind'] = kind
         self._callbacks.append((callback, kwargs))
+
+    def add_postprocess(self, *callbacks: PostprocessCallback) -> None:
+        """Post-process this study's outputs where it runs, right after the solver.
+
+        Each callback returns a table saved as ``processed/<name>.parquet`` next to the
+        outputs (for remote runs, on the remote host), so only that table needs to be
+        downloaded. Callbacks are copied with :meth:`copy`, so adding them to a template adds
+        them to every study made from it.
+
+        Args:
+            *callbacks: e.g. ``ExtractHDF5(...)``, ``ObservationPoints()`` or any
+                :class:`~pydelling.managers.postprocess.PostprocessCallback`.
+
+        Raises:
+            ValueError: If a name is unsafe or already used by a callback of this study.
+
+        Example:
+            ```python
+            template.add_postprocess(
+                ExtractHDF5("Total_*", {"outlet": Cell(x=10.0)}),
+                ObservationPoints(),
+            )
+            ```
+        """
+        from pydelling.managers.postprocess.base import check_name
+
+        for callback in callbacks:
+            check_name(callback.name)
+            if any(existing.name == callback.name for existing in self.postprocess):
+                raise ValueError(f"{self.name} already has a postprocess callback named "
+                                 f"'{callback.name}'")
+            self.postprocess.append(callback)
 
     def add_ssh_step(self, step: BaseStep):
         """Register an SSH execution step for this study.

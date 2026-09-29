@@ -1,6 +1,8 @@
 // Pages: runs overview/history, run detail, launch wizard, hosts, missing token.
 import { computed, onMounted, reactive, ref, watch } from '../vendor/vue.esm-browser.prod.js';
 import { api } from './api.js';
+import { DeleteHistory } from './cleanup.js';
+import { TablePanel } from './tables.js';
 import {
   CheckList, Command, DtChart, HostMeter, Icon, Kpi, LogView, ProgressBar, StateBar,
   Stages, StatusPill, StudyGrid, StudyTable, Timeline,
@@ -15,7 +17,7 @@ const hostLabel = (id) => (state.hosts[id] && (state.hosts[id].label || id)) || 
 
 // Runs --------------------------------------------------------------------------------
 export const RunsView = {
-  components: { Icon, Kpi, StateBar, StatusPill },
+  components: { DeleteHistory, Icon, Kpi, StateBar, StatusPill },
   setup() {
     const filters = reactive({ q: '', status: 'all', host: 'all' });
     const groups = {
@@ -24,6 +26,7 @@ export const RunsView = {
       completed: ['completed'],
       failed: ['failed', 'lost'],
       cancelled: ['cancelled', 'interrupted'],
+      missing: ['missing'],
     };
     const runs = computed(() => Object.values(state.runs)
       .filter((r) => !groups[filters.status] || groups[filters.status].includes(r.status))
@@ -47,8 +50,8 @@ export const RunsView = {
   template: `<div class="page">
     <div class="page-head">
       <div><h1 class="page-title">Runs</h1>
-        <p class="page-sub">Campañas y scripts lanzados, en curso e históricos{{ state.project ? ' · ' + state.project.name : '' }}</p></div>
-      <div class="page-actions"><a class="btn primary" href="#/launch"><Icon name="rocket" size="sm"/>Nuevo lanzamiento</a></div>
+        <p class="page-sub">Scripts lanzados, en curso e históricos{{ state.project ? ' · ' + state.project.name : '' }}</p></div>
+      <div class="page-actions"><DeleteHistory :disabled="!state.kpis.total"/><a class="btn primary" href="#/launch"><Icon name="rocket" size="sm"/>Nuevo lanzamiento</a></div>
     </div>
     <div class="kpis">
       <Kpi label="Runs activos" icon="activity" :value="fmtInt(state.kpis.active)"/>
@@ -66,7 +69,7 @@ export const RunsView = {
     <div class="toolbar">
       <div class="search"><Icon name="search" size="sm"/><input class="input" v-model="filters.q" placeholder="rc1-smoke, cases/rc1/study.yaml…" aria-label="Buscar runs"></div>
       <div class="segmented" role="group" aria-label="Filtrar por estado">
-        <button v-for="[k, label] in [['all','Todos'],['active','Activos'],['completed','Completados'],['failed','Fallidos'],['cancelled','Cancelados']]"
+        <button v-for="[k, label] in [['all','Todos'],['active','Activos'],['completed','Completados'],['failed','Fallidos'],['cancelled','Cancelados'],['missing','Sin carpeta']]"
           :key="k" :class="{on: filters.status === k}" @click="filters.status = k" :aria-pressed="filters.status === k">{{ label }}</button>
       </div>
       <select class="select" v-model="filters.host" aria-label="Filtrar por host">
@@ -91,7 +94,7 @@ export const RunsView = {
       <div v-if="!runs.length" class="empty">
         <div class="empty-icon"><Icon name="rocket" size="lg"/></div>
         <h3>{{ Object.keys(state.runs).length ? 'Ningún run coincide con los filtros' : 'Todavía no hay runs' }}</h3>
-        <p>Lanza una campaña o un script desde aquí o con <code>just run</code>. Las campañas existentes en los hosts aparecen solas al conectar.</p>
+        <p>Lanza un script desde aquí o una campaña con <code>just run</code>. Las campañas existentes en los hosts aparecen solas al conectar.</p>
         <a class="btn primary" href="#/launch"><Icon name="rocket" size="sm"/>Lanzar un run</a>
       </div>
     </div>
@@ -151,7 +154,7 @@ const StudyPanel = {
 };
 
 export const RunView = {
-  components: { Icon, Kpi, LogView, Stages, StateBar, StatusPill, StudyGrid, StudyPanel, StudyTable, Timeline },
+  components: { DeleteHistory, Icon, Kpi, LogView, Stages, StateBar, StatusPill, StudyGrid, StudyPanel, StudyTable, TablePanel, Timeline },
   props: { id: String },
   setup(props) {
     const view = ref('grid');
@@ -219,8 +222,9 @@ export const RunView = {
         <div class="page-actions">
           <button v-if="detail.actions.resume" class="btn" :disabled="!!busy" @click="doAction('resume', {}, 'Reanudación lanzada')"><Icon name="refresh" size="sm" :spin="busy === 'resume'"/>Reanudar</button>
           <button v-if="detail.actions.collect" class="btn" :disabled="!!busy" @click="doAction('collect', {}, 'Descarga en marcha')"><Icon name="download" size="sm"/>Descargar</button>
-          <button v-if="detail.actions.collect" class="btn" :disabled="!!busy" @click="doAction('collect', {raw: true}, 'Descarga con HDF5 en marcha')" title="Incluye los ficheros HDF5 originales"><Icon name="disk" size="sm"/>Con HDF5</button>
+          <button v-if="detail.actions.collect" class="btn" :disabled="!!busy" @click="doAction('collect', {raw: true}, 'Descarga con HDF5 en marcha')" title="Incluye los ficheros HDF5 originales y los balances de masa (*-mas.dat)"><Icon name="disk" size="sm"/>Con HDF5</button>
           <button v-if="detail.actions.open" class="btn" @click="doAction('open')"><Icon name="folder" size="sm"/>Abrir carpeta</button>
+          <DeleteHistory :run-id="id" :disabled="!!busy || !detail.actions.delete"/>
           <button v-if="detail.actions.cancel" class="btn danger" :disabled="!!busy" @click="doAction('cancel', {}, 'Cancelación enviada')"><Icon name="stop" size="sm"/>Cancelar</button>
         </div>
       </div>
@@ -263,6 +267,7 @@ export const RunView = {
             <StudyTable v-if="studies.length && view === 'table'" :studies="studies" :selected="selected && selected.name" @select="select"/>
             <div v-if="!studies.length" class="card-body muted">Todavía no hay estudios registrados.</div>
           </div>
+          <TablePanel :run-id="id" :refresh="detail.events.length + ':' + (run.local_folder || '')"/>
           <div class="card">
             <div class="card-head"><h2 class="card-title">Log del worker</h2>
               <button class="btn sm ghost" style="margin-left:auto" @click="refreshLog"><Icon name="refresh" size="sm"/>Leer del host</button></div>
@@ -307,6 +312,7 @@ export const LaunchView = {
         if (form.host && entry.value.kind === 'script') query.set('host', form.host);
         preview.value = await api(`/preview?${query}`);
         if (fixedHost.value) form.host = fixedHost.value;
+        else if (!form.host && preview.value.default_host) form.host = preview.value.default_host;
       } catch (error) {
         previewError.value = error.message;
       }
@@ -326,7 +332,22 @@ export const LaunchView = {
       }
     };
     watch(() => form.host, () => { checks.value = null; if (form.host) runCheck(); if (entry.value && entry.value.kind === 'script') refreshPreview(); });
-    const args = computed(() => splitArgs(form.args));
+    // Options a script declares in MONITOR: values are keyed by option name.
+    const options = computed(() => (preview.value && preview.value.options) || []);
+    const optionValues = reactive({});
+    watch(options, (list) => {
+      for (const key of Object.keys(optionValues)) delete optionValues[key];
+      for (const o of list) optionValues[o.name] = o.default === null || o.default === undefined ? (o.flag ? false : '') : o.default;
+    });
+    const optionArgs = computed(() => {
+      const out = [];
+      for (const o of options.value) {
+        const value = optionValues[o.name];
+        if (!o.name.startsWith('-')) { if (value) out.push(value); } else if (o.flag) { if (value) out.push(o.name); } else if (value) out.push(o.name, value);
+      }
+      return out;
+    });
+    const args = computed(() => [...optionArgs.value, ...splitArgs(form.args)]);
     const cli = computed(() => {
       if (!entry.value || !form.path) return '';
       if (entry.value.kind === 'campaign') return `just run ${form.path}`;
@@ -354,7 +375,7 @@ export const LaunchView = {
     const hostState = (h) => HOST_STATE[h.stream_state] || HOST_STATE.offline;
     return {
       entries, form, entry, hosts, preview, previewError, fixedHost, checks, checking, runCheck, cli,
-      canLaunch, launch, launching, hostState, fmtInt, args,
+      canLaunch, launch, launching, hostState, fmtInt, args, options, optionValues,
     };
   },
   template: `<div class="page">
@@ -372,8 +393,20 @@ export const LaunchView = {
           </div>
           <p v-if="entry && !entry.paths.length" class="muted">No hay ficheros que coincidan con esta entrada.</p>
           <div v-if="entry && entry.kind === 'script'" style="margin-top:12px;display:grid;gap:6px;max-width:560px">
-            <label for="args" class="muted" style="font-size:12.5px">Argumentos del script</label>
-            <input id="args" class="input mono" v-model="form.args" placeholder="--casos 10 --semilla 42">
+            <template v-for="o in options" :key="o.name">
+              <label v-if="o.flag" style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" v-model="optionValues[o.name]">{{ o.label }}</label>
+              <template v-else>
+                <label :for="'opt-' + o.name" class="muted" style="font-size:12.5px">{{ o.label }} <span class="mono faint">{{ o.name }}</span></label>
+                <select v-if="o.choices" :id="'opt-' + o.name" class="input" v-model="optionValues[o.name]">
+                  <option v-if="o.default === null" value="">(por defecto del script)</option>
+                  <option v-for="c in o.choices" :key="c" :value="c">{{ c }}<template v-if="c === o.default"> (por defecto)</template></option>
+                </select>
+                <input v-else :id="'opt-' + o.name" class="input mono" v-model="optionValues[o.name]">
+              </template>
+            </template>
+            <label for="args" class="muted" style="font-size:12.5px">{{ options.length ? 'Otros argumentos' : 'Argumentos del script' }}</label>
+            <input id="args" class="input mono" v-model="form.args" placeholder="opcional">
+            <p v-if="!options.length" class="faint" style="font-size:12px;margin:0">Este script no declara opciones (<code>MONITOR</code>): se ejecuta sin argumentos salvo los que escribas.</p>
           </div>
           <div v-if="previewError" class="error-banner" style="margin-top:12px"><Icon name="alert"/><div>{{ previewError }}</div></div>
           <dl v-if="preview" class="preview-box" style="margin:14px 0 0">

@@ -50,14 +50,44 @@ def test_resume_and_corrupted_output(tmp_path, solver):
     folder = tmp_path / "runs"
     result = manager.run_batch(executor, folder, requirements)
     assert result.successful
+    assert result.states["a"]["workdir"] == "."
+    assert (folder / "a/result.h5").exists() and not (folder / "a/attempts").exists()
     assert manager.run_batch(executor, folder, requirements).states == result.states
+    (folder / "a/result.h5").unlink()
+    (folder / "a/leftover.txt").write_text("from the first run")
+    repeated = manager.run_batch(executor, folder, requirements)
+    assert repeated.states["a"]["attempt"] == 2
+    assert repeated.states["b"]["attempt"] == 1
+    assert (folder / "a/result.h5").exists() and not (folder / "a/attempts").exists()
+    assert not (folder / "a/leftover.txt").exists(), "a re-run starts from a clean study folder"
+    with pytest.raises(ValueError, match="Incompatible"):
+        manager.run_batch(executor, folder, requirements, provenance={"changed": True})
+
+
+def test_attempts_keep_every_run_in_its_own_folder(tmp_path, solver):
+    manager, requirements = setup_manager(tmp_path)
+    executor = LocalExecutor(solver, workers=2, attempts=True)
+    folder = tmp_path / "runs"
+    result = manager.run_batch(executor, folder, requirements)
+    assert result.states["a"]["workdir"] == "attempts/0001"
+    assert (folder / "a/attempts/0001/result.h5").exists()
     (folder / "a/attempts/0001/result.h5").unlink()
     repeated = manager.run_batch(executor, folder, requirements)
     assert repeated.states["a"]["attempt"] == 2
     assert repeated.states["b"]["attempt"] == 1
-    assert (folder / "a/attempts/0001/status.json").exists()
-    with pytest.raises(ValueError, match="Incompatible"):
-        manager.run_batch(executor, folder, requirements, provenance={"changed": True})
+    assert repeated.states["a"]["workdir"] == "attempts/0002"
+    assert (folder / "a/attempts/0001/status.json").exists(), "the first attempt is kept"
+
+
+def test_flat_rerun_leaves_earlier_attempt_folders_alone(tmp_path, solver):
+    manager, requirements = setup_manager(tmp_path)
+    folder = tmp_path / "runs"
+    manager.run_batch(LocalExecutor(solver, attempts=True), folder, requirements)
+    (folder / "a/attempts/0001/result.h5").unlink()
+    flat = manager.run_batch(LocalExecutor(solver), folder, requirements)
+    assert flat.states["a"]["workdir"] == "." and flat.states["a"]["attempt"] == 2
+    assert (folder / "a/result.h5").exists()
+    assert (folder / "a/attempts/0001/status.json").exists(), "legacy attempts are never deleted"
 
 
 @pytest.mark.parametrize("mode", ["fail", "incomplete", "timeout"])

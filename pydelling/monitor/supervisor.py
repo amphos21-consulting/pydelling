@@ -34,6 +34,11 @@ def summarize(event):
     if kind == "study.state":
         text = f"{event.get('study')}: {event.get('state')}"
         return f"{text} — {event['error']}" if event.get("error") else text
+    if kind == "study.postprocess":
+        text = f"{event.get('study')}: postproceso {event.get('name')} {event.get('state')}"
+        if event.get("error"):
+            return f"{text} — {event['error']}"
+        return f"{text} ({event.get('rows')} filas)" if event.get("rows") is not None else text
     if kind == "batch.started":
         return f"{event.get('batch')}: {event.get('pending')} de {event.get('studies')} estudios"
     if kind == "batch.finished":
@@ -297,6 +302,14 @@ class Supervisor:
             self.registry.set_host_stream(host_id, "connected", hello=message)
         elif kind == "heartbeat":
             self.registry.set_host_stream(host_id, "connected", heartbeat=message)
+        elif kind == "missing":
+            run = self.registry.find_run(host_id, message["folder"])
+            if run and run["status"] not in CLIENT_PHASES:
+                self.registry.update_run(
+                    run["id"], status="missing", phase="missing", worker_alive=0,
+                    error="La carpeta del run ya no existe en este host. "
+                    "No se puede verificar su resultado; puedes eliminar este registro del historial.",
+                )
         elif kind == "campaign":
             self._campaign(host_id, message)
         elif kind in ("study", "event", "log", "progress"):
@@ -334,6 +347,9 @@ class Supervisor:
             run_id = run["id"] if run else None
             if run_id:
                 self.run_ids[key] = run_id
+        if run_id and self.registry.get_run(run_id) is None:
+            self.run_ids.pop(key, None)
+            return None, False
         return run_id, True
 
     def _host_for_copy(self, remote_folder, download):
@@ -359,6 +375,8 @@ class Supervisor:
             if remote_host:
                 snapshot = True
                 run = self._ensure(remote_host, mirror["remote_folder"], message)
+                if run is None:
+                    return
                 self.snapshots[(host_id, folder)] = run["id"]
                 if run.get("local_folder") != folder:
                     self.registry.update_run(run["id"], local_folder=folder)
@@ -375,6 +393,8 @@ class Supervisor:
                     return  # the live host already owns this run
         if not snapshot:
             run = self._ensure(host_id, folder, message)
+            if run is None:
+                return
             self.run_ids[(host_id, folder)] = run["id"]
         exit_info = message.get("exit") or {}
         updates = {
@@ -402,6 +422,9 @@ class Supervisor:
                 updates.setdefault("local_folder", folder)
         error = (message.get("campaign") or {}).get("error")
         if error:
+            updates["error"] = error
+        if run["status"] == "missing":
+            updates["status"] = "unknown"
             updates["error"] = error
         merged = {**run, **updates}
         status = derive_status(merged)

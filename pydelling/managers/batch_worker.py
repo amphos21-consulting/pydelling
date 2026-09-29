@@ -7,6 +7,7 @@ from pathlib import Path
 from .batch import LocalExecutor, atomic_json, cancel_requested
 from .pflotran_manager import PflotranManager
 from .pflotran_study import PflotranStudy
+from .postprocess import PostprocessCallback
 
 
 def main():
@@ -18,6 +19,8 @@ def main():
         study = PflotranStudy(str(base / description["input"]), study_name=description["name"])
         for name in description["auxiliary"]:
             study.add_auxiliary_file(base / "input_files" / name)
+        for spec in description.get("postprocess", []):
+            study.add_postprocess(PostprocessCallback.from_spec(spec))
         manager.add_study(study)
     executor = LocalExecutor(**job["executor"])
     with executor.pipeline(folder):

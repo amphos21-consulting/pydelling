@@ -19,6 +19,7 @@ from pathlib import Path
 from pydelling.managers.batch import CANCEL_FILE
 from pydelling.managers.ssh_executor import WORKER_SUPERVISOR
 
+from .config import default_script_args
 from .preflight import run_preflight
 from .registry import CLIENT_PHASES, derive_status
 from .reporter import Reporter
@@ -84,10 +85,15 @@ def launch_entry(
     origin="ui",
     spawn=True,
 ):
-    """Validate an entry, create/refresh its run row and start the launcher process."""
+    """Validate an entry, create/refresh its run row and start the launcher process.
+
+    A script launched without ``args`` runs with the defaults it declares in ``MONITOR``.
+    """
     entry, path = project.resolve_entry(entry_id, path)
     if entry.kind == "script" and action != "run":
         raise ValueError("Los scripts solo admiten la acción run")
+    if entry.kind == "script" and not args:
+        args = default_script_args(project.script_options(entry_id, path))
     command = entry.run if action == "run" else entry.resume
     if entry.kind == "campaign" and not command:
         raise ValueError(f"La entrada {entry_id} no define la acción {action}")
@@ -147,7 +153,7 @@ def start_local_worker(folder, argv, cwd):
         [sys.executable, "-c", WORKER_SUPERVISOR, json.dumps(argv), str(folder)],
         cwd,
         folder / "worker.log",
-        env={"PYDELLING_RUNS_WORKER": "1"},
+        env={"PYDELLING_RUNS_WORKER": "1", "PYDELLING_RUN_FOLDER": str(folder)},
     )
     state = {"pid": pid, "start": None, "launched": time.time()}
     temp = folder / "worker.json.tmp"
@@ -232,8 +238,12 @@ def cancel_run(project, registry, run_id, supervisor=None):
     registry.add_event(run_id, "cancel.sent", level="warning", message="Cancelación enviada")
 
 
-def collect_run(project, registry, run_id, raw=False):
-    """Download results of a finished remote run into its local folder."""
+def collect_run(project, registry, run_id, raw=False, full_logs=False):
+    """Download results of a finished remote run into its local folder.
+
+    ``raw`` adds HDF5/XMF and mass balances; ``full_logs`` keeps solver logs whole
+    instead of their tails (see ``SSHExecutor.collect``).
+    """
     run = registry.get_run(run_id)
     if run is None:
         raise ValueError(f"Unknown run: {run_id}")
@@ -245,7 +255,9 @@ def collect_run(project, registry, run_id, raw=False):
     local = Path(run.get("local_folder") or project.local_runs / run["name"])
     reporter = Reporter(registry, run_id)
     with reporter.stage("collect"):
-        make_transport(host).executor().collect(run["remote_folder"], local, raw=raw)
+        make_transport(host).executor().collect(
+            run["remote_folder"], local, raw=raw, full_logs=full_logs, on_event=reporter.on_event
+        )
     marker = local / "remote.json"
     if not marker.exists():
         marker.write_text(json.dumps({"remote_folder": run["remote_folder"], "host": host.ssh}))

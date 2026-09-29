@@ -29,7 +29,7 @@ def solver(tmp_path):
     path.write_text(
         f"#!{sys.executable}\n"
         + """import os,time,pathlib,h5py,numpy as np
-+pathlib.Path(os.environ['FAKE_MARKER']).joinpath(pathlib.Path.cwd().parents[1].name).write_text('ran')
++pathlib.Path(os.environ['FAKE_MARKER']).joinpath(str(os.getpid())).write_text('ran')
 +if os.environ.get('FAKE_MODE')=='sleep': time.sleep(30)
 +with h5py.File('result.h5','w') as f:
 + c=f.create_group('Coordinates')
@@ -71,6 +71,7 @@ def test_batch_appends_study_and_batch_events(tmp_path, solver):
     types = [e["type"] for e in events]
     assert types[0] == "batch.started" and types[-1] == "batch.finished"
     assert events[0]["batch"] == "training" and events[0]["pending"] == 2
+    assert events[0]["workers"] == 2
     assert events[-1]["counts"] == {"completed": 2}
     states = sorted((e["study"], e["state"]) for e in events if e["type"] == "study.state")
     assert states == [("a", "completed"), ("a", "running"), ("b", "completed"), ("b", "running")]
@@ -153,7 +154,8 @@ def test_launch_worker_records_exit_code_and_worker_marker(tmp_path):
         "-c",
         (
             f"import os,pathlib; pathlib.Path({str(probe)!r}).write_text("
-            "os.environ.get('PYDELLING_RUNS_WORKER','')); raise SystemExit(3)"
+            "os.environ['PYDELLING_RUNS_WORKER']+os.environ['PYDELLING_RUN_FOLDER']); "
+            "raise SystemExit(3)"
         ),
     ]
     if not hasattr(os, "fork"):
@@ -166,7 +168,8 @@ def test_launch_worker_records_exit_code_and_worker_marker(tmp_path):
     while not exit_file.exists() and time.monotonic() < deadline:
         time.sleep(0.05)
     assert json.loads(exit_file.read_text())["returncode"] == 3
-    assert probe.read_text() == "1"
+    # The worker learns the folder the monitor watches, so its output lands there.
+    assert probe.read_text() == "1" + str(tmp_path / "campaigns" / "job")
     assert not (folder / CANCEL_FILE).exists(), "a new launch clears stale cancel requests"
 
 

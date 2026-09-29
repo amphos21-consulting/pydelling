@@ -45,14 +45,15 @@ The dashboard only launches files matched by the declared globs.
 
 Campaign commands should report their phases with
 `pydelling.monitor.reporter.Reporter` (`begin`, `stage(...)`, `on_event`, `fail`) and pass
-`on_event` to `SSHExecutor.deploy/start`; see KiMoDa's `workflow.py` for a full example.
+`on_event` to `SSHExecutor.deploy/start/collect` (collect emits `collect.progress` ticks for the
+dashboard's download bar); see KiMoDa's `workflow.py` for a full example.
 
 ## Files a campaign exposes (written by `pydelling.managers`)
 
 | File | Writer | Meaning |
 |---|---|---|
 | `events.jsonl` | `batch.append_event` | `batch.started/finished`, `study.state`, `cancel.requested`, project events |
-| `<study>/status.json` | `LocalExecutor` | per-study state, attempt, runtime, error |
+| `<study>/status.json` | `LocalExecutor` | per-study state, attempt number, `workdir` (`.`, or `attempts/000N`), runtime, error |
 | `worker.json` / `worker-exit.json` | `SSHExecutor.launch_worker` | detached worker pid and exit code |
 | `cancel.request` | `batch.request_cancel`, `SSHExecutor.cancel` | cooperative cancellation |
 | `campaign.json`, `preview.json`, `config.json` | project | campaign state, expected study count, config |

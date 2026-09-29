@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,14 @@ def strip_comment(line: str) -> str:
     for marker in ('#', '!'):
         line = line.split(marker, 1)[0]
     return line.strip()
+
+
+def split_path(path: str) -> List[str]:
+    """Split a card path ``'GRID/BOUNDS'`` into selectors ``['GRID', 'BOUNDS']``."""
+    selectors = [part.strip() for part in path.split('/') if part.strip()]
+    if not selectors:
+        raise ValueError(f"Empty card path: {path!r}")
+    return selectors
 
 
 def _indent(line: str) -> int:
@@ -275,6 +283,59 @@ class PflotranDeck:
     def select(self, *selectors: str) -> Card:
         """Follow a descendant path of selectors; raise :class:`CardNotFound` if missing."""
         return self.root.select(*selectors)
+
+    def top_level_cards(self) -> List[Card]:
+        """Cards at the top of the deck, looking through ``SUBSURFACE`` (``GRID``, ``TIME``…)."""
+        cards = []
+        for card in self.root.children:
+            if card.key == 'SUBSURFACE' and card.is_block:
+                cards.extend(card.children)
+            else:
+                cards.append(card)
+        return cards
+
+    def resolve(self, path: str) -> Tuple[Optional[Card], List[Card]]:
+        """Resolve a card path like ``'MATERIAL_PROPERTY soil/PERMEABILITY/PERM_ISO'``.
+
+        The first selector matches a top-level card (see :meth:`top_level_cards`), each later
+        selector a direct child of the previous block, so ``'OUTPUT/TIMES'`` is never
+        ``CHEMISTRY/OUTPUT``. Returns ``(parent, matches)``: the block holding the last
+        selector (None at the top level) and every card it matches, possibly none.
+
+        Raises:
+            CardNotFound: if a block along the path is missing or ambiguous.
+        """
+        selectors = split_path(path)
+        parent, candidates = None, self.top_level_cards()
+        for depth, selector in enumerate(selectors):
+            matches = [card for card in candidates if card.matches(selector)]
+            if depth == len(selectors) - 1:
+                return parent, matches
+            blocks = [card for card in matches if card.is_block]
+            where = '/'.join(selectors[:depth + 1])
+            if not blocks:
+                raise CardNotFound(self.not_found_message(where))
+            if len(blocks) > 1:
+                names = ', '.join(self.path_of(block) for block in blocks)
+                raise CardNotFound(f"'{where}' matches {len(blocks)} blocks ({names}); "
+                                   f"name the one you mean")
+            parent, candidates = blocks[0], blocks[0].children
+
+    def not_found_message(self, path: str) -> str:
+        """Error text for a missing path, listing where its last keyword does exist."""
+        last = split_path(path)[-1]
+        found = [self.path_of(card) for card in self.find_all(last)]
+        hint = f"; found at: {', '.join(found)}" if found else ''
+        return f"No card '{path}'{hint}"
+
+    def path_of(self, card: Card) -> str:
+        """Card path of ``card`` as accepted by :meth:`resolve` (blocks include their name)."""
+        parts = []
+        while card is not None and card is not self.root:
+            if not (card.key == 'SUBSURFACE' and card.parent is self.root):
+                parts.append(card.keyword + (f' {card.name}' if card.is_block and card.name else ''))
+            card = card.parent
+        return '/'.join(reversed(parts))
 
     def card_at(self, line_index: int) -> Optional[Card]:
         """The card on ``line_index``, else the innermost block spanning it, else None."""

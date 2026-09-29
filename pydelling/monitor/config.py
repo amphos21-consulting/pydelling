@@ -5,6 +5,7 @@ and, optionally, an adapter module providing ``hosts(root)``, ``describe(root, p
 and ``deploy_files(root)``. The local machine is always available as host ``local``.
 """
 
+import ast
 import importlib
 import os
 import shutil
@@ -89,6 +90,108 @@ class Entry:
         return sorted(found)
 
 
+def _declaration(source: str) -> dict:
+    """The literal ``MONITOR`` dict of a script's source, parsed and never executed."""
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, ValueError):
+        return {}
+    for node in tree.body:
+        targets = [node.target] if isinstance(node, ast.AnnAssign) else getattr(node, "targets", [])
+        if any(isinstance(t, ast.Name) and t.id == "MONITOR" for t in targets):
+            try:
+                declared = ast.literal_eval(node.value)
+            except (ValueError, TypeError, AttributeError):
+                return {}
+            return declared if isinstance(declared, dict) else {}
+    return {}
+
+
+def parse_script_host(source: str) -> str | None:
+    """Host id a script declares as ``MONITOR = {"host": "macario"}`` (None when absent).
+
+    Args:
+        source: Python source of the script.
+
+    Returns:
+        str | None: The host the launch form preselects.
+    """
+    host = _declaration(source).get("host")
+    return host if isinstance(host, str) and host else None
+
+
+def parse_script_options(source: str) -> list[dict]:
+    """Launch options a script declares in a module-level ``MONITOR`` literal.
+
+    The script is parsed, never executed. ``MONITOR = {"options": [...]}`` lists the
+    arguments the launch form offers; each option is a dict with:
+
+    * ``name``: ``"--backend"`` for a flag/option, ``"action"`` (no dashes) for a
+      positional argument.
+    * ``label``: text shown in the form (defaults to ``name``).
+    * ``choices``: list of texts, shown as a dropdown.
+    * ``flag``: True for an option without value (a checkbox).
+    * ``default``: text (or True for a flag) used when the launch gives no arguments.
+
+    Anything malformed is ignored, so a broken declaration never blocks a launch.
+
+    Args:
+        source: Python source of the script.
+
+    Returns:
+        list[dict]: Validated options in declaration order (empty when none).
+    """
+    options = _declaration(source).get("options")
+    found = []
+    for raw in options if isinstance(options, list) else []:
+        name = raw.get("name") if isinstance(raw, dict) else None
+        if not isinstance(name, str) or not name or any(c.isspace() for c in name):
+            continue
+        choices = raw.get("choices")
+        if choices is not None and not (
+            isinstance(choices, list) and choices and all(isinstance(c, str) for c in choices)
+        ):
+            continue
+        flag = raw.get("flag") is True and name.startswith("-") and choices is None
+        default = raw.get("default")
+        valid_default = default is None or (default is True if flag else isinstance(default, str))
+        if not valid_default or (choices and default is not None and default not in choices):
+            continue
+        label = raw.get("label")
+        found.append(
+            {
+                "name": name,
+                "label": label if isinstance(label, str) else name,
+                "choices": choices,
+                "flag": flag,
+                "default": default,
+            }
+        )
+    return found
+
+
+def default_script_args(options: list[dict]) -> list[str]:
+    """Arguments a script runs with when a launch gives none (from each ``default``).
+
+    Args:
+        options: Options from :func:`parse_script_options`.
+
+    Returns:
+        list[str]: Positionals and flags in declaration order, e.g. ``["run"]``.
+    """
+    args: list[str] = []
+    for option in options:
+        if option["default"] is None:
+            continue
+        if not option["name"].startswith("-"):
+            args.append(option["default"])
+        elif option["flag"]:
+            args.append(option["name"])
+        else:
+            args += [option["name"], option["default"]]
+    return args
+
+
 class Project:
     def __init__(self, root, settings):
         self.root = Path(root).resolve()
@@ -168,6 +271,24 @@ class Project:
             raise ValueError(f"{text} is not declared by entry {entry_id}")
         return entry, text
 
+    def _script_source(self, entry_id: str, path: str) -> str:
+        entry, path = self.resolve_entry(entry_id, path)
+        if entry.kind != "script":
+            return ""
+        try:
+            return (self.root / path).read_text(errors="replace")
+        except OSError:
+            return ""
+
+    def script_options(self, entry_id: str, path: str) -> list[dict]:
+        """Launch options declared by a script of a ``script`` entry (see above)."""
+        return parse_script_options(self._script_source(entry_id, path))
+
+    def script_host(self, entry_id: str, path: str) -> str | None:
+        """Host a script asks the launch form to preselect, if it is a known host."""
+        host = parse_script_host(self._script_source(entry_id, path))
+        return host if host in {h.id for h in self.hosts()} else None
+
     def describe(self, entry_id, path, host_id=None):
         """Target of a launch: name, host, remote/local folders and a short preview."""
         entry, path = self.resolve_entry(entry_id, path)
@@ -175,10 +296,12 @@ class Project:
             if self.adapter is None or not hasattr(self.adapter, "describe"):
                 raise ValueError("Campaign entries need an adapter with describe()")
             return {"kind": "campaign", **self.adapter.describe(self.root, path)}
-        host = self.host(host_id or "local")
+        host = self.host(host_id or self.script_host(entry_id, path) or "local")
         name = f"{PurePosixPath(path).stem}-{time.strftime('%Y%m%d-%H%M%S')}"
         return {
             "kind": "script",
+            "options": self.script_options(entry_id, path),
+            "default_host": self.script_host(entry_id, path),
             "name": name,
             "host_id": host.id,
             "remote_folder": str(PurePosixPath(host.campaigns_root) / name)

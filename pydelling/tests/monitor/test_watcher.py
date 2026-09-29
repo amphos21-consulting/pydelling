@@ -391,3 +391,15 @@ def test_cursor_lets_a_reconnect_skip_unchanged_studies(tmp_path):
     }
     again = run_once({"roots": [str(tmp_path)], "known": known})
     assert not [m for m in again if m["t"] == "study"]
+
+
+def test_missing_known_folder_is_reported_once_and_can_reappear(tmp_path):
+    folder = tmp_path / 'old'
+    messages = []
+    watcher = watcher_script.Watcher([str(tmp_path)], known={str(folder): {}}, emit=messages.append)
+    watcher.scan(force=True)
+    watcher.scan(force=True)
+    assert [m for m in messages if m['t'] == 'missing'] == [{'t': 'missing', 'folder': str(folder)}]
+    write_json(folder / 'campaign.json', {'state': 'completed'})
+    watcher.scan(force=True)
+    assert any(m['t'] == 'campaign' for m in messages)

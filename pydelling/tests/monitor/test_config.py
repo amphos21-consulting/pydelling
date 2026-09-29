@@ -3,7 +3,7 @@ import textwrap
 
 import pytest
 
-from pydelling.monitor.config import load_project
+from pydelling.monitor.config import default_script_args, load_project, parse_script_options
 
 PYPROJECT = """
 [project]
@@ -128,3 +128,50 @@ def test_registry_path_can_be_overridden(tmp_path, monkeypatch):
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "x"\n')
     monkeypatch.setenv("PYDELLING_MONITOR_REGISTRY", str(tmp_path / "elsewhere.sqlite"))
     assert load_project(tmp_path).registry_path == tmp_path / "elsewhere.sqlite"
+
+
+OPTIONS_SCRIPT = '''
+import sys
+MONITOR = {
+    "options": [
+        {"name": "action", "label": "Acción", "choices": ["run", "prepare"], "default": "run"},
+        {"name": "--backend", "choices": ["local", "ssh"]},
+        {"name": "--detach", "flag": True, "default": True},
+        {"name": "--seed", "default": "42"},
+        {"name": "bad name"},
+        {"name": "--wrong", "choices": ["a"], "default": "b"},
+        {"name": "--empty", "choices": []},
+    ]
+}
+raise SystemExit("never executed by the monitor")
+'''
+
+
+def test_script_options_are_read_without_running_the_script(project):
+    (project.root / "scripts" / "opts.py").write_text(OPTIONS_SCRIPT)
+    options = project.script_options("script", "scripts/opts.py")
+    assert [o["name"] for o in options] == ["action", "--backend", "--detach", "--seed"]
+    assert options[0]["label"] == "Acción" and options[1]["label"] == "--backend"
+    assert options[2]["flag"] is True
+    assert project.describe("script", "scripts/opts.py")["options"] == options
+    assert default_script_args(options) == ["run", "--detach", "--seed", "42"]
+
+
+@pytest.mark.parametrize(
+    "source",
+    ["", "x = 1", "MONITOR = 3", "MONITOR = {'options': 'run'}", "MONITOR = dict(a=1)", "def ("],
+)
+def test_scripts_without_a_valid_declaration_have_no_options(source):
+    assert parse_script_options(source) == []
+
+
+def test_script_declares_the_host_the_form_preselects(project):
+    source = 'MONITOR = {"host": "%s"}\n'
+    (project.root / "scripts" / "on_macario.py").write_text(source % "macario")
+    (project.root / "scripts" / "on_unknown.py").write_text(source % "nowhere")
+    assert project.script_host("script", "scripts/on_macario.py") == "macario"
+    assert project.script_host("script", "scripts/on_unknown.py") is None
+    assert project.script_host("script", "scripts/job.py") is None
+    assert project.describe("script", "scripts/on_macario.py")["host_id"] == "macario"
+    assert project.describe("script", "scripts/on_macario.py", host_id="local")["host_id"] == "local"
+    assert project.describe("script", "scripts/job.py")["host_id"] == "local"

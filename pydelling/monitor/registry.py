@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 CLIENT_PHASES = ("queued", "preflight", "deploying", "starting")
-TERMINAL = ("completed", "failed", "cancelled", "interrupted", "lost")
+TERMINAL = ("completed", "failed", "cancelled", "interrupted", "lost", "missing")
 ACTIVE = (*CLIENT_PHASES, "running", "cancelling")
 FINISHED_STUDIES = ("completed", "failed", "interrupted")
 SERIES_MAX = 256
@@ -23,6 +23,10 @@ LOG_TAIL_MAX = 65536
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL);
 INSERT OR IGNORE INTO meta VALUES ('rev', 0);
+CREATE TABLE IF NOT EXISTS deleted_runs (
+  id TEXT PRIMARY KEY, host_id TEXT NOT NULL, remote_folder TEXT NOT NULL,
+  rev INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS ix_deleted_folder ON deleted_runs (host_id, remote_folder);
 CREATE TABLE IF NOT EXISTS hosts (
   id TEXT PRIMARY KEY, label TEXT, transport TEXT NOT NULL, ssh TEXT, root TEXT, uv TEXT,
   options_json TEXT, stream_state TEXT NOT NULL DEFAULT 'offline', stream_error TEXT,
@@ -56,7 +60,7 @@ CREATE TABLE IF NOT EXISTS studies (
   PRIMARY KEY (run_id, name));
 CREATE INDEX IF NOT EXISTS ix_studies_rev ON studies (rev);
 """
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 def decode(row):
@@ -96,6 +100,8 @@ def derive_status(run):
         return "cancelled" if cancel or campaign == "cancelled" else "failed"
     if campaign in TERMINAL:
         return campaign
+    if status == "cancelling" and run.get("worker_alive") is not None:
+        return "cancelled"
     if campaign == "running" or run.get("worker_json"):
         return "lost"
     return status
@@ -204,6 +210,14 @@ class Registry:
     def ensure_run(self, host_id, remote_folder, **fields):
         """Get or create the run identified by (host, remote folder); update ``fields``."""
         with self._write() as db:
+            if (
+                fields.get("origin") == "discovered"
+                and db.execute(
+                    "SELECT 1 FROM deleted_runs WHERE host_id = ? AND remote_folder = ?",
+                    [host_id, remote_folder],
+                ).fetchone()
+            ):
+                return None
             row = db.execute(
                 "SELECT id FROM runs WHERE host_id = ? AND remote_folder = ?",
                 [host_id, remote_folder],
@@ -234,6 +248,36 @@ class Registry:
         if fields:
             self.update_run(run_id, **fields)
         return run_id
+
+    def delete_runs(self, run_id=None, *, before_delete=None):
+        """Delete history atomically; retain identifiers to suppress rediscovery.
+
+        Passing no id clears inactive runs, without the list endpoint's pagination.
+        Active workers must be stopped before removing their history.
+        """
+        with self._write() as db:
+            rows = db.execute(
+                "SELECT * FROM runs" + (" WHERE id = ?" if run_id else ""),
+                [run_id] if run_id else [],
+            ).fetchall()
+            inactive = [r for r in rows if r["status"] not in ACTIVE and not r["worker_alive"]]
+            if run_id and len(inactive) != len(rows):
+                raise ValueError("El run sigue activo; cancélalo y espera a que termine antes de borrar")
+            if rows and not inactive:
+                raise ValueError("Todos los runs siguen activos; no hay historial inactivo que borrar")
+            rows = inactive
+            if not rows:
+                return []
+            if before_delete is not None:
+                before_delete([dict(r) for r in rows])
+            rev = self._bump(db)
+            db.executemany(
+                "INSERT OR REPLACE INTO deleted_runs (id, host_id, remote_folder, rev) "
+                "VALUES (?, ?, ?, ?)",
+                [(r["id"], r["host_id"], r["remote_folder"], rev) for r in rows],
+            )
+            db.executemany("DELETE FROM runs WHERE id = ?", [(r["id"],) for r in rows])
+            return [r["id"] for r in rows]
 
     def update_run(self, run_id, **fields):
         if not fields:
@@ -320,6 +364,8 @@ class Registry:
         ts=None,
     ):
         with self._write() as db:
+            if not db.execute("SELECT 1 FROM runs WHERE id = ?", [run_id]).fetchone():
+                return False
             cursor = db.execute(
                 "INSERT OR IGNORE INTO run_events (run_id, ts, source, event_type, level, "
                 "message, payload_json, remote_offset) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -344,19 +390,29 @@ class Registry:
         return [decode(r) for r in rows]
 
     def last_events(self, run_id, limit=200):
+        """Latest events, without ``collect.progress`` ticks that would crowd out the rest
+        (they only reach clients through the change stream and :meth:`last_event`)."""
         rows = self.db.execute(
-            "SELECT * FROM (SELECT * FROM run_events WHERE run_id = ? ORDER BY id DESC LIMIT ?) "
-            "ORDER BY id",
+            "SELECT * FROM (SELECT * FROM run_events WHERE run_id = ? AND "
+            "event_type != 'collect.progress' ORDER BY id DESC LIMIT ?) ORDER BY id",
             [run_id, int(limit)],
         )
         return [decode(r) for r in rows]
+
+    def last_event(self, run_id, event_type):
+        """Most recent event of one type, or ``None``."""
+        row = self.db.execute(
+            "SELECT * FROM run_events WHERE run_id = ? AND event_type = ? ORDER BY id DESC LIMIT 1",
+            [run_id, event_type],
+        ).fetchone()
+        return decode(row) if row else None
 
     def milestones(self, run_id, limit=500):
         """Latest non-routine events (launch phases, batches, failures): never crowded out
         by thousands of routine ``study.state``/``preflight.check`` lines."""
         rows = self.db.execute(
             "SELECT * FROM (SELECT * FROM run_events WHERE run_id = ? AND NOT "
-            "(event_type IN ('study.state', 'preflight.check') AND level = 'info') "
+            "(event_type IN ('study.state', 'preflight.check', 'collect.progress') AND level = 'info') "
             "ORDER BY id DESC LIMIT ?) ORDER BY id",
             [run_id, int(limit)],
         )
@@ -366,6 +422,8 @@ class Registry:
     def upsert_study(self, run_id, name, **fields):
         points = fields.pop("points", None)
         with self._write() as db:
+            if not db.execute("SELECT 1 FROM runs WHERE id = ?", [run_id]).fetchone():
+                return
             row = decode(
                 db.execute(
                     "SELECT * FROM studies WHERE run_id = ? AND name = ?", [run_id, name]
@@ -433,6 +491,7 @@ class Registry:
         try:
             current = db.execute("SELECT value FROM meta WHERE key = 'rev'").fetchone()[0]
             last_event = db.execute("SELECT COALESCE(MAX(id), 0) FROM run_events").fetchone()[0]
+            deleted = db.execute("SELECT id FROM deleted_runs WHERE rev > ?", [rev]).fetchall()
             hosts = db.execute("SELECT * FROM hosts WHERE rev > ?", [rev]).fetchall()
             runs = db.execute(
                 "SELECT * FROM runs WHERE rev > ? ORDER BY rev LIMIT ?", [rev, limit]
@@ -448,6 +507,7 @@ class Registry:
         events = [decode(r) for r in events]
         return {
             "rev": current,
+            "deleted_runs": [r["id"] for r in deleted],
             "event_id": events[-1]["id"] if len(events) == limit else last_event,
             "hosts": [decode(r) for r in hosts],
             "runs": [decode(r) for r in runs],

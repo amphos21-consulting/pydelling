@@ -50,10 +50,10 @@ def write_deck(workdir):
 def simulate_study(folder, name, *, duration, fail=False, rng=None):
     """Advance one fake PFLOTRAN study; return its final state."""
     rng = rng or random.Random(name)
-    workdir = folder / name / "attempts" / "0001"
+    workdir = folder / name
     write_deck(workdir)
     started = time.time()
-    base = {"attempt": 1, "workdir": "attempts/0001", "started": started}
+    base = {"attempt": 1, "workdir": ".", "started": started}
     base["command"] = ["pflotran", "-pflotranin", "model.in"]
     study_status(folder, name, state="running", **base)
     append_event(folder, "study.state", study=name, state="running", attempt=1)

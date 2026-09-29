@@ -88,10 +88,21 @@ def build_parser():
     launch.add_argument("args", nargs="*", help="argumentos del script (tras --)")
     add("launch-script", "", hidden=True).add_argument("--run", required=True)
     add("cancel", "cancela un run (cooperativo: detiene los solvers en curso)").add_argument("run")
+    delete = add("delete", "elimina un run del historial")
+    delete.add_argument("run")
+    clear = add("clear-history", "elimina todo el historial del monitor")
+    for command in (delete, clear):
+        command.add_argument(
+            "--files", action="store_true", help="borra también resultados locales y remotos"
+        )
+        command.add_argument("--yes", action="store_true", help="confirma el borrado irreversible")
     collect = add("collect", "descarga los resultados de un run remoto")
     collect.add_argument("run", nargs="?")
     collect.add_argument("--run", dest="run_option")
-    collect.add_argument("--raw", action="store_true", help="incluye HDF5/XMF")
+    collect.add_argument("--raw", action="store_true", help="incluye HDF5/XMF y *-mas.dat")
+    collect.add_argument(
+        "--full-logs", action="store_true", help="logs completos en vez de su cola final"
+    )
     add("sync", "importa una vez el estado de los hosts").add_argument("host", nargs="?")
     add("connect", "abre una sesión SSH compartida (macOS/Linux)").add_argument("host")
     add("ssh-key-install", "instala tu clave pública SSH en un host").add_argument("host")
@@ -292,6 +303,20 @@ def run(args):
         print(f"run {run_id}")
         return 0
 
+    if args.command in ("delete", "clear-history"):
+        from .service import RunsService
+
+        if not args.yes:
+            raise ValueError("Confirma el borrado con --yes; --files borra también los resultados")
+        service = RunsService(project, registry)
+        result = (
+            service.delete(resolve_run(registry, args.run), files=args.files)
+            if args.command == "delete"
+            else service.clear_history(files=args.files)
+        )
+        print(f"Eliminados {len(result['deleted_runs'])} runs.")
+        return 0
+
     if args.command == "cancel":
         from .launcher import cancel_run
 
@@ -304,7 +329,7 @@ def run(args):
         from .launcher import collect_run
 
         run_id = resolve_run(registry, args.run or args.run_option or "")
-        folder = collect_run(project, registry, run_id, raw=args.raw)
+        folder = collect_run(project, registry, run_id, raw=args.raw, full_logs=args.full_logs)
         print(f"Resultados en {folder}")
         return 0
 

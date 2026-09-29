@@ -11,7 +11,7 @@ from . import PflotranStudy
 import subprocess
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Sequence
 from pydelling.utils import create_results_folder
 from pydelling.managers.pflotran_postprocessing import PflotranPostprocessing
 import logging
@@ -41,6 +41,22 @@ class PflotranManager(BaseManager):
         """
         return executor.run_batch(self.studies.values(), folder, requirements,
                                   resume=resume, provenance=provenance, batch_name=batch_name)
+
+    def requirements(self, required_variables: Sequence[str]) -> Dict[str, dict]:
+        """Outputs every study must produce, read from its own deck.
+
+        Args:
+            required_variables: HDF5 variables every output time must contain, e.g.
+                ``["Total_Tracer [M]"]``.
+
+        Returns:
+            dict: ``{study name: {"expected_times": [s, ...], "required_variables": [...]}}``,
+            the ``requirements`` argument of :meth:`run_batch`. Expected times are the
+            ``OUTPUT/TIMES`` of each study, in seconds.
+        """
+        return {name: {"expected_times": study.output_times(),
+                       "required_variables": list(required_variables)}
+                for name, study in self.studies.items()}
 
     def _get_study_status(self, study_id: int):
         """Return status information for a PFLOTRAN study.

@@ -8,15 +8,19 @@ for campaigns with thousands of studies.
 import os
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+
+from pydelling.managers.ssh_executor import is_truncated
 
 from .launcher import cancel_run, launch_entry, launch_log, spawn_detached
 from .preflight import run_preflight
 from .registry import ACTIVE, TERMINAL
+from .tables import DEFAULT_PAGE, list_tables, read_table
 from .transport import TransportError, make_transport
 from .watcher_script import SUMMARY_KEYS, convergence
 
 PROGRESS_KEYS = (*SUMMARY_KEYS, "final_time_s")
+COLLECT_PROGRESS_KEYS = ("files", "total_files", "bytes", "total_bytes", "elapsed")
 
 CAMPAIGN_KEYS = ("state", "error", "started", "finished", "platform")
 STAGE_LABELS = {
@@ -52,11 +56,13 @@ def slim_study(study):
     return {k: v for k, v in study.items() if k != "series_json"}
 
 
-def stages(run, events, local=False):
+def stages(run, events, local=False, progress=None):
     """Pipeline stages of the latest launch, derived from client and worker events.
 
     ``local`` runs never deploy nor download; a pending client stage followed by a
-    stage that already ran is reported as skipped.
+    stage that already ran is reported as skipped. ``progress`` is the latest
+    ``collect.progress`` event (kept out of ``events``, which holds milestones only):
+    when it belongs to the current download, the collect stage carries its counters.
     """
     last_launch = max(
         (e["id"] for e in events if e["event_type"] in ("launch.requested", "launch.queued")),
@@ -121,15 +127,27 @@ def stages(run, events, local=False):
                 stage["status"] = "failed" if run["status"] != "completed" else "done"
     result.extend(batches.values())
     collect = {"id": "collect", "label": STAGE_LABELS["collect"], "status": "pending", "steps": []}
+    started_id = 0
     for event in events:  # a download may happen after the launch it belongs to
         if event["id"] < last_launch:
             continue
-        if event["event_type"] == "collect.started":
-            collect.update(status="running", started=event["ts"])
-        elif event["event_type"] == "collect.done":
+        kind = event["event_type"]
+        if kind == "collect.queued":
+            collect.update(status="queued")
+        elif kind == "collect.started":
+            started_id = event["id"]
+            collect = {**collect, "status": "running", "started": event["ts"]}
+            for key in ("finished", "seconds", "detail"):
+                collect.pop(key, None)
+        elif kind == "collect.done":
             collect.update(status="done", finished=event["ts"])
-        elif event["event_type"] == "collect.failed":
-            collect.update(status="failed", detail=event.get("message"))
+        elif kind == "collect.failed":
+            collect.update(status="failed", finished=event["ts"], detail=event.get("message"))
+    if collect.get("started") is not None and collect.get("finished") is not None:
+        collect["seconds"] = round(collect["finished"] - collect["started"], 3)
+    tick = (progress or {}).get("payload_json")
+    if tick and progress["id"] > started_id > 0:
+        collect["progress"] = {k: tick.get(k) for k in COLLECT_PROGRESS_KEYS}
     if local and collect["status"] == "pending":
         collect["status"] = "skipped"
     result.append(collect)
@@ -189,7 +207,12 @@ class RunsService:
             "run": slim_run(run, detail=True),
             "studies": [slim_study(s) for s in self.registry.studies(run_id)],
             "events": events,
-            "stages": stages(run, milestones, local=self._is_local(run["host_id"])),
+            "stages": stages(
+                run,
+                milestones,
+                local=self._is_local(run["host_id"]),
+                progress=self.registry.last_event(run_id, "collect.progress"),
+            ),
             "actions": self.actions(run),
         }
 
@@ -200,8 +223,9 @@ class RunsService:
         host = next((h for h in self.project.hosts() if h.id == run["host_id"]), None)
         local_folder = run.get("local_folder")
         return {
+            "delete": run["status"] not in ACTIVE and not run.get("worker_alive"),
             "cancel": run["status"] in ACTIVE,
-            "resume": bool(run.get("entry_id"))
+            "resume": run.get("entry_id") in self.project.entries
             and run.get("kind") == "campaign"
             and run["status"] not in ACTIVE,
             "collect": bool(host and host.transport == "ssh") and not run.get("worker_alive"),
@@ -233,10 +257,15 @@ class RunsService:
         return finished and study.get("workdir") and not study.get("series_json")
 
     def _convergence(self, run, study):
-        """Parse a finished study's output: local copy first, then the live host."""
-        relative = f"{study['name']}/{study['workdir']}"
+        """Parse a finished study's output: local copy first, then the live host.
+
+        A collected log tail (see ``SSHExecutor.collect``) would give a partial series,
+        so it is skipped in favour of the host.
+        """
+        relative = PurePosixPath(study["name"], study["workdir"]).as_posix()
         for base in (run.get("local_folder"), run["remote_folder"]):
-            if base and (Path(base) / relative / "stdout.log").is_file():
+            log = Path(base or "") / relative / "stdout.log"
+            if base and log.is_file() and not is_truncated(log):
                 return convergence(str(Path(base) / relative))
         stream = self.supervisor.streams.get(run["host_id"]) if self.supervisor else None
         if stream is None or not stream.connected:
@@ -256,7 +285,7 @@ class RunsService:
         filename = LOG_FILES.get(stream)
         if filename is None:
             raise ValueError("stream debe ser stdout o stderr")
-        relative = f"{name}/{study['workdir']}/{filename}"
+        relative = PurePosixPath(name, study["workdir"], filename).as_posix()
         return {"text": self._tail(run, relative), "path": relative}
 
     def worker_log(self, run_id, live=False):
@@ -339,6 +368,36 @@ class RunsService:
         )
         return {"run_id": run_id}
 
+    def _delete_files(self, runs):
+        source = Path(__file__).with_name("cleanup_script.py").read_text()
+        targets = {}
+        for run in runs:
+            host = self.project.host(run["host_id"])
+            targets[(host.id, run["remote_folder"])] = (host, host.campaigns_root)
+            if run.get("local_folder"):
+                local = self.project.local_host()
+                targets[(local.id, run["local_folder"])] = (local, str(self.project.local_runs))
+        # Validate all destinations first. If deletion fails, retain history for retry.
+        for mode in ("check", "delete"):
+            for (_, folder), (host, root) in targets.items():
+                make_transport(host).python(source, str(root), folder, mode, timeout=120)
+
+    def delete(self, run_id, *, files=False):
+        self._run(run_id)
+        return {
+            "deleted_runs": self.registry.delete_runs(
+                run_id,
+                before_delete=self._delete_files if files else None,
+            )
+        }
+
+    def clear_history(self, *, files=False):
+        return {
+            "deleted_runs": self.registry.delete_runs(
+                before_delete=self._delete_files if files else None,
+            )
+        }
+
     def cancel(self, run_id):
         self._run(run_id)
         try:
@@ -364,7 +423,7 @@ class RunsService:
         )
         return {"run_id": new_id}
 
-    def collect(self, run_id, raw=False):
+    def collect(self, run_id, raw=False, full_logs=False):
         run = self._run(run_id)
         if run.get("worker_alive"):
             raise ValueError("El worker sigue escribiendo resultados; descarga cuando termine")
@@ -375,9 +434,33 @@ class RunsService:
         argv += ["--project", str(self.project.root), "--run", run_id]
         if raw:
             argv.append("--raw")
-        self.registry.add_event(run_id, "collect.queued", payload={"raw": bool(raw)})
+        if full_logs:
+            argv.append("--full-logs")
+        payload = {"raw": bool(raw), "full_logs": bool(full_logs)}
+        self.registry.add_event(run_id, "collect.queued", payload=payload)
         spawn_detached(argv, self.project.root, launch_log(self.project, run_id, "collect"))
         return {"ok": True}
+
+    def _results_folder(self, run):
+        """Where this machine holds the run's files: the download, or the run itself if local."""
+        local = run.get("local_folder")
+        if local and Path(local).is_dir():
+            return Path(local)
+        if self._is_local(run["host_id"]) and Path(run["remote_folder"]).is_dir():
+            return Path(run["remote_folder"])
+        return None
+
+    def tables(self, run_id):
+        """CSV tables of the run available on this machine (empty until downloaded)."""
+        base = self._results_folder(self._run(run_id))
+        return {"tables": list_tables(base) if base else []}
+
+    def table(self, run_id, path, offset=0, limit=DEFAULT_PAGE, query=""):
+        """One page of a downloaded CSV table; ``query`` filters rows by text."""
+        base = self._results_folder(self._run(run_id))
+        if base is None:
+            raise NotFound("Este run todavía no tiene resultados en este equipo; descárgalos primero")
+        return read_table(base, path or "", offset=offset, limit=limit, query=query)
 
     def open_folder(self, run_id):
         run = self._run(run_id)
