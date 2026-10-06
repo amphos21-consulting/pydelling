@@ -1,0 +1,6097 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Comprehensive Python library for mesh preprocessing and numerical modeling workflows">
+      
+      
+      
+        <link rel="canonical" href="https://amphos21-consulting.github.io/pydelling/managers/overview/">
+      
+      
+      
+      
+      <link rel="icon" href="../../pydelling_logo_square.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.34">
+    
+    
+      
+        <title>Simulation Management Overview - pydelling - Numerical Modeling Toolkit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.35f28582.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="pydelling-green">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#simulation-management-overview" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="pydelling - Numerical Modeling Toolkit" class="md-header__button md-logo" aria-label="pydelling - Numerical Modeling Toolkit" data-md-component="logo">
+      
+  <img src="../../pydelling_logo_square.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            pydelling - Numerical Modeling Toolkit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Simulation Management Overview
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="pydelling-green"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="pydelling-green"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://gitlab.amphos21.com/aitirga/pydelling" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitLab Repository
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="pydelling - Numerical Modeling Toolkit" class="md-nav__button md-logo" aria-label="pydelling - Numerical Modeling Toolkit" data-md-component="logo">
+      
+  <img src="../../pydelling_logo_square.png" alt="logo">
+
+    </a>
+    pydelling - Numerical Modeling Toolkit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://gitlab.amphos21.com/aitirga/pydelling" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitLab Repository
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs-installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs-getting_started/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Quick Start
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Usage Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-reference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Modules
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Modules
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_1" id="__nav_3_3_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    assets
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            assets
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/assets/catalog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    catalog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/assets/contracts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    contracts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/assets/handlers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    handlers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/assets/pflotran_case/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_case
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/assets/pflotran_handlers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_handlers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/assets/registry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    registry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/assets/thermodynamic_database/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    thermodynamic_database
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_2" id="__nav_3_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    estimators
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            estimators
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/estimators/base_estimator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_estimator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/estimators/polygon_zone_estimator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    polygon_zone_estimator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_3" id="__nav_3_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    interpolation
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            interpolation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/interpolation/base_interpolator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_interpolator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/interpolation/kde_estimator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    kde_estimator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/interpolation/sparse_data_interpolator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sparse_data_interpolator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_4" id="__nav_3_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    managers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            managers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/base_manager/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_manager
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/base_study/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_study
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/batch/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    batch
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/batch_worker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    batch_worker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_4_5" id="__nav_3_3_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    callbacks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            callbacks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/callbacks/base_callback/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_callback
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/callbacks/pflotran_restart_callback/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_restart_callback
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/callbacks/pflotran_save_results_callback/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_save_results_callback
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/comsol_manager/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    comsol_manager
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/pflotran_deck/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_deck
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/pflotran_manager/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_manager
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/pflotran_postprocessing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_postprocessing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/pflotran_study/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_study
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_4_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_4_11" id="__nav_3_3_4_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    postprocess
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_4_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_4_11">
+            <span class="md-nav__icon md-icon"></span>
+            postprocess
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/postprocess/base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/postprocess/geometry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    geometry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/postprocess/hdf5/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hdf5
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/postprocess/observations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    observations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/postprocess/selections/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    selections
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_4_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_4_12" id="__nav_3_3_4_12_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ssh
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_4_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_4_12">
+            <span class="md-nav__icon md-icon"></span>
+            ssh
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/ssh/base_ssh/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_ssh
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/ssh/jureca_ssh/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    jureca_ssh
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/ssh/lumi_ssh/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    lumi_ssh
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_4_12_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_4_12_4" id="__nav_3_3_4_12_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    steps
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_4_12_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_4_12_4">
+            <span class="md-nav__icon md-icon"></span>
+            steps
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/ssh/steps/base_step/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_step
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/ssh/steps/copy_step/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    copy_step
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/ssh_executor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ssh_executor
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_4_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_4_14" id="__nav_3_3_4_14_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    status
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_4_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_4_14">
+            <span class="md-nav__icon md-icon"></span>
+            status
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/status/BaseStatus/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    BaseStatus
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/status/PflotranStatus/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PflotranStatus
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/managers/study_design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    study_design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_5" id="__nav_3_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    monitor
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            monitor
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/cleanup_script/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    cleanup_script
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/fastapi_router/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fastapi_router
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/launcher/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    launcher
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/preflight/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    preflight
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/registry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    registry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/reporter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    reporter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/server/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    server
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/service/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    service
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/supervisor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    supervisor
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/tables/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tables
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/transport/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    transport
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/monitor/watcher_script/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    watcher_script
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_6" id="__nav_3_3_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    paraview_processor
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            paraview_processor
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_6_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_6_1" id="__nav_3_3_6_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    filters
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            filters
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/append_arc_length_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    append_arc_length_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/base_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/calculator_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    calculator_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/cell_data_to_point_data_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    cell_data_to_point_data_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/clip_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    clip_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/csv_reader_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    csv_reader_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/integrate_variable_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    integrate_variable_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/plot_over_line_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    plot_over_line_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/save_data_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    save_data_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/stream_tracer_with_custom_source_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    stream_tracer_with_custom_source_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/table_to_points_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    table_to_points_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/tecplot_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tecplot_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/vtk_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    vtk_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/filters/xdmf_filter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    xdmf_filter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/paraview_processor/paraview_processor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    paraview_processor
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_7" id="__nav_3_3_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    postprocessing
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            postprocessing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/postprocessing/mass_balance_check_pflotran/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    mass_balance_check_pflotran
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_8" id="__nav_3_3_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    preprocessing
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            preprocessing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/base_preprocessing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_preprocessing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/closed_stl_generator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    closed_stl_generator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_8_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_8_3" id="__nav_3_3_8_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    dfn_preprocessor
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_8_3">
+            <span class="md-nav__icon md-icon"></span>
+            dfn_preprocessor
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/dfn_preprocessor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dfn_preprocessor
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/dfn_preprocessor_utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dfn_preprocessor_utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/dfn_upscaler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dfn_upscaler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/fault/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fault
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/fracture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fracture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/hydraulic_properties/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hydraulic_properties
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/parallel_helpers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    parallel_helpers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/polygon_fracture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    polygon_fracture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/surface_dfn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    surface_dfn
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/dfn_preprocessor/surface_upscaler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    surface_upscaler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_8_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_8_4" id="__nav_3_3_8_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    gid_preprocessor
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_8_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            gid_preprocessor
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/gid_preprocessor/gid_object/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    gid_object
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/gid_preprocessor/gidobjects/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    gidobjects
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/gid_preprocessor/line/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    line
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/gid_preprocessor/point/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    point
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/gid_preprocessor/surface/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    surface
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/git_preprocessor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    git_preprocessor
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_8_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_8_6" id="__nav_3_3_8_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    mesh_preprocessor
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_8_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_8_6">
+            <span class="md-nav__icon md-icon"></span>
+            mesh_preprocessor
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/array_mesh/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    array_mesh
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_8_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_8_6_2" id="__nav_3_3_8_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    geometry
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_8_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_8_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            geometry
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/base_abstract_mesh_object/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_abstract_mesh_object
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/base_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/base_face/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_face
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/hexahedra_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hexahedra_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/pyramid_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pyramid_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/quadrilateral_face/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    quadrilateral_face
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/tetrahedra_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tetrahedra_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/triangle_face/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    triangle_face
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/geometry/wedge_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    wedge_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/mesh_preprocessor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    mesh_preprocessor
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_8_6_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_8_6_4" id="__nav_3_3_8_6_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_8_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_8_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/utils/igp_logic/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    igp_logic
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/mesh_preprocessor/utils/mesh_utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    mesh_utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preprocessing/stl_from_point_cloud/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    stl_from_point_cloud
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/preview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    preview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_10" id="__nav_3_3_10_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    readers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_10">
+            <span class="md-nav__icon md-icon"></span>
+            readers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/base_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/centroid_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    centroid_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/connect_flow_mesh_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    connect_flow_mesh_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/connect_flow_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    connect_flow_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/feflow_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    feflow_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/fem_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fem_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_10_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_10_7" id="__nav_3_3_10_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    iGPReader
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_10_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_10_7">
+            <span class="md-nav__icon md-icon"></span>
+            iGPReader
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_10_7_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_10_7_1" id="__nav_3_3_10_7_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    engines
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_10_7_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_10_7_1">
+            <span class="md-nav__icon md-icon"></span>
+            engines
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/engines/post_processing_engine/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    post_processing_engine
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_10_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_10_7_2" id="__nav_3_3_10_7_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    geometry
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_10_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_10_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            geometry
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/geometry/base_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/geometry/base_face/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_face
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/geometry/hexahedra_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hexahedra_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/geometry/quadrilateral_face/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    quadrilateral_face
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/geometry/tetrahedra_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tetrahedra_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/geometry/triangle_face/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    triangle_face
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/geometry/wedge_element/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    wedge_element
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_10_7_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_10_7_3" id="__nav_3_3_10_7_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    io
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_10_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_10_7_3">
+            <span class="md-nav__icon md-icon"></span>
+            io
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/asc_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    asc_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/base_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/base_writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/borehole_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    borehole_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/csv_writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    csv_writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/igp_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    igp_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/pflotran_explicit_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_explicit_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/pflotran_explicit_writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_explicit_writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/io/pflotran_implicit_writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_implicit_writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_10_7_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_10_7_4" id="__nav_3_3_10_7_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_3_3_10_7_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_10_7_4">
+            <span class="md-nav__icon md-icon"></span>
+            utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/utils/decorators/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    decorators
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/utils/geometry_utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    geometry_utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/utils/region_operations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    region_operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/iGPReader/utils/utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/open_foam_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    open_foam_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/pflotran_mass_balance_file_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_mass_balance_file_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/pflotran_observation_point_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_observation_point_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/pflotran_processing_utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_processing_utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/pflotran_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pflotran_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/raster_file_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    raster_file_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_10_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_10_14" id="__nav_3_3_10_14_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    reader_utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_10_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_10_14">
+            <span class="md-nav__icon md-icon"></span>
+            reader_utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/reader_utils/image_operations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    image_operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/smesh_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    smesh_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/streamline_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    streamline_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/structured_grid_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    structured_grid_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/structured_list_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    structured_list_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/tiff_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tiff_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/unstructured_mesh_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    unstructured_mesh_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/vtk_mesh_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    vtk_mesh_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/readers/vtk_reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    vtk_reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/sdk/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sdk
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_12" id="__nav_3_3_12_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_12">
+            <span class="md-nav__icon md-icon"></span>
+            utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/configuration_utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    configuration_utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/decorators/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    decorators
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_12_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_12_3" id="__nav_3_3_12_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    geometry
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_12_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_12_3">
+            <span class="md-nav__icon md-icon"></span>
+            geometry
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/base_primitive/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_primitive
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/intersections/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    intersections
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/line/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    line
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/plane/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    plane
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/point/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    point
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/polygon/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    polygon
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/scalar/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    scalar
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/segment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    segment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry/vector/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    vector
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/geometry_utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    geometry_utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/montecarlo_integration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    montecarlo_integration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/root_finding_solver/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    root_finding_solver
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/sub_fish_module/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sub_fish_module
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/utility_subclasses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    utility_subclasses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/utils/utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_13" id="__nav_3_3_13_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    webapps
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_13">
+            <span class="md-nav__icon md-icon"></span>
+            webapps
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/webapps/base_streamlit_utility_class/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_streamlit_utility_class
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_13_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_13_2" id="__nav_3_3_13_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    components
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_3_13_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_13_2">
+            <span class="md-nav__icon md-icon"></span>
+            components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/webapps/components/base_component/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_component
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/webapps/components/input_component/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    input_component
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/webapps/components/remote_login_component/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    remote_login_component
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/webapps/web_app_runer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    web_app_runer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/webapps/web_app_runner/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    web_app_runner
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3_14" id="__nav_3_3_14_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    writers
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3_14">
+            <span class="md-nav__icon md-icon"></span>
+            writers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/writers/base_writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    base_writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/writers/hdf5_centroid_writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hdf5_centroid_writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/writers/hdf5_raster_writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hdf5_raster_writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/writers/open_foam_variable_writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    open_foam_variable_writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/code-snippets/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Code Snippets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/tutorials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/use-cases/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use Cases
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/contributing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Development Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Testing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/gitlab-ci-docs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    GitLab CI Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/releases/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="simulation-management-overview"><a class="toclink" href="#simulation-management-overview">Simulation Management Overview</a><a class="headerlink" href="#simulation-management-overview" title="Anchor link to this section">&para;</a></h1>
+<p>The managers module provides tools for running and coordinating numerical simulations across different software platforms.</p>
+<h2 id="available-managers"><a class="toclink" href="#available-managers">Available Managers</a><a class="headerlink" href="#available-managers" title="Anchor link to this section">&para;</a></h2>
+<h3 id="pflotran-manager"><a class="toclink" href="#pflotran-manager">PFLOTRAN Manager</a><a class="headerlink" href="#pflotran-manager" title="Anchor link to this section">&para;</a></h3>
+<ul>
+<li>Automated PFLOTRAN simulation workflows</li>
+<li>Parameter studies and sensitivity analysis</li>
+<li>Local and HPC execution support</li>
+</ul>
+<h3 id="comsol-manager"><a class="toclink" href="#comsol-manager">COMSOL Manager</a><a class="headerlink" href="#comsol-manager" title="Anchor link to this section">&para;</a></h3>
+<ul>
+<li>COMSOL batch processing</li>
+<li>Parametric sweeps</li>
+<li>Result extraction and analysis</li>
+</ul>
+<h2 id="pflotran-studies"><a class="toclink" href="#pflotran-studies">PFLOTRAN studies</a><a class="headerlink" href="#pflotran-studies" title="Anchor link to this section">&para;</a></h2>
+<p>A <code>PflotranStudy</code> wraps one input deck used as a template. Each case of a parameter study is
+a copy of it with its own values, and a manager writes and runs them.</p>
+<h3 id="template-placeholders"><a class="toclink" href="#template-placeholders">Template placeholders</a><a class="headerlink" href="#template-placeholders" title="Anchor link to this section">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydelling.managers</span> <span class="kn">import</span> <span class="n">PflotranManager</span><span class="p">,</span> <span class="n">PflotranStudy</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">base</span> <span class="o">=</span> <span class="n">PflotranStudy</span><span class="p">(</span><span class="s2">&quot;rc1_training_template.in&quot;</span><span class="p">,</span> <span class="n">variable_delimiters</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&lt;&lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&gt;&quot;</span><span class="p">))</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">base</span><span class="o">.</span><span class="n">placeholders</span><span class="p">()</span>            <span class="c1"># {&#39;PERM&#39;, &#39;PHI&#39;, ...}</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">manager</span> <span class="o">=</span> <span class="n">PflotranManager</span><span class="p">()</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">case</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">study_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;case-</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>   <span class="c1"># independent copy</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="k">case</span><span class="o">.</span><span class="n">set_variables</span><span class="p">(</span><span class="o">**</span><span class="n">sample</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">manager</span><span class="o">.</span><span class="n">add_study</span><span class="p">(</span><span class="n">case</span><span class="p">)</span>                          <span class="c1"># assigns case.idx = position</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">manager</span><span class="o">.</span><span class="n">generate_run_files</span><span class="p">(</span><span class="s2">&quot;./studies&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Rendering is strict: a placeholder without a value raises <code>MissingTemplateVariables</code> listing
+all missing names (<code>missing_variables()</code> returns them without raising). Pass <code>strict=False</code>
+for the pre-1.2.1 behaviour of rendering unknown placeholders as empty text. Without
+<code>variable_delimiters</code> the usual Jinja <code>{{ name }}</code> syntax is used.</p>
+<h3 id="editing-the-deck-like-a-dict"><a class="toclink" href="#editing-the-deck-like-a-dict">Editing the deck like a dict</a><a class="headerlink" href="#editing-the-deck-like-a-dict" title="Anchor link to this section">&para;</a></h3>
+<p>A study behaves like a dict of card paths. A path is <code>/</code>-separated selectors, each <code>KEYWORD</code>
+or <code>KEYWORD name</code> (case-insensitive). The first one matches a top-level card (looking
+through <code>SUBSURFACE</code>), the rest direct children, so a path means exactly one place:
+<code>"OUTPUT/TIMES"</code> is never <code>CHEMISTRY/OUTPUT</code>, and
+<code>"FLOW_CONDITION initial/LIQUID_PRESSURE"</code> is never <code>TYPE/LIQUID_PRESSURE</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">study</span><span class="p">[</span><span class="s2">&quot;MATERIAL_PROPERTY soil/POROSITY&quot;</span><span class="p">]</span>            <span class="c1"># [&#39;0.25&#39;]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">study</span><span class="p">[</span><span class="s2">&quot;MATERIAL_PROPERTY soil/POROSITY&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.3</span>      <span class="c1"># keeps indentation and comment</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">study</span><span class="p">[</span><span class="s2">&quot;TIME/FINAL_TIME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">]</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">study</span><span class="p">[</span><span class="s2">&quot;TIME/MAXIMUM_TIMESTEP_SIZE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e5</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">]</span>    <span class="c1"># appended to TIME if missing</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># A list of rows rewrites a block&#39;s content in place...</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">study</span><span class="p">[</span><span class="s2">&quot;GRID/BOUNDS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">study</span><span class="p">[</span><span class="s2">&quot;REGION east/COORDINATES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># ...or replaces a card and all its repeats with one card per row.</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">study</span><span class="p">[</span><span class="s2">&quot;OUTPUT/TIMES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">150</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">250</span><span class="p">]]</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">del</span> <span class="n">study</span><span class="p">[</span><span class="s2">&quot;OUTPUT/SNAPSHOT_FILE&quot;</span><span class="p">]</span>                   <span class="c1"># or = None (no error if missing)</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="s2">&quot;GRID/BOUNDS&quot;</span> <span class="ow">in</span> <span class="n">study</span>                              <span class="c1"># True</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="n">study</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>                                      <span class="c1"># several edits, e.g. from YAML</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="s2">&quot;GRID/NXYZ&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="s2">&quot;OUTPUT/MASS_BALANCE&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="p">})</span>
+</span></code></pre></div>
+<p>Reading returns string tokens: a card's arguments, a block's rows, or one row per repeated
+card. A path that matches nothing raises <code>CardNotFound</code> (a <code>KeyError</code>) naming where the
+keyword does exist, e.g. <code>found at: MATERIAL_PROPERTY soil/PERMEABILITY/PERM_ISO</code>. A missing
+card is only appended when its keyword does not already exist deeper in that block, so
+<code>study["MATERIAL_PROPERTY soil/PERM_ISO"] = 1e-12</code> raises instead of adding a misplaced card.
+A block with several same-keyword entries must be named (<code>REGION west</code>, not <code>REGION</code>).</p>
+<p><code>study.deck</code> is the parsed card/block tree (<code>PflotranDeck</code>) of the current text. The
+selector-tuple API is still available (<code>get_card</code>, <code>get_card_values</code>, <code>set_card_values</code>,
+<code>add_card</code>, <code>remove_card</code>); there each selector matches at any depth below the previous one
+unless <code>direct=True</code>. Blocks end at their matching <code>END</code> or <code>/</code>, including nested
+sub-blocks, <code>SKIP</code>/<code>NOSKIP</code> sections and <code>SUBSURFACE</code>/<code>END_SUBSURFACE</code>. Which cards open
+blocks is inferred from known PFLOTRAN keywords and indentation; when the parser has to
+guess (e.g. fully unindented decks), it lists the guess in <code>study.deck.warnings</code>.</p>
+<h3 id="samplings-and-sensitivity-cases"><a class="toclink" href="#samplings-and-sensitivity-cases">Samplings and sensitivity cases</a><a class="headerlink" href="#samplings-and-sensitivity-cases" title="Anchor link to this section">&para;</a></h3>
+<p>The flow is: parameters → samplings → template → studies.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span> <span class="nn">scipy.stats</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span> <span class="nn">pydelling.managers</span> <span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">LHS</span><span class="p">,</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">ParameterSpace</span><span class="p">,</span> <span class="n">PflotranManager</span><span class="p">,</span> <span class="n">PflotranStudy</span><span class="p">,</span> <span class="n">Sampler</span><span class="p">,</span> <span class="n">Table</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># 1. Parameters, in physical units. Every sample is checked against these ranges.</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">space</span> <span class="o">=</span> <span class="n">ParameterSpace</span><span class="p">({</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">],</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;m/s&quot;</span><span class="p">},</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="s2">&quot;phi&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]},</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">})</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="c1"># 2. From one sample to the template placeholders (&lt;&lt;PERM&gt;&gt;, &lt;&lt;PHI&gt;&gt;).</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="k">def</span> <span class="nf">to_pflotran</span><span class="p">(</span><span class="n">sample</span><span class="p">):</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;PERM&quot;</span><span class="p">:</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;K&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.02e-7</span><span class="p">,</span> <span class="s2">&quot;PHI&quot;</span><span class="p">:</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;phi&quot;</span><span class="p">]}</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="c1"># 3. Templates: shared card edits once; a variant of the template is a sensitivity case.</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="n">base</span> <span class="o">=</span> <span class="n">PflotranStudy</span><span class="p">(</span><span class="s2">&quot;template.in&quot;</span><span class="p">,</span> <span class="n">variable_delimiters</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&lt;&lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&gt;&quot;</span><span class="p">))</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="n">base</span><span class="p">[</span><span class="s2">&quot;GRID/NXYZ&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="n">long_run</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="n">long_run</span><span class="p">[</span><span class="s2">&quot;TIME/FINAL_TIME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="c1"># 4. Samplers: built-in ones, or your own (n unit-cube points, one column per parameter).</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="k">class</span> <span class="nc">Halton</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>    <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimension</span><span class="p">):</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">qmc</span><span class="o">.</span><span class="n">Halton</span><span class="p">(</span><span class="n">dimension</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="c1"># 5. Studies: one line per set, sampler + parameters + template; one study per sample.</span>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="n">manager</span> <span class="o">=</span> <span class="n">PflotranManager</span><span class="p">()</span>
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="n">manager</span><span class="o">.</span><span class="n">add_studies</span><span class="p">(</span><span class="n">LHS</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="n">to_pflotran</span><span class="p">)</span>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="n">manager</span><span class="o">.</span><span class="n">add_studies</span><span class="p">(</span><span class="n">Grid</span><span class="p">(</span><span class="n">levels</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">],</span> <span class="s2">&quot;phi&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]}),</span> <span class="n">space</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">to_pflotran</span><span class="p">)</span>
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="n">manager</span><span class="o">.</span><span class="n">add_studies</span><span class="p">(</span><span class="n">Halton</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="n">to_pflotran</span><span class="p">)</span>
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="n">manager</span><span class="o">.</span><span class="n">add_studies</span><span class="p">(</span><span class="n">LHS</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">long_run</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="n">to_pflotran</span><span class="p">,</span>
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lhs-long&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;case&quot;</span><span class="p">:</span> <span class="s2">&quot;long&quot;</span><span class="p">})</span>   <span class="c1"># same samples, other case</span>
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="n">manager</span><span class="o">.</span><span class="n">add_studies</span><span class="p">(</span><span class="n">Table</span><span class="p">(</span><span class="s2">&quot;runs/example/samples-lhs.csv&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;replay&quot;</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span>
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>                    <span class="n">variables</span><span class="o">=</span><span class="n">to_pflotran</span><span class="p">)</span>                        <span class="c1"># samples you already have</span>
+</span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>
+</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="n">manager</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">case</span><span class="o">=</span><span class="s2">&quot;long&quot;</span><span class="p">)</span>                      <span class="c1"># manager with those studies only</span>
+</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="n">manager</span><span class="o">.</span><span class="n">records</span><span class="p">()</span>                                <span class="c1"># rows: study_id, metadata, sample, simulation_id</span>
+</span><span id="__span-2-42"><a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a><span class="n">manager</span><span class="o">.</span><span class="n">requirements</span><span class="p">([</span><span class="s2">&quot;Total_Tracer [M]&quot;</span><span class="p">])</span>       <span class="c1"># expected outputs, read from each deck</span>
+</span><span id="__span-2-43"><a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="n">manager</span><span class="o">.</span><span class="n">designs</span><span class="p">[</span><span class="s2">&quot;lhs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;samples-lhs.csv&quot;</span><span class="p">)</span>  <span class="c1"># the samples drawn, per name</span>
+</span></code></pre></div>
+<p>Studies are named <code>&lt;name&gt;-000000</code>, <code>&lt;name&gt;-000001</code>… and the template is never modified.
+<code>n=0</code> adds nothing. <code>sampler.sample(space)</code> alone returns the samples (a <code>Design</code>)
+without building studies. Without <code>variables</code>, each sample is passed to the template as is. Every study gets
+<code>study.metadata = {**metadata, "design", "method", "seed", **sample, **variables}</code>;
+<code>records()</code> adds a <code>simulation_id</code> (hash of the rendered input), so identical inputs share
+it whatever design produced them. <code>study.set_output_times(times, unit="s")</code> writes
+<code>OUTPUT/TIMES</code> (10 values per card) and <code>study.output_times()</code> reads them back in seconds,
+which is what <code>requirements()</code> uses.</p>
+<h3 id="post-processing-where-the-study-runs"><a class="toclink" href="#post-processing-where-the-study-runs">Post-processing where the study runs</a><a class="headerlink" href="#post-processing-where-the-study-runs" title="Anchor link to this section">&para;</a></h3>
+<p>Callbacks turn a finished run into a small table, <strong>where it ran</strong> (for SSH campaigns, on
+the remote host), so only that table has to be downloaded. They are copied with the
+template, validated before anything runs, and executed by <code>LocalExecutor</code> right after the
+solver's outputs pass <code>check_outputs</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">pydelling.managers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Cell</span><span class="p">,</span> <span class="n">Cells</span><span class="p">,</span> <span class="n">Domain</span><span class="p">,</span> <span class="n">ExtractHDF5</span><span class="p">,</span> <span class="n">FunctionCallback</span><span class="p">,</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>                                <span class="n">ObservationPoints</span><span class="p">,</span> <span class="n">Region</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">template</span><span class="o">.</span><span class="n">add_postprocess</span><span class="p">(</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="c1"># HDF5 snapshots -&gt; time series: time_s, selection, variable, unit, cell, value,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="c1"># aggregate, n_cells, volume</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">ExtractHDF5</span><span class="p">(</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="s2">&quot;Total_*&quot;</span><span class="p">,</span>                                        <span class="c1"># dataset names or globs</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="p">{</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>            <span class="s2">&quot;outlet&quot;</span><span class="p">:</span> <span class="n">Cell</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>                       <span class="c1"># nearest cell (None axes ignored)</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>            <span class="s2">&quot;cell_42&quot;</span><span class="p">:</span> <span class="n">Cell</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>                       <span class="c1"># 1-based natural id, any grid</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>            <span class="s2">&quot;probes&quot;</span><span class="p">:</span> <span class="n">Cells</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="p">[[</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">]]),</span>  <span class="c1"># one row per cell</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>            <span class="s2">&quot;inlet&quot;</span><span class="p">:</span> <span class="n">Region</span><span class="p">(</span><span class="s2">&quot;west&quot;</span><span class="p">,</span> <span class="n">aggregate</span><span class="o">=</span><span class="s2">&quot;volume_mean&quot;</span><span class="p">),</span>  <span class="c1"># deck REGION</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>            <span class="s2">&quot;box&quot;</span><span class="p">:</span> <span class="n">Region</span><span class="p">(</span><span class="n">box</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">aggregate</span><span class="o">=</span><span class="s2">&quot;max&quot;</span><span class="p">),</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>            <span class="s2">&quot;mass&quot;</span><span class="p">:</span> <span class="n">Domain</span><span class="p">(</span><span class="s2">&quot;integral&quot;</span><span class="p">),</span>                   <span class="c1"># sum(value * volume)</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>        <span class="p">},</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        <span class="n">times</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                                       <span class="c1"># or seconds to keep</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="p">),</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="c1"># *-obs-*.pft files -&gt; time_s, point, cell, x, y, z, variable, unit, value</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    <span class="n">ObservationPoints</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="s2">&quot;Total_*&quot;</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="c1"># anything else: f(workdir, study) -&gt; DataFrame, defined in a module</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    <span class="n">FunctionCallback</span><span class="p">(</span><span class="n">my_module</span><span class="o">.</span><span class="n">final_mass</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;mass_balance&quot;</span><span class="p">),</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="p">)</span>
+</span></code></pre></div>
+<ul>
+<li><strong>Geometry</strong> (<code>CellGeometry</code>) is read from the HDF5 <code>Coordinates</code> (structured), the
+  deck's <code>.uge</code> <code>CELLS</code> table (explicit unstructured) or HDF5 <code>Domain/Cells</code> +
+  <code>Vertices</code> (implicit unstructured). Before running it comes from the deck's <code>GRID</code>
+  when possible; otherwise the checks that need it wait for the run.</li>
+<li><strong>Regions</strong>: <code>COORDINATES</code> boxes or points, <code>COORDINATE</code>, <code>BLOCK</code> and <code>FILE</code> (cell ids,
+  text or HDF5). On structured grids a box selects the cells it overlaps; a zero-width box
+  (a face such as <code>REGION west</code>) selects the cells touching it. On unstructured grids, the
+  cells whose center is inside.</li>
+<li><strong>Aggregates</strong>: <code>mean</code>, <code>volume_mean</code>, <code>sum</code>, <code>integral</code>, <code>min</code>, <code>max</code>, or any
+  module-level <code>f(values, volumes) -&gt; float</code>. <code>Region</code>/<code>Domain</code> require one.</li>
+<li><strong>Custom</strong>: subclass <code>PostprocessCallback</code> (<code>process</code>, <code>options</code>, optional <code>validate</code>) or
+  <code>Selection</code> (<code>cells(geometry, study, workdir)</code> -&gt; 1-based ids).</li>
+<li><strong>State</strong>: <code>status.json</code> records <code>postprocess: {name: {state, file, rows, sha256}}</code> and
+  <code>solver_completed</code>. A failed callback fails the study; a resume re-runs only the
+  callbacks when the solver outputs are unchanged. Each callback's <code>spec()</code> is part of the
+  batch identity and lets <code>batch_worker</code> rebuild it on any host.</li>
+</ul>
+<h2 id="coming-soon"><a class="toclink" href="#coming-soon">Coming Soon</a><a class="headerlink" href="#coming-soon" title="Anchor link to this section">&para;</a></h2>
+<p>Detailed documentation for simulation managers is being updated. Please check back soon or refer to the API documentation for specific class details.</p>
+<p>For examples, see the <code>code_snippets/managers/</code> directory in the repository.</p>
+<h2 id="reproducible-parameter-batches"><a class="toclink" href="#reproducible-parameter-batches">Reproducible parameter batches</a><a class="headerlink" href="#reproducible-parameter-batches" title="Anchor link to this section">&para;</a></h2>
+<p>The opt-in batch API preserves legacy <code>run()</code> callers:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">pydelling.managers</span> <span class="kn">import</span> <span class="n">LHS</span><span class="p">,</span> <span class="n">LocalExecutor</span><span class="p">,</span> <span class="n">PflotranManager</span><span class="p">,</span> <span class="n">PflotranStudy</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">space</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;permeability&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e-15</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">],</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">}}</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">manager</span> <span class="o">=</span> <span class="n">PflotranManager</span><span class="p">()</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">manager</span><span class="o">.</span><span class="n">add_studies</span><span class="p">(</span><span class="n">LHS</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">PflotranStudy</span><span class="p">(</span><span class="s2">&quot;template.in&quot;</span><span class="p">))</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">requirements</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">requirements</span><span class="p">([</span><span class="s2">&quot;Total_Tracer [M]&quot;</span><span class="p">])</span>  <span class="c1"># output times read from each deck</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">run_batch</span><span class="p">(</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">LocalExecutor</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s2">&quot;/path/to/pflotran&quot;</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="s2">&quot;runs/example&quot;</span><span class="p">,</span> <span class="n">requirements</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">successful</span>
+</span></code></pre></div>
+<p><code>ParameterSpace</code> supports fixed values, discrete values, continuous bounds,
+weighted disjoint intervals, and generated linear/log partitions. Samplers: <code>Random</code>,
+<code>LHS</code> and <code>Sobol</code> (<code>n</code> a power of two; both take scipy options such as <code>scramble=False</code>),
+<code>Grid(levels={...})</code> with physical levels, <code>Table(csv | DataFrame | records)</code> to replay
+samples, or a <code>Sampler</code> subclass implementing <code>points(dimension)</code>.</p>
+<p><code>SSHExecutor(host, root, uv, ...)</code> provides source deployment, detached workers,
+status and allowlisted artifact retrieval through OpenSSH. <code>deploy(workspace,
+relative_files)</code> returns a remote uv runtime. Set <code>runtime</code> to that directory and
+<code>local_options</code> to the remote <code>LocalExecutor</code> settings to pass an <code>SSHExecutor</code>
+directly to <code>manager.run_batch</code>. This invokes the generic pydelling batch worker;
+no application-specific module is needed. The supplied runtime must contain the
+locked pydelling workspace. For complete application pipelines, <code>start</code> accepts a
+config and a configurable <code>entrypoint</code> (default <code>run_models.py</code>).</p>
+<p>A batch writes each study's files in its own folder (<code>&lt;campaign&gt;/&lt;study&gt;/</code>; with
+<code>LocalExecutor(attempts=True)</code>, one <code>attempts/0001</code>, <code>attempts/0002</code>… sub-folder per
+run so earlier runs are kept), validates HDF5 variables and times, records return
+codes and output hashes, rejects changed provenance, and skips intact successful
+studies on resume. <code>LocalExecutor.pipeline(folder)</code> holds the same campaign lock
+across multiple named batches and postprocessing, allowing applications to gate a
+training batch on verification. No shell interpolation or global cwd/env mutation
+is used for local solver launches.</p>
+<p><code>PflotranReader</code> is a context manager. <code>times_seconds</code> normalizes supported HDF5
+units without changing legacy native-time access, and <code>cell_centers</code> computes
+structured-grid centroids from face coordinates.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Amphos 21
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://gitlab.amphos21.com/aitirga/pydelling" target="_blank" rel="noopener" title="GitLab Repository" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="m503.5 204.6-.7-1.8-69.7-181.78c-1.4-3.57-3.9-6.59-7.2-8.64-2.4-1.55-5.1-2.515-8-2.81s-5.7.083-8.4 1.11c-2.7 1.02-5.1 2.66-7.1 4.78-1.9 2.12-3.3 4.67-4.1 7.44l-47 144H160.8l-47.1-144c-.8-2.77-2.2-5.31-4.1-7.43-2-2.12-4.4-3.75-7.1-4.77a18.1 18.1 0 0 0-8.38-1.113 18.4 18.4 0 0 0-8.04 2.793 18.1 18.1 0 0 0-7.16 8.64L9.267 202.8l-.724 1.8a129.57 129.57 0 0 0-3.52 82c7.747 26.9 24.047 50.7 46.447 67.6l.27.2.59.4 105.97 79.5 52.6 39.7 32 24.2c3.7 1.9 8.3 4.3 13 4.3s9.3-2.4 13-4.3l32-24.2 52.6-39.7 106.7-79.9.3-.3c22.4-16.9 38.7-40.6 45.6-67.5 8.6-27 7.4-55.8-2.6-82"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://amphos21.com" target="_blank" rel="noopener" title="Amphos 21 Website" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M352 256c0 22.2-1.2 43.6-3.3 64H163.4c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64h185.3c2.2 20.4 3.3 41.8 3.3 64m28.8-64h123.1c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64H380.8c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64m112.6-32H376.7c-10-63.9-29.8-117.4-55.3-151.6 78.3 20.7 142 77.5 171.9 151.6zm-149.1 0H167.7c6.1-36.4 15.5-68.6 27-94.7 10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 256 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5 11.6 26 20.9 58.2 27 94.7m-209 0H18.6c30-74.1 93.6-130.9 172-151.6-25.5 34.2-45.3 87.7-55.3 151.6M8.1 192h123.1c-2.1 20.6-3.2 42-3.2 64s1.1 43.4 3.2 64H8.1C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64m186.6 254.6c-11.6-26-20.9-58.2-27-94.6h176.6c-6.1 36.4-15.5 68.6-27 94.6-10.5 23.6-22.2 40.7-33.5 51.5-11.2 10.7-20.5 13.9-27.8 13.9s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zM135.3 352c10 63.9 29.8 117.4 55.3 151.6-78.4-20.7-142-77.5-172-151.6zm358.1 0c-30 74.1-93.6 130.9-171.9 151.6 25.5-34.2 45.2-87.7 55.3-151.6h116.7z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:digital-solutions@amphos21.com" target="_blank" rel="noopener" title="Contact Us" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l217.6 163.2c11.4 8.5 27 8.5 38.4 0l217.6-163.2c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 176v208c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V176L294.4 339.2a63.9 63.9 0 0 1-76.8 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.path", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.code.select", "content.code.annotate", "content.tabs.link", "toc.integrate"], "search": "../../assets/javascripts/workers/search.07f07601.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.56dfad97.min.js"></script>
+      
+        <script src="../../javascripts/sidebar-version.js"></script>
+      
+        <script src="../../javascripts/sidebar-nav-toggle.js"></script>
+      
+        <script src="../../javascripts/anchor-fix.js"></script>
+      
+        <script src="../../javascripts/katex.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js"></script>
+      
+    
+  </body>
+</html>
