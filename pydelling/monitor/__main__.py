@@ -180,7 +180,18 @@ def main(argv=None):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(errors="replace")
     parser = build_parser()
+    # Split the script arguments off by hand: before Python 3.12 argparse rejects
+    # anything after ``--`` once the optional positional ``args`` has been filled.
+    argv = list(sys.argv[1:] if argv is None else argv)
+    extra = []
+    if "--" in argv:
+        cut = argv.index("--")
+        argv, extra = argv[:cut], argv[cut + 1 :]
     args = parser.parse_args(argv)
+    if extra:
+        if not hasattr(args, "args"):
+            parser.error(f"unrecognized arguments: -- {' '.join(extra)}")
+        args.args = [*(args.args or []), *extra]
     if not args.command:
         parser.print_help()
         return 0
