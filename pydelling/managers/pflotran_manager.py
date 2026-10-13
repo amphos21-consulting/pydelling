@@ -465,13 +465,10 @@ class PflotranManager(BaseManager):
         print(file_ext)
         if file_ext is None:
             file_ext = ['.h5']
-        dir_list = self.ssh.ls
-        for ext in file_ext:
-            ext_files = [file for file in dir_list if Path(file).suffix == ext]
-            dir_list += ext_files
-        if job_id is not None:
-            ext_files = [file for file in dir_list if str(job_id) in file]
-            dir_list += ext_files
+        # Only the files whose extension is in file_ext are downloaded.
+        dir_list = [file for file in self.ssh.ls if Path(file).suffix in file_ext]
+        if len(dir_list) == 0:
+            logger.warning(f"No files with extensions {file_ext} found in {self.ssh.pwd}")
         for file in dir_list:
             try:
                 self.ssh.get(f"{file}", study.output_folder / file)
